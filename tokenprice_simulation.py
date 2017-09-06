@@ -1,3 +1,7 @@
+#Jessica Marshall
+#Distribute
+#token pricing simulation
+
 
 #initial values
 constant = 1
@@ -62,11 +66,14 @@ class TokenHolder:
             print('burn return per token:', price, 'ETH')
             print('total burn return:', total_price, 'ETH\n')
 
+    #def stakeTokens(self, project, )
+
 class Project:
 
         def __init__(self, cost):
             self.project_cost = cost
-            self.project_stage = 'proposed'
+            self.project_stage = 'proposed'     #enumerate this?
+            #proposed, open, active, completed, [incomplete], validated/[failed]
             if (burnPrice() == 0):
                 self.project_tokens = None
             else:
@@ -74,6 +81,7 @@ class Project:
             print('project initialized')
             print('total project cost: ', self.project_cost, 'ETH')
             print('tokens required at initialization: ', self.project_tokens, '\n')
+
 
 
 #define instances of TokenHolder class
@@ -88,3 +96,4 @@ Jessica.burnTokens(11)
 #Jessica.burnTokens(9)
 
 #to do -> simulations of different use cases, plot profit, token value over time
+#
