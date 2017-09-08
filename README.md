@@ -6,5 +6,5 @@ python -v
 
 to run:
 
-python3 filename.py
+python3 tokenprice_simulation.py
 
