@@ -73,7 +73,6 @@ class TokenHolder:
     #def stakeProject(self, num_tokens, ):
         #lock up tokens
 
-
     #def validateProject():
 
     #def voteProject():
@@ -105,11 +104,24 @@ class Project:
             print('total project cost: ', self.project_cost, 'ETH')
             print('tokens required at initialization: ', self.project_tokens, '\n')
 
-        #def changeState():
+        def changeState(self):
+            state = ['proposed', 'active', 'open', 'complete', 'validated']
+            if self.project_state in state:
+                print('old state of', self.project_id, 'is', self.project_state)
+                index = state.index( self.project_state)
+                self.project_state = state[index + 1]
+                print('new state of', self.project_id, 'is', self.project_state)
+            else:
+                print('state not in state list');
+
+            #incomplete & failed states to be done separately
 
         #def refundProposer():
 
 def main():
+    Jessica = TokenHolder()
+    Project1 = Project(1, 'project1')
+    Project1.changeState()
     #create an array of token holders
     #have a few of them createProjects
 
