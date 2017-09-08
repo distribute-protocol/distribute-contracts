@@ -3,10 +3,11 @@
 #token pricing simulation
 
 
-#initial values
+#initial values/global variables
 constant = 1
 pool_ETH = 0
 token_supply = 0
+
 
 #mintPrice returns the amount of ether 1 token can be minted for
 def mintPrice():
@@ -69,7 +70,9 @@ class TokenHolder:
     def createProject(self, _cost, _id):
         Project(_cost, _id)
 
-    #def stakeProject():
+    #def stakeProject(self, num_tokens, ):
+        #lock up tokens
+
 
     #def validateProject():
 
@@ -106,18 +109,9 @@ class Project:
 
         #def refundProposer():
 
+def main():
+    #create an array of token holders
+    #have a few of them createProjects
 
-
-#define instances of TokenHolder class
-Jessica = TokenHolder()
-Ashoka = TokenHolder()
-#node442 = Project(10, 'project 442')
-#example class method calls
-Jessica.createProject(10, 'node443')
-#node443 = Project()
-#Ashoka.mintTokens(5)
-Jessica.burnTokens(11)
-#Jessica.burnTokens(9)
-
-#to do -> simulations of different use cases, plot profit, token value over time
-#
+if __name__ == "__main__":
+    main()
