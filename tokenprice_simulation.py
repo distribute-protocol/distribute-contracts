@@ -99,6 +99,8 @@ class TokenHolder:
     def stakeProject(self, num_tokens, _projectid):
         if(_projectid > project_id):
             print('project', _projectid, "doesn't exist\n")
+        elif(projects[_projectid].project_state != 'proposed'):
+            print('this project is in stage', projects[_projectid].project_state, 'and is not eligible for staking')
         elif(num_tokens > self.tokens):
             print("You don't have", num_tokens, "tokens to stake!\n")
         else:
@@ -141,7 +143,10 @@ class Project:
         def __init__(self, _cost):         #_id should be the name of the project
             self.project_cost = _cost
             self.project_state = 'proposed'
+            #self.proposer =
+
             self.worker_tokens = 10      #hard coded to stakeProject
+            self.project_tokens = 0     #will be changed below based on exchange rate
             self.staked_worker_tokens = 0
             self.staked_capital_tokens = 0
 
@@ -177,17 +182,19 @@ class Project:
 
 def main():
     Jessica1 = Worker()
-
     Jessica = TokenHolder()
+
     Jessica.mintTokens(1000)        #seed the pool with ETH
     Jessica.mintTokens(1)
 
     Ashoka = TokenHolder()
+    Ashoka1 = TokenHolder()
+
     Jessica.createProject(30)
     Project1 = Project(15)
     Project1.changeState()
 
-    Jessica.stakeProject(50, 50)
+    Jessica.stakeProject(50, 1)
 
     #check to make sure dictionaries are working
     print(len(workers))
