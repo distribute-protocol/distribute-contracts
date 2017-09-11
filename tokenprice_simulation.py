@@ -16,6 +16,7 @@ projects = {}       #dictionary of projects
 workers = {}        #dictionary of workers
 tokenholders = {}   #dictionary of tokenholders
 
+#these arrays are much like what the Solidity mapping implementation will do
 projects_workers = np.zeros((100, 100))     #first dim projects, second dim workers; holds which workers stake
 projects_tokenholders = np.zeros((100, 100)) #first dim projects, second dim tokenholders; holds which tokenholders stake
 
@@ -98,9 +99,20 @@ class TokenHolder:
     def stakeProject(self, num_tokens, _projectid):
         if(_projectid > project_id):
             print('project', _projectid, "doesn't exist\n")
-        #else:
-
-        #lock up tokens in array
+        elif(num_tokens > self.tokens):
+            print("You don't have", num_tokens, "tokens to stake!\n")
+        else:
+            tokenreq = projects[_projectid].project_tokens
+            tokenstake = projects[_projectid].staked_capital_tokens
+            tokensneeded = tokenreq - tokenstake
+            print('this project requires', tokenreq, 'capital tokens and has', tokenstake, 'tokens staked to it')
+            if (tokenreq < num_tokens):
+                self.tokens -= tokensneeded
+                tokenstake += tokensneeded
+                projects[_projectid].changeState()
+            else:
+                self.tokens -= num_tokens
+                tokenstake += num_tokens
 
     #def validateProject():
 
@@ -120,7 +132,7 @@ class Worker:
 
     #def stakeProject():
 
-    #def pickTask();
+    #def pickTask():
 
     #def voteProject():
 
@@ -129,7 +141,9 @@ class Project:
         def __init__(self, _cost):         #_id should be the name of the project
             self.project_cost = _cost
             self.project_state = 'proposed'
-            self.workertokens = 10      #hard coded to stakeProject
+            self.worker_tokens = 10      #hard coded to stakeProject
+            self.staked_worker_tokens = 0
+            self.staked_capital_tokens = 0
 
             global project_id
             self.projectid = project_id
@@ -137,7 +151,6 @@ class Project:
 
             projects[self.projectid] = self
 
-            #proposed, open, active, completed, [incomplete], validated/[failed]
             if (burnPrice() == 0):
                 self.project_tokens = None
             else:
@@ -155,7 +168,7 @@ class Project:
                 print('new state of', self.projectid, 'is', self.project_state, '\n')
             else:
                 print('state not in state list\n');
-
+            #proposed, open, active, completed, [incomplete], validated/[failed]
             #incomplete & failed states to be done separately
 
         #def refundProposer():
@@ -166,7 +179,7 @@ def main():
     Jessica1 = Worker()
 
     Jessica = TokenHolder()
-    Jessica.mintTokens(1000)        #seed the pool of ETH
+    Jessica.mintTokens(1000)        #seed the pool with ETH
     Jessica.mintTokens(1)
 
     Ashoka = TokenHolder()
@@ -180,9 +193,6 @@ def main():
     print(len(workers))
     print(len(projects))
     print(len(tokenholders))
-
-    #create an array of token holders
-    #have a few of them createProjects
 
 if __name__ == "__main__":
     main()
