@@ -11,10 +11,11 @@ token_supply = 0
 worker_id = 0
 tokenholder_id = 0
 project_id = 0
-    #hard code project array for simulation
-    #first dim are projects, second dim are token holders, third dim are workers
-#projects = np.array((100, 100, 100))
+#hard code project arrays for simulation
+projects = {}       #dictionary of projects
 
+projects_workers = np.zeros((100, 100))     #first dim projects, second dim workers; holds which workers stake
+projects_tokenholders = np.zeros((100, 100)) #first dim projects, second dim tokenholders; holds which tokenholders stake
 
 #mintPrice returns the amount of ether 1 token can be minted for
 def mintPrice():
@@ -89,10 +90,13 @@ class TokenHolder:
             print("You don't have the", _cost, "tokens to propose this project.")
         else:
             Project(_cost)
-            projects()
-        #add task functionality here!
+        #add task functionality here in real life!
 
-    #def stakeProject(self, num_tokens, _projectid):
+    def stakeProject(self, num_tokens, _projectid):
+        if(_projectid > project_id):
+            print('project', _projectid, "doesn't exist")
+        #else:
+
         #lock up tokens in array
 
     #def validateProject():
@@ -121,10 +125,14 @@ class Project:
         def __init__(self, _cost):         #_id should be the name of the project
             self.project_cost = _cost
             self.project_state = 'proposed'
+            self.workertokens = 10      #hard coded to stakeProject
 
             global project_id
             self.projectid = project_id
             project_id += 1
+
+            global projects
+            projects[project_id] = self
 
             #proposed, open, active, completed, [incomplete], validated/[failed]
             if (burnPrice() == 0):
@@ -148,6 +156,8 @@ class Project:
             #incomplete & failed states to be done separately
 
         #def refundProposer():
+
+#after every action, have to check to see if any projects are a place where they can change state
 
 def main():
     Jessica = TokenHolder()
