@@ -13,7 +13,7 @@ tokenholder_id = 0
 project_id = 0
     #hard code project array for simulation
     #first dim are projects, second dim are token holders, third dim are workers
-projects = np.array((100, 100, 100))
+#projects = np.array((100, 100, 100))
 
 
 #mintPrice returns the amount of ether 1 token can be minted for
@@ -50,16 +50,21 @@ class TokenHolder:
         global constant
 
         price = 0
+        total_price = 0
         for i in range(0, num_tokens):
             price = mintPrice()
             self.tokens = self.tokens + 1
             self.investment = self.investment + price
             pool_ETH = pool_ETH + price
+            total_price = total_price + price
             token_supply = token_supply + 1
-            print('minted one token for', price, 'ETH')
-            print('tokens: ', self.tokens)
-            print('investment:', self.investment, 'ETH')
-            print('mint price of next token:', price, '\n')
+            #print('minted one token for', price, 'ETH')        #print statements to make sure the function works as required
+            #print('tokens: ', self.tokens)
+            #print('investment:', self.investment, 'ETH')
+            #print('mint price of next token:', price, '\n')
+        print('minted', num_tokens, 'tokens')
+        print('total minting price:', total_price)
+        print('total token supply:', token_supply, '\n')
 
     #burnTokens allows a TokenHolder to burn tokens for themself
     def burnTokens(self, num_tokens):
@@ -79,8 +84,12 @@ class TokenHolder:
             print('burn return per token:', price, 'ETH')
             print('total burn return:', total_price, 'ETH\n')
 
-    def createProject(self, _cost, _id):
-        Project(_cost, _id)
+    def createProject(self, _cost):
+        if self.tokens < _cost:
+            print("You don't have the", _cost, "tokens to propose this project.")
+        else:
+            Project(_cost)
+            projects()
         #add task functionality here!
 
     #def stakeProject(self, num_tokens, _projectid):
@@ -116,7 +125,6 @@ class Project:
             global project_id
             self.projectid = project_id
             project_id += 1
-            print('initialized project', self.projectid)
 
             #proposed, open, active, completed, [incomplete], validated/[failed]
             if (burnPrice() == 0):
@@ -143,8 +151,12 @@ class Project:
 
 def main():
     Jessica = TokenHolder()
+    Jessica.mintTokens(1000)        #seed the pool of ETH
+    Jessica.mintTokens(1)
+
     Ashoka = TokenHolder()
-    Project1 = Project(1)
+    Ashoka.createProject(30)
+    Project1 = Project(15)
     Project1.changeState()
     #create an array of token holders
     #have a few of them createProjects
