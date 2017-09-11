@@ -87,14 +87,17 @@ class TokenHolder:
 
     def createProject(self, _cost):
         if self.tokens < _cost:
-            print("You don't have the", _cost, "tokens to propose this project.")
+            print("You don't have the", _cost, "tokens to propose this project.\n")
         else:
-            Project(_cost)
+            project = Project(_cost)
+            projects[project.projectid] = project
+            print('projectid:', project.projectid)
+            print('project cost:', projects[project.projectid].project_cost, '\n')
         #add task functionality here in real life!
 
     def stakeProject(self, num_tokens, _projectid):
         if(_projectid > project_id):
-            print('project', _projectid, "doesn't exist")
+            print('project', _projectid, "doesn't exist\n")
         #else:
 
         #lock up tokens in array
@@ -119,7 +122,6 @@ class Worker:
 
     #def voteProject():
 
-
 class Project:
 
         def __init__(self, _cost):         #_id should be the name of the project
@@ -131,8 +133,7 @@ class Project:
             self.projectid = project_id
             project_id += 1
 
-            global projects
-            projects[project_id] = self
+            projects.update({self.projectid : Project})
 
             #proposed, open, active, completed, [incomplete], validated/[failed]
             if (burnPrice() == 0):
@@ -149,9 +150,9 @@ class Project:
                 print('old state of', self.projectid, 'is', self.project_state)
                 index = state.index( self.project_state)
                 self.project_state = state[index + 1]
-                print('new state of', self.projectid, 'is', self.project_state)
+                print('new state of', self.projectid, 'is', self.project_state, '\n')
             else:
-                print('state not in state list');
+                print('state not in state list\n');
 
             #incomplete & failed states to be done separately
 
@@ -165,9 +166,12 @@ def main():
     Jessica.mintTokens(1)
 
     Ashoka = TokenHolder()
-    Ashoka.createProject(30)
+    Jessica.createProject(30)
     Project1 = Project(15)
     Project1.changeState()
+
+    Jessica.stakeProject(50, 50)
+
     #create an array of token holders
     #have a few of them createProjects
 
