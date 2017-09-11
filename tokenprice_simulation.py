@@ -13,6 +13,8 @@ tokenholder_id = 0
 project_id = 0
 #hard code project arrays for simulation
 projects = {}       #dictionary of projects
+workers = {}        #dictionary of workers
+tokenholders = {}   #dictionary of tokenholders
 
 projects_workers = np.zeros((100, 100))     #first dim projects, second dim workers; holds which workers stake
 projects_tokenholders = np.zeros((100, 100)) #first dim projects, second dim tokenholders; holds which tokenholders stake
@@ -42,7 +44,8 @@ class TokenHolder:
         global tokenholder_id
         self.tokenholderid = tokenholder_id     #to keep track of token holders
         tokenholder_id += 1
-        #print('initialized TokenHolder', self.tokenholderid)
+
+        tokenholders[self.tokenholderid] = self     #added new tokenholder to tokenholder dictionary
 
     #mintTokens allows a TokenHolder to mint tokens for themself
     def mintTokens(self, num_tokens):
@@ -90,9 +93,6 @@ class TokenHolder:
             print("You don't have the", _cost, "tokens to propose this project.\n")
         else:
             project = Project(_cost)
-            projects[project.projectid] = project
-            print('projectid:', project.projectid)
-            print('project cost:', projects[project.projectid].project_cost, '\n')
         #add task functionality here in real life!
 
     def stakeProject(self, num_tokens, _projectid):
@@ -113,6 +113,8 @@ class Worker:
 
         global worker_id
         self.workerid = worker_id
+        workers[self.workerid] = self
+
         worker_id += 1
         print('initialized worker', self.workerid)
 
@@ -133,7 +135,7 @@ class Project:
             self.projectid = project_id
             project_id += 1
 
-            projects.update({self.projectid : Project})
+            projects[self.projectid] = self
 
             #proposed, open, active, completed, [incomplete], validated/[failed]
             if (burnPrice() == 0):
@@ -161,6 +163,8 @@ class Project:
 #after every action, have to check to see if any projects are a place where they can change state
 
 def main():
+    Jessica1 = Worker()
+
     Jessica = TokenHolder()
     Jessica.mintTokens(1000)        #seed the pool of ETH
     Jessica.mintTokens(1)
@@ -171,6 +175,11 @@ def main():
     Project1.changeState()
 
     Jessica.stakeProject(50, 50)
+
+    #check to make sure dictionaries are working
+    print(len(workers))
+    print(len(projects))
+    print(len(tokenholders))
 
     #create an array of token holders
     #have a few of them createProjects
