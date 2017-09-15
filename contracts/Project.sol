@@ -29,8 +29,8 @@ contract Project{
   struct Worker {
     address workerAddress;
     //uint taskHash;
-    //uint tokenReward;
-    //uint ETHReward;   //unclear how to go about representing this
+    //uint escrowTokens;   //tokens paid to sign up for task, amount they will earn if validated
+    //uint ETHReward;      //unclear how to go about representing this
   }
 
   //keep track of validating complete project
@@ -102,8 +102,18 @@ function getBalance() returns(uint){
 
 //functions
 
-  //CHECK FOR STATE CHANGE
-  function checkStaked() internal {
+  //CHECK HAS TOKENS
+
+  function checkHasFreeWorkerTokens() {
+    //references worker registry
+  }
+
+  function checkHasFreeCapitalTokens() {
+    //references token holder registry
+  }
+
+  //PROPOSED PROJECT - STAKING FUNCTIONALITY
+  function checkStaked() onlyInState(State.Proposed) internal {
     if (totalCapitalStaked >= capitalCost &&
       totalWorkerStaked >= workerCost)
       {
@@ -111,29 +121,6 @@ function getBalance() returns(uint){
       }
   }
 
-  function checkDone() internal {
-
-  }
-
-  function checkValidationOver() internal {
-
-  }
-
-  function checkVotingOver() internal {
-
-  }
-
-  //CHECK HAS TOKENS
-
-  function checkHasFreeWorkerTokens() {
-
-  }
-
-  function checkHasFreeCapitalTokens() {
-    
-  }
-
-  //ACTIVE PROJECT - STAKING FUNCTIONALITY
   function stakeCapitalToken() onlyInState(State.Proposed) onlyBefore(projectDeadline) {
     checkStaked();
     //if first stake, add to tokenholders mapping
@@ -153,12 +140,24 @@ function getBalance() returns(uint){
   }
 
   //ACTIVE PROJECT
+  function checkWorkersDone() onlyInState(State.Active) internal {
+
+  }
+
   function addWorker(address _workerAddress) onlyInState(State.Active) {
     //need to restrict who can call this
     workers.push(Worker(_workerAddress));
   }
 
   //COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
+  function checkValidationOver() onlyInState(State.Completed) internal {
+
+  }
+
+  function checkVotingOver() onlyInState(State.Completed) internal {
+
+  }
+
   function validate(uint _tokens) onlyInState(State.Completed) onlyBefore(projectDeadline) {
     //make sure has the free tokens
     //update the mapping
