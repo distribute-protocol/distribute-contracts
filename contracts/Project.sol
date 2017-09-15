@@ -158,9 +158,15 @@ function getBalance() returns(uint){
 
   }
 
-  function validate(uint _tokens) onlyInState(State.Completed) onlyBefore(projectDeadline) {
+  function validate(uint _tokens, bool _validationState) onlyInState(State.Completed) onlyBefore(projectDeadline) {
     //make sure has the free tokens
-    //update the mapping
+    //move msg.sender's tokens from freeTokenBalance to validatedTokenBalance
+    if (_validationState) {
+      validatedAffirmative(msg.sender) = _tokens;
+    }
+    else {
+      validatedNegative(msg.sender) = _tokens
+    }
   }
 
   function voteWorker(uint _workerTokens) {

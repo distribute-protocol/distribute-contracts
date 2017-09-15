@@ -31,21 +31,25 @@ contract TokenHolderRegistry{
 
 //constructor
 
-  function TokenHolderRegistry(){       //contract is created when the first token is minted
+  function TokenHolderRegistry() {       //contract is created when the first token is minted
   }
 
 //functions
 
-  function mintPrice(){
+  function mintPrice() {
   }
 
-  function burnPrice(){
+  function burnPrice() {
   }
 
-  function mint(){
+  function mint() {
   }
 
-  function burn(){
+  function burn() {
+  }
+
+  function transfer(address _to) {
+
   }
 
 }

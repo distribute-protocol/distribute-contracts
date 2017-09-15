@@ -11,6 +11,13 @@ import "./ProjectRegistry.sol";
 
 contract WorkerRegistry{
 
+  struct Worker{
+    uint totalTokenBalance;       //total capital tokens of all types
+    uint proposedTokenBalance;    //tokens held in escrow for proposed projects
+    uint stakedTokenBalance;      //tokens staked on proposed/active projects
+    uint validatedTokenBalance;   //tokens staked on a validation state of a complete project
+    uint votedTokenBalance;       //tokens held in escrow for voting on a complete project
+  }
 //state variables
 
 
