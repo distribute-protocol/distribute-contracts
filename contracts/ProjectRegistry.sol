@@ -9,7 +9,6 @@ import "./WorkerRegistry.sol";
   create project,keep track of existing projects
 */
 
-
 contract ProjectRegistry{
 
 //state variables

@@ -28,6 +28,7 @@ contract Project{
 
   struct Worker {
     address workerAddress;
+    bool taskComplete;
     //uint taskHash;
     //uint escrowTokens;   //tokens paid to sign up for task, amount they will earn if validated
     //uint ETHReward;      //unclear how to go about representing this
@@ -102,6 +103,13 @@ function getBalance() returns(uint){
 
 //functions
 
+  //EXCHANGE RATE FUNCTIONS
+
+  function updateCosts() {
+    //updates capitalCost & workerCost
+    //references mintPrice and burnPrice of TokenHolderRegistry contract
+  }
+
   //CHECK HAS TOKENS
 
   function checkHasFreeWorkerTokens() {
@@ -113,11 +121,13 @@ function getBalance() returns(uint){
   }
 
   //PROPOSED PROJECT - STAKING FUNCTIONALITY
-  function checkStaked() onlyInState(State.Proposed) internal {
+  function checkStaked() onlyInState(State.Proposed) internal {   //if staked, changes state and breaks
+    updateCosts();
     if (totalCapitalStaked >= capitalCost &&
       totalWorkerStaked >= workerCost)
       {
         proposalState = State.Active;
+        break;
       }
   }
 
@@ -141,12 +151,16 @@ function getBalance() returns(uint){
 
   //ACTIVE PROJECT
   function checkWorkersDone() onlyInState(State.Active) internal {
-
+    for (uint i=0; i<workers.length; i++) {
+        if (workers.taskComplete[i] == false) {
+          break;
+        }
+    }
   }
 
   function addWorker(address _workerAddress) onlyInState(State.Active) {
     //need to restrict who can call this
-    workers.push(Worker(_workerAddress));
+    workers.push(Worker(_workerAddress, false));
   }
 
   //COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
