@@ -21,7 +21,7 @@ contract WorkerRegistry{
 
 //constructor
 function WorkerRegistry(){
-  
+
 }
 
 

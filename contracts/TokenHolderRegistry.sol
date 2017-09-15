@@ -6,8 +6,7 @@ import "./ProjectRegistry.sol";
 
 /*
   keeps track of token holder capital token balances of all
-  states (free, staked, validated, voted),
-  is linked to the ProjectRegistry and Project contracts
+  states (free, staked, validated, voted)
 */
 
 contract TokenHolderRegistry{
