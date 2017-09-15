@@ -17,12 +17,13 @@ contract Project{
   address projectRegistry;
   uint capitalCost;   //total amount of staked capital tokens needed
   uint workerCost;    //total amount of staked worker tokens needed
+  uint proposerStake;   //amount of capital tokens the proposer stakes
 
   //keep track of staking on proposed project
   uint totalCapitalStaked;   //amount of capital tokens currently staked
   uint totalWorkerStaked;    //amount of worker tokens currently staked
-  mapping (address => uint) stakedCapitalBalances = 0;
-  mapping (address => uint) stakedWorkerBalances = 0;
+  mapping (address => uint) stakedCapitalBalances;
+  mapping (address => uint) stakedWorkerBalances;
 
   //keep track of workers with tasks
   Worker[] workers;
@@ -46,7 +47,7 @@ contract Project{
   uint votingPeriod;
 
   //project states & deadlines
-  State public proposalState;
+  State public projectState;
   uint public projectDeadline;
   enum State {
     Proposed,
@@ -63,7 +64,7 @@ contract Project{
 //modifiers
 
   modifier onlyInState(State _state) {
-    require(proposalState == _state);
+    require(projectState == _state);
     _;
   }
 
@@ -94,12 +95,14 @@ function getBalance() returns(uint){
 
 //constructor
   function Project(uint _cost, uint _projectDeadline) {
+    updateCosts();
+    //check has percentage of tokens to stake
+    //move tokens from free to proposed in tokenholder contract
     capitalCost = _cost;
     projectDeadline = _projectDeadline;
-    proposalState = State.Proposed;
+    projectState = State.Proposed;
     totalCapitalStaked = 0;
     totalWorkerStaked = 0;
-    //projectRegistry = msg.sender;
   }
 
 //functions
@@ -125,13 +128,14 @@ function getBalance() returns(uint){
     if (totalCapitalStaked >= capitalCost &&
       totalWorkerStaked >= workerCost)
       {
-        proposalState = State.Active;
+        projectState = State.Active;
         refundProposer();
         break;
       }
   }
 
   function refundProposer() {
+    address proposer = ProjectRegistry(projectRegistry).proposers(this);
 
   }
 

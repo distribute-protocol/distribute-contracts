@@ -15,7 +15,7 @@ contract ProjectRegistry{
   address tokenHolderRegistry;    //to be able to call the contract at this address
   address workerRegistry;
 
-  mapping(address => bool) public projectExists = false;
+  mapping(address => bool) public projectExists;
   mapping(address => address) proposers;
   bool initialized = false;
 
