@@ -12,10 +12,11 @@ import "./WorkerRegistry.sol";
 contract ProjectRegistry{
 
 //state variables
-  address tokenHolderRegistry;
+  address tokenHolderRegistry;    //to be able to call the contract at this address
   address workerRegistry;
 
-  mapping(address => bool) public projectExists;
+  mapping(address => bool) public projectExists = false;
+  mapping(address => address) proposers;
   bool initialized = false;
 
 //events
@@ -37,6 +38,8 @@ contract ProjectRegistry{
     //check to make sure has enough tokens
     Project newProject = new Project(_cost, _projectDeadline);
     address projectAddress = address(newProject);
+    projectExists(projectAddress) = true;
+    proposers(projectAddress) = msg.sender;
   }
 
 }

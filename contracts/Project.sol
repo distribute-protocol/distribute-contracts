@@ -11,8 +11,9 @@ import "./WorkerRegistry.sol";
 
 contract Project{
 
-//state variables (incomplete)
-
+//state variables
+  address tokenHolderRegistry;
+  address workerRegistry;
   address projectRegistry;
   uint capitalCost;   //total amount of staked capital tokens needed
   uint workerCost;    //total amount of staked worker tokens needed
@@ -20,8 +21,8 @@ contract Project{
   //keep track of staking on proposed project
   uint totalCapitalStaked;   //amount of capital tokens currently staked
   uint totalWorkerStaked;    //amount of worker tokens currently staked
-  mapping (address => uint) stakedCapitalBalances;
-  mapping (address => uint) stakedWorkerBalances;
+  mapping (address => uint) stakedCapitalBalances = 0;
+  mapping (address => uint) stakedWorkerBalances = 0;
 
   //keep track of workers with tasks
   Worker[] workers;
@@ -104,14 +105,12 @@ function getBalance() returns(uint){
 //functions
 
   //EXCHANGE RATE FUNCTIONS
-
   function updateCosts() {
     //updates capitalCost & workerCost
     //references mintPrice and burnPrice of TokenHolderRegistry contract
   }
 
   //CHECK HAS TOKENS
-
   function checkHasFreeWorkerTokens() {
     //references worker registry
   }
@@ -127,26 +126,52 @@ function getBalance() returns(uint){
       totalWorkerStaked >= workerCost)
       {
         proposalState = State.Active;
+        refundProposer();
         break;
       }
   }
 
-  function stakeCapitalToken() onlyInState(State.Proposed) onlyBefore(projectDeadline) {
+  function refundProposer() {
+
+  }
+
+
+  function stakeCapitalToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
+    checkStaked();    //in case exchange rate has changed since last check
+    //make sure has tokens to stake (reference TokenHolder contract)
+    //move tokens from free to staked in TokenHolder contract
+    if(stakedCapitalBalances(msg.sender) += _tokens > stakedCapitalBalances(msg.sender)) {
+      stakedCapitalBalances(msg.sender) += _tokens;
+    }
     checkStaked();
-    //if first stake, add to tokenholders mapping
   }
 
-  function unstakeCapitalToken() onlyInState(State.Proposed) onlyBefore(projectDeadline) {
-    //if removes all tokens, remove from tokenholders mapping
-  }
-
-  function stakeWorkerToken() onlyInState(State.Proposed) onlyBefore(projectDeadline) {
+  function unstakeCapitalToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
     checkStaked();
-    //if first stake, add to workers mapping
+    //make sure has tokens to stake (reference TokenHolder contract)
+    //move tokens from staked to free in TokenHolder contract
+    if(stakedCapitalBalances(msg.sender) -= _tokens < stakedCapitalBalances(msg.sender)) {
+      stakedCapitalBalances(msg.sender) -= _tokens;
+    }
   }
 
-  function unstakeWorkerToken() onlyInState(State.Proposed) onlyBefore(projectDeadline) {
-    //if removes all tokens, remove from workers mapping`
+  function stakeWorkerToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
+    checkStaked();
+    //make sure has tokens to stake (reference Worker contract)
+    //move tokens from free to staked in Worker contract
+    if(stakedWorkerBalances(msg.sender) += _tokens > stakedWorkerBalances(msg.sender)) {
+      stakedWorkerBalances(msg.sender) += _tokens;
+    }
+    checkStaked();
+  }
+
+  function unstakeWorkerToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
+    checkStaked();
+    //make sure has tokens to unstake (reference Worker contract)
+    //move tokens from staked to free in Worker contract
+    if(stakedWorkerBalances(msg.sender) -= _tokens < stakedWorkerBalances(msg.sender)) {
+      stakedWorkerBalances(msg.sender) -= _tokens;
+    }
   }
 
   //ACTIVE PROJECT
@@ -176,19 +201,22 @@ function getBalance() returns(uint){
     //make sure has the free tokens
     //move msg.sender's tokens from freeTokenBalance to validatedTokenBalance
     if (_validationState) {
-      validatedAffirmative(msg.sender) = _tokens;
+      //check for overflow
+      //move tokens from free to validated
+      validatedAffirmative(msg.sender) += _tokens;
     }
     else {
-      validatedNegative(msg.sender) = _tokens
+      //check for overflow
+      //move tokens from free to validated in other contract
+      validatedNegative(msg.sender) += _tokens;
     }
   }
 
-  function voteWorker(uint _workerTokens) {
-    //check has the free tokens
-  }
-
-  function voteTokenHolder(uint _capitalTokens){
-
+  function vote(uint _tokens, bool _validationState, bool _isworker) {
+    //check has the free tokens depending on bool _isworker
+    //move tokens from free to vote in other contract
+    //check for overflow
+    //update votedAffirmative or votedNegative mapping
   }
 
 }

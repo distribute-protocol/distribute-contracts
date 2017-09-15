@@ -11,6 +11,7 @@ import "./ProjectRegistry.sol";
 
 contract WorkerRegistry{
 
+//state variables
   struct Worker{
     uint totalTokenBalance;       //total capital tokens of all types
     uint proposedTokenBalance;    //tokens held in escrow for proposed projects
@@ -18,7 +19,11 @@ contract WorkerRegistry{
     uint validatedTokenBalance;   //tokens staked on a validation state of a complete project
     uint votedTokenBalance;       //tokens held in escrow for voting on a complete project
   }
-//state variables
+
+  address projectRegistry;
+  mapping (address => Worker) public balances;
+  uint public totalWorkerTokenSupply;               //total supply of capital tokens in all states
+  uint public totalFreeWorkerTokenSupply;           //total supply of free capital tokens (not staked, validated, or voted)
 
 
 //events
