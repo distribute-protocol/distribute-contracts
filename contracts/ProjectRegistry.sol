@@ -5,6 +5,8 @@ pragma solidity ^0.4.10;
 contract ProjectRegistry{
 //state variables
 
+
+
 //events
 
 //modifiers

@@ -11,7 +11,9 @@ import "./ProjectRegistry.sol";
 */
 
 contract WorkerRegistry{
+
 //state variables
+
 
 //events
 

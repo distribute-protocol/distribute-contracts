@@ -28,8 +28,6 @@ contract TokenHolderRegistry{
 
 //events
 
-
-
 //modifiers
 
 //constructor
