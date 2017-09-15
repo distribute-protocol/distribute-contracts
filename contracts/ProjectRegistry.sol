@@ -11,16 +11,33 @@ import "./WorkerRegistry.sol";
 
 
 contract ProjectRegistry{
+
 //state variables
+  address tokenHolderRegistry;
+  address workerRegistry;
 
-
+  mapping(address => bool) public projectExists;
+  bool initialized = false;
 
 //events
 
 //modifiers
 
-//constructor
+//"constructor"
+  function init(address _tokenHolderRegistry, address _workerRegistry) {
+    if (initialized == false) {
+      initialized = true;
+      tokenHolderRegistry = _tokenHolderRegistry;
+      workerRegistry = _workerRegistry;
+    }
+  }
+
 
 //functions
+  function proposeProject(uint _cost, uint _projectDeadline) {
+    //check to make sure has enough tokens
+    Project newProject = new Project(_cost, _projectDeadline);
+    address projectAddress = address(newProject);
+  }
 
 }

@@ -14,16 +14,16 @@ contract Project{
 //state variables (incomplete)
 
   address projectRegistry;
-  uint capitalCost;   //amount of staked capital tokens needed
-  uint workerCost;    //amount of staked worker tokens needed
+  uint capitalCost;   //total amount of staked capital tokens needed
+  uint workerCost;    //total amount of staked worker tokens needed
 
-  //needed to keep track of staking on proposed project
-  uint totalCapitalStaked;
+  //keep track of staking on proposed project
+  uint totalCapitalStaked;   //amount of capital tokens currently staked
   uint totalWorkerStaked;    //amount of worker tokens currently staked
   mapping (address => uint) stakedCapitalBalances;
   mapping (address => uint) stakedWorkerBalances;
 
-  //needed to keep track of workers with tasks
+  //keep track of workers with tasks
   Worker[] workers;
 
   struct Worker {
@@ -33,13 +33,15 @@ contract Project{
     //uint ETHReward;   //unclear how to go about representing this
   }
 
-  //needed to keep track of validating complete project
+  //keep track of validating complete project
   mapping (address => uint) validatedAffirmative;
   mapping (address => uint) validatedNegative;
+  uint validationPeriod;
 
   //needed to keep track of voting complete project
   mapping (address => uint) votedAffirmative;
   mapping (address => uint) votedNegative;
+  uint votingPeriod;
 
   //project states & deadlines
   State public proposalState;
@@ -50,7 +52,8 @@ contract Project{
     Completed,
     Validated,
     Incomplete,
-    Failed
+    Failed,
+    Abandoned
   }
 
 //events
@@ -62,8 +65,13 @@ contract Project{
     _;
   }
 
+  modifier onlyAfter(uint _time){
+    require(now > _time);
+    _;
+  }
+
   modifier onlyBefore(uint _time) {
-    require(now >= _time);
+    require(now < _time);
     _;
   }
 
@@ -89,10 +97,41 @@ function getBalance() returns(uint){
     proposalState = State.Proposed;
     totalCapitalStaked = 0;
     totalWorkerStaked = 0;
-    projectRegistry = msg.sender;
+    //projectRegistry = msg.sender;
   }
 
 //functions
+
+  //CHECK FOR STATE CHANGE
+  function checkStaked() internal {
+    if (totalCapitalStaked >= capitalCost &&
+      totalWorkerStaked >= workerCost)
+      {
+        proposalState = State.Active;
+      }
+  }
+
+  function checkDone() internal {
+
+  }
+
+  function checkValidationOver() internal {
+
+  }
+
+  function checkVotingOver() internal {
+
+  }
+
+  //CHECK HAS TOKENS
+
+  function checkHasFreeWorkerTokens() {
+
+  }
+
+  function checkHasFreeCapitalTokens() {
+    
+  }
 
   //ACTIVE PROJECT - STAKING FUNCTIONALITY
   function stakeCapitalToken() onlyInState(State.Proposed) onlyBefore(projectDeadline) {
@@ -113,19 +152,10 @@ function getBalance() returns(uint){
     //if removes all tokens, remove from workers mapping`
   }
 
-  function checkStaked() internal {
-    if (totalCapitalStaked >= capitalCost &&
-      totalWorkerStaked >= workerCost)
-      {
-        proposalState = State.Active;
-      }
-  }
-
   //ACTIVE PROJECT
-
-  function addWorker(address _worker) {
+  function addWorker(address _workerAddress) onlyInState(State.Active) {
     //need to restrict who can call this
-    workers.push()
+    workers.push(Worker(_workerAddress));
   }
 
   //COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
@@ -134,11 +164,11 @@ function getBalance() returns(uint){
     //update the mapping
   }
 
-  function voteWorker(uint _token) {
-
+  function voteWorker(uint _workerTokens) {
+    //check has the free tokens
   }
 
-  function voteTokenHolder(uint _token){
+  function voteTokenHolder(uint _capitalTokens){
 
   }
 

@@ -6,8 +6,7 @@ import "./ProjectRegistry.sol";
 
 /*
   keeps track of worker token balances of all
-  states (free, staked, voted),
-  is linked to the ProjectRegistry and Project contracts
+  states (free, staked, voted
 */
 
 contract WorkerRegistry{
