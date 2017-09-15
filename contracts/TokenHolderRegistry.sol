@@ -23,8 +23,8 @@ contract TokenHolderRegistry{
 
   address projectRegistry;
   mapping (address => TokenHolder) public balances;
-  uint public totalSupply;               //total supply of capital tokens in all states
-  uint public totalFreeSupply;           //total supply of free capital tokens (not staked, validated, or voted)
+  uint public totalCapitalTokenSupply;               //total supply of capital tokens in all states
+  uint public totalFreeCapitalTokenSupply;           //total supply of free capital tokens (not staked, validated, or voted)
 
 //events
 
@@ -32,27 +32,21 @@ contract TokenHolderRegistry{
 
 //constructor
 
-  function TokenHolderRegistry(address firstMinter){       //contract is created when the first token is minted
-
+  function TokenHolderRegistry(){       //contract is created when the first token is minted
   }
 
 //functions
 
   function mintPrice(){
-
   }
 
   function burnPrice(){
-
   }
 
   function mint(){
-
   }
 
-
   function burn(){
-
   }
 
 }

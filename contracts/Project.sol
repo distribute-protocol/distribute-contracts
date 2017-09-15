@@ -6,13 +6,20 @@ contract Project{
 
 //state variables (incomplete)
   address projectRegistry;
-  address[] tokenHolders;     //list of token holders who stake capital tokens
-  address[] workers;          //list of workers who stake worker tokens
-  uint capitalCost;           //amount of staked capital tokens needed
-  uint workerCost;            //amount of staked worker tokens needed
+  address[] tokenHolders;       //list of token holders who stake capital tokens
+  address[] workers;            //list of workers who stake worker tokens
+
+  uint capitalTokenCost;   //amount of staked capital tokens needed
+  uint workerTokenCost;    //amount of staked worker tokens needed
+
+  uint totalCapitalTokensStaked;   //amount of capital tokens currently staked
+  uint totalWorkerTokensStaked;    //amount of worker tokens currently staked
+
+  mapping (address => uint) capitalTokens;
+  mapping (address => uint) workerTokens;
+
   State public proposalState;
   uint public projectDeadline;
-  mapping (address => )
 
   enum State {
     Proposed,
@@ -37,17 +44,37 @@ contract Project{
     _;
   }
 
+  modifier onlyWorker() {
+
+    _;
+  }
+
+  modifier onlyTokenHolder() {
+
+    _;
+  }
+
+//balance of contract
+function getBalance() returns(uint){
+  return this.balance;
+}
+
 //constructor
   function Project(uint _cost, uint _projectDeadline) {
-    capitalCost = _cost;
+    capitalTokenCost = _cost;
     projectDeadline = _projectDeadline;
     proposalState = State.Proposed;
+    totalCapitalTokensStaked = 0;
+    totalWorkerTokensStaked = 0;
+    projectRegistry = msg.sender;
   }
 
 //functions
-  function stakeCapitalToken() onlyInState(State.Proposed) onlyBefore(projectDeadline) {
-    //if first stake, add to tokenholders mapping
 
+  //ACTIVE PROJECT - STAKING FUNCTIONALITY
+  function stakeCapitalToken() onlyInState(State.Proposed) onlyBefore(projectDeadline) {
+    checkStaked();
+    //if first stake, add to tokenholders mapping
   }
 
   function unstakeCapitalToken() onlyInState(State.Proposed) onlyBefore(projectDeadline) {
@@ -55,6 +82,7 @@ contract Project{
   }
 
   function stakeWorkerToken() onlyInState(State.Proposed) onlyBefore(projectDeadline) {
+    checkStaked();
     //if first stake, add to workers mapping
   }
 
@@ -62,11 +90,17 @@ contract Project{
     //if removes all tokens, remove from workers mapping`
   }
 
-  function getTotalCapitalTokens() returns (uint) {
-    return this.
+  function checkStaked() internal {
+    if (totalCapitalTokensStaked >= capitalTokenCost &&
+      totalWorkerTokensStaked >= workerTokenCost)
+      {
+        proposalState = State.Active;
+      }
   }
 
-  function checkReady() internal {
+  //COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
+  function validate(uint _tokens) onlyInState(State.Active) onlyBefore(projectDeadline) {
+    //if removes all tokens, remove from workers mapping`
   }
 
 }
