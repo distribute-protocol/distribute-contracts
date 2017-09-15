@@ -5,22 +5,28 @@ pragma solidity ^0.4.10;
 contract Project{
 
 //state variables (incomplete)
+
   address projectRegistry;
-  address[] tokenHolders;       //list of token holders who stake capital tokens
-  address[] workers;            //list of workers who stake worker tokens
+  uint capitalCost;   //amount of staked capital tokens needed
+  uint workerCost;    //amount of staked worker tokens needed
 
-  uint capitalTokenCost;   //amount of staked capital tokens needed
-  uint workerTokenCost;    //amount of staked worker tokens needed
+  //needed to keep track of staking on proposed project
+  uint totalCapitalStaked;
+  uint totalWorkerStaked;    //amount of worker tokens currently staked
+  mapping (address => uint) stakedCapitalBalances;
+  mapping (address => uint) stakedWorkerBalances;
 
-  uint totalCapitalTokensStaked;   //amount of capital tokens currently staked
-  uint totalWorkerTokensStaked;    //amount of worker tokens currently staked
+  //needed to keep track of validating complete project
+  mapping (address => uint) validatedAffirmative;
+  mapping (address => uint) validatedNegative;
 
-  mapping (address => uint) capitalTokens;
-  mapping (address => uint) workerTokens;
+  //needed to keep track of voting complete project
+  mapping (address => uint) validatedAffirmative;
+  mapping (address => uint) validatedAffirmative;
 
+  //project states & deadlines
   State public proposalState;
   uint public projectDeadline;
-
   enum State {
     Proposed,
     Active,
@@ -61,11 +67,11 @@ function getBalance() returns(uint){
 
 //constructor
   function Project(uint _cost, uint _projectDeadline) {
-    capitalTokenCost = _cost;
+    capitalCost = _cost;
     projectDeadline = _projectDeadline;
     proposalState = State.Proposed;
-    totalCapitalTokensStaked = 0;
-    totalWorkerTokensStaked = 0;
+    totalCapitalStaked = 0;
+    totalWorkerStaked = 0;
     projectRegistry = msg.sender;
   }
 
@@ -91,8 +97,8 @@ function getBalance() returns(uint){
   }
 
   function checkStaked() internal {
-    if (totalCapitalTokensStaked >= capitalTokenCost &&
-      totalWorkerTokensStaked >= workerTokenCost)
+    if (totalCapitalStaked >= capitalCost &&
+      totalWorkerStaked >= workerCost)
       {
         proposalState = State.Active;
       }
@@ -100,7 +106,7 @@ function getBalance() returns(uint){
 
   //COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
   function validate(uint _tokens) onlyInState(State.Active) onlyBefore(projectDeadline) {
-    //if removes all tokens, remove from workers mapping`
+
   }
 
 }
