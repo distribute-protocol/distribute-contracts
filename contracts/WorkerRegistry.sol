@@ -20,6 +20,10 @@ contract WorkerRegistry{
 //modifiers
 
 //constructor
+function WorkerRegistry(){
+  
+}
+
 
 //functions
 

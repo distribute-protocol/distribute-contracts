@@ -32,7 +32,7 @@ contract TokenHolderRegistry{
 
 //constructor
 
-  function TokenHolderRegistry(){       //contract is created when the first token is minted
+  function TokenHolderRegistry(address firstMinter){       //contract is created when the first token is minted
 
   }
 
