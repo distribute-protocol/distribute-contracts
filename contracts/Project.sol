@@ -16,13 +16,23 @@ contract Project{
   mapping (address => uint) stakedCapitalBalances;
   mapping (address => uint) stakedWorkerBalances;
 
+  //needed to keep track of workers with tasks
+  Worker[] workers;
+
+  struct Worker {
+    address workerAddress;
+    //uint taskHash;
+    //uint tokenReward;
+    //uint ETHReward;   //unclear how to go about representing this
+  }
+
   //needed to keep track of validating complete project
   mapping (address => uint) validatedAffirmative;
   mapping (address => uint) validatedNegative;
 
   //needed to keep track of voting complete project
-  mapping (address => uint) validatedAffirmative;
-  mapping (address => uint) validatedAffirmative;
+  mapping (address => uint) votedAffirmative;
+  mapping (address => uint) votedNegative;
 
   //project states & deadlines
   State public proposalState;
@@ -50,15 +60,15 @@ contract Project{
     _;
   }
 
+/*
   modifier onlyWorker() {
-
     _;
   }
 
   modifier onlyTokenHolder() {
-
     _;
   }
+*/
 
 //balance of contract
 function getBalance() returns(uint){
@@ -104,8 +114,24 @@ function getBalance() returns(uint){
       }
   }
 
+  //ACTIVE PROJECT
+
+  function addWorker(address _worker) {
+    //need to restrict who can call this
+    workers.push()
+  }
+
   //COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
-  function validate(uint _tokens) onlyInState(State.Active) onlyBefore(projectDeadline) {
+  function validate(uint _tokens) onlyInState(State.Completed) onlyBefore(projectDeadline) {
+    //make sure has the free tokens
+    //update the mapping
+  }
+
+  function voteWorker(uint _token) {
+
+  }
+
+  function voteTokenHolder(uint _token){
 
   }
 
