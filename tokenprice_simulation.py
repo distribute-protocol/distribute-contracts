@@ -140,43 +140,43 @@ class Worker:
 
 class Project:
 
-        def __init__(self, _cost):         #_id should be the name of the project
-            self.project_cost = _cost
-            self.project_state = 'proposed'
-            #self.proposer =
+    def __init__(self, _cost):         #_id should be the name of the project
+        self.project_cost = _cost
+        self.project_state = 'proposed'
+        #self.proposer =
 
-            self.worker_tokens = 10      #hard coded to stakeProject
-            self.project_tokens = 0     #will be changed below based on exchange rate
-            self.staked_worker_tokens = 0
-            self.staked_capital_tokens = 0
+        self.worker_tokens = 10      #hard coded to stakeProject
+        self.project_tokens = 0     #will be changed below based on exchange rate
+        self.staked_worker_tokens = 0
+        self.staked_capital_tokens = 0
 
-            global project_id
-            self.projectid = project_id
-            project_id += 1
+        global project_id
+        self.projectid = project_id
+        project_id += 1
 
-            projects[self.projectid] = self
+        projects[self.projectid] = self
 
-            if (burnPrice() == 0):
-                self.project_tokens = None
-            else:
-                self.project_tokens = (_cost / burnPrice())    #at initialization, number of tokens needed
-            print('project', self.projectid, 'initialized')
-            print('total project cost: ', self.project_cost, 'ETH')
-            print('tokens required at initialization: ', self.project_tokens, '\n')
+        if (burnPrice() == 0):
+            self.project_tokens = None
+        else:
+            self.project_tokens = (_cost / burnPrice())    #at initialization, number of tokens needed
+        print('project', self.projectid, 'initialized')
+        print('total project cost: ', self.project_cost, 'ETH')
+        print('tokens required at initialization: ', self.project_tokens, '\n')
 
-        def changeState(self):
-            state = ['proposed', 'active', 'open', 'complete', 'validated']
-            if self.project_state in state:
-                print('old state of', self.projectid, 'is', self.project_state)
-                index = state.index( self.project_state)
-                self.project_state = state[index + 1]
-                print('new state of', self.projectid, 'is', self.project_state, '\n')
-            else:
-                print('state not in state list\n');
+    def changeState(self):
+        state = ['proposed', 'active', 'open', 'complete', 'validated']
+        if self.project_state in state:
+            print('old state of', self.projectid, 'is', self.project_state)
+            index = state.index( self.project_state)
+            self.project_state = state[index + 1]
+            print('new state of', self.projectid, 'is', self.project_state, '\n')
+        else:
+            print('state not in state list\n');
             #proposed, open, active, completed, [incomplete], validated/[failed]
             #incomplete & failed states to be done separately
 
-        #def refundProposer():
+    #def refundProposer():
 
 #after every action, have to check to see if any projects are a place where they can change state
 
