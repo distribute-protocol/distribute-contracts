@@ -25,14 +25,16 @@ contract WorkerRegistry{
   uint public totalWorkerTokenSupply;               //total supply of capital tokens in all states
   uint public totalFreeWorkerTokenSupply;           //total supply of free capital tokens (not staked, validated, or voted)
 
-
 //events
 
 //modifiers
 
 //constructor
-function WorkerRegistry(){
-
+function WorkerRegistry(address _projectRegistry, address _firstWorker){
+  projectRegistry = _projectRegistry;
+  balances[_firstWorker] = Worker(1, 0, 0, 0, 0);
+  totalWorkerTokenSupply = 1;
+  totalFreeWorkerTokenSupply = 1;
 }
 
 

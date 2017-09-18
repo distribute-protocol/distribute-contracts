@@ -7,6 +7,7 @@ import "./ProjectRegistry.sol";
 /*
   keeps track of token holder capital token balances of all
   states (free, staked, validated, voted)
+  balance of contract is token pool
 */
 
 contract TokenHolderRegistry{
@@ -31,12 +32,17 @@ contract TokenHolderRegistry{
 
 //constructor
 
-  function TokenHolderRegistry() {       //contract is created when the first token is minted
+  function TokenHolderRegistry(address _projectRegistry, address _firstTokenHolder, uint _initialBalance) {       //contract is created when the first token is minted
+    projectRegistry = _projectRegistry;
+    balances[_firstTokenHolder] = TokenHolder(_initialBalance, 0, 0, 0, 0);
+    totalCapitalTokenSupply = _initialBalance;
+    totalFreeCapitalTokenSupply = _initialBalance;
   }
 
 //functions
 
   function mintPrice() {
+
   }
 
   function burnPrice() {

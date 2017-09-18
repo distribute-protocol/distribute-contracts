@@ -1,0 +1,74 @@
+{
+  "contract_name": "WorkerRegistry",
+  "abi": [
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "balances",
+      "outputs": [
+        {
+          "name": "totalTokenBalance",
+          "type": "uint256"
+        },
+        {
+          "name": "proposedTokenBalance",
+          "type": "uint256"
+        },
+        {
+          "name": "stakedTokenBalance",
+          "type": "uint256"
+        },
+        {
+          "name": "validatedTokenBalance",
+          "type": "uint256"
+        },
+        {
+          "name": "votedTokenBalance",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "totalFreeWorkerTokenSupply",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "totalWorkerTokenSupply",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "payable": false,
+      "type": "constructor"
+    }
+  ],
+  "unlinked_binary": "0x6060604052341561000c57fe5b5b5b5b61011c8061001e6000396000f300606060405263ffffffff60e060020a60003504166327e235e381146034578063934383f3146078578063a1bad6e1146097575bfe5b3415603b57fe5b604d600160a060020a036004351660b6565b6040805195865260208601949094528484019290925260608401526080830152519081900360a00190f35b3415607f57fe5b608560e4565b60408051918252519081900360200190f35b3415609e57fe5b608560ea565b60408051918252519081900360200190f35b6001602081905260009182526040909120805491810154600282015460038301546004909301549192909185565b60035481565b600254815600a165627a7a7230582011cda0cb74cb084d2faede0a87da1a841f36384a9c0da02b5d26042cf5ea2b400029",
+  "networks": {},
+  "schema_version": "0.0.5",
+  "updated_at": 1505748733128
+}

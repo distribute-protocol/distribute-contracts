@@ -16,6 +16,8 @@ contract Project{
   address workerRegistry;
   address projectRegistry;
 
+  address proposer;
+
   uint capitalCost;   //total amount of staked capital tokens needed
   uint workerCost;    //total amount of staked worker tokens needed
   uint proposerStake;   //amount of capital tokens the proposer stakes

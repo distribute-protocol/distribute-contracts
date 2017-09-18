@@ -1,0 +1,184 @@
+{
+  "contract_name": "Project",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "checkHasFreeCapitalTokens",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "projectDeadline",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "updateCosts",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "projectState",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_workerAddress",
+          "type": "address"
+        }
+      ],
+      "name": "addWorker",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_tokens",
+          "type": "uint256"
+        }
+      ],
+      "name": "unstakeCapitalToken",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "refundProposer",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_tokens",
+          "type": "uint256"
+        },
+        {
+          "name": "_validationState",
+          "type": "bool"
+        }
+      ],
+      "name": "validate",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_tokens",
+          "type": "uint256"
+        }
+      ],
+      "name": "stakeWorkerToken",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "checkHasFreeWorkerTokens",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_tokens",
+          "type": "uint256"
+        }
+      ],
+      "name": "stakeCapitalToken",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_tokens",
+          "type": "uint256"
+        },
+        {
+          "name": "_validationState",
+          "type": "bool"
+        },
+        {
+          "name": "_isworker",
+          "type": "bool"
+        }
+      ],
+      "name": "vote",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_tokens",
+          "type": "uint256"
+        }
+      ],
+      "name": "unstakeWorkerToken",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "_cost",
+          "type": "uint256"
+        },
+        {
+          "name": "_projectDeadline",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "constructor"
+    }
+  ],
+  "unlinked_binary": "0x6060604052341561000c57fe5b6040516040806106b48339810160405280516020909101515b61003a6401000000006101f461008682021704565b60028054600160a060020a03191633600160a060020a031617905560038290556012819055601180546000919060ff19166001835b0217905550600060068190556007555b5050610089565b5b565b61061c806100986000396000f300606060405236156100a95763ffffffff60e060020a600035041663331d479b81146100ab578063601413ad146100bd5780636375ed08146100ab578063748807ab146100f1578063806ad57e146101255780638a7ab6771461014357806392eec3bc146100ab57806397ef4e3e1461016a578063b8d77e4a14610184578063c675b1c1146100ab578063cdccd20f146101ab578063df133bca146101c0578063fbaed305146101df575bfe5b34156100b357fe5b6100bb6101f4565b005b34156100c557fe5b6100cd6101f7565b60408051918252519081900360200190f35b34156100b357fe5b6100bb6101f4565b005b34156100f957fe5b610101610200565b6040518082600681111561011157fe5b60ff16815260200191505060405180910390f35b341561012d57fe5b6100bb600160a060020a0360043516610209565b005b341561014b57fe5b6100bb60043561028c565b005b34156100b357fe5b6100bb6101f4565b005b341561017257fe5b6100bb6004356024351515610312565b005b341561018c57fe5b6100bb600435610394565b005b34156100b357fe5b6100bb6101f4565b005b34156101b357fe5b6100bb600435610421565b005b34156101c857fe5b6100bb60043560243515156044351515610307565b005b34156101e757fe5b6100bb6004356104b1565b005b5b565b60125481565b5b565b60115460ff1681565b6001805b60115460ff16600681111561021e57fe5b146102295760006000fd5b600a80546001810161023b838261059b565b916000526020600020900160005b5060408051808201909152600160a060020a03851680825260006020909201919091528154600160a060020a0319161760a060020a60ff0219169055505b5b5050565b6000805b60115460ff1660068111156102a157fe5b146102ac5760006000fd5b601254428190106102bd5760006000fd5b6102c5610534565b600160a060020a033316600090815260086020526040902054838103101561030757600160a060020a0333166000908152600860205260409020805484900390555b5b5b505b5050565b5b565b6002805b60115460ff16600681111561032757fe5b146103325760006000fd5b601254428190106103435760006000fd5b821561036c57600160a060020a0333166000908152600b6020526040902080548501905561038b565b600160a060020a0333166000908152600c602052604090208054850190555b5b5b505b505050565b6000805b60115460ff1660068111156103a957fe5b146103b45760006000fd5b601254428190106103c55760006000fd5b6103cd610534565b600160a060020a033316600090815260096020526040902054838101111561040e57600160a060020a03331660009081526009602052604090208054840190555b610307610534565b5b5b505b5050565b5b565b6000805b60115460ff16600681111561043657fe5b146104415760006000fd5b601254428190106104525760006000fd5b61045a610534565b600160a060020a033316600090815260086020526040902054838101111561040e57600160a060020a03331660009081526008602052604090208054840190555b610307610534565b5b5b505b5050565b5b505050565b6000805b60115460ff1660068111156104c657fe5b146104d15760006000fd5b601254428190106104e25760006000fd5b6104ea610534565b600160a060020a033316600090815260096020526040902054838103101561030757600160a060020a0333166000908152600960205260409020805484900390555b5b5b505b5050565b6000805b60115460ff16600681111561054957fe5b146105545760006000fd5b61055c6101f4565b60035460065410158015610574575060045460075410155b1561059557601180546001919060ff191682805b02179055506105956101f4565b5b5b5b50565b815481835581811511610307576000838152602090206103079181019083016105c5565b5b505050565b6105ed91905b808211156105e9578054600160a860020a03191681556001016105cb565b5090565b905600a165627a7a72305820866e646b003a9650885c539424ae6c5d9c37c115bf70202538182c25ed1675b70029",
+  "networks": {},
+  "schema_version": "0.0.5",
+  "updated_at": 1505748733128
+}

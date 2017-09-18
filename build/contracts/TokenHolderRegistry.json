@@ -1,0 +1,119 @@
+{
+  "contract_name": "TokenHolderRegistry",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "mint",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_to",
+          "type": "address"
+        }
+      ],
+      "name": "transfer",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "balances",
+      "outputs": [
+        {
+          "name": "totalTokenBalance",
+          "type": "uint256"
+        },
+        {
+          "name": "proposedTokenBalance",
+          "type": "uint256"
+        },
+        {
+          "name": "stakedTokenBalance",
+          "type": "uint256"
+        },
+        {
+          "name": "validatedTokenBalance",
+          "type": "uint256"
+        },
+        {
+          "name": "votedTokenBalance",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "burn",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "totalCapitalTokenSupply",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "mintPrice",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "totalFreeCapitalTokenSupply",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [],
+      "name": "burnPrice",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "payable": false,
+      "type": "constructor"
+    }
+  ],
+  "unlinked_binary": "0x6060604052341561000c57fe5b5b5b5b6101db8061001e6000396000f300606060405236156100725763ffffffff60e060020a6000350416631249c58b81146100745780631a6952301461008657806327e235e3146100a457806344df8e70146100745780635eab7235146100fd5780636817c76c14610074578063b0d9e70c14610131578063bde6a5a914610074575bfe5b341561007c57fe5b610084610165565b005b341561008e57fe5b610084600160a060020a0360043516610168565b005b34156100ac57fe5b6100c0600160a060020a036004351661016c565b6040805195865260208601949094528484019290925260608401526080830152519081900360a00190f35b341561007c57fe5b610084610165565b005b341561010557fe5b61010d61019d565b60408051918252519081900360200190f35b341561007c57fe5b610084610165565b005b341561013957fe5b61010d6101a6565b60408051918252519081900360200190f35b341561007c57fe5b610084610165565b005b5b565b5b50565b6001602081905260009182526040909120805491810154600282015460038301546004909301549192909185565b5b565b60025481565b5b565b60035481565b5b5600a165627a7a7230582086589b0d1d9c8b68193a0cdd25df8ef1ee2193490ab218156773c8aa96faff990029",
+  "networks": {},
+  "schema_version": "0.0.5",
+  "updated_at": 1505748733128
+}
