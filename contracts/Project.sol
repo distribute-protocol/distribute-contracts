@@ -15,6 +15,7 @@ contract Project{
   address tokenHolderRegistry;
   address workerRegistry;
   address projectRegistry;
+
   uint capitalCost;   //total amount of staked capital tokens needed
   uint workerCost;    //total amount of staked worker tokens needed
   uint proposerStake;   //amount of capital tokens the proposer stakes
@@ -26,7 +27,7 @@ contract Project{
   mapping (address => uint) stakedWorkerBalances;
 
   //keep track of workers with tasks
-  Worker[] workers;
+  Worker[] workers;   //array of tasked workers
 
   struct Worker {
     address workerAddress;
@@ -88,16 +89,12 @@ contract Project{
   }
 */
 
-//balance of contract
-function getBalance() returns(uint){
-  return this.balance;
-}
-
 //constructor
   function Project(uint _cost, uint _projectDeadline) {
     updateCosts();
     //check has percentage of tokens to stake
     //move tokens from free to proposed in tokenholder contract
+    projectRegistry = msg.sender;     //the project registry calls this function
     capitalCost = _cost;
     projectDeadline = _projectDeadline;
     projectState = State.Proposed;
@@ -125,17 +122,14 @@ function getBalance() returns(uint){
   //PROPOSED PROJECT - STAKING FUNCTIONALITY
   function checkStaked() onlyInState(State.Proposed) internal {   //if staked, changes state and breaks
     updateCosts();
-    if (totalCapitalStaked >= capitalCost &&
-      totalWorkerStaked >= workerCost)
+    if (totalCapitalStaked >= capitalCost && totalWorkerStaked >= workerCost)
       {
         projectState = State.Active;
         refundProposer();
-        break;
       }
   }
 
   function refundProposer() {
-    address proposer = ProjectRegistry(projectRegistry).proposers(this);
 
   }
 
@@ -144,8 +138,8 @@ function getBalance() returns(uint){
     checkStaked();    //in case exchange rate has changed since last check
     //make sure has tokens to stake (reference TokenHolder contract)
     //move tokens from free to staked in TokenHolder contract
-    if(stakedCapitalBalances(msg.sender) += _tokens > stakedCapitalBalances(msg.sender)) {
-      stakedCapitalBalances(msg.sender) += _tokens;
+    if((stakedCapitalBalances[msg.sender] + _tokens) > stakedCapitalBalances[msg.sender]) {
+      stakedCapitalBalances[msg.sender] += _tokens;
     }
     checkStaked();
   }
@@ -154,8 +148,8 @@ function getBalance() returns(uint){
     checkStaked();
     //make sure has tokens to stake (reference TokenHolder contract)
     //move tokens from staked to free in TokenHolder contract
-    if(stakedCapitalBalances(msg.sender) -= _tokens < stakedCapitalBalances(msg.sender)) {
-      stakedCapitalBalances(msg.sender) -= _tokens;
+    if(stakedCapitalBalances[msg.sender] - _tokens < stakedCapitalBalances[msg.sender]) {
+      stakedCapitalBalances[msg.sender] -= _tokens;
     }
   }
 
@@ -163,8 +157,8 @@ function getBalance() returns(uint){
     checkStaked();
     //make sure has tokens to stake (reference Worker contract)
     //move tokens from free to staked in Worker contract
-    if(stakedWorkerBalances(msg.sender) += _tokens > stakedWorkerBalances(msg.sender)) {
-      stakedWorkerBalances(msg.sender) += _tokens;
+    if((stakedWorkerBalances[msg.sender] + _tokens) > stakedWorkerBalances[msg.sender]) {
+      stakedWorkerBalances[msg.sender] += _tokens;
     }
     checkStaked();
   }
@@ -173,15 +167,15 @@ function getBalance() returns(uint){
     checkStaked();
     //make sure has tokens to unstake (reference Worker contract)
     //move tokens from staked to free in Worker contract
-    if(stakedWorkerBalances(msg.sender) -= _tokens < stakedWorkerBalances(msg.sender)) {
-      stakedWorkerBalances(msg.sender) -= _tokens;
+    if(stakedWorkerBalances[msg.sender] - _tokens < stakedWorkerBalances[msg.sender]) {
+      stakedWorkerBalances[msg.sender] -= _tokens;
     }
   }
 
   //ACTIVE PROJECT
   function checkWorkersDone() onlyInState(State.Active) internal {
     for (uint i=0; i<workers.length; i++) {
-        if (workers.taskComplete[i] == false) {
+        if (workers[i].taskComplete == false) {
           break;
         }
     }
@@ -207,12 +201,12 @@ function getBalance() returns(uint){
     if (_validationState) {
       //check for overflow
       //move tokens from free to validated
-      validatedAffirmative(msg.sender) += _tokens;
+      validatedAffirmative[msg.sender] += _tokens;
     }
     else {
       //check for overflow
       //move tokens from free to validated in other contract
-      validatedNegative(msg.sender) += _tokens;
+      validatedNegative[msg.sender] += _tokens;
     }
   }
 

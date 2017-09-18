@@ -6,7 +6,7 @@ import "./TokenHolderRegistry.sol";
 import "./WorkerRegistry.sol";
 
 /*
-  create project,keep track of existing projects
+  create project, keep track of existing projects
 */
 
 contract ProjectRegistry{
@@ -35,11 +35,13 @@ contract ProjectRegistry{
 
 //functions
   function proposeProject(uint _cost, uint _projectDeadline) {
-    //check to make sure has enough tokens
-    Project newProject = new Project(_cost, _projectDeadline);
+    //check to make sure msg.sender has enough tokens
+    Project newProject = new Project(_cost,
+                                     _projectDeadline
+                                     );
     address projectAddress = address(newProject);
-    projectExists(projectAddress) = true;
-    proposers(projectAddress) = msg.sender;
+    projectExists[projectAddress] = true;
+    proposers[projectAddress] = msg.sender;
   }
 
 }
