@@ -52,7 +52,7 @@ contract TokenHolderRegistry{
       return mintPriceConstant;
     }
     else {
-      return ((getBalance()/totalCapitalTokenSupply) + mintPriceConstant);    //division errors here
+      return ((getBalance()/totalCapitalTokenSupply) + mintPriceConstant);    //division errors here FOR SURE
     }
   }
 
