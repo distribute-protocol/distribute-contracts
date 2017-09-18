@@ -119,6 +119,7 @@ contract Project{
 
   function checkHasFreeCapitalTokens() {
     //references token holder registry
+
   }
 
   //PROPOSED PROJECT - STAKING FUNCTIONALITY
@@ -175,10 +176,13 @@ contract Project{
   }
 
   //ACTIVE PROJECT
-  function checkWorkersDone() onlyInState(State.Active) internal {
+  function checkWorkersDone() onlyInState(State.Active) internal returns (bool) {
     for (uint i=0; i<workers.length; i++) {
         if (workers[i].taskComplete == false) {
-          break;
+          return false;
+        }
+        else {
+          return true;
         }
     }
   }

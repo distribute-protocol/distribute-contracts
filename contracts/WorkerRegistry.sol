@@ -9,11 +9,13 @@ import "./ProjectRegistry.sol";
   states (free, staked, voted
 */
 
+//INCOMPLETE
+
 contract WorkerRegistry{
 
 //state variables
   struct Worker{
-    uint totalTokenBalance;       //total capital tokens of all types
+    uint totalTokenBalance;       //total worker tokens of all types
     uint freeTokenBalance;
   }
 
@@ -27,13 +29,12 @@ contract WorkerRegistry{
 //modifiers
 
 //constructor
-function WorkerRegistry(address _projectRegistry, address _firstWorker){
+function WorkerRegistry(address _projectRegistry){
   projectRegistry = _projectRegistry;
   balances[_firstWorker] = Worker(1, 0, 0, 0);
   totalWorkerTokenSupply = 1;
   totalFreeWorkerTokenSupply = 1;
-}
-
+  }
 
 //functions
 
