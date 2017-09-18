@@ -7,7 +7,7 @@ import "./ProjectRegistry.sol";
 /*
   keeps track of token holder capital token balances of all
   states (free, staked, validated, voted)
-  balance of contract is token pool
+  balance of this contract is the ETH pool
 */
 
 contract TokenHolderRegistry{
@@ -26,6 +26,8 @@ contract TokenHolderRegistry{
   uint public totalCapitalTokenSupply;               //total supply of capital tokens in all states
   uint public totalFreeCapitalTokenSupply;           //total supply of free capital tokens (not staked, validated, or voted)
 
+  uint mintPriceConstant = 1;
+
 //events
 
 //modifiers
@@ -41,17 +43,29 @@ contract TokenHolderRegistry{
 
 //functions
 
-  function mintPrice() {
+  function getBalance() returns (uint){    //returns balance of ether pool
+    return this.balance;
+  }
+
+  function mintPrice() returns (uint) {
+    if (getBalance() == 0) {
+      return mintPriceConstant;
+    }
+    else {
+      return ((getBalance()/totalCapitalTokenSupply) + mintPriceConstant);    //division errors here
+    }
+  }
+
+  function burnPrice() returns (uint) {
 
   }
 
-  function burnPrice() {
+  function mint(uint _numTokens) {
+
   }
 
-  function mint() {
-  }
+  function burn(_numTokens) {
 
-  function burn() {
   }
 
   function transfer(address _to) {
