@@ -18,16 +18,13 @@ contract TokenHolderRegistry{
   //TOKEN HOLDER STATE VARIABLES
   struct TokenHolder{
     uint totalTokenBalance;       //total capital tokens of all types
-    uint proposedTokenBalance;    //tokens held in escrow for proposed projects
-    uint stakedTokenBalance;      //tokens staked on proposed/active projects
-    uint validatedTokenBalance;   //tokens staked on a validation state of a complete project
-    uint votedTokenBalance;       //tokens held in escrow for voting on a complete project
+    uint freeTokenBalance;
   }
 
   address projectRegistry;
   mapping (address => TokenHolder) public balances;
-  uint public totalCapitalTokenSupply;               //total supply of capital tokens in all states
-  uint public totalFreeCapitalTokenSupply;           //total supply of free capital tokens (not staked, validated, or voted)
+  uint public totalCapitalTokenSupply = 0;               //total supply of capital tokens in all states
+  uint public totalFreeCapitalTokenSupply = 0;           //total supply of free capital tokens (not staked, validated, or voted)
 
   //CONTINUOUS TOKEN STATE VARIABLES --> from Simon's code
   uint public constant MAX_UINT = (2**256) - 1;
@@ -35,9 +32,7 @@ contract TokenHolderRegistry{
   uint256 baseCost = 100000000000000; //100000000000000 wei 0.0001 ether
   uint256 public costPerToken = 0;
 
-  uint256 public totalEverMinted;
-  uint256 public totalEverWithdrawn;
-  uint256 public poolBalance;
+  uint256 public poolBalance;   //in Wei
 
   uint8 decimals;
   string symbol;
@@ -54,12 +49,9 @@ event LogCostOfTokenUpdate(uint256 newCost);
 
 //constructor
 
-  function TokenHolderRegistry(address _projectRegistry, address _firstTokenHolder, uint _initialBalance) {       //contract is created when the first token is minted
+  function TokenHolderRegistry(address _projectRegistry) {       //contract is created
     updateMintingPrice(0);
     projectRegistry = _projectRegistry;
-    balances[_firstTokenHolder] = TokenHolder(_initialBalance, 0, 0, 0, 0);
-    totalCapitalTokenSupply = _initialBalance;
-    totalFreeCapitalTokenSupply = _initialBalance;
   }
 
 //functions
@@ -90,7 +82,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
   function mint(uint256 _amountToMint) payable returns (bool) {
       //balance of msg.sender increases if paid right amount according to protocol
 
-      if(_amountToMint > 0 && (MAX_UINT - _amountToMint) >= totalSupply && msg.value > 0) {
+      if(_amountToMint > 0 && (MAX_UINT - _amountToMint) >= totalCapitalTokenSupply && msg.value > 0) {
 
           uint256 totalMinted = 0;
           uint256 totalCost = 0;
@@ -99,7 +91,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
               if(totalCost + costPerToken <= msg.value) {
                   totalCost += costPerToken;
                   totalMinted += 1;
-                  updateMintingPrice((totalSupply+i));
+                  updateMintingPrice((totalCapitalTokenSupply + i));
               } else {
                   break;
               }
@@ -109,9 +101,8 @@ event LogCostOfTokenUpdate(uint256 newCost);
               msg.sender.transfer(msg.value - totalCost);
           }
 
-          totalEverMinted += totalMinted;
-          totalSupply += totalMinted;
-          balances[msg.sender] += totalMinted;
+          totalCapitalTokenSupply += totalMinted;
+          balances[msg.sender].totalTokenBalance += totalMinted;
           poolBalance += totalCost;
 
           LogMint(totalMinted, totalCost);
@@ -122,23 +113,29 @@ event LogCostOfTokenUpdate(uint256 newCost);
       }
   }
 
-  function withdraw(uint256 _amountToWithdraw) returns (bool) {
-      if(_amountToWithdraw > 0 && balances[msg.sender] >= _amountToWithdraw) {
+  function burn(uint256 _amountToBurn) returns (bool) {
+      if(_amountToBurn > 0 && balances[msg.sender] >= _amountToBurn) {
+          //CHECK HAS FREE TOKENS
           //determine how much you can leave with.
-          uint256 reward = _amountToWithdraw * poolBalance/totalSupply; //rounding?
+          uint256 reward = _amountToBurn * poolBalance/totalCapitalTokenSupply; //rounding?
           msg.sender.transfer(reward);
-          balances[msg.sender] -= _amountToWithdraw;
-          totalSupply -= _amountToWithdraw;
-          updateMintingPrice(totalSupply);
-          LogWithdraw(_amountToWithdraw, reward);
+          balances[msg.sender].totalTokenBalance -= _amountToBurn;
+          totalCapitalTokenSupply -= _amountToBurn;
+          updateMintingPrice(totalCapitalTokenSupply);
+          LogWithdraw(_amountToBurn, reward);
           return true;
       } else {
           revert();
       }
   }
 
-  function transfer(address _to) {
-
+  function transfer(address _to, uint256 _amountToTransfer) returns (bool) {
+    if(_amountToTransfer > 0 && balances[msg.sender] >= _amountToTransfer) {
+      balances[msg.sender] -= _amountToTransfer;
+      balances[_to] += _amountToTransfer;
+    }
+    else {
+      revert();
+    }
   }
-
 }

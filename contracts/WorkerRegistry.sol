@@ -14,10 +14,7 @@ contract WorkerRegistry{
 //state variables
   struct Worker{
     uint totalTokenBalance;       //total capital tokens of all types
-    uint proposedTokenBalance;    //tokens held in escrow for proposed projects
-    uint stakedTokenBalance;      //tokens staked on proposed/active projects
-    uint validatedTokenBalance;   //tokens staked on a validation state of a complete project
-    uint votedTokenBalance;       //tokens held in escrow for voting on a complete project
+    uint freeTokenBalance;
   }
 
   address projectRegistry;
@@ -32,7 +29,7 @@ contract WorkerRegistry{
 //constructor
 function WorkerRegistry(address _projectRegistry, address _firstWorker){
   projectRegistry = _projectRegistry;
-  balances[_firstWorker] = Worker(1, 0, 0, 0, 0);
+  balances[_firstWorker] = Worker(1, 0, 0, 0);
   totalWorkerTokenSupply = 1;
   totalFreeWorkerTokenSupply = 1;
 }
