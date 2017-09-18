@@ -10,8 +10,6 @@ import "./ProjectRegistry.sol";
   mint, burn prices
 */
 
-//FIGURE OUT HOW TO INTEGRATE CONTINUOUS TOKEN HERE
-
 contract TokenHolderRegistry{
 
 //state variables
@@ -33,11 +31,6 @@ contract TokenHolderRegistry{
   uint256 public costPerToken = 0;
 
   uint256 public poolBalance;   //in Wei
-
-  uint8 decimals;
-  string symbol;
-  string name;
-
 
 //events
 
@@ -114,13 +107,15 @@ event LogCostOfTokenUpdate(uint256 newCost);
   }
 
   function burn(uint256 _amountToBurn) returns (bool) {
-      if(_amountToBurn > 0 && balances[msg.sender] >= _amountToBurn) {
+      if(_amountToBurn > 0 && (balances[msg.sender].freeTokenBalance) >= _amountToBurn) {
           //CHECK HAS FREE TOKENS
           //determine how much you can leave with.
           uint256 reward = _amountToBurn * poolBalance/totalCapitalTokenSupply; //rounding?
           msg.sender.transfer(reward);
           balances[msg.sender].totalTokenBalance -= _amountToBurn;
+          balances[msg.sender].freeTokenBalance -= _amountToBurn;
           totalCapitalTokenSupply -= _amountToBurn;
+          totalFreeCapitalTokenSupply -= _amountToBurn;
           updateMintingPrice(totalCapitalTokenSupply);
           LogWithdraw(_amountToBurn, reward);
           return true;
@@ -130,9 +125,12 @@ event LogCostOfTokenUpdate(uint256 newCost);
   }
 
   function transfer(address _to, uint256 _amountToTransfer) returns (bool) {
-    if(_amountToTransfer > 0 && balances[msg.sender] >= _amountToTransfer) {
-      balances[msg.sender] -= _amountToTransfer;
-      balances[_to] += _amountToTransfer;
+    if(_amountToTransfer > 0 && balances[msg.sender].freeTokenBalance >= _amountToTransfer) {
+      balances[msg.sender].totalTokenBalance -= _amountToTransfer;
+      balances[msg.sender].freeTokenBalance -= _amountToTransfer;
+      balances[_to].totalTokenBalance += _amountToTransfer;
+      balances[_to].freeTokenBalance += _amountToTransfer;
+
     }
     else {
       revert();
