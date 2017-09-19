@@ -100,16 +100,6 @@ contract Project{
 
 //functions
 
-  //CHECK HAS TOKENS
-  function checkHasFreeWorkerTokens() returns (bool) {
-    //references worker registry
-
-  }
-
-  function checkHasFreeCapitalTokens() returns (bool) {
-
-  }
-
   //PROPOSED PROJECT - STAKING FUNCTIONALITY
   function checkStaked() onlyInState(State.Proposed) internal returns (bool) {   //if staked, changes state and breaks
     if (totalCapitalStaked >= capitalCost && totalWorkerStaked >= workerCost)
@@ -129,7 +119,6 @@ contract Project{
       TokenHolderRegistry(tokenHolderRegistry).refundProposer(tempaddress, tempvalue);
     }
   }
-
 
   function stakeCapitalToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
     if (checkStaked() == false &&
