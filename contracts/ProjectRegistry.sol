@@ -15,13 +15,9 @@ contract ProjectRegistry{
   address tokenHolderRegistry;    //to be able to call the contract at this address
   address workerRegistry;
 
-  struct Proposer {
-    address proposerAddress;
-    uint proposerStake;
-  }
-
   mapping(address => bool) public projectExists;
-  mapping(address => Proposer) public proposers;
+  mapping(address => address) public proposers;
+  mapping(address => uint) public proposerStakes;
   bool initialized = false;
 
   uint proposePercent = 20;
@@ -50,8 +46,8 @@ contract ProjectRegistry{
                                      );
     address projectAddress = address(newProject);
     projectExists[projectAddress] = true;
-    proposers[projectAddress].proposerAddress = msg.sender;
-    proposers[projectAddress].proposerStake = proposalProportion;
+    proposers[projectAddress] = msg.sender;
+    proposerStakes[projectAddress] = proposalProportion;
   }
 
 }

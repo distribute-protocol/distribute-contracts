@@ -88,7 +88,6 @@ contract Project{
 
 //constructor
   function Project(uint _cost, uint _projectDeadline) {
-    updateCosts();
     //check has percentage of tokens to stake
     //move tokens from free to proposed in tokenholder contract
     projectRegistry = msg.sender;     //the project registry calls this function
@@ -101,46 +100,46 @@ contract Project{
 
 //functions
 
-  //EXCHANGE RATE FUNCTIONS
-  function updateCosts() {
-    TokenHolderRegistry(tokenHolderRegistry).updateMintingPrice(TokenHolderRegistry(tokenHolderRegistry).totalCapitalTokenSupply());
-  }
-
   //CHECK HAS TOKENS
-  function checkHasFreeWorkerTokens() {
+  function checkHasFreeWorkerTokens() returns (bool) {
     //references worker registry
 
   }
 
-  function checkHasFreeCapitalTokens() {
+  function checkHasFreeCapitalTokens() returns (bool) {
 
   }
 
   //PROPOSED PROJECT - STAKING FUNCTIONALITY
-  function checkStaked() onlyInState(State.Proposed) internal {   //if staked, changes state and breaks
-    updateCosts();
+  function checkStaked() onlyInState(State.Proposed) internal returns (bool) {   //if staked, changes state and breaks
     if (totalCapitalStaked >= capitalCost && totalWorkerStaked >= workerCost)
       {
         projectState = State.Active;
+        return true;
       }
+    else {
+      return false;
+    }
   }
 
-  function refundProposer() {
-    if (State != Proposed && ProjectRegistry(projectRegistry).proposers[this] = msg.sender) {   //make sure out of proposed state & msg.sender is the proposer
-      TokenHolderRegistry(tokenHolderRegistry).totalFreeCapitalTokenSupply += ProjectRegistry(projectRegistry).proposers[this].proposerStake;
-      TokenHolderRegistry(tokenHolderRegistry).balances[msg.sender].freeTokenBalance += ProjectRegistry(projectRegistry).proposers[this].proposerStake;
+  function refundProposer() {   //called by proposer to return
+    if (projectState != State.Proposed && ProjectRegistry(projectRegistry).proposers[this] == msg.sender) {   //make sure out of proposed state & msg.sender is the proposer
+      TokenHolderRegistry(tokenHolderRegistry).totalFreeCapitalTokenSupply += ProjectRegistry(projectRegistry).proposerStakes[this];
+      TokenHolderRegistry(tokenHolderRegistry).balances[msg.sender].freeTokenBalance += ProjectRegistry(projectRegistry).proposerStakes[this];
     }
   }
 
 
   function stakeCapitalToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
-    checkStaked();    //in case exchange rate has changed since last check
+    if (checkStaked() == true) {
+    //in case exchange rate has changed since last check
     //make sure has tokens to stake (reference TokenHolder contract)
     //move tokens from free to staked in TokenHolder contract
-    if((stakedCapitalBalances[msg.sender] + _tokens) > stakedCapitalBalances[msg.sender]) {
-      stakedCapitalBalances[msg.sender] += _tokens;
+      if((stakedCapitalBalances[msg.sender] + _tokens) > stakedCapitalBalances[msg.sender]) {
+        stakedCapitalBalances[msg.sender] += _tokens;
+      }
+      checkStaked();
     }
-    checkStaked();
   }
 
   function unstakeCapitalToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
