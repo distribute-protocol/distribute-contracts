@@ -125,9 +125,23 @@ event LogCostOfTokenUpdate(uint256 newCost);
       }
   }
 
-  function refundProposer(address _proposer, uint _value) {
-    balances[_proposer].freeTokenBalance += _value;
-    totalFreeCapitalTokenSupply += _value;
+  function refundProposer(address _proposer, uint _tokens) {
+    balances[_proposer].freeTokenBalance += _tokens;
+    totalFreeCapitalTokenSupply += _tokens;
+  }
+
+  function stakeToken(address _staker, uint _tokens) {
+    if (balances[_staker].freeTokenBalance > _tokens) {
+      balances[_staker].freeTokenBalance -= _tokens;
+      totalFreeCapitalTokenSupply -= _tokens;
+    }
+  }
+
+  function unStakeToken(address _staker, uint _tokens) {
+    if (balances[_staker].totalTokenBalance - balances[_staker].freeTokenBalance < _tokens) {
+      balances[_staker].freeTokenBalance += _tokens;
+      totalFreeCapitalTokenSupply += _tokens;
+    }
   }
 
   function transfer(address _to, uint256 _amountToTransfer) returns (bool) {

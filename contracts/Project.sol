@@ -124,7 +124,7 @@ contract Project{
 
   function refundProposer() {   //called by proposer to return
     if (projectState != State.Proposed && sha3(ProjectRegistry(projectRegistry).proposers(address(this))) == sha3(msg.sender)) {   //make sure out of proposed state & msg.sender is the proposer
-      address tempaddress = ProjectRegistry(projectRegistry).proposers(address(this));    //proposer's address
+      address tempaddress = msg.sender;    //proposer's address
       uint tempvalue = ProjectRegistry(projectRegistry).proposerStakes(address(this));    //proposer's stake
       TokenHolderRegistry(tokenHolderRegistry).refundProposer(tempaddress, tempvalue);
     }
@@ -132,23 +132,21 @@ contract Project{
 
 
   function stakeCapitalToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
-    if (checkStaked() == true) {
-    //in case exchange rate has changed since last check
-    //make sure has tokens to stake (reference TokenHolder contract)
-    //move tokens from free to staked in TokenHolder contract
-      if((stakedCapitalBalances[msg.sender] + _tokens) > stakedCapitalBalances[msg.sender]) {
-        stakedCapitalBalances[msg.sender] += _tokens;
-      }
-      checkStaked();
+    if (checkStaked() == false &&
+         stakedCapitalBalances[msg.sender] + _tokens > stakedCapitalBalances[msg.sender]) {
+           stakedCapitalBalances[msg.sender] += _tokens;
+           TokenHolderRegistry(tokenHolderRegistry).stakeToken(msg.sender, _tokens);
+           checkStaked();
     }
   }
 
-  function unstakeCapitalToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
-    checkStaked();
-    //make sure has tokens to stake (reference TokenHolder contract)
-    //move tokens from staked to free in TokenHolder contract
-    if(stakedCapitalBalances[msg.sender] - _tokens < stakedCapitalBalances[msg.sender]) {
-      stakedCapitalBalances[msg.sender] -= _tokens;
+  function unStakeCapitalToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
+    if (checkStaked() == false &&
+         stakedCapitalBalances[msg.sender] - _tokens < stakedCapitalBalances[msg.sender] &&   //check overflow
+         stakedCapitalBalances[msg.sender] - _tokens >= 0) {    //make sure has the tokens staked to unstake
+           stakedCapitalBalances[msg.sender] -= _tokens;
+           TokenHolderRegistry(tokenHolderRegistry).unStakeToken(msg.sender, _tokens);
+           checkStaked();
     }
   }
 
@@ -230,5 +228,4 @@ contract Project{
     //check for overflow
     //update votedAffirmative or votedNegative mapping
   }
-
 }
