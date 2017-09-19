@@ -21,6 +21,7 @@ contract TokenHolderRegistry{
 
   address projectRegistry;
   mapping (address => TokenHolder) public balances;
+
   uint public totalCapitalTokenSupply = 0;               //total supply of capital tokens in all states
   uint public totalFreeCapitalTokenSupply = 0;           //total supply of free capital tokens (not staked, validated, or voted)
 
@@ -67,7 +68,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
     return s;
   }
 
-  function updateMintingPrice(uint256 _supply) internal {    //minting price
+  function updateMintingPrice(uint256 _supply) {    //minting price
       costPerToken = baseCost+fracExp(baseCost, 618046, _supply, 2)+baseCost*_supply/1000;
       LogCostOfTokenUpdate(costPerToken);
   }

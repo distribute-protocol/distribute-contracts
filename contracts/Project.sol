@@ -71,13 +71,8 @@ contract Project{
     _;
   }
 
-  modifier onlyAfter(uint _time){
-    require(now > _time);
-    _;
-  }
-
-  modifier onlyBefore(uint _time) {
-    require(now < _time);
+  modifier onlyBefore(uint time) {
+    require(now < time);
     _;
   }
 
@@ -108,17 +103,16 @@ contract Project{
 
   //EXCHANGE RATE FUNCTIONS
   function updateCosts() {
-    //updates capitalCost & workerCost
-    //references mintPrice and burnPrice of TokenHolderRegistry contract
+    TokenHolderRegistry(tokenHolderRegistry).updateMintingPrice(TokenHolderRegistry(tokenHolderRegistry).totalCapitalTokenSupply());
   }
 
   //CHECK HAS TOKENS
   function checkHasFreeWorkerTokens() {
     //references worker registry
+
   }
 
   function checkHasFreeCapitalTokens() {
-    //references token holder registry
 
   }
 
@@ -128,12 +122,14 @@ contract Project{
     if (totalCapitalStaked >= capitalCost && totalWorkerStaked >= workerCost)
       {
         projectState = State.Active;
-        refundProposer();
       }
   }
 
   function refundProposer() {
-
+    if (State != Proposed && ProjectRegistry(projectRegistry).proposers[this] = msg.sender) {   //make sure out of proposed state & msg.sender is the proposer
+      TokenHolderRegistry(tokenHolderRegistry).totalFreeCapitalTokenSupply += ProjectRegistry(projectRegistry).proposers[this].proposerStake;
+      TokenHolderRegistry(tokenHolderRegistry).balances[msg.sender].freeTokenBalance += ProjectRegistry(projectRegistry).proposers[this].proposerStake;
+    }
   }
 
 
@@ -187,9 +183,21 @@ contract Project{
     }
   }
 
-  function addWorker(address _workerAddress) onlyInState(State.Active) {
+  function addWorker(address _workerAddress) onlyInState(State.Active) onlyBefore(projectDeadline) {
     //need to restrict who can call this
     workers.push(Worker(_workerAddress, false));
+  }
+
+  function updateWorker() onlyInState(State.Active) returns (bool) {
+    for (uint i=0; i<workers.length; i++) {
+      if(workers[i].workerAddress == msg.sender) {
+        workers[i].taskComplete = true;
+        return true;
+      }
+      else {
+      return false;
+      }
+    }
   }
 
   //COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
@@ -216,7 +224,7 @@ contract Project{
     }
   }
 
-  function vote(uint _tokens, bool _validationState, bool _isworker) {
+  function vote(uint _tokens, bool _validationState, bool _isworker) onlyBefore(projectDeadline) {
     //check has the free tokens depending on bool _isworker
     //move tokens from free to vote in other contract
     //check for overflow

@@ -15,9 +15,16 @@ contract ProjectRegistry{
   address tokenHolderRegistry;    //to be able to call the contract at this address
   address workerRegistry;
 
+  struct Proposer {
+    address proposerAddress;
+    uint proposerStake;
+  }
+
   mapping(address => bool) public projectExists;
-  mapping(address => address) proposers;
+  mapping(address => Proposer) public proposers;
   bool initialized = false;
+
+  uint proposePercent = 20;
 
 //events
 
@@ -34,14 +41,17 @@ contract ProjectRegistry{
 
 
 //functions
-  function proposeProject(uint _cost, uint _projectDeadline) {
+
+  function proposeProject(uint _cost, uint _projectDeadline) {    //cost in tokens
+    uint proposalProportion = _cost - 1;    //for now, needs to be division in the future
     //check to make sure msg.sender has enough tokens
     Project newProject = new Project(_cost,
                                      _projectDeadline
                                      );
     address projectAddress = address(newProject);
     projectExists[projectAddress] = true;
-    proposers[projectAddress] = msg.sender;
+    proposers[projectAddress].proposerAddress = msg.sender;
+    proposers[projectAddress].proposerStake = proposalProportion;
   }
 
 }
