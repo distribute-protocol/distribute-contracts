@@ -31,9 +31,6 @@ contract WorkerRegistry{
 //constructor
 function WorkerRegistry(address _projectRegistry){
   projectRegistry = _projectRegistry;
-  balances[_firstWorker] = Worker(1, 0, 0, 0);
-  totalWorkerTokenSupply = 1;
-  totalFreeWorkerTokenSupply = 1;
   }
 
 //functions
