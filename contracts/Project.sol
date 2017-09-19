@@ -123,8 +123,8 @@ contract Project{
   function stakeCapitalToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
     if (checkStaked() == false &&
          stakedCapitalBalances[msg.sender] + _tokens > stakedCapitalBalances[msg.sender]) {
-           stakedCapitalBalances[msg.sender] += _tokens;
            TokenHolderRegistry(tokenHolderRegistry).stakeToken(msg.sender, _tokens);
+           stakedCapitalBalances[msg.sender] += _tokens;
            checkStaked();
     }
   }
@@ -135,22 +135,25 @@ contract Project{
          stakedCapitalBalances[msg.sender] - _tokens >= 0) {    //make sure has the tokens staked to unstake
            stakedCapitalBalances[msg.sender] -= _tokens;
            TokenHolderRegistry(tokenHolderRegistry).unStakeToken(msg.sender, _tokens);
-           checkStaked();
     }
   }
 
   function stakeWorkerToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
-    checkStaked();
-    //make sure has tokens to stake (reference Worker contract)
-    //move tokens from free to staked in Worker contract
-    if((stakedWorkerBalances[msg.sender] + _tokens) > stakedWorkerBalances[msg.sender]) {
-      stakedWorkerBalances[msg.sender] += _tokens;
-    }
-    checkStaked();
+    if (checkStaked() == false &&
+        stakedWorkerBalances[msg.sender] + _tokens > stakedWorkerBalances[msg.sender]) {
+          WorkerRegistry(workerRegistry).stakeToken(msg.sender, _tokens);
+          stakedWorkerBalances[msg.sender] += _tokens;
+          checkStaked();
+        }
   }
 
   function unstakeWorkerToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
-    checkStaked();
+    if (checkStaked() == false &&
+        stakedWorkerBalances[msg.sender] - _tokens < stakedWorkerBalances[msg.sender] &&
+        stakedWorkerBalances[msg.sender] - _tokens >= 0) {
+          WorkerRegistry(workerRegistry).unStakeToken(msg.sender, _tokens);
+          stakedWorkerBalances[msg.sender] -= _tokens;
+        }
     //make sure has tokens to unstake (reference Worker contract)
     //move tokens from staked to free in Worker contract
     if(stakedWorkerBalances[msg.sender] - _tokens < stakedWorkerBalances[msg.sender]) {
