@@ -123,9 +123,10 @@ contract Project{
   }
 
   function refundProposer() {   //called by proposer to return
-    if (projectState != State.Proposed && ProjectRegistry(projectRegistry).proposers[this] == msg.sender) {   //make sure out of proposed state & msg.sender is the proposer
-      TokenHolderRegistry(tokenHolderRegistry).totalFreeCapitalTokenSupply += ProjectRegistry(projectRegistry).proposerStakes[this];
-      TokenHolderRegistry(tokenHolderRegistry).balances[msg.sender].freeTokenBalance += ProjectRegistry(projectRegistry).proposerStakes[this];
+    if (projectState != State.Proposed && sha3(ProjectRegistry(projectRegistry).proposers(address(this))) == sha3(msg.sender)) {   //make sure out of proposed state & msg.sender is the proposer
+      address tempaddress = ProjectRegistry(projectRegistry).proposers(address(this));    //proposer's address
+      uint tempvalue = ProjectRegistry(projectRegistry).proposerStakes(address(this));    //proposer's stake
+      TokenHolderRegistry(tokenHolderRegistry).refundProposer(tempaddress, tempvalue);
     }
   }
 

@@ -125,6 +125,11 @@ event LogCostOfTokenUpdate(uint256 newCost);
       }
   }
 
+  function refundProposer(address _proposer, uint _value) {
+    balances[_proposer].freeTokenBalance += _value;
+    totalFreeCapitalTokenSupply += _value;
+  }
+
   function transfer(address _to, uint256 _amountToTransfer) returns (bool) {
     if(_amountToTransfer > 0 && balances[msg.sender].freeTokenBalance >= _amountToTransfer) {
       balances[msg.sender].totalTokenBalance -= _amountToTransfer;
