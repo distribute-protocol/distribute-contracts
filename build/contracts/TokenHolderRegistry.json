@@ -2,27 +2,6 @@
   "contract_name": "TokenHolderRegistry",
   "abi": [
     {
-      "constant": false,
-      "inputs": [],
-      "name": "mint",
-      "outputs": [],
-      "payable": false,
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "_to",
-          "type": "address"
-        }
-      ],
-      "name": "transfer",
-      "outputs": [],
-      "payable": false,
-      "type": "function"
-    },
-    {
       "constant": true,
       "inputs": [
         {
@@ -37,19 +16,20 @@
           "type": "uint256"
         },
         {
-          "name": "proposedTokenBalance",
+          "name": "freeTokenBalance",
           "type": "uint256"
-        },
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "costPerToken",
+      "outputs": [
         {
-          "name": "stakedTokenBalance",
-          "type": "uint256"
-        },
-        {
-          "name": "validatedTokenBalance",
-          "type": "uint256"
-        },
-        {
-          "name": "votedTokenBalance",
+          "name": "",
           "type": "uint256"
         }
       ],
@@ -58,8 +38,31 @@
     },
     {
       "constant": false,
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "_amountToBurn",
+          "type": "uint256"
+        }
+      ],
       "name": "burn",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_supply",
+          "type": "uint256"
+        }
+      ],
+      "name": "updateMintingPrice",
       "outputs": [],
       "payable": false,
       "type": "function"
@@ -79,9 +82,88 @@
     },
     {
       "constant": false,
-      "inputs": [],
-      "name": "mintPrice",
+      "inputs": [
+        {
+          "name": "_staker",
+          "type": "address"
+        },
+        {
+          "name": "_tokens",
+          "type": "uint256"
+        }
+      ],
+      "name": "unstakeToken",
       "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "poolBalance",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_amountToMint",
+          "type": "uint256"
+        }
+      ],
+      "name": "mint",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": true,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_proposer",
+          "type": "address"
+        },
+        {
+          "name": "_tokens",
+          "type": "uint256"
+        }
+      ],
+      "name": "refundProposer",
+      "outputs": [],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_to",
+          "type": "address"
+        },
+        {
+          "name": "_amountToTransfer",
+          "type": "uint256"
+        }
+      ],
+      "name": "transfer",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
       "payable": false,
       "type": "function"
     },
@@ -99,21 +181,519 @@
       "type": "function"
     },
     {
-      "constant": false,
+      "constant": true,
       "inputs": [],
-      "name": "burnPrice",
+      "name": "MAX_UINT",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_staker",
+          "type": "address"
+        },
+        {
+          "name": "_tokens",
+          "type": "uint256"
+        }
+      ],
+      "name": "stakeToken",
       "outputs": [],
       "payable": false,
       "type": "function"
     },
     {
-      "inputs": [],
+      "inputs": [
+        {
+          "name": "_projectRegistry",
+          "type": "address"
+        }
+      ],
       "payable": false,
       "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "amountMinted",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "totalCost",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogMint",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "amountWithdrawn",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "reward",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogWithdraw",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "newCost",
+          "type": "uint256"
+        }
+      ],
+      "name": "LogCostOfTokenUpdate",
+      "type": "event"
     }
   ],
-  "unlinked_binary": "0x6060604052341561000c57fe5b5b5b5b6101db8061001e6000396000f300606060405236156100725763ffffffff60e060020a6000350416631249c58b81146100745780631a6952301461008657806327e235e3146100a457806344df8e70146100745780635eab7235146100fd5780636817c76c14610074578063b0d9e70c14610131578063bde6a5a914610074575bfe5b341561007c57fe5b610084610165565b005b341561008e57fe5b610084600160a060020a0360043516610168565b005b34156100ac57fe5b6100c0600160a060020a036004351661016c565b6040805195865260208601949094528484019290925260608401526080830152519081900360a00190f35b341561007c57fe5b610084610165565b005b341561010557fe5b61010d61019d565b60408051918252519081900360200190f35b341561007c57fe5b610084610165565b005b341561013957fe5b61010d6101a6565b60408051918252519081900360200190f35b341561007c57fe5b610084610165565b005b5b565b5b50565b6001602081905260009182526040909120805491810154600282015460038301546004909301549192909185565b5b565b60025481565b5b565b60035481565b5b5600a165627a7a7230582086589b0d1d9c8b68193a0cdd25df8ef1ee2193490ab218156773c8aa96faff990029",
-  "networks": {},
+  "unlinked_binary": "0x606060405260006002556000600355655af3107a40006004556000600555341561002557fe5b60405160208061088483398101604052515b61004e60006401000000006103ab61007082021704565b60008054600160a060020a031916600160a060020a0383161790555b50610137565b6004546103e89082025b046100a060045462096e3e8460026100e0640100000000026106bb176401000000009004565b6004540101600581905560408051918252517f6107240b152f88c02cc96226ebe928f44aa7767097ec63deb754607d21162c9d9181900360200190a15b50565b600080600180825b858110156101275780880a82848b0281151561010057fe5b0481151561010a57fe5b04840193508087038302925080600101820291505b6001016100e8565b8394505b50505050949350505050565b61073e806101466000396000f300606060405236156100a95763ffffffff60e060020a60003504166327e235e381146100ab5780633ba523c7146100e057806342966c68146101025780635788ff36146101295780635eab72351461013e5780636c82a7261461016057806396365d4414610181578063a0712d68146101a3578063a8af9ae7146101c2578063a9059cbb146101e3578063b0d9e70c14610216578063e5b5019a14610238578063f739ed9e1461025a575bfe5b34156100b357fe5b6100c7600160a060020a036004351661027b565b6040805192835260208301919091528051918290030190f35b34156100e857fe5b6100f0610294565b60408051918252519081900360200190f35b341561010a57fe5b61011560043561029a565b604080519115158252519081900360200190f35b341561013157fe5b61013c6004356103ab565b005b341561014657fe5b6100f0610408565b60408051918252519081900360200190f35b341561016857fe5b61013c600160a060020a036004351660243561040e565b005b341561018957fe5b6100f0610468565b60408051918252519081900360200190f35b61011560043561046e565b604080519115158252519081900360200190f35b34156101ca57fe5b61013c600160a060020a03600435166024356105a2565b005b34156101eb57fe5b610115600160a060020a03600435166024356105d1565b604080519115158252519081900360200190f35b341561021e57fe5b6100f0610658565b60408051918252519081900360200190f35b341561024057fe5b6100f061065e565b60408051918252519081900360200190f35b341561026257fe5b61013c600160a060020a0360043516602435610664565b005b6001602081905260009182526040909120805491015482565b60055481565b600060006000831180156102cb5750600160a060020a03331660009081526001602081905260409091200154839010155b1561039e5760025460065484028115156102e157fe5b6040519190049150600160a060020a0333169082156108fc029083906000818181858888f19350505050151561031357fe5b600160a060020a0333166000908152600160208190526040909120805485900381550180548490039055600280548490039081905560038054859003905561035a906103ab565b604080518481526020810183905281517f210405eb88ac7589aa9de0a6e36b9c9d3cd6e4061b74363d250a77afe3c6efb7929181900390910190a1600191506103a4565b60006000fd5b5b50919050565b6004546103e89082025b046103c860045462096e3e8460026106bb565b6004540101600581905560408051918252517f6107240b152f88c02cc96226ebe928f44aa7767097ec63deb754607d21162c9d9181900360200190a15b50565b60025481565b600160a060020a0382166000908152600160208190526040909120908101549054038190101561046357600160a060020a03821660009081526001602081905260409091200180548201905560038054820190555b5b5050565b60065481565b600060006000600060008511801561048c5750600254856000190310155b80156104985750600034115b1561039e575060009150819050805b848110156104e85760055434908301116104da57600554820191506001830192506104d581600254016103ab565b6104df565b6104e8565b5b6001016104a7565b3482101561051f57604051600160a060020a033316903484900380156108fc02916000818181858888f19350505050151561051f57fe5b5b6002805484019055600160a060020a0333166000908152600160209081526040918290208054860190556006805485019055815185815290810184905281517fe7360c0fa1984a85874443100f5b25dd4f84192659660eb199f6c96e11defbcb929181900390910190a160019350610599565b60006000fd5b5b505050919050565b600160a060020a03821660009081526001602081905260409091200180548201905560038054820190555b5050565b60006000821180156106005750600160a060020a03331660009081526001602081905260409091200154829010155b1561039e57600160a060020a03338116600090815260016020819052604080832080548790038155820180548790039055928616825291902080548401815501805483019055610651565b60006000fd5b5b92915050565b60035481565b60001981565b600160a060020a038216600090815260016020819052604090912001548190111561046357600160a060020a038216600090815260016020819052604090912001805482900390556003805482900390555b5b5050565b600080600180825b858110156107025780880a82848b028115156106db57fe5b048115156106e557fe5b04840193508087038302925080600101820291505b6001016106c3565b8394505b505050509493505050505600a165627a7a723058202539914441c9ee98c451b70b96324c6a26da5ec64b9c5f132e77a4c533dff9290029",
+  "networks": {
+    "1505918117215": {
+      "events": {
+        "0xe7360c0fa1984a85874443100f5b25dd4f84192659660eb199f6c96e11defbcb": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountMinted",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "totalCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogMint",
+          "type": "event"
+        },
+        "0x210405eb88ac7589aa9de0a6e36b9c9d3cd6e4061b74363d250a77afe3c6efb7": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountWithdrawn",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "reward",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogWithdraw",
+          "type": "event"
+        },
+        "0x6107240b152f88c02cc96226ebe928f44aa7767097ec63deb754607d21162c9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "newCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogCostOfTokenUpdate",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x24393c64c316ec9b22713e6c3cfb1e135fbae4a7",
+      "updated_at": 1505918247516
+    },
+    "1505932876314": {
+      "events": {
+        "0xe7360c0fa1984a85874443100f5b25dd4f84192659660eb199f6c96e11defbcb": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountMinted",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "totalCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogMint",
+          "type": "event"
+        },
+        "0x210405eb88ac7589aa9de0a6e36b9c9d3cd6e4061b74363d250a77afe3c6efb7": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountWithdrawn",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "reward",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogWithdraw",
+          "type": "event"
+        },
+        "0x6107240b152f88c02cc96226ebe928f44aa7767097ec63deb754607d21162c9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "newCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogCostOfTokenUpdate",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x70511da5aecc0964436806bea03176001fe34750",
+      "updated_at": 1505932885130
+    },
+    "1505932902709": {
+      "events": {
+        "0xe7360c0fa1984a85874443100f5b25dd4f84192659660eb199f6c96e11defbcb": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountMinted",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "totalCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogMint",
+          "type": "event"
+        },
+        "0x210405eb88ac7589aa9de0a6e36b9c9d3cd6e4061b74363d250a77afe3c6efb7": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountWithdrawn",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "reward",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogWithdraw",
+          "type": "event"
+        },
+        "0x6107240b152f88c02cc96226ebe928f44aa7767097ec63deb754607d21162c9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "newCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogCostOfTokenUpdate",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x09648f4b8163f73facf266ab42e076c3aa113412",
+      "updated_at": 1505932906766
+    },
+    "1505933599735": {
+      "events": {
+        "0xe7360c0fa1984a85874443100f5b25dd4f84192659660eb199f6c96e11defbcb": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountMinted",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "totalCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogMint",
+          "type": "event"
+        },
+        "0x210405eb88ac7589aa9de0a6e36b9c9d3cd6e4061b74363d250a77afe3c6efb7": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountWithdrawn",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "reward",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogWithdraw",
+          "type": "event"
+        },
+        "0x6107240b152f88c02cc96226ebe928f44aa7767097ec63deb754607d21162c9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "newCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogCostOfTokenUpdate",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xc565569e9f94d2e4ee80d62350eae7472c2cbce1",
+      "updated_at": 1505933603390
+    },
+    "1505933634636": {
+      "events": {
+        "0xe7360c0fa1984a85874443100f5b25dd4f84192659660eb199f6c96e11defbcb": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountMinted",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "totalCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogMint",
+          "type": "event"
+        },
+        "0x210405eb88ac7589aa9de0a6e36b9c9d3cd6e4061b74363d250a77afe3c6efb7": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountWithdrawn",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "reward",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogWithdraw",
+          "type": "event"
+        },
+        "0x6107240b152f88c02cc96226ebe928f44aa7767097ec63deb754607d21162c9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "newCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogCostOfTokenUpdate",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xf8534bdff8f7aa56268a9ebee1b181878a1c2222",
+      "updated_at": 1505933637960
+    },
+    "1505933815370": {
+      "events": {
+        "0xe7360c0fa1984a85874443100f5b25dd4f84192659660eb199f6c96e11defbcb": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountMinted",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "totalCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogMint",
+          "type": "event"
+        },
+        "0x210405eb88ac7589aa9de0a6e36b9c9d3cd6e4061b74363d250a77afe3c6efb7": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountWithdrawn",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "reward",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogWithdraw",
+          "type": "event"
+        },
+        "0x6107240b152f88c02cc96226ebe928f44aa7767097ec63deb754607d21162c9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "newCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogCostOfTokenUpdate",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xca9fde764984428f8b21b9ff5d56cf7a6ffe6469",
+      "updated_at": 1505933823919
+    },
+    "1505934089879": {
+      "events": {
+        "0xe7360c0fa1984a85874443100f5b25dd4f84192659660eb199f6c96e11defbcb": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountMinted",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "totalCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogMint",
+          "type": "event"
+        },
+        "0x210405eb88ac7589aa9de0a6e36b9c9d3cd6e4061b74363d250a77afe3c6efb7": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountWithdrawn",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "reward",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogWithdraw",
+          "type": "event"
+        },
+        "0x6107240b152f88c02cc96226ebe928f44aa7767097ec63deb754607d21162c9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "newCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogCostOfTokenUpdate",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x93fbf4896a1402869b22f4381cae0ecb2e5ca911",
+      "updated_at": 1505934095124
+    },
+    "1505934332853": {
+      "events": {
+        "0xe7360c0fa1984a85874443100f5b25dd4f84192659660eb199f6c96e11defbcb": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountMinted",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "totalCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogMint",
+          "type": "event"
+        },
+        "0x210405eb88ac7589aa9de0a6e36b9c9d3cd6e4061b74363d250a77afe3c6efb7": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "amountWithdrawn",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "name": "reward",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogWithdraw",
+          "type": "event"
+        },
+        "0x6107240b152f88c02cc96226ebe928f44aa7767097ec63deb754607d21162c9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "name": "newCost",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogCostOfTokenUpdate",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xa267b812e4161f3842e4863f39ac83654909257c",
+      "updated_at": 1505934644838
+    }
+  },
   "schema_version": "0.0.5",
-  "updated_at": 1505748733128
+  "updated_at": 1505934644838
 }

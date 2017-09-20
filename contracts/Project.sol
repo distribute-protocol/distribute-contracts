@@ -221,10 +221,12 @@ contract Project{
     }
   }
 
+/*
   function vote(uint _tokens, bool _validationState, bool _isworker) onlyBefore(projectDeadline) {
     //check has the free tokens depending on bool _isworker
     //move tokens from free to vote in other contract
     //check for overflow
     //update votedAffirmative or votedNegative mapping
   }
+*/
 }

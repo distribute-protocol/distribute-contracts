@@ -3,25 +3,21 @@ var ProjectRegistry = artifacts.require("./ProjectRegistry.sol");
 var TokenHolderRegistry = artifacts.require("./TokenHolderRegistry.sol");
 var WorkerRegistry = artifacts.require("./WorkerRegistry.sol");
 
-//var initialBalance = accounts.length*10
-//console.log("initBalance" + initialBalance)
-var accounts = web3.eth.accounts
-
-
-module.exports = function(deployer) {
-  deployer.deploy(ConvertLib);
-  deployer.link(ConvertLib, MetaCoin);
-  deployer.deploy(MetaCoin);
-};
-
+/*
+  deploys and connects contracts
+*/
 
 module.exports = function(deployer) {
     deployer.then(function(){
         return deployer.deploy(ProjectRegistry)
-    }).then(function(instance){
-        return deployer.deploy(TokenHolderRegistry, ProjectRegistry.address, accounts[0], initialBalance)
-    }).then(function(){
+      }).then(function(instance){
+        return deployer.deploy(TokenHolderRegistry, ProjectRegistry.address)
+      }).then(function(instance){
+        return deployer.deploy(WorkerRegistry, ProjectRegistry.address)
+      }).then(function(){
         return ProjectRegistry.deployed()
-    }).then(function(instance){
-        return instance.init(UserRegistry.address)
+      }).then(function(instance){
+        console.log('success 2')   //prints the contract to the console
+        return instance.init(TokenHolderRegistry.address, WorkerRegistry.address)
     })
+};
