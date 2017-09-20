@@ -128,6 +128,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
   function refundProposer(address _proposer, uint _tokens) {
     balances[_proposer].freeTokenBalance += _tokens;
     totalFreeCapitalTokenSupply += _tokens;
+    //implement pool reward
   }
 
   function stakeToken(address _staker, uint _tokens) {
@@ -137,7 +138,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
     }
   }
 
-  function unStakeToken(address _staker, uint _tokens) {
+  function unstakeToken(address _staker, uint _tokens) {
     if (balances[_staker].totalTokenBalance - balances[_staker].freeTokenBalance < _tokens) {
       balances[_staker].freeTokenBalance += _tokens;
       totalFreeCapitalTokenSupply += _tokens;

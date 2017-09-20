@@ -42,6 +42,7 @@ contract Project{
   //keep track of validating complete project
   mapping (address => uint) validatedAffirmative;
   mapping (address => uint) validatedNegative;
+  uint validationStart;
   uint validationPeriod;
 
   //needed to keep track of voting complete project
@@ -134,7 +135,7 @@ contract Project{
          stakedCapitalBalances[msg.sender] - _tokens < stakedCapitalBalances[msg.sender] &&   //check overflow
          stakedCapitalBalances[msg.sender] - _tokens >= 0) {    //make sure has the tokens staked to unstake
            stakedCapitalBalances[msg.sender] -= _tokens;
-           TokenHolderRegistry(tokenHolderRegistry).unStakeToken(msg.sender, _tokens);
+           TokenHolderRegistry(tokenHolderRegistry).unstakeToken(msg.sender, _tokens);
     }
   }
 
@@ -151,14 +152,9 @@ contract Project{
     if (checkStaked() == false &&
         stakedWorkerBalances[msg.sender] - _tokens < stakedWorkerBalances[msg.sender] &&
         stakedWorkerBalances[msg.sender] - _tokens >= 0) {
-          WorkerRegistry(workerRegistry).unStakeToken(msg.sender, _tokens);
+          WorkerRegistry(workerRegistry).unstakeToken(msg.sender, _tokens);
           stakedWorkerBalances[msg.sender] -= _tokens;
         }
-    //make sure has tokens to unstake (reference Worker contract)
-    //move tokens from staked to free in Worker contract
-    if(stakedWorkerBalances[msg.sender] - _tokens < stakedWorkerBalances[msg.sender]) {
-      stakedWorkerBalances[msg.sender] -= _tokens;
-    }
   }
 
   //ACTIVE PROJECT
@@ -168,6 +164,7 @@ contract Project{
           return false;
         }
         else {
+          validationStart = now;
           return true;
         }
     }
@@ -191,12 +188,22 @@ contract Project{
   }
 
   //COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
-  function checkValidationOver() onlyInState(State.Completed) internal {
-
+  function checkValidationOver() onlyInState(State.Completed) internal returns (bool) {
+    if(validationStart + validationPeriod < now) {
+      return false;
+    }
+    else {
+      return true;
+    }
   }
 
-  function checkVotingOver() onlyInState(State.Completed) internal {
-
+  function checkVotingOver() onlyInState(State.Completed) internal returns (bool) {
+    if (validationStart + validationPeriod + votingPeriod < now) {
+      return false;
+    }
+    else {
+      return true;
+    }
   }
 
   function validate(uint _tokens, bool _validationState) onlyInState(State.Completed) onlyBefore(projectDeadline) {

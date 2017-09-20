@@ -42,7 +42,7 @@ function stakeToken(address _staker, uint _tokens) {
   }
 }
 
-function unStakeToken(address _staker, uint _tokens) {
+function unstakeToken(address _staker, uint _tokens) {
   if (balances[_staker].totalTokenBalance - balances[_staker].freeTokenBalance < _tokens) {
     balances[_staker].freeTokenBalance += _tokens;
     totalFreeWorkerTokenSupply += _tokens;
