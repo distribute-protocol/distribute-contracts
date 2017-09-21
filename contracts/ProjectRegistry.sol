@@ -22,6 +22,9 @@ contract ProjectRegistry{
 
   uint proposePercent = 20;
 
+  address public lastProject;
+
+  uint testInt;
 //events
 
 //modifiers
@@ -38,8 +41,8 @@ contract ProjectRegistry{
 
 //functions
 
-  function returnExists(address _address) returns (bool) {
-    return projectExists[_address];
+  function returnLastProject() returns (bool) {
+    return projectExists[lastProject];
   }
 
   function proposeProject(uint _cost, uint _projectDeadline) returns (address) {    //cost in tokens
@@ -52,7 +55,7 @@ contract ProjectRegistry{
     projectExists[projectAddress] = true;
     proposers[projectAddress] = msg.sender;
     proposerStakes[projectAddress] = proposalProportion;
-    return projectAddress;
+    lastProject = projectAddress;
   }
 
 }

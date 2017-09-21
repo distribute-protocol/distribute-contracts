@@ -1,7 +1,7 @@
-var Project = artifacts.require("./Project.sol");
-var ProjectRegistry = artifacts.require("./ProjectRegistry.sol");
-var TokenHolderRegistry = artifacts.require("./TokenHolderRegistry.sol");
-var WorkerRegistry = artifacts.require("./WorkerRegistry.sol");
+var Project = artifacts.require("./Project");
+var ProjectRegistry = artifacts.require("./ProjectRegistry");
+var TokenHolderRegistry = artifacts.require("./TokenHolderRegistry");
+var WorkerRegistry = artifacts.require("./WorkerRegistry");
 
 /*
   deploys and connects contracts
