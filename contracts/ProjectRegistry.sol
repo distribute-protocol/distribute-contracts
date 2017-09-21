@@ -38,7 +38,11 @@ contract ProjectRegistry{
 
 //functions
 
-  function proposeProject(uint _cost, uint _projectDeadline) {    //cost in tokens
+  function returnExists(address _address) returns (bool) {
+    return projectExists[_address];
+  }
+
+  function proposeProject(uint _cost, uint _projectDeadline) returns (address) {    //cost in tokens
     uint proposalProportion = _cost - 1;    //for now, needs to be division in the future
     //check to make sure msg.sender has enough tokens
     Project newProject = new Project(_cost,
@@ -48,6 +52,7 @@ contract ProjectRegistry{
     projectExists[projectAddress] = true;
     proposers[projectAddress] = msg.sender;
     proposerStakes[projectAddress] = proposalProportion;
+    return projectAddress;
   }
 
 }

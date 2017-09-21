@@ -21,6 +21,7 @@ contract TokenHolderRegistry{
 
   address projectRegistry;
   mapping (address => TokenHolder) public balances;
+  mapping(address => uint) public balancesuint;
 
   uint public totalCapitalTokenSupply = 0;               //total supply of capital tokens in all states
   uint public totalFreeCapitalTokenSupply = 0;           //total supply of free capital tokens (not staked, validated, or voted)
@@ -96,7 +97,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
           }
 
           totalCapitalTokenSupply += totalMinted;
-          balances[msg.sender].totalTokenBalance += totalMinted;
+          balancesuint[msg.sender] += totalMinted;
           poolBalance += totalCost;
 
           LogMint(totalMinted, totalCost);

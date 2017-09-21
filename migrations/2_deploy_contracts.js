@@ -17,7 +17,7 @@ module.exports = function(deployer) {
       }).then(function(){
         return ProjectRegistry.deployed()
       }).then(function(instance){
-        console.log('success 2')   //prints the contract to the console
+        //console.log('success 2')   //prints the contract to the console
         return instance.init(TokenHolderRegistry.address, WorkerRegistry.address)
     })
 };
