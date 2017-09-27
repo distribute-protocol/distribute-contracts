@@ -73,39 +73,36 @@ event LogCostOfTokenUpdate(uint256 newCost);
       LogCostOfTokenUpdate(costPerToken);
   }
 
-  function mint(uint256 _amountToMint) payable returns (bool) {
+  function mint() payable {   //fix this function, make ether payable, not tokens
       //balance of msg.sender increases if paid right amount according to protocol
+      //will mint as many tokens as it can depending on msg.value and MAX_UINT
 
-      if(_amountToMint > 0 && (MAX_UINT - _amountToMint) >= totalCapitalTokenSupply && msg.value > 0) {
-
-          uint256 totalMinted = 0;
-          uint256 totalCost = 0;
-          //for loop to determine cost at each point.
-          for(uint i = 0; i < _amountToMint; i+=1) {
-              if(totalCost + costPerToken <= msg.value) {
-                  totalCost += costPerToken;
-                  totalMinted += 1;
-                  updateMintingPrice((totalCapitalTokenSupply + i));
-              } else {
-                  break;
-              }
-          }
-
-          if(totalCost < msg.value) { //some funds left, not enough for one token. Send back funds
-              msg.sender.transfer(msg.value - totalCost);
-          }
-
-          totalCapitalTokenSupply += totalMinted;
-          balances[msg.sender].totalTokenBalance += totalMinted;
-          poolBalance += totalCost;
-
-          LogMint(totalMinted, totalCost);
-
-          return true;
-      } else {
-          revert();
+      uint256 totalMinted = 0;
+      uint256 fundsLeft = msg.value;
+      while(fundsLeft >= costPerToken) {   //check to see how many whole tokens can be minted
+        if (totalCapitalTokenSupply += totalMinted < MAX_UINT) {
+          fundsLeft -= costPerToken;     //subtract token cost from amount paid
+          totalMinted += 1;          //update the amount of tokens minted
+          updateMintingPrice((totalCapitalTokenSupply + totalMinted));  //update costPerToken
+        }
+        else{
+          break; // token supply hit maximum value
+        }
       }
-  }
+        //leaves loop when not enough eth to buy another whole token
+
+      if(fundsLeft > 0) { //some funds left, not enough for one token. Send back funds
+          msg.sender.transfer(fundsLeft);
+      }
+
+      totalCapitalTokenSupply += totalMinted;
+      totalFreeCapitalTokenSupply += totalMinted;
+      balances[msg.sender].totalTokenBalance += totalMinted;
+      balances[msg.sender].freeTokenBalance += totalMinted;
+      poolBalance += msg.value - fundsLeft;
+
+      LogMint(totalMinted, msg.value - fundsLeft);
+    }
 
   function burn(uint256 _amountToBurn) returns (bool) {
       if(_amountToBurn > 0 && (balances[msg.sender].freeTokenBalance) >= _amountToBurn) {
