@@ -31,7 +31,7 @@ contract TokenHolderRegistry{
   uint256 baseCost = 100000000000000; //100000000000000 wei 0.0001 ether
   uint256 public costPerToken = 0;
 
-  uint256 public poolBalance;   //in Wei
+  uint256 public ethBal;   //in Wei
 
 //events
 
@@ -99,16 +99,16 @@ event LogCostOfTokenUpdate(uint256 newCost);
       totalFreeCapitalTokenSupply += totalMinted;
       balances[msg.sender].totalTokenBalance += totalMinted;
       balances[msg.sender].freeTokenBalance += totalMinted;
-      poolBalance += msg.value - fundsLeft;
+      ethBal += msg.value - fundsLeft;
 
       LogMint(totalMinted, msg.value - fundsLeft);
     }
 
-  function burn(uint256 _amountToBurn) returns (bool) {
+  function burnAndRefund(uint256 _amountToBurn) returns (bool) {
       if(_amountToBurn > 0 && (balances[msg.sender].freeTokenBalance) >= _amountToBurn) {
           //CHECK HAS FREE TOKENS
           //determine how much you can leave with.
-          uint256 reward = _amountToBurn * poolBalance/totalCapitalTokenSupply; //rounding?
+          uint256 reward = _amountToBurn * ethBal/totalCapitalTokenSupply; //rounding?
           msg.sender.transfer(reward);
           balances[msg.sender].totalTokenBalance -= _amountToBurn;
           balances[msg.sender].freeTokenBalance -= _amountToBurn;
