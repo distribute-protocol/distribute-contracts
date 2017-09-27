@@ -5,7 +5,7 @@
 import numpy as np
 
 #initial values/global variables
-constant = 1
+constant = 1                #this is a placeholder
 pool_ETH = 0
 token_supply = 0
 worker_id = 0

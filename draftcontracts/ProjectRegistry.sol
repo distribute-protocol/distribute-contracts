@@ -16,10 +16,14 @@ contract ProjectRegistry{
   address workerRegistry;
 
   mapping(address => bool) public projectExists;
-  mapping(address => address) public proposers;
-  mapping(address => uint) public proposerStakes;
-  bool initialized = false;
 
+  struct Proposer{
+    address proposer;
+    uint proposerStake;
+  }
+
+  mapping(address => Proposer) proposers;
+  bool initialized = false;
   uint proposePercent = 20;
 
 //events
