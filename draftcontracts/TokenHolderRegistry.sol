@@ -3,6 +3,7 @@ pragma solidity ^0.4.10;
 //import files
 import "./Project.sol";
 import "./ProjectRegistry.sol";
+import "./ERC20.sol";
 
 /*
   keeps track of token holder capital token balances of all
@@ -10,19 +11,15 @@ import "./ProjectRegistry.sol";
   mint, burn prices
 */
 
-contract TokenHolderRegistry{
+contract TokenHolderRegistry is ERC20 {
 
 //state variables
   //TOKEN HOLDER STATE VARIABLES
-  struct TokenHolder{
-    uint totalTokenBalance;       //total capital tokens of all types
-    uint freeTokenBalance;
-  }
 
+  //balances in ERC20 contract
   address projectRegistry;
-  mapping (address => TokenHolder) public balances;
 
-  uint public totalCapitalTokenSupply = 0;               //total supply of capital tokens in all states
+  uint public totalCapitalTokenSupply = 0;               //total supply of capital tokens in all staking states
   uint public totalFreeCapitalTokenSupply = 0;           //total supply of free capital tokens (not staked, validated, or voted)
 
   //CONTINUOUS TOKEN STATE VARIABLES --> from Simon's code
@@ -47,7 +44,6 @@ event LogCostOfTokenUpdate(uint256 newCost);
     updateMintingPrice(0);
     projectRegistry = _projectRegistry;
   }
-
 //functions
 
   // via: http://ethereum.stackexchange.com/questions/10425/is-there-any-efficient-way-to-compute-the-exponentiation-of-a-fraction-and-an-in/10432#10432
@@ -97,21 +93,19 @@ event LogCostOfTokenUpdate(uint256 newCost);
 
       totalCapitalTokenSupply += totalMinted;
       totalFreeCapitalTokenSupply += totalMinted;
-      balances[msg.sender].totalTokenBalance += totalMinted;
-      balances[msg.sender].freeTokenBalance += totalMinted;
+      balances[msg.sender] += totalMinted;
       ethBal += msg.value - fundsLeft;
 
       LogMint(totalMinted, msg.value - fundsLeft);
     }
 
   function burnAndRefund(uint256 _amountToBurn) returns (bool) {
-      if(_amountToBurn > 0 && (balances[msg.sender].freeTokenBalance) >= _amountToBurn) {
+      if(_amountToBurn > 0 && (balances[msg.sender]) >= _amountToBurn) {
           //CHECK HAS FREE TOKENS
           //determine how much you can leave with.
           uint256 reward = _amountToBurn * ethBal/totalCapitalTokenSupply; //rounding?
           msg.sender.transfer(reward);
-          balances[msg.sender].totalTokenBalance -= _amountToBurn;
-          balances[msg.sender].freeTokenBalance -= _amountToBurn;
+          balances[msg.sender] -= _amountToBurn;
           totalCapitalTokenSupply -= _amountToBurn;
           totalFreeCapitalTokenSupply -= _amountToBurn;
           updateMintingPrice(totalCapitalTokenSupply);
@@ -123,35 +117,23 @@ event LogCostOfTokenUpdate(uint256 newCost);
   }
 
   function refundProposer(address _proposer, uint _tokens) {
-    balances[_proposer].freeTokenBalance += _tokens;
+    balances[_proposer] += _tokens;
     totalFreeCapitalTokenSupply += _tokens;
-    //implement pool reward
+    //figure out how to implement pool reward
   }
 
-  function stakeToken(address _staker, uint _tokens) {
-    if (balances[_staker].freeTokenBalance > _tokens) {
-      balances[_staker].freeTokenBalance -= _tokens;
+/////////////////STAKING NEEDS TO BE FIXED/////////////////
+//purpose of stake & unstake is to update balances mapping
+  function stakeToken(address _staker, uint _tokens) {    //not good right now, anyone can call
+    if (balances[_staker] > _tokens) {
+      balances[_staker] -= _tokens;
       totalFreeCapitalTokenSupply -= _tokens;
     }
   }
 
-  function unstakeToken(address _staker, uint _tokens) {
-    if (balances[_staker].totalTokenBalance - balances[_staker].freeTokenBalance < _tokens) {
-      balances[_staker].freeTokenBalance += _tokens;
-      totalFreeCapitalTokenSupply += _tokens;
-    }
+  function unstakeToken(address _staker, uint _tokens) {    //not good right now, anyone can call
+    balances[_staker] += _tokens;                   //assumes _staker has staked to begin with
+    totalFreeCapitalTokenSupply += _tokens;
   }
-
-  function transfer(address _to, uint256 _amountToTransfer) returns (bool) {
-    if(_amountToTransfer > 0 && balances[msg.sender].freeTokenBalance >= _amountToTransfer) {
-      balances[msg.sender].totalTokenBalance -= _amountToTransfer;
-      balances[msg.sender].freeTokenBalance -= _amountToTransfer;
-      balances[_to].totalTokenBalance += _amountToTransfer;
-      balances[_to].freeTokenBalance += _amountToTransfer;
-
-    }
-    else {
-      revert();
-    }
-  }
+  /////////////////////////////////////////////////////////
 }
