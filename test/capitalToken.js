@@ -18,9 +18,22 @@ contract('Capital token', function(accounts) {
       //console.log(x.receipt.gasUsed)
       return THR.totalCapitalTokenSupply.call()
     }).then(function(tokensupply) {
-      //console.log(tokensupply.toString())
-      assert.notEqual(tokensupply, 0, "Project was created by account1")
+      //gconsole.log(tokensupply.toString())
+      a = tokensupply
+      assert.notEqual(tokensupply, 0, "tokens were not minted")
     });
   });
+
+it("is burned", function() {
+  return TokenHolderRegistry.deployed().then(function(instance) {
+    THR = instance;
+    a = THR.totalCapitalTokenSupply.call();
+    return THR.burnAndRefund(6, {from: account1})
+  }).then(function(bool){
+    return THR.totalCapitalTokenSupply.call();
+  }).then(function(tokenSupply) {
+    assert.notEqual(tokenSupply, a, "tokens were not burned and refunded")
+  });
+});
 
 });
