@@ -42,8 +42,8 @@ event LogCostOfTokenUpdate(uint256 newCost);
 
 //modifiers
 
-//constructor
-  function TokenHolderRegistry() {       //contract is created
+//quasi-constructor
+  function init() {       //contract is created
     updateMintingPrice(0);
   }
 
@@ -129,7 +129,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
     totalFreeCapitalTokenSupply -= proposerTokenCost;
     Project newProject = new Project(_cost,
                                      _projectDeadline,
-                                     proposerTokenCost,
+                                     proposerTokenCost
                                      );
     projectNonce += 1;                  //determine project id
     address projectAddress = address(newProject);
@@ -143,7 +143,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
   function refundProposer(address _proposer, uint256 _projectId) {   //called by proposer, since contract has the eth and
     require(proposers[projectId[_projectId]].proposer == msg.sender);
     //call project to "send back" staked tokens to put in proposer's balances
-    projectAddress = projectId[project_Id];
+    address projectAddress = projectId[_projectId];
     proposerStake = Project(projectAddress).refundProposer();   //function returns proposer stake
     balances[msg.sender] += proposerStake;    //give proposer back their tokens
     totalFreeCapitalTokenSupply += proposerStake;
@@ -154,7 +154,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
 
   function stakeToken(uint256 _projectId, uint256 _tokens) {    //not good right now, anyone can call
     require(balances[msg.sender] >= _tokens && _projectId < projectNonce);   //make sure project exists & TH has tokens to stake
-    success = Project(projectId[_projectId]).stakeCapitalToken(_tokens, msg.sender);
+    bool success = Project(projectId[_projectId]).stakeCapitalToken(_tokens, msg.sender);
     assert(success == true);
     balances[msg.sender] -= _tokens;
     totalFreeCapitalTokenSupply -= _tokens;
@@ -162,7 +162,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
 
   function unstakeToken(uint256 _projectId, uint256 _tokens) {    //not good right now, anyone can call
     require(projectId < projectNonce);
-    success = Project(projectId[_projectId]).unstakeCapitalToken(_tokens, msg.sender);
+    bool success = Project(projectId[_projectId]).unstakeCapitalToken(_tokens, msg.sender);
     assert(success == true);
     balances[msg.sender] += _tokens;                   //assumes _staker has staked to begin with
     totalFreeCapitalTokenSupply += _tokens;

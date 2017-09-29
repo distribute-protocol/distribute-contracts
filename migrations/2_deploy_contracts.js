@@ -1,5 +1,4 @@
 var Project = artifacts.require("./Project");
-var ProjectRegistry = artifacts.require("./ProjectRegistry");
 var TokenHolderRegistry = artifacts.require("./TokenHolderRegistry");
 var WorkerRegistry = artifacts.require("./WorkerRegistry");
 
@@ -9,15 +8,12 @@ var WorkerRegistry = artifacts.require("./WorkerRegistry");
 
 module.exports = function(deployer) {
     deployer.then(function(){
-        return deployer.deploy(ProjectRegistry)
+        return deployer.deploy(TokenHolderRegistry)
       }).then(function(instance){
-        return deployer.deploy(TokenHolderRegistry, ProjectRegistry.address)
+        return deployer.deploy(WorkerRegistry, TokenHolderRegistry.address)
       }).then(function(instance){
-        return deployer.deploy(WorkerRegistry, ProjectRegistry.address)
-      }).then(function(){
-        return ProjectRegistry.deployed()
+        return TokenHolderRegistry.deployed()
       }).then(function(instance){
-        //console.log('success 2')   //prints the contract to the console
-        return instance.init(TokenHolderRegistry.address, WorkerRegistry.address)
+        return instance.init()
     })
 };

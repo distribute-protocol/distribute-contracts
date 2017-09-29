@@ -1,7 +1,6 @@
 pragma solidity ^0.4.10;
 
 //import files
-import "./ProjectRegistry.sol";
 import "./TokenHolderRegistry.sol";
 import "./WorkerRegistry.sol";
 
@@ -14,11 +13,9 @@ contract Project{
 //state variables
   address tokenHolderRegistry;
   address workerRegistry;
-  address projectRegistry;
 
-  address proposer;
+  uint capitalCost;   //total amount of staked capital in eth needed
 
-  uint capitalCost;   //total amount of staked capital tokens needed
   uint workerCost;    //total amount of staked worker tokens needed
   uint proposerStake;   //amount of capital tokens the proposer stakes
 
@@ -77,24 +74,26 @@ contract Project{
     _;
   }
 
-/*
-  modifier onlyWorker() {
+  modifier onlyTHR() {
+    require(msg.sender == tokenHolderRegistry);
     _;
   }
 
+/*
   modifier onlyTokenHolder() {
     _;
   }
 */
 
 //constructor
-  function Project(uint _cost, uint _projectDeadline) {
+  function Project(uint _cost, uint _projectDeadline, uint256 _proposerStake) {
     //check has percentage of tokens to stake
     //move tokens from free to proposed in tokenholder contract
-    projectRegistry = msg.sender;     //the project registry calls this function
+    address tokenHolderRegistry = msg.sender;     //the project registry calls this function
     capitalCost = _cost;
     projectDeadline = _projectDeadline;
     projectState = State.Proposed;
+    proposerStake = _proposerStake;
     totalCapitalStaked = 0;
     totalWorkerStaked = 0;
   }
@@ -113,29 +112,31 @@ contract Project{
     }
   }
 
-  function refundProposer() {   //called by proposer to return
-    if (projectState != State.Proposed && sha3(ProjectRegistry(projectRegistry).proposers(address(this))) == sha3(msg.sender)) {   //make sure out of proposed state & msg.sender is the proposer
-      address tempaddress = msg.sender;    //proposer's address
-      uint tempvalue = ProjectRegistry(projectRegistry).proposerStakes(address(this));    //proposer's stake
-      TokenHolderRegistry(tokenHolderRegistry).refundProposer(tempaddress, tempvalue);
+  function refundProposer() returns (uint256) {   //called by THR, decrements proposer tokens
+    require(projectState != State.Proposed && proposerStake != 0);   //make sure out of proposed state & msg.sender is the proposer
+    uint256 temp = proposerStake;
+    proposerStake = 0;
+    return temp;
+  }
+
+  function stakeCapitalToken(uint _tokens, address _staker) onlyTHR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool) {  //called by THR only
+    if (checkStaked() == false &&
+      stakedCapitalBalances[_staker] + _tokens > stakedCapitalBalances[_staker]) {
+        stakedCapitalBalances[_staker] += _tokens;
+        return true;
+    } else {
+      return false;
     }
   }
 
-  function stakeCapitalToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
+  function unstakeCapitalToken(uint _tokens, address _staker) onlyTHR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool) {    //called by THR only
     if (checkStaked() == false &&
-         stakedCapitalBalances[msg.sender] + _tokens > stakedCapitalBalances[msg.sender]) {
-           TokenHolderRegistry(tokenHolderRegistry).stakeToken(msg.sender, _tokens);
-           stakedCapitalBalances[msg.sender] += _tokens;
-           checkStaked();
-    }
-  }
-
-  function unStakeCapitalToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
-    if (checkStaked() == false &&
-         stakedCapitalBalances[msg.sender] - _tokens < stakedCapitalBalances[msg.sender] &&   //check overflow
-         stakedCapitalBalances[msg.sender] - _tokens >= 0) {    //make sure has the tokens staked to unstake
-           stakedCapitalBalances[msg.sender] -= _tokens;
-           TokenHolderRegistry(tokenHolderRegistry).unstakeToken(msg.sender, _tokens);
+         stakedCapitalBalances[_staker] - _tokens < stakedCapitalBalances[_staker] &&   //check overflow
+         stakedCapitalBalances[_staker] - _tokens >= 0) {    //make sure has the tokens staked to unstake
+           stakedCapitalBalances[_staker] -= _tokens;
+           return true;
+    } else {
+      return false;
     }
   }
 
@@ -221,12 +222,10 @@ contract Project{
     }
   }
 
-/*
   function vote(uint _tokens, bool _validationState, bool _isworker) onlyBefore(projectDeadline) {
     //check has the free tokens depending on bool _isworker
     //move tokens from free to vote in other contract
     //check for overflow
     //update votedAffirmative or votedNegative mapping
   }
-*/
 }
