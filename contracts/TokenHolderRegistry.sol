@@ -140,7 +140,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
 
   }
 
-  function refundProposer(address _proposer, uint256 _projectId) {   //called by proposer, since contract has the eth and
+  function refundProposer(uint256 _projectId) {   //called by proposer, since contract has the eth and
     require(proposers[projectId[_projectId]].proposer == msg.sender);
     //call project to "send back" staked tokens to put in proposer's balances
     address projectAddress = projectId[_projectId];

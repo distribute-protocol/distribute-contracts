@@ -206,7 +206,7 @@ contract Project{
       return true;
     }
   }
-
+/*
   function validate(uint _tokens, bool _validationState) onlyInState(State.Completed) onlyBefore(projectDeadline) {
     //make sure has the free tokens
     //move msg.sender's tokens from freeTokenBalance to validatedTokenBalance
@@ -228,4 +228,5 @@ contract Project{
     //check for overflow
     //update votedAffirmative or votedNegative mapping
   }
+*/
 }
