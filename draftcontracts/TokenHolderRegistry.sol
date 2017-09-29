@@ -12,36 +12,29 @@ import "./ERC20.sol";
 
 contract TokenHolderRegistry is ERC20 {
 
-//state variables
-  //TOKEN HOLDER STATE VARIABLES
-
-  //balances in ERC20 contract
-
+//state variables --> note: balances are held in ERC20 contract
+  //general token holder state variables
   uint public totalCapitalTokenSupply = 0;               //total supply of capital tokens in all staking states
   uint public totalFreeCapitalTokenSupply = 0;           //total supply of free capital tokens (not staked, validated, or voted)
-
-  mapping(address => bool) projectExists;
+  mapping(address => bool) projectExists;   //combine with proposers bc if project exists, so does proposer
   mapping(uint => address) projectId;
 
-  struct Proposer{
-    address proposer;
-    uint proposerStake;
-  }
-
-  mapping(address => Proposer) proposers;
+ //proposer state variables
+  mapping(address => Proposer) proposers;   //project -> Proposer
   bool initialized = false;
   uint proposePercent = 20;     //hardcoded for now
+  struct Proposer{
+    address proposer;   //who is the proposer
+    uint proposerStake; //how much did they stake in tokens
+  }
 
-  //CONTINUOUS TOKEN STATE VARIABLES --> from Simon's code
+  //minting & burning state variables --> from Simon's code
   uint public constant MAX_UINT = (2**256) - 1;
-
   uint256 baseCost = 100000000000000; //100000000000000 wei 0.0001 ether
-  uint256 public costPerToken = 0;
-
+  uint256 public costPerToken = 0;      //current minting price
   uint256 public ethBal;   //in Wei
 
 //events
-
 event LogMint(uint256 amountMinted, uint256 totalCost);
 event LogWithdraw(uint256 amountWithdrawn, uint256 reward);
 event LogCostOfTokenUpdate(uint256 newCost);
@@ -49,19 +42,18 @@ event LogCostOfTokenUpdate(uint256 newCost);
 //modifiers
 
 //constructor
-
   function TokenHolderRegistry() {       //contract is created
     updateMintingPrice(0);
   }
-//functions
 
-  // via: http://ethereum.stackexchange.com/questions/10425/is-there-any-efficient-way-to-compute-the-exponentiation-of-a-fraction-and-an-in/10432#10432
-  // Computes `k * (1+1/q) ^ N`, with precision `p`. The higher
-  // the precision, the higher the gas cost. It should be
-  // something around the log of `n`. When `p == n`, the
-  // precision is absolute (sans possible integer overflows).
-  // Much smaller values are sufficient to get a great approximation.
+//functions
   function fracExp(uint k, uint q, uint n, uint p) internal returns (uint) {
+    // via: http://ethereum.stackexchange.com/questions/10425/is-there-any-efficient-way-to-compute-the-exponentiation-of-a-fraction-and-an-in/10432#10432
+    // Computes `k * (1+1/q) ^ N`, with precision `p`. The higher
+    // the precision, the higher the gas cost. It should be
+    // something around the log of `n`. When `p == n`, the
+    // precision is absolute (sans possible integer overflows).
+    // Much smaller values are sufficient to get a great approximation.
     uint s = 0;
     uint N = 1;
     uint B = 1;
@@ -81,7 +73,6 @@ event LogCostOfTokenUpdate(uint256 newCost);
   function mint() payable {   //fix this function, make ether payable, not tokens
       //balance of msg.sender increases if paid right amount according to protocol
       //will mint as many tokens as it can depending on msg.value and MAX_UINT
-
       uint256 totalMinted = 0;
       uint256 fundsLeft = msg.value;
       while(fundsLeft >= costPerToken) {   //check to see how many whole tokens can be minted
@@ -94,17 +85,14 @@ event LogCostOfTokenUpdate(uint256 newCost);
           break; // token supply hit maximum value
         }
       }
-        //leaves loop when not enough eth to buy another whole token
-
+      //leaves loop when not enough eth to buy another whole token
       if(fundsLeft > 0) { //some funds left, not enough for one token. Send back funds
           msg.sender.transfer(fundsLeft);
       }
-
       totalCapitalTokenSupply += totalMinted;
       totalFreeCapitalTokenSupply += totalMinted;
       balances[msg.sender] += totalMinted;
       ethBal += msg.value - fundsLeft;
-
       LogMint(totalMinted, msg.value - fundsLeft);
     }
 
@@ -124,8 +112,6 @@ event LogCostOfTokenUpdate(uint256 newCost);
           revert();
       }
   }
-
-//PROPOSAL-RELATED
 
   function proposeProject(uint _cost, uint _projectDeadline) {    //cost in tokens
     uint proposalProportion = _cost - 1;    //for now, needs to be division in the future
