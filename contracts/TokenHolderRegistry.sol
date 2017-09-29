@@ -17,7 +17,7 @@ contract TokenHolderRegistry is ERC20 {
   uint256 public totalCapitalTokenSupply = 0;               //total supply of capital tokens in all staking states
   uint256 public totalFreeCapitalTokenSupply = 0;           //total supply of free capital tokens (not staked, validated, or voted)
   mapping(uint256 => address) projectId;                    //projectId to project address
-  uint256 projectNonce = 0;     //no projects in existence when contract initialized
+  uint256 public projectNonce = 0;     //no projects in existence when contract initialized
 
  //proposer state variables
   mapping(address => Proposer) proposers;   //project -> Proposer
@@ -137,7 +137,6 @@ event LogCostOfTokenUpdate(uint256 newCost);
     proposers[projectAddress].proposer = msg.sender;
     proposers[projectAddress].proposerStake = proposerTokenCost;
     proposers[projectAddress].projectCost = _cost;
-
   }
 
   function refundProposer(uint256 _projectId) {   //called by proposer, since contract has the eth and
