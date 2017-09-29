@@ -14,8 +14,6 @@ contract Project{
   address tokenHolderRegistry;
   address workerRegistry;
 
-  address proposer;
-
   uint capitalCost;   //total amount of staked capital tokens needed
   uint workerCost;    //total amount of staked worker tokens needed
   uint proposerStake;   //amount of capital tokens the proposer stakes
@@ -86,13 +84,14 @@ contract Project{
 */
 
 //constructor
-  function Project(uint _cost, uint _projectDeadline) {
+  function Project(uint _cost, uint _projectDeadline, uint256 _proposerStake) {
     //check has percentage of tokens to stake
     //move tokens from free to proposed in tokenholder contract
     projectRegistry = msg.sender;     //the project registry calls this function
     capitalCost = _cost;
     projectDeadline = _projectDeadline;
     projectState = State.Proposed;
+    proposerStake = _proposerStake;
     totalCapitalStaked = 0;
     totalWorkerStaked = 0;
   }
@@ -111,12 +110,11 @@ contract Project{
     }
   }
 
-  function refundProposer() {   //called by proposer to return
-    if (projectState != State.Proposed && sha3(ProjectRegistry(projectRegistry).proposers(address(this))) == sha3(msg.sender)) {   //make sure out of proposed state & msg.sender is the proposer
-      address tempaddress = msg.sender;    //proposer's address
-      uint tempvalue = ProjectRegistry(projectRegistry).proposerStakes(address(this));    //proposer's stake
-      TokenHolderRegistry(tokenHolderRegistry).refundProposer(tempaddress, tempvalue);
-    }
+  function refundProposer() returns (uint256) {   //called by THR, decrements proposer tokens
+    require(projectState != State.Proposed && proposerStake != 0);   //make sure out of proposed state & msg.sender is the proposer
+    uint256 temp = proposerStake;
+    proposerStake = 0;
+    return temp;
   }
 
   function stakeCapitalToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {

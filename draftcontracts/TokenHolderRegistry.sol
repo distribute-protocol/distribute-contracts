@@ -12,27 +12,27 @@ import "./ERC20.sol";
 
 contract TokenHolderRegistry is ERC20 {
 
-//state variables --> note: balances are held in ERC20 contract
+//state variables --> note: balances are held in ERC20 contract, ho
   //general token holder state variables
-  uint public totalCapitalTokenSupply = 0;               //total supply of capital tokens in all staking states
-  uint public totalFreeCapitalTokenSupply = 0;           //total supply of free capital tokens (not staked, validated, or voted)
-  mapping(address => bool) projectExists;   //combine with proposers bc if project exists, so does proposer
-  mapping(uint => address) projectId;
+  uint256 public totalCapitalTokenSupply = 0;               //total supply of capital tokens in all staking states
+  uint256 public totalFreeCapitalTokenSupply = 0;           //total supply of free capital tokens (not staked, validated, or voted)
+  mapping(uint256 => address) projectId;                    //projectId to project address
+  uint256 projectNonce = 0;     //no projects in existence when contract initialized
 
  //proposer state variables
   mapping(address => Proposer) proposers;   //project -> Proposer
-  bool initialized = false;
-  uint proposePercent = 20;     //hardcoded for now
+  uint256 proposeProportion = 20;     //hardcoded for now
   struct Proposer{
-    address proposer;   //who is the proposer
-    uint proposerStake; //how much did they stake in tokens
+    address proposer;     //who is the proposer
+    uint256 proposerStake;   //how much did they stake in tokens
+    uint256 projectCost;
   }
 
   //minting & burning state variables --> from Simon's code
-  uint public constant MAX_UINT = (2**256) - 1;
+  uint256 public constant MAX_UINT = (2**256) - 1;
   uint256 baseCost = 100000000000000; //100000000000000 wei 0.0001 ether
   uint256 public costPerToken = 0;      //current minting price
-  uint256 public ethBal;   //in Wei
+  uint256 public weiBal;   //in wei
 
 //events
 event LogMint(uint256 amountMinted, uint256 totalCost);
@@ -47,17 +47,17 @@ event LogCostOfTokenUpdate(uint256 newCost);
   }
 
 //functions
-  function fracExp(uint k, uint q, uint n, uint p) internal returns (uint) {
+  function fracExp(uint256 k, uint256 q, uint256 n, uint256 p) internal returns (uint) {
     // via: http://ethereum.stackexchange.com/questions/10425/is-there-any-efficient-way-to-compute-the-exponentiation-of-a-fraction-and-an-in/10432#10432
     // Computes `k * (1+1/q) ^ N`, with precision `p`. The higher
     // the precision, the higher the gas cost. It should be
     // something around the log of `n`. When `p == n`, the
     // precision is absolute (sans possible integer overflows).
     // Much smaller values are sufficient to get a great approximation.
-    uint s = 0;
-    uint N = 1;
-    uint B = 1;
-    for (uint i = 0; i < p; ++i){
+    uint256 s = 0;
+    uint256 N = 1;
+    uint256 B = 1;
+    for (uint256 i = 0; i < p; ++i){
       s += k * N / B / (q**i);
       N  = N * (n-i);
       B  = B * (i+1);
@@ -70,7 +70,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
       LogCostOfTokenUpdate(costPerToken);
   }
 
-  function mint() payable {   //fix this function, make ether payable, not tokens
+  function mint() payable {
       //balance of msg.sender increases if paid right amount according to protocol
       //will mint as many tokens as it can depending on msg.value and MAX_UINT
       uint256 totalMinted = 0;
@@ -79,32 +79,31 @@ event LogCostOfTokenUpdate(uint256 newCost);
         if (totalCapitalTokenSupply += totalMinted < MAX_UINT) {
           fundsLeft -= costPerToken;     //subtract token cost from amount paid
           totalMinted += 1;          //update the amount of tokens minted
-          updateMintingPrice((totalCapitalTokenSupply + totalMinted));  //update costPerToken
+          updateMintingPrice((totalCapitalTokenSupply + totalMinted));  //update costPerToken for next token
         }
         else{
           break; // token supply hit maximum value
         }
       }
-      //leaves loop when not enough eth to buy another whole token
+      //leaves loop when not enough wei to buy another whole token
       if(fundsLeft > 0) { //some funds left, not enough for one token. Send back funds
           msg.sender.transfer(fundsLeft);
       }
       totalCapitalTokenSupply += totalMinted;
       totalFreeCapitalTokenSupply += totalMinted;
       balances[msg.sender] += totalMinted;
-      ethBal += msg.value - fundsLeft;
-      LogMint(totalMinted, msg.value - fundsLeft);
+      weiBal += (msg.value - fundsLeft);
+      LogMint(totalMinted, (msg.value - fundsLeft));
     }
 
-  function burnAndRefund(uint256 _amountToBurn) returns (bool) {
+  function burnAndRefund(uint256 _amountToBurn) returns (bool) {      //free tokens only
       if(_amountToBurn > 0 && (balances[msg.sender]) >= _amountToBurn) {
-          //CHECK HAS FREE TOKENS
           //determine how much you can leave with.
-          uint256 reward = _amountToBurn * ethBal/totalCapitalTokenSupply; //rounding?
-          msg.sender.transfer(reward);
+          uint256 reward = _amountToBurn * weiBal/totalCapitalTokenSupply; //rounding? - remainder discarded
           balances[msg.sender] -= _amountToBurn;
           totalCapitalTokenSupply -= _amountToBurn;
           totalFreeCapitalTokenSupply -= _amountToBurn;
+          msg.sender.transfer(reward);
           updateMintingPrice(totalCapitalTokenSupply);
           LogWithdraw(_amountToBurn, reward);
           return true;
@@ -113,34 +112,56 @@ event LogCostOfTokenUpdate(uint256 newCost);
       }
   }
 
-  function proposeProject(uint _cost, uint _projectDeadline) {    //cost in tokens
-    uint proposalProportion = _cost - 1;    //for now, needs to be division in the future
-    //check to make sure msg.sender has enough tokens
-    Project newProject = new Project(_cost,
-                                     _projectDeadline
-                                     );
-    address projectAddress = address(newProject);
-    projectExists[projectAddress] = true;
-    proposers[projectAddress] = msg.sender;
-    proposerStakes[projectAddress] = proposalProportion;
+  function burnAndRefundPrice() returns (uint256) {
+    //calculated current burn reward of 1 token
+    uint256 reward = weiBal/totalCapitalTokenSupply; //rounding? - remainder discarded
+    return reward;    //reward in wei of burning 1 token
   }
 
-  function refundProposer(address _proposer, uint _tokens) {
-    balances[_proposer] += _tokens;
-    totalFreeCapitalTokenSupply += _tokens;
-    //figure out how to implement pool reward
+  function proposeProject(uint256 _cost, uint256 _projectDeadline) payable {    //_cost of project in ether
+    //calculate cost of project in tokens currently (_cost in wei)
+    //check proposer has at least 5% of the proposed cost in tokens
+    uint256 currentTokenCost = _cost / burnAndRefundPrice();
+    uint256 proposerTokenCost = currentTokenCost / proposeProportion;    //divide by 20 to get 5 percent of tokens
+    require(balances[msg.sender] >= proposerTokenCost);
+    balances[msg.sender] -= proposerTokenCost;
+    totalFreeCapitalTokenSupply -= proposerTokenCost;
+    Project newProject = new Project(_cost,
+                                     _projectDeadline,
+                                     proposerTokenCost,
+                                     );
+    projectNonce += 1;                  //determine project id
+    address projectAddress = address(newProject);
+    projectId[projectNonce] = projectAddress;
+    proposers[projectAddress].proposer = msg.sender;
+    proposers[projectAddress].proposerStake = proposerTokenCost;
+    proposers[projectAddress].projectCost = _cost;
+
+  }
+
+  function refundProposer(address _proposer, uint256 _projectId) {   //called by proposer, since contract has the eth and
+    require(proposers[projectId[_projectId]].proposer == msg.sender);
+    //call project to "send back" staked tokens to put in proposer's balances
+    projectAddress = projectId[project_Id];
+    proposerStake = Project(projectAddress).refundProposer();   //function returns proposer stake
+    balances[msg.sender] += proposerStake;    //give proposer back their tokens
+    totalFreeCapitalTokenSupply += proposerStake;
+    //credit 1% of project cost from weiPool
+    uint256 proposerReward = ;
+    msg.sender.transfer(proposerReward)
+
   }
 
 /////////////////STAKING NEEDS TO BE FIXED/////////////////
 //purpose of stake & unstake is to update balances mapping
-  function stakeToken(address _staker, uint _tokens) {    //not good right now, anyone can call
+  function stakeToken(address _staker, uint256 _tokens) {    //not good right now, anyone can call
     if (balances[_staker] > _tokens) {
       balances[_staker] -= _tokens;
       totalFreeCapitalTokenSupply -= _tokens;
     }
   }
 
-  function unstakeToken(address _staker, uint _tokens) {    //not good right now, anyone can call
+  function unstakeToken(address _staker, uint256 _tokens) {    //not good right now, anyone can call
     balances[_staker] += _tokens;                   //assumes _staker has staked to begin with
     totalFreeCapitalTokenSupply += _tokens;
   }
