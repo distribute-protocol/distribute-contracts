@@ -119,21 +119,24 @@ contract Project{
     return temp;
   }
 
-  function stakeCapitalToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
+  function stakeCapitalToken(uint _tokens, address _staker) onlyTHR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool) {  //called by THR only
     if (checkStaked() == false &&
-         stakedCapitalBalances[msg.sender] + _tokens > stakedCapitalBalances[msg.sender]) {
-           TokenHolderRegistry(tokenHolderRegistry).stakeToken(msg.sender, _tokens);
-           stakedCapitalBalances[msg.sender] += _tokens;
-           checkStaked();
+      stakedCapitalBalances[_staker] + _tokens > stakedCapitalBalances[_staker]) {
+        stakedCapitalBalances[_staker] += _tokens;
+        return true;
+    } else {
+      return false;
     }
   }
 
-  function unStakeCapitalToken(uint _tokens) onlyInState(State.Proposed) onlyBefore(projectDeadline) {
+  function unStakeCapitalToken(uint _tokens, address _staker) onlyTHR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool) {    //called by THR only
     if (checkStaked() == false &&
-         stakedCapitalBalances[msg.sender] - _tokens < stakedCapitalBalances[msg.sender] &&   //check overflow
-         stakedCapitalBalances[msg.sender] - _tokens >= 0) {    //make sure has the tokens staked to unstake
-           stakedCapitalBalances[msg.sender] -= _tokens;
-           TokenHolderRegistry(tokenHolderRegistry).unstakeToken(msg.sender, _tokens);
+         stakedCapitalBalances[_staker] - _tokens < stakedCapitalBalances[_staker] &&   //check overflow
+         stakedCapitalBalances[_staker] - _tokens >= 0) {    //make sure has the tokens staked to unstake
+           stakedCapitalBalances[_staker] -= _tokens;
+           return true;
+    } else {
+      return false;
     }
   }
 

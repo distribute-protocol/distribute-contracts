@@ -150,21 +150,21 @@ event LogCostOfTokenUpdate(uint256 newCost);
     //credit 1% of project cost from weiPool
     uint256 proposerReward = proposers[projectAddress].projectCost/rewardProportion;
     msg.sender.transfer(proposerReward);     //how are we sure that this still exists in the ethpool?
-
   }
 
-/////////////////STAKING NEEDS TO BE FIXED/////////////////
-//purpose of stake & unstake is to update balances mapping
-  function stakeToken(address _staker, uint256 _tokens) {    //not good right now, anyone can call
-    if (balances[_staker] > _tokens) {
-      balances[_staker] -= _tokens;
-      totalFreeCapitalTokenSupply -= _tokens;
-    }
+  function stakeToken(uint256 _projectId, uint256 _tokens) {    //not good right now, anyone can call
+    require(balances[msg.sender] >= _tokens && _projectId < projectNonce);   //make sure project exists & TH has tokens to stake
+    success = Project(projectId[_projectId]).stakeCapitalToken(_tokens, msg.sender);
+    assert(success == true);
+    balances[msg.sender] -= _tokens;
+    totalFreeCapitalTokenSupply -= _tokens;
   }
 
-  function unstakeToken(address _staker, uint256 _tokens) {    //not good right now, anyone can call
-    balances[_staker] += _tokens;                   //assumes _staker has staked to begin with
+  function unstakeToken(uint256 _projectId, uint256 _tokens) {    //not good right now, anyone can call
+    require(projectId < projectNonce);
+    success = Project(projectId[_projectId]).unstakeCapitalToken(_tokens, msg.sender);
+    assert(success == true);
+    balances[msg.sender] += _tokens;                   //assumes _staker has staked to begin with
     totalFreeCapitalTokenSupply += _tokens;
   }
-  /////////////////////////////////////////////////////////
 }
