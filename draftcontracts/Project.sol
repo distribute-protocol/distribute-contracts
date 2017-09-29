@@ -1,7 +1,6 @@
 pragma solidity ^0.4.10;
 
 //import files
-import "./ProjectRegistry.sol";
 import "./TokenHolderRegistry.sol";
 import "./WorkerRegistry.sol";
 
@@ -14,7 +13,6 @@ contract Project{
 //state variables
   address tokenHolderRegistry;
   address workerRegistry;
-  address projectRegistry;
 
   address proposer;
 

@@ -2,7 +2,6 @@ pragma solidity ^0.4.10;
 
 //import files
 import "./Project.sol";
-import "./ProjectRegistry.sol";
 import "./ERC20.sol";
 
 /*
@@ -17,10 +16,21 @@ contract TokenHolderRegistry is ERC20 {
   //TOKEN HOLDER STATE VARIABLES
 
   //balances in ERC20 contract
-  address projectRegistry;
 
   uint public totalCapitalTokenSupply = 0;               //total supply of capital tokens in all staking states
   uint public totalFreeCapitalTokenSupply = 0;           //total supply of free capital tokens (not staked, validated, or voted)
+
+  mapping(address => bool) projectExists;
+  mapping(uint => address) projectId;
+
+  struct Proposer{
+    address proposer;
+    uint proposerStake;
+  }
+
+  mapping(address => Proposer) proposers;
+  bool initialized = false;
+  uint proposePercent = 20;     //hardcoded for now
 
   //CONTINUOUS TOKEN STATE VARIABLES --> from Simon's code
   uint public constant MAX_UINT = (2**256) - 1;
@@ -40,9 +50,8 @@ event LogCostOfTokenUpdate(uint256 newCost);
 
 //constructor
 
-  function TokenHolderRegistry(address _projectRegistry) {       //contract is created
+  function TokenHolderRegistry() {       //contract is created
     updateMintingPrice(0);
-    projectRegistry = _projectRegistry;
   }
 //functions
 
@@ -114,6 +123,20 @@ event LogCostOfTokenUpdate(uint256 newCost);
       } else {
           revert();
       }
+  }
+
+//PROPOSAL-RELATED
+
+  function proposeProject(uint _cost, uint _projectDeadline) {    //cost in tokens
+    uint proposalProportion = _cost - 1;    //for now, needs to be division in the future
+    //check to make sure msg.sender has enough tokens
+    Project newProject = new Project(_cost,
+                                     _projectDeadline
+                                     );
+    address projectAddress = address(newProject);
+    projectExists[projectAddress] = true;
+    proposers[projectAddress] = msg.sender;
+    proposerStakes[projectAddress] = proposalProportion;
   }
 
   function refundProposer(address _proposer, uint _tokens) {
