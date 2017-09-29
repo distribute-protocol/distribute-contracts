@@ -21,7 +21,8 @@ contract TokenHolderRegistry is ERC20 {
 
  //proposer state variables
   mapping(address => Proposer) proposers;   //project -> Proposer
-  uint256 proposeProportion = 20;     //hardcoded for now
+  uint256 proposeProportion = 20;
+  uint256 rewardProportion = 100;
   struct Proposer{
     address proposer;     //who is the proposer
     uint256 proposerStake;   //how much did they stake in tokens
@@ -147,8 +148,8 @@ event LogCostOfTokenUpdate(uint256 newCost);
     balances[msg.sender] += proposerStake;    //give proposer back their tokens
     totalFreeCapitalTokenSupply += proposerStake;
     //credit 1% of project cost from weiPool
-    uint256 proposerReward = ;
-    msg.sender.transfer(proposerReward)
+    uint256 proposerReward = proposers[projectAddress].projectCost/rewardProportion;
+    msg.sender.transfer(proposerReward);     //how are we sure that this still exists in the ethpool?
 
   }
 

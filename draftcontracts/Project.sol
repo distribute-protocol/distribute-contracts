@@ -14,7 +14,8 @@ contract Project{
   address tokenHolderRegistry;
   address workerRegistry;
 
-  uint capitalCost;   //total amount of staked capital tokens needed
+  uint capitalCost;   //total amount of staked capital in eth needed
+
   uint workerCost;    //total amount of staked worker tokens needed
   uint proposerStake;   //amount of capital tokens the proposer stakes
 
@@ -73,11 +74,12 @@ contract Project{
     _;
   }
 
-/*
-  modifier onlyWorker() {
+  modifier onlyTHR() {
+    require(msg.sender == tokenHolderRegistry);
     _;
   }
 
+/*
   modifier onlyTokenHolder() {
     _;
   }
