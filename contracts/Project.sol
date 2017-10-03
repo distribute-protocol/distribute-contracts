@@ -249,7 +249,7 @@ contract Project{
     return 0;
   }
 
-  function refundWorker(){
-
+  function rewardWorker() onlyInState(State.Validated) returns (uint _reward) {
+    return 1;
   }
 }

@@ -54,16 +54,15 @@ contract WorkerRegistry{
 
   }
 
-  function refundStaker(uint _id) {
-    address _staker = msg.sender;
-    address _projectAddress = TokenHolderRegistry(tokenHolderRegistry).getProjectAddress(_id);
+  function refundStaker(uint _projectId) {
+    address _projectAddress = TokenHolderRegistry(tokenHolderRegistry).getProjectAddress(_projectId);
     uint _refund = Project(_projectAddress).refundStaker(msg.sender);
     totalFreeWorkerTokenSupply += _refund;
     balances[msg.sender] += _refund;
   }
 
-  function refundWorker(uint _id) {
-    address _worker = msg.sender;
+  function rewardWorker(uint _projectId) {   //pay worker for work
+
   }
 
 }

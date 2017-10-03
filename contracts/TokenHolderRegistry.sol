@@ -44,6 +44,10 @@ event LogWithdraw(uint256 amountWithdrawn, uint256 reward);
 event LogCostOfTokenUpdate(uint256 newCost);
 
 //modifiers
+modifier onlyWR() {
+  require(msg.sender == workerRegistry);
+  _;
+}
 
 //quasi-constructor
   function init(address _workerRegistry) {       //contract is created
@@ -52,7 +56,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
   }
 
 //functions
-  function getProjectAddress(uint _id) returns (address) {
+  function getProjectAddress(uint _id) onlyWR() returns (address) {
     if (_id <= projectNonce) {
       return projectId[_id];
     }
@@ -187,6 +191,10 @@ event LogCostOfTokenUpdate(uint256 newCost);
 
   function refundStaker(uint _projectId) {
     require(_projectId <= projectNonce);
+
+  }
+
+  function rewardWorker(address _worker, uint _reward) onlyWR() {
 
   }
 }
