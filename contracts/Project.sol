@@ -214,7 +214,7 @@ contract Project{
 
   }
 
-  function checkVotingOver() onlyInState(State.Completed) internal returns (bool) {         //if true, handles redistribution of tokens
+  function checkVotingOver() onlyInState(State.Completed) internal returns (bool) {         //if true, handle redistribution of validation tokens & potentially staked tokens
     if (validationStart + validationPeriod + votingPeriod < now) {
       return false;
     }
