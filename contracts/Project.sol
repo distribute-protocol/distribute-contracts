@@ -16,7 +16,7 @@ contract Project{
 
   uint capitalCost;   //total amount of staked capital in eth needed
 
-  uint workerCost;    //total amount of staked worker tokens needed
+  uint workerCost;    //total amount of staked worker tokens needed, one to one with capital tokens
   uint proposerStake;   //amount of capital tokens the proposer stakes
 
   //keep track of staking on proposed project
@@ -26,10 +26,11 @@ contract Project{
   mapping (address => uint) stakedWorkerBalances;
 
   //keep track of workers with tasks
-  Worker[] workers;   //array of tasked workers
+  Task[] tasks;   //array of tasks for this project
 
-  struct Worker {
-    address workerAddress;
+  struct Task {
+    address workerAddress;    //which worker is assigned to this task
+    string description;       //brief description of task
     bool taskComplete;
     //uint taskHash;
     //uint escrowTokens;   //tokens paid to sign up for task, amount they will earn if validated
@@ -79,6 +80,11 @@ contract Project{
     _;
   }
 
+  modifier onlyWR() {
+    require(msg.sender == workerRegistry);
+    _;
+  }
+
 /*
   modifier onlyTokenHolder() {
     _;
@@ -86,7 +92,7 @@ contract Project{
 */
 
 //constructor
-  function Project(uint _cost, uint _projectDeadline, uint256 _proposerStake) {
+  function Project(uint _cost, uint _projectDeadline, uint256 _proposerStake) onlyTHR() {
     //check has percentage of tokens to stake
     //move tokens from free to proposed in tokenholder contract
     address tokenHolderRegistry = msg.sender;     //the project registry calls this function
@@ -112,7 +118,7 @@ contract Project{
     }
   }
 
-  function refundProposer() returns (uint256) {   //called by THR, decrements proposer tokens
+  function refundProposer() onlyTHR() returns (uint256) {   //called by THR, decrements proposer tokens
     require(projectState != State.Proposed && proposerStake != 0);   //make sure out of proposed state & msg.sender is the proposer
     uint256 temp = proposerStake;
     proposerStake = 0;
@@ -159,9 +165,9 @@ contract Project{
   }
 
   //ACTIVE PROJECT
-  function checkWorkersDone() onlyInState(State.Active) internal returns (bool) {
-    for (uint i=0; i<workers.length; i++) {
-        if (workers[i].taskComplete == false) {
+  function checkTasksDone() onlyInState(State.Active) internal returns (bool) {
+    for (uint i=0; i<tasks.length; i++) {
+        if (tasks[i].taskComplete == false) {
           return false;
         }
         else {
@@ -171,15 +177,15 @@ contract Project{
     }
   }
 
-  function addWorker(address _workerAddress) onlyInState(State.Active) onlyBefore(projectDeadline) {
+  function addTask(address _workerAddress, string _description) onlyInState(State.Active) onlyBefore(projectDeadline) {
     //need to restrict who can call this
-    workers.push(Worker(_workerAddress, false));
+    tasks.push(Task(_workerAddress, _description, false));
   }
 
-  function updateWorker() onlyInState(State.Active) returns (bool) {
-    for (uint i=0; i<workers.length; i++) {
-      if(workers[i].workerAddress == msg.sender) {
-        workers[i].taskComplete = true;
+  function updateTask() onlyInState(State.Active) returns (bool) {  //limit to called by worker in task
+    for (uint i=0; i<tasks.length; i++) {
+      if(tasks[i].workerAddress == msg.sender) {
+        tasks[i].taskComplete = true;
         return true;
       }
       else {

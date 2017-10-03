@@ -24,16 +24,20 @@ contract('Capital token', function(accounts) {
     });
   });
 
-it("is burned", function() {
-  return TokenHolderRegistry.deployed().then(function(instance) {
-    THR = instance;
-    a = THR.totalCapitalTokenSupply.call();
-    return THR.burnAndRefund(6, {from: account1})
-  }).then(function(bool){
-    return THR.totalCapitalTokenSupply.call();
-  }).then(function(tokenSupply) {
-    assert.notEqual(tokenSupply, a, "tokens were not burned and refunded")
+  it("is burned", function() {
+    return TokenHolderRegistry.deployed().then(function(instance) {
+      THR = instance;
+      a = THR.totalCapitalTokenSupply.call()
+      console.log(a)
+      a = a.toNumber();
+      return THR.burnAndRefund(a, {from: account1})
+    }).then(function(bool){
+      return THR.totalCapitalTokenSupply.call();
+    }).then(function(tokenSupply) {
+      assert.equal(tokenSupply, 0, "tokens were not burned and refunded")
+    });
   });
-});
+
+
 
 });

@@ -23,6 +23,7 @@ contract TokenHolderRegistry is ERC20 {
   mapping(address => Proposer) proposers;   //project -> Proposer
   uint256 proposeProportion = 20;
   uint256 rewardProportion = 100;
+
   struct Proposer{
     address proposer;     //who is the proposer
     uint256 proposerStake;   //how much did they stake in tokens
@@ -48,6 +49,12 @@ event LogCostOfTokenUpdate(uint256 newCost);
   }
 
 //functions
+  function getProjectAddress(uint _id) returns (address) {
+    if (_id <= projectNonce) {
+      return projectId[_id];
+    }
+  }
+
   function fracExp(uint256 k, uint256 q, uint256 n, uint256 p) internal returns (uint) {
     // via: http://ethereum.stackexchange.com/questions/10425/is-there-any-efficient-way-to-compute-the-exponentiation-of-a-fraction-and-an-in/10432#10432
     // Computes `k * (1+1/q) ^ N`, with precision `p`. The higher
@@ -66,7 +73,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
     return s;
   }
 
-  function updateMintingPrice(uint256 _supply) {    //minting price
+  function updateMintingPrice(uint256 _supply) internal {    //minting price
       costPerToken = baseCost+fracExp(baseCost, 618046, _supply, 2)+baseCost*_supply/1000;
       LogCostOfTokenUpdate(costPerToken);
   }
@@ -113,7 +120,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
       }
   }
 
-  function burnAndRefundPrice() returns (uint256) {
+  function burnAndRefundPrice() internal returns (uint256) {
     //calculated current burn reward of 1 token
     uint256 reward = weiBal/totalCapitalTokenSupply; //rounding? - remainder discarded
     return reward;    //reward in wei of burning 1 token
