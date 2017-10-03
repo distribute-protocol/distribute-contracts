@@ -12,7 +12,7 @@ import "./ERC20.sol";
 
 contract TokenHolderRegistry is ERC20 {
 
-//state variables --> note: balances are held in ERC20 contract, ho
+//state variables --> note: balances are held in ERC20 contract
   //general token holder state variables
   address workerRegistry;
 
@@ -49,19 +49,20 @@ modifier onlyWR() {
   _;
 }
 
-//quasi-constructor
+//QUASI-CONSTRUCTOR
   function init(address _workerRegistry) {       //contract is created
     workerRegistry = _workerRegistry;
     updateMintingPrice(0);
   }
 
-//functions
+//GENERAL FUNCTION
   function getProjectAddress(uint _id) onlyWR() returns (address) {
     if (_id <= projectNonce) {
       return projectId[_id];
     }
   }
 
+  //MINTING FUNCTIONS
   function fracExp(uint256 k, uint256 q, uint256 n, uint256 p) internal returns (uint) {
     // via: http://ethereum.stackexchange.com/questions/10425/is-there-any-efficient-way-to-compute-the-exponentiation-of-a-fraction-and-an-in/10432#10432
     // Computes `k * (1+1/q) ^ N`, with precision `p`. The higher
@@ -111,7 +112,7 @@ modifier onlyWR() {
       LogMint(totalMinted, (msg.value - fundsLeft));
     }
 
-  function burnAndRefund(uint256 _amountToBurn) returns (bool) {      //free tokens only
+  function burnAndRefund(uint256 _amountToBurn) returns (bool success) {      //free tokens only
       if(_amountToBurn > 0 && (balances[msg.sender]) >= _amountToBurn) {
           //determine how much you can leave with.
           uint256 reward = _amountToBurn * weiBal/totalCapitalTokenSupply; //rounding? - remainder discarded
@@ -127,12 +128,13 @@ modifier onlyWR() {
       }
   }
 
-  function burnAndRefundPrice() internal returns (uint256) {
+  function burnAndRefundPrice() internal returns (uint256 price) {
     //calculated current burn reward of 1 token
     uint256 reward = weiBal/totalCapitalTokenSupply; //rounding? - remainder discarded
     return reward;    //reward in wei of burning 1 token
   }
 
+  //PROPOSER FUNCTIONS
   function proposeProject(uint256 _cost, uint256 _projectDeadline) payable {    //_cost of project in ether
     //calculate cost of project in tokens currently (_cost in wei)
     //check proposer has at least 5% of the proposed cost in tokens
@@ -165,7 +167,8 @@ modifier onlyWR() {
     msg.sender.transfer(proposerReward);     //how are we sure that this still exists in the ethpool?
   }
 
-  function stakeToken(uint256 _projectId, uint256 _tokens) {    //not good right now, anyone can call
+  //PROPOSED PROJECT - STAKING FUNCTIONALITY
+  function stakeToken(uint256 _projectId, uint256 _tokens) {
     require(balances[msg.sender] >= _tokens && _projectId <= projectNonce);   //make sure project exists & TH has tokens to stake
     bool success = Project(projectId[_projectId]).stakeCapitalToken(_tokens, msg.sender);
     assert(success == true);
@@ -173,7 +176,7 @@ modifier onlyWR() {
     totalFreeCapitalTokenSupply -= _tokens;
   }
 
-  function unstakeToken(uint256 _projectId, uint256 _tokens) {    //not good right now, anyone can call
+  function unstakeToken(uint256 _projectId, uint256 _tokens) {
     require(_projectId <= projectNonce);
     bool success = Project(projectId[_projectId]).unstakeCapitalToken(_tokens, msg.sender);
     assert(success == true);
@@ -181,16 +184,17 @@ modifier onlyWR() {
     totalFreeCapitalTokenSupply += _tokens;
   }
 
-  function refundVoter(uint _projectId) {
+  //COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
+  function validate(uint256 _projectId, uint256 _tokens) {
 
   }
 
-  function refundValidator(uint _projectId) {
+  function vote(uint256 _projectId, uint256 _tokens) {
 
   }
 
+  //VALIDATED PROJECT
   function refundStaker(uint _projectId) {
-    require(_projectId <= projectNonce);
 
   }
 

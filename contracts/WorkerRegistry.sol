@@ -17,51 +17,46 @@ contract WorkerRegistry{
   address tokenHolderRegistry;
 
   mapping (address => uint) balances;
-  uint public totalWorkerTokenSupply;               //total supply of capital tokens in all states
-  uint public totalFreeWorkerTokenSupply;           //total supply of free capital tokens (not staked, validated, or voted)
+  uint256 totalWorkerTokenSupply;               //total supply of capital tokens in all states
+  uint256 totalFreeWorkerTokenSupply;           //total supply of free capital tokens (not staked, validated, or voted)
 
 //events
 
 //modifiers
 
-//constructor
+//CONSTRUCTOR
   function WorkerRegistry(address _tokenHolderRegistry){
       tokenHolderRegistry = _tokenHolderRegistry;
   }
 
-//functions
-
-  function stakeToken(address _staker, uint _tokens) {
-    if (balances[_staker] > _tokens) {
-      balances[_staker] -= _tokens;
-      totalFreeWorkerTokenSupply -= _tokens;
-    }
-  }
-
-  function unstakeToken(address _staker, uint _tokens) {
+//PROPOSED PROJECT - STAKING FUNCTIONALITY
+  function stakeToken(uint256 _projectId, uint256 _tokens) {
 
   }
 
+  function unstakeToken(uint256 _projectId, uint256 _tokens) {
+
+  }
+
+
+  //ACTIVE PROJECT
   function updateTask() {
 
   }
 
-  function vote(uint _projectId, uint _numTokens) {
+  //COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
+  function vote(uint256 _projectId, uint256 _tokens) {
 
   }
 
-  function refundVoter(uint _projectId) {
-
-  }
-
-  function refundStaker(uint _projectId) {
+  function refundStaker(uint256 _projectId) {
     address _projectAddress = TokenHolderRegistry(tokenHolderRegistry).getProjectAddress(_projectId);
-    uint _refund = Project(_projectAddress).refundStaker(msg.sender);
+    uint256 _refund = Project(_projectAddress).refundStaker(msg.sender);
     totalFreeWorkerTokenSupply += _refund;
     balances[msg.sender] += _refund;
   }
 
-  function rewardWorker(uint _projectId) {   //pay worker for work
+  function rewardWorker(uint256 _projectId) {   //pay worker for work
 
   }
 
