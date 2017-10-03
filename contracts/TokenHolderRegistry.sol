@@ -14,6 +14,8 @@ contract TokenHolderRegistry is ERC20 {
 
 //state variables --> note: balances are held in ERC20 contract, ho
   //general token holder state variables
+  address workerRegistry;
+
   uint256 public totalCapitalTokenSupply = 0;               //total supply of capital tokens in all staking states
   uint256 public totalFreeCapitalTokenSupply = 0;           //total supply of free capital tokens (not staked, validated, or voted)
   mapping(uint256 => address) projectId;                    //projectId to project address
@@ -44,7 +46,8 @@ event LogCostOfTokenUpdate(uint256 newCost);
 //modifiers
 
 //quasi-constructor
-  function init() {       //contract is created
+  function init(address _workerRegistry) {       //contract is created
+    workerRegistry = _workerRegistry;
     updateMintingPrice(0);
   }
 
@@ -172,6 +175,14 @@ event LogCostOfTokenUpdate(uint256 newCost);
     assert(success == true);
     balances[msg.sender] += _tokens;                   //assumes _staker has staked to begin with
     totalFreeCapitalTokenSupply += _tokens;
+  }
+
+  function refundVoter(uint _projectId) {
+
+  }
+
+  function refundValidator(uint _projectId) {
+
   }
 
   function refundStaker(uint _projectId) {

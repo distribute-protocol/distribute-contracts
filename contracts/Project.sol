@@ -182,7 +182,7 @@ contract Project{
     tasks.push(Task(_workerAddress, _description, false));
   }
 
-  function updateTask() onlyInState(State.Active) returns (bool) {  //limit to called by worker in task
+  function updateTask() onlyInState(State.Active) onlyWR() returns (bool) {  //limit to called by worker in task
     for (uint i=0; i<tasks.length; i++) {
       if(tasks[i].workerAddress == msg.sender) {
         tasks[i].taskComplete = true;
@@ -200,6 +200,7 @@ contract Project{
       return false;
     }
     else {
+
       return true;
     }
   }
@@ -212,41 +213,43 @@ contract Project{
       return true;
     }
   }
-/*
-  function validate(uint _tokens, bool _validationState) onlyInState(State.Completed) onlyBefore(projectDeadline) {
+
+  function validate(uint _tokens, bool _validationState) onlyInState(State.Completed) onlyBefore(projectDeadline) onlyTHR() {
     //make sure has the free tokens
     //move msg.sender's tokens from freeTokenBalance to validatedTokenBalance
     if (_validationState) {
       //check for overflow
-      //move tokens from free to validated
       validatedAffirmative[msg.sender] += _tokens;
     }
     else {
       //check for overflow
-      //move tokens from free to validated in other contract
       validatedNegative[msg.sender] += _tokens;
     }
   }
 
-  function vote(uint _tokens, bool _validationState, bool _isworker) onlyBefore(projectDeadline) {
-    //check has the free tokens depending on bool _isworker
-    //move tokens from free to vote in other contract
+  function vote(uint _tokens, bool _validationState) onlyBefore(projectDeadline) {
+    //check has the free tokens
     //check for overflow
-    //update votedAffirmative or votedNegative mapping
   }
-*/
-  function refundStaker(address _staker) onlyInState(State.validated) returns (uint _refund) {  //called by THR or WR
-    require(msg.sender == (tokenHolderRegistry || workerRegistry));
+
+
+
+  function refundStaker(address _staker) onlyInState(State.Validated) returns (uint _refund) {  //called by THR or WR
+    require(msg.sender == tokenHolderRegistry ||  msg.sender == workerRegistry);
     if (msg.sender == tokenHolderRegistry) {
 
     }
     else if (msg.sender == workerRegistry) {
       require(stakedWorkerBalances[_staker] > 0);
-      _stake = stakedWorkerBalances[_staker];
+      uint _stake = stakedWorkerBalances[_staker];
       stakedWorkerBalances[_staker] -= _stake;
       totalWorkerStaked -= _stake;
       return _stake;
     }
     return 0;
+  }
+
+  function refundWorker(){
+
   }
 }

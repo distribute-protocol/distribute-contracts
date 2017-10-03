@@ -18,7 +18,7 @@ module.exports = function(deployer) {
       }).then(function(instance){
         return TokenHolderRegistry.deployed()
       }).then(function(instance){
-        return instance.init()
+        return instance.init(WorkerRegistry.address)
     })
     deployer.link(ERC20Contract, TokenHolderRegistry);
 };
