@@ -95,7 +95,7 @@ contract Project{
   function Project(uint _cost, uint _projectDeadline, uint256 _proposerStake) onlyTHR() {
     //check has percentage of tokens to stake
     //move tokens from free to proposed in tokenholder contract
-    address tokenHolderRegistry = msg.sender;     //the project registry calls this function
+    tokenHolderRegistry = msg.sender;     //the project registry calls this function
     capitalCost = _cost;
     projectDeadline = _projectDeadline;
     projectState = State.Proposed;
@@ -235,4 +235,18 @@ contract Project{
     //update votedAffirmative or votedNegative mapping
   }
 */
+  function refundStaker(address _staker) onlyInState(State.validated) returns (uint _refund) {  //called by THR or WR
+    require(msg.sender == (tokenHolderRegistry || workerRegistry));
+    if (msg.sender == tokenHolderRegistry) {
+
+    }
+    else if (msg.sender == workerRegistry) {
+      require(stakedWorkerBalances[_staker] > 0);
+      _stake = stakedWorkerBalances[_staker];
+      stakedWorkerBalances[_staker] -= _stake;
+      totalWorkerStaked -= _stake;
+      return _stake;
+    }
+    return 0;
+  }
 }

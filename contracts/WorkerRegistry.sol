@@ -15,12 +15,7 @@ contract WorkerRegistry{
 //state variables
   address tokenHolderRegistry;
 
-  struct Worker{
-    uint totalTokenBalance;       //total worker tokens of all types
-    uint freeTokenBalance;
-  }
-
-  mapping (address => Worker) balances;
+  mapping (address => uint) balances;
   uint public totalWorkerTokenSupply;               //total supply of capital tokens in all states
   uint public totalFreeWorkerTokenSupply;           //total supply of free capital tokens (not staked, validated, or voted)
 
@@ -29,24 +24,29 @@ contract WorkerRegistry{
 //modifiers
 
 //constructor
-function WorkerRegistry(address _tokenHolderRegistry){
-    tokenHolderRegistry = _tokenHolderRegistry;
+  function WorkerRegistry(address _tokenHolderRegistry){
+      tokenHolderRegistry = _tokenHolderRegistry;
   }
 
 //functions
 
-function stakeToken(address _staker, uint _tokens) {
-  if (balances[_staker].freeTokenBalance > _tokens) {
-    balances[_staker].freeTokenBalance -= _tokens;
-    totalFreeWorkerTokenSupply -= _tokens;
+  function stakeToken(address _staker, uint _tokens) {
+    if (balances[_staker] > _tokens) {
+      balances[_staker] -= _tokens;
+      totalFreeWorkerTokenSupply -= _tokens;
+    }
   }
-}
 
-function unstakeToken(address _staker, uint _tokens) {
-  if (balances[_staker].totalTokenBalance - balances[_staker].freeTokenBalance < _tokens) {
-    balances[_staker].freeTokenBalance += _tokens;
-    totalFreeWorkerTokenSupply += _tokens;
+  function unstakeToken(address _staker, uint _tokens) {
+
   }
-}
+
+  function refundStaker(uint _id) {
+    address _staker = msg.sender;
+    address _projectAddress = TokenHolderRegistry(tokenHolderRegistry).getProjectAddress(_id);
+    uint _refund = Project(_projectAddress).refundStaker(msg.sender);
+    balances[msg.sender] += _refund;
+    totalFreeWorkerTokenSupply += refund;
+  }
 
 }

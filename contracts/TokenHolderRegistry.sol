@@ -159,7 +159,7 @@ event LogCostOfTokenUpdate(uint256 newCost);
   }
 
   function stakeToken(uint256 _projectId, uint256 _tokens) {    //not good right now, anyone can call
-    require(balances[msg.sender] >= _tokens && _projectId < projectNonce);   //make sure project exists & TH has tokens to stake
+    require(balances[msg.sender] >= _tokens && _projectId <= projectNonce);   //make sure project exists & TH has tokens to stake
     bool success = Project(projectId[_projectId]).stakeCapitalToken(_tokens, msg.sender);
     assert(success == true);
     balances[msg.sender] -= _tokens;
@@ -167,10 +167,15 @@ event LogCostOfTokenUpdate(uint256 newCost);
   }
 
   function unstakeToken(uint256 _projectId, uint256 _tokens) {    //not good right now, anyone can call
-    require(_projectId < projectNonce);
+    require(_projectId <= projectNonce);
     bool success = Project(projectId[_projectId]).unstakeCapitalToken(_tokens, msg.sender);
     assert(success == true);
     balances[msg.sender] += _tokens;                   //assumes _staker has staked to begin with
     totalFreeCapitalTokenSupply += _tokens;
+  }
+
+  function refundStaker(uint _projectId) {
+    require(_projectId <= projectNonce);
+
   }
 }
