@@ -45,6 +45,8 @@ contract Project{
   mapping (address => uint) validatedNegative;
   uint256 validationStart;
   uint256 validationPeriod;
+  uint256 totalValidateAffirmative;
+  uint256 totalValidateNegative;
 
   //keep track of voting complete project
   mapping (address => uint) votedAffirmative;
@@ -145,10 +147,12 @@ contract Project{
     else if (projectState == State.Completed) {
       if(now > validationStart + validationPeriod + votingPeriod) {
         if (totalVoteNegative > totalVoteAffirmate) {
+          handleVoteResult();                   //prevent stakers from withdrawing before burning their tokens
           projectState = State.Failed;
           return true;
         }
         else {
+          handleVoteResult();
           projectState = State.Validated;
           return true;
         }
@@ -210,65 +214,70 @@ contract Project{
     }
   }
 
-  //ACTIVE PROJECT
+  // =======================
+  // ACTIVE PROJECT FUNCTIONS
+  // =======================
 
-  function addTask(address _workerAddress, string _description) onlyInState(State.Active) onlyBefore(projectDeadline) {
-    //need to restrict who can call this
-    tasks.push(Task(_workerAddress, _description, false));
+  function addTask(address _workerAddress, string _description) onlyInState(State.Active) onlyBefore(projectDeadline) {     //uclear who can call this, needs to be restricted to consensus-based tasks
+    if (checkStateChange() == false) {
+      tasks.push(Task(_workerAddress, _description, false));
+    }
   }
 
-  function updateTask() onlyInState(State.Active) onlyWR() returns (bool success) {  //limit to called by worker in task
-    for (uint256 i=0; i<tasks.length; i++) {
-      if(tasks[i].workerAddress == msg.sender) {
-        tasks[i].taskComplete = true;
+  function completeTask() onlyInState(State.Active) onlyWR() returns (bool success) {  //can only be called by worker in task
+    if (checkStateChange() == false) {
+      for (uint256 i=0; i<tasks.length; i++) {
+        if(tasks[i].workerAddress == msg.sender && tasks[i].taskComplete == false) {
+          tasks[i].taskComplete = true;
+          return true;
+        }
+      }
+      return false;
+    }
+    return false;
+  }
+
+  // =======================
+  // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
+  // =======================
+
+  function validate(address _staker, uint256 _tokens, bool _validationState) onlyTHR() onlyInState(State.Completed) returns (bool success) {
+    //checks for free tokens done in THR
+    //increments validation tokens in Project.sol only
+    if (checkStateChange() == false) {
+      require(now < validationStart + validationPeriod);
+      if (_validationState == true && validatedAffirmative[_staker] + _tokens > validatedAffirmative[_staker] && totalValidateAffirmative + _tokens > totalValidateAffirmative) {
+        validatedAffirmative[_staker] += _tokens;
+        totalValidateAffirmative += _tokens;
         return true;
       }
-      else {
-      return false;
+      else if (_validationState == false && validatedNegative[_staker] + _tokens > validatedNegative[_staker] && totalValidateNegative + _tokens > totalValidateNegative){
+        validatedNegative[msg.sender] += _tokens;
+        totalValidateNegative += _tokens;
+        return true;
       }
-    }
-  }
-
-  //COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
-  function validate(uint256 _tokens, bool _validationState) onlyTHR() onlyInState(State.Completed) onlyBefore(projectDeadline) onlyTHR() {
-    //make sure has the free tokens
-    //move msg.sender's tokens from freeTokenBalance to validatedTokenBalance
-    if (_validationState) {
-      //check for overflow
-      validatedAffirmative[msg.sender] += _tokens;
-    }
-    else {
-      //check for overflow
-      validatedNegative[msg.sender] += _tokens;
-    }
-  }
-
-  function checkValidationOver() onlyInState(State.Completed) internal returns (bool) {
-    if(validationStart + validationPeriod < now) {
       return false;
     }
-    else {
+  }
 
-      return true;
+  function vote(address _staker, uint256 _tokens, bool _validationState) onlyInState(State.Completed) returns (bool success) {
+    if (checkStateChange() == false) {
+      require(now > validationStart + validationPeriod && now < validationStart + validationPeriod + votingPeriod);
+      require(msg.sender == tokenHolderRegistry ||  msg.sender == workerRegistry);
     }
   }
 
-  function vote(uint256 _tokens, bool _validationState) onlyBefore(projectDeadline) {
-    require(msg.sender == tokenHolderRegistry ||  msg.sender == workerRegistry);
-
+  function handleVoteResult() internal {
+    //redistribute validator tokens
+    //if no incorrect validators, allow validators to share 1% of project cost from pool
+    //burn staked tokens if necessary
   }
 
-  function checkVotingOver() onlyInState(State.Completed) internal returns (bool) {         //if true, handle redistribution of validation tokens & potentially staked tokens
-    if (validationStart + validationPeriod + votingPeriod < now) {
-      return false;
-    }
-    else {
-      return true;
-    }
-  }
+  // =======================
+  // VALIDATED PROJECT
+  // =======================
 
-  //VALIDATED PROJECT
-  function refundStaker(address _staker) onlyInState(State.Validated) returns (uint256 _refund) {  //called by THR or WR
+  function refundStaker(address _staker) onlyInState(State.Validated) returns (uint256 _refund) {  //called by THR or WR, allow return of staked, validated, and
     require(msg.sender == tokenHolderRegistry ||  msg.sender == workerRegistry);
     if (msg.sender == tokenHolderRegistry) {
 
@@ -286,4 +295,5 @@ contract Project{
   function rewardWorker() onlyWR() onlyInState(State.Validated) returns (uint256 _reward) {
     return 1;
   }
+
 }
