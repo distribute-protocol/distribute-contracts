@@ -135,7 +135,7 @@ modifier onlyWR() {
   }
 
   //PROPOSER FUNCTIONS
-  function proposeProject(uint256 _cost, uint256 _projectDeadline) payable {    //_cost of project in ether
+  function proposeProject(uint256 _cost, uint256 _projectDeadline) payable {    //_cost of project in ether, _projectDeadline is for end of active period
     //calculate cost of project in tokens currently (_cost in wei)
     //check proposer has at least 5% of the proposed cost in tokens
     uint256 currentTokenCost = _cost / burnAndRefundPrice();
