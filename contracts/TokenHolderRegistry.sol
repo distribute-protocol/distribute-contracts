@@ -143,11 +143,11 @@ modifier onlyWR() {
     require(balances[msg.sender] >= proposerTokenCost);
     balances[msg.sender] -= proposerTokenCost;
     totalFreeCapitalTokenSupply -= proposerTokenCost;
-    Project newProject = new Project(_cost,
+    projectNonce += 1;                  //determine project id
+    Project newProject = new Project(projectNonce, _cost,
                                      _projectDeadline,
                                      proposerTokenCost
                                      );
-    projectNonce += 1;                  //determine project id
     address projectAddress = address(newProject);
     projectId[projectNonce] = projectAddress;
     proposers[projectAddress].proposer = msg.sender;
@@ -193,7 +193,12 @@ modifier onlyWR() {
 
   }
 
-  //VALIDATED PROJECT
+  //FAILED / VALIDATED PROJECT
+  function updateTotal(uint256 _projectId, uint256 _tokens) {
+    require(projectId[_projectId] == msg.sender);     //check that valid project is calling this function
+    totalCapitalTokenSupply -= _tokens;
+  }
+
   function refundStaker(uint _projectId) {
 
   }

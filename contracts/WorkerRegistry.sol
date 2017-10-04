@@ -49,6 +49,13 @@ contract WorkerRegistry{
 
   }
 
+  //FAILED / VALIDATED PROJECT
+  function updateTotal(uint256 _projectId, uint256 _tokens) {
+    require(TokenHolderRegistry(tokenHolderRegistry).getProjectAddress(_projectId) == msg.sender);                  //check that valid project is calling this function
+    totalWorkerTokenSupply -= _tokens;
+  }
+
+
   function refundStaker(uint256 _projectId) {
     address _projectAddress = TokenHolderRegistry(tokenHolderRegistry).getProjectAddress(_projectId);
     uint256 _refund = Project(_projectAddress).refundStaker(msg.sender);
