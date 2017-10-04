@@ -285,7 +285,7 @@ contract Project{
 
   function handleVoteResult() internal {
     if(totalVoteNegative > totalVoteAffirmative) {      //project fails
-      TokenHolderRegistry(tokenHolderRegistry).updateTotal(projectId, totalCapitalStaked;
+      TokenHolderRegistry(tokenHolderRegistry).updateTotal(projectId, totalCapitalStaked);
       WorkerRegistry(workerRegistry).updateTotal(projectId, totalWorkerStaked);
       totalCapitalStaked = 0;
       totalWorkerStaked = 0;
