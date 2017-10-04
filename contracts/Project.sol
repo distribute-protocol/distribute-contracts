@@ -316,7 +316,7 @@ contract Project{
         validatedNegative[_staker] = 0;
         //plus validation reward
       }
-      if(totalValidatedAffirmative != 0) {
+      if(totalValidateAffirmative != 0) {
         refund += validatedAffirmative[_staker];
         validatedAffirmative[_staker] = 0;
         //plus validation reward
