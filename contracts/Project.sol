@@ -64,13 +64,13 @@ contract Project{
     Failed
   }
 
-  // =======================
-  // EVENTS
-  // =======================
+// =======================
+// EVENTS
+// =======================
 
-  // =======================
-  // MODIFIERS
-  // =======================
+// =======================
+// MODIFIERS
+// =======================
 
   modifier onlyInState(State _state) {
     require(projectState == _state);
@@ -92,6 +92,10 @@ contract Project{
     _;
   }
 
+// =======================
+// FUNCTIONS
+// =======================
+
   // =======================
   // CONSTRUCTOR
   // =======================
@@ -108,10 +112,9 @@ contract Project{
   }
 
   // =======================
-  // FUNCTIONS
+  // GENERAL FUNCTIONS
   // =======================
 
-  //GENERAL FUNCTIONS
   function checkStateChange() internal returns (bool stateChange) {                              //general state change function
     if (projectState == State.Proposed) {
       if (totalCapitalStaked >= capitalCost && totalWorkerStaked >= workerCost)
@@ -141,7 +144,7 @@ contract Project{
 
     else if (projectState == State.Completed) {
       if(now > validationStart + validationPeriod + votingPeriod) {
-        if (votedNegative > votedAffirmative) {
+        if (totalVoteNegative > totalVoteAffirmate) {
           projectState = State.Failed;
           return true;
         }
@@ -154,17 +157,20 @@ contract Project{
     }
   }
 
-  //PROPOSED PROJECT - STAKING FUNCTIONALITY
-  function refundProposer() onlyTHR() returns (uint256 _proposerStake) {   //called by THR, decrements proposer tokens
+  // =======================
+  // PROPOSED PROJECT - STAKING FUNCTIONS
+  // =======================
+
+  function refundProposer() onlyTHR() returns (uint256 _proposerStake) {   //called by THR, decrements proposer tokens in Project.sol
     require(projectState != State.Proposed && proposerStake != 0);   //make sure out of proposed state & msg.sender is the proposer
     uint256 temp = proposerStake;
     proposerStake = 0;
     return temp;
   }
 
-  function stakeCapitalToken(uint256 _tokens, address _staker) onlyTHR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool) {  //called by THR only
-    if (checkStaked() == false &&
-      stakedCapitalBalances[_staker] + _tokens > stakedCapitalBalances[_staker]) {
+  function stakeCapitalToken(uint256 _tokens, address _staker) onlyTHR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {  //called by THR, increments _staker tokens in Project.sol
+    if (checkStateChange() == false &&
+         stakedCapitalBalances[_staker] + _tokens > stakedCapitalBalances[_staker]) {
         stakedCapitalBalances[_staker] += _tokens;
         return true;
     } else {
@@ -172,10 +178,10 @@ contract Project{
     }
   }
 
-  function unstakeCapitalToken(uint256 _tokens, address _staker) onlyTHR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool) {    //called by THR only
-    if (checkStaked() == false &&
+  function unstakeCapitalToken(uint256 _tokens, address _staker) onlyTHR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {    //called by THR only, decrements _staker tokens in Project.sol
+    if (checkStateChange() == false &&
          stakedCapitalBalances[_staker] - _tokens < stakedCapitalBalances[_staker] &&   //check overflow
-         stakedCapitalBalances[_staker] - _tokens >= 0) {    //make sure has the tokens staked to unstake
+         stakedCapitalBalances[_staker] - _tokens >= 0) {    //make sure _staker has the tokens staked to unstake
            stakedCapitalBalances[_staker] -= _tokens;
            return true;
     } else {
@@ -183,12 +189,25 @@ contract Project{
     }
   }
 
-  function stakeWorkerToken(uint256 _tokens, address _staker) onlyWR() onlyInState(State.Proposed) onlyBefore(projectDeadline) {
-
+  function stakeWorkerToken(uint256 _tokens, address _staker) onlyWR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {
+    if (checkStateChange() == false &&
+         stakedWorkerBalances[_staker] + _tokens > stakedWorkerBalances[_staker]) {
+        stakedWorkerBalances[_staker] += _tokens;
+        return true;
+    } else {
+      return false;
+    }
   }
 
-  function unstakeWorkerToken(uint256 _tokens, address _staker) onlyWR() onlyInState(State.Proposed) onlyBefore(projectDeadline) {
-
+  function unstakeWorkerToken(uint256 _tokens, address _staker) onlyWR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {
+    if (checkStateChange() == false &&
+         stakedWorkerBalances[_staker] - _tokens < stakedWorkerBalances[_staker] &&   //check overflow
+         stakedWorkerBalances[_staker] - _tokens >= 0) {    //make sure _staker has the tokens staked to unstake
+           stakedWorkerBalances[_staker] -= _tokens;
+           return true;
+    } else {
+      return false;
+    }
   }
 
   //ACTIVE PROJECT
