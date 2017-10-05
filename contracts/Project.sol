@@ -19,7 +19,7 @@ contract Project{
 
   uint256 projectId;
 
-  uint256 capitalETHCost;
+  uint256 public capitalETHCost;
   uint256 capitalCost;            //total amount of staked capital in tokens needed
   uint256 workerCost;             //total amount of staked worker tokens needed, one to one with capital tokens
 
@@ -171,7 +171,7 @@ contract Project{
   // =======================
 
   function refundProposer() onlyTHR() returns (uint256 _proposerStake) {   //called by THR, decrements proposer tokens in Project.sol
-    require(projectState != State.Proposed && proposerStake != 0);   //make sure out of proposed state & msg.sender is the proposer
+    require(projectState != State.Proposed && proposerStake != 0);         //make sure out of proposed state & msg.sender is the proposer
     uint256 temp = proposerStake;
     proposerStake = 0;
     return temp;
@@ -344,7 +344,7 @@ contract Project{
   function rewardWorker(address _staker) onlyWR() onlyInState(State.Validated) returns (uint256 _reward) {
     uint256 reward = 0;
     for (uint256 i=0; i<tasks.length; i++) {
-      if(tasks[i].workerAddress == msg.sender) {
+      if(tasks[i].workerAddress == _staker) {
         reward += tasks[i].ETHReward;
         tasks[i].ETHReward = 0;
       }
