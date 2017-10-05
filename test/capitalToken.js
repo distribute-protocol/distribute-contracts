@@ -9,32 +9,34 @@ var account1 = accounts[1]    //account 0 is THR
 contract('Capital token', function(accounts) {
   it("is minted", function() {
     return TokenHolderRegistry.deployed().then(function(instance) {
-      THR = instance;
-      //console.log('account1:', account1)
-      //return projReg.testFunc(5, {from: account1})
-      return THR.mint({from: account1, value: 1500000000000000})
+      THR = instance
+      tokens = 7
+      return THR.mint(tokens, {from: account1, value: 1500000000000000})
     }).then(function() {
-      //return projReg.returnLastProject.call()
-      //console.log(x.receipt.gasUsed)
       return THR.totalCapitalTokenSupply.call()
     }).then(function(tokensupply) {
-      //gconsole.log(tokensupply.toString())
-      a = tokensupply
-      assert.notEqual(tokensupply, 0, "tokens were not minted")
+      assert.equal(tokensupply, tokens, "total token supply not updated correctly")
+    }).then(function() {
+      return THR.balances.call(account1)
+    }).then(function(balance) {
+      assert.equal(balance, tokens, 'balances mapping not updated correctly')
     });
   });
 
   it("is burned", function() {
     return TokenHolderRegistry.deployed().then(function(instance) {
       THR = instance;
-      a = THR.totalCapitalTokenSupply.call()
-      console.log(a)
-      a = a.toNumber();
-      return THR.burnAndRefund(a, {from: account1})
-    }).then(function(bool){
+      return THR.balances.call(account1)
+    }).then(function(balance) {
+      assert.equal(balance, 7, "balance call failed")
+      return THR.burnAndRefund(balance, {from: account1})
+    }).then(function() {
+      return THR.balances.call(account1)
+    }).then(function(balance) {
+      assert.equal(balance, 0, 'balances mapping not updated correctly')
       return THR.totalCapitalTokenSupply.call();
-    }).then(function(tokenSupply) {
-      assert.equal(tokenSupply, 0, "tokens were not burned and refunded")
+    }).then(function(tokensupply) {
+      assert.equal(tokensupply, 0, "total token supply not updated correctly")
     });
   });
 
