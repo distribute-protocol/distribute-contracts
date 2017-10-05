@@ -12,9 +12,9 @@ import "./ERC20.sol";
 
 contract TokenHolderRegistry is ERC20 {
 
-// =======================
+// =====================================================================
 // STATE VARIABLES
-// =======================
+// =====================================================================
   address workerRegistry;
 
   uint256 public totalCapitalTokenSupply = 0;               //total supply of capital tokens in all staking states
@@ -42,38 +42,38 @@ contract TokenHolderRegistry is ERC20 {
   //ether pool
   uint256 public weiBal;   //in wei
 
-// =======================
+// =====================================================================
 // EVENTS
-// =======================
+// =====================================================================
 
   event LogMint(uint256 amountMinted, uint256 totalCost);
   event LogWithdraw(uint256 amountWithdrawn, uint256 reward);
   event LogCostOfTokenUpdate(uint256 newCost);
 
-// =======================
+// =====================================================================
 // MODIFIERS
-// =======================
+// =====================================================================
 
   modifier onlyWR() {
     require(msg.sender == workerRegistry);
     _;
   }
 
-// =======================
+// =====================================================================
 // FUNCTIONS
-// =======================
+// =====================================================================
 
-  // =======================
+  // =====================================================================
   // QUASI-CONSTRUCTOR
-  // =======================
+  // =====================================================================
   function init(address _workerRegistry) {       //contract is created
     workerRegistry = _workerRegistry;
     updateMintingPrice(0);
   }
 
-  // =======================
+  // =====================================================================
   // GENERAL FUNCTION
-  // =======================
+  // =====================================================================
 
   function getProjectAddress(uint _id) onlyWR() returns (address) {
     if (_id <= projectNonce && _id > 0) {
@@ -81,9 +81,9 @@ contract TokenHolderRegistry is ERC20 {
     }
   }
 
-  // =======================
+  // =====================================================================
   // MINTING FUNCTIONS
-  // =======================
+  // =====================================================================
 
   function fracExp(uint256 k, uint256 q, uint256 n, uint256 p) internal returns (uint) {
     // via: http://ethereum.stackexchange.com/questions/10425/is-there-any-efficient-way-to-compute-the-exponentiation-of-a-fraction-and-an-in/10432#10432
@@ -159,9 +159,9 @@ contract TokenHolderRegistry is ERC20 {
     return reward;                                   //reward in wei of burning 1 token
   }
 
-  // =======================
+  // =====================================================================
   // PROPOSER FUNCTIONS
-  // =======================
+  // =====================================================================
 
   function proposeProject(uint256 _cost, uint256 _projectDeadline) payable {    //_cost of project in ether, _projectDeadline is for end of active period
     //calculate cost of project in tokens currently (_cost in wei)
@@ -194,9 +194,9 @@ contract TokenHolderRegistry is ERC20 {
     msg.sender.transfer(proposerReward);                                        //how are we sure that this still exists in the ethpool?
   }
 
-  // =======================
+  // =====================================================================
   // PROPOSED PROJECT - STAKING FUNCTIONALITY
-  // =======================
+  // =====================================================================
 
   function stakeToken(uint256 _projectId, uint256 _tokens) {
     require(balances[msg.sender] >= _tokens && _projectId <= projectNonce && _projectId > 0);   //make sure project exists & TH has tokens to stake
@@ -214,9 +214,9 @@ contract TokenHolderRegistry is ERC20 {
     totalFreeCapitalTokenSupply += _tokens;
   }
 
-  // =======================
+  // =====================================================================
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
-  // =======================
+  // =====================================================================
 
   function validate(uint256 _projectId, uint256 _tokens, bool _validationState) {
     require(balances[msg.sender] >= _tokens && _projectId <= projectNonce && _projectId > 0);
@@ -234,9 +234,9 @@ contract TokenHolderRegistry is ERC20 {
     totalFreeCapitalTokenSupply -= _tokens;
   }
 
-  // =======================
+  // =====================================================================
   // FAILED / VALIDATED PROJECT
-  // =======================
+  // =====================================================================
 
   function updateTotal(uint256 _projectId, uint256 _tokens) {
     require(projectId[_projectId] == msg.sender);                               //check that valid project is calling this function
@@ -247,5 +247,9 @@ contract TokenHolderRegistry is ERC20 {
     uint256 refund = Project(projectId[_projectId]).refundStaker(msg.sender);
     totalFreeCapitalTokenSupply += refund;
     balances[msg.sender] += refund;
+  }
+
+  function rewardWorker(address _worker, uint _reward) onlyWR() {
+    _worker.transfer(_reward);
   }
 }

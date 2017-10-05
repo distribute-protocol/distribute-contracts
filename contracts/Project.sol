@@ -10,9 +10,9 @@ import "./WorkerRegistry.sol";
 
 contract Project{
 
-// =======================
+// =====================================================================
 // STATE VARIABLES
-// =======================
+// =====================================================================
 
   address tokenHolderRegistry;    //connect to THR
   address workerRegistry;         //connect to WR
@@ -70,13 +70,13 @@ contract Project{
     Failed
   }
 
-// =======================
+// =====================================================================
 // EVENTS
-// =======================
+// =====================================================================
 
-// =======================
+// =====================================================================
 // MODIFIERS
-// =======================
+// =====================================================================
 
   modifier onlyInState(State _state) {
     require(projectState == _state);
@@ -98,13 +98,13 @@ contract Project{
     _;
   }
 
-// =======================
+// =====================================================================
 // FUNCTIONS
-// =======================
+// =====================================================================
 
-  // =======================
+  // =====================================================================
   // CONSTRUCTOR
-  // =======================
+  // =====================================================================
 
   function Project(uint256 _id, uint256 _cost, uint256 _projectDeadline, uint256 _proposerStake) onlyTHR() {       //called by THR
     //all checks done in THR first
@@ -118,9 +118,9 @@ contract Project{
     totalWorkerStaked = 0;
   }
 
-  // =======================
+  // =====================================================================
   // GENERAL FUNCTIONS
-  // =======================
+  // =====================================================================
 
   function checkStateChange() internal returns (bool stateChange) {                              //general state change function
     if (projectState == State.Proposed) {
@@ -166,9 +166,9 @@ contract Project{
     }
   }
 
-  // =======================
+  // =====================================================================
   // PROPOSED PROJECT - STAKING FUNCTIONS
-  // =======================
+  // =====================================================================
 
   function refundProposer() onlyTHR() returns (uint256 _proposerStake) {   //called by THR, decrements proposer tokens in Project.sol
     require(projectState != State.Proposed && proposerStake != 0);         //make sure out of proposed state & msg.sender is the proposer
@@ -219,9 +219,9 @@ contract Project{
     }
   }
 
-  // =======================
+  // =====================================================================
   // ACTIVE PROJECT FUNCTIONS
-  // =======================
+  // =====================================================================
 
   function addTask(address _workerAddress, string _description, uint256 _workerReward) onlyInState(State.Active) onlyBefore(projectDeadline) {     //uclear who can call this, needs to be restricted to consensus-based tasks
     if (checkStateChange() == false) {
@@ -242,9 +242,9 @@ contract Project{
     return false;
   }
 
-  // =======================
+  // =====================================================================
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
-  // =======================
+  // =====================================================================
 
   function validate(address _staker, uint256 _tokens, bool _validationState) onlyTHR() onlyInState(State.Completed) returns (bool success) {
     //checks for free tokens done in THR
@@ -298,9 +298,9 @@ contract Project{
     }
   }
 
-  // =======================
+  // =====================================================================
   // VALIDATED / FAILED PROJECT
-  // =======================
+  // =====================================================================
 
   function refundStaker(address _staker) returns (uint256 _refund) {  //called by THR or WR, allow return of staked, validated, and
     require(msg.sender == tokenHolderRegistry ||  msg.sender == workerRegistry);
