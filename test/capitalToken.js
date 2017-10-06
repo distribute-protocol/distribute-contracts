@@ -1,104 +1,70 @@
-var TokenHolderRegistry = artifacts.require("TokenHolderRegistry")
-var Project = artifacts.require("Project")
+require('./testFunctions.js')();
 
-accounts = web3.eth.accounts
+contract('Token holder', function() {
 
-var account1 = accounts[1]    //account 0 is THR
-var tokens = 102
-var burnAmount = 2
+  let accounts = web3.eth.accounts
+  let account1 = accounts[1]
 
-var weiPool = 0
-var mintEvents;
-var proposerEvents;
+  let tokens = 102;
+  let burnAmount = 2;
+  let weiPool, _projectCost, _timePeriod;
+  let tempBalance, freeTokenTemp, totalTokenTemp;
 
-var tempBalance;
-var freeTokenTemp;
-var totalTokenTemp;
-
-//utils = require("../js/utils.js")
-
-contract('Token holder', function(accounts) {
-  it("mints capital tokens", function() {
-    return TokenHolderRegistry.deployed().then(function(instance) {
-      THR = instance
-//      mintEvents = THR.LogMint({fromBlock: 0, toBlock: 'latest'});
-//      mintEvents.watch(function(error, event){
-//        if (!error)
-//          console.log(event.args);
-//      });
-      return THR.mint(tokens, {from: account1, value: 502934896893435110})
-    }).then(function() {
-      return THR.totalCapitalTokenSupply.call()
-    }).then(function(tokensupply) {
-      assert.equal(tokensupply, tokens, "total token supply not updated correctly")
-      return THR.totalFreeCapitalTokenSupply.call()
-    }).then(function(tokensupply) {
-      assert.equal(tokensupply, tokens, "free token supply not updated correctly")
-      return THR.balances.call(account1)
-    }).then(function(balance) {
-      assert.equal(balance, tokens, 'balances mapping not updated correctly')
-//      mintEvents.stopWatching();
-    });
+  it("mints capital tokens", () =>  {
+      let THR;
+      return getTHR()
+          .then((instance) => THR = instance)
+          .then(() => THR.mint(tokens, {from: account1, value: 502934896893435110}))
+          .then(() => THR.totalCapitalTokenSupply.call())
+          .then((tokensupply) => assert.equal(tokensupply, tokens, "total token supply not updated correctly"))
+          .then(() => THR.totalFreeCapitalTokenSupply.call())
+          .then((tokensupply) => assert.equal(tokensupply, tokens, "free token supply not updated correctly"))
+          .then(() => THR.balances.call(account1))
+          .then((balance) => assert.equal(balance, tokens, "balances mapping not updated correctly"));
   });
 
   it("burns capital tokens", function() {
-    return TokenHolderRegistry.deployed().then(function(instance) {
-      THR = instance;
-      return THR.balances.call(account1)
-    }).then(function(balance) {
-      assert.equal(balance, tokens, "balance call failed")
-      return THR.burnAndRefund(burnAmount, {from: account1})
-    }).then(function() {
-      return THR.balances.call(account1)
-    }).then(function(balance) {
-      assert.equal(balance, (tokens - burnAmount), 'balances mapping not updated correctly')
-      tempBalance = balance;
-      return THR.totalCapitalTokenSupply.call();
-    }).then(function(tokensupply) {
-      totalTokenTemp = tokensupply;
-      //console.log(tokensupply)
-      assert.equal(tokensupply, (tokens - burnAmount), "total token supply not updated correctly")
-      return THR.totalFreeCapitalTokenSupply.call()
-    }).then(function(tokensupply) {
-      freeTokenTemp = tokensupply;
-      assert.equal(tokensupply, (tokens - burnAmount), "free token supply not updated correctly")
-    });
+      let THR;
+      return getTHR()
+          .then((instance) => THR = instance)
+          .then(() => THR.balances.call(account1))
+          .then((balance) => assert.equal(balance, tokens, "balance call failed"))
+          .then(() => THR.burnAndRefund(burnAmount, {from: account1}))
+          .then(() => THR.balances.call(account1))
+          .then((balance) => {
+              tempBalance = balance;
+              assert.equal(tempBalance, (tokens - burnAmount), "balances mapping not updated correctly")
+          })
+          .then(() => THR.totalCapitalTokenSupply.call())
+          .then((tokensupply) => {
+              totalTokenTemp = tokensupply
+              assert.equal(totalTokenTemp, (tokens - burnAmount), "total token supply not updated correctly")
+          })
+          .then(() => THR.totalFreeCapitalTokenSupply.call())
+          .then((tokensupply) => assert.equal(tokensupply, (tokens - burnAmount), "free token supply not updated correctly"));
   });
 
+
   it("proposes a project", function() {
-    return TokenHolderRegistry.deployed().then(function(instance) {
-      THR = instance
-      proposerEvents = THR.LogProposal();
-      proposerEvents.watch(function(error, event){
-        if (!error)
-          console.log('error');
-      });
-      return THR.weiBal.call()
-    }).then(function(weiBal) {
-      weiPool = weiBal
-      //console.log('\nwei balance of pool before creation of project is ' + weiPool.toNumber() + '\n')
-      return THR.totalCapitalTokenSupply.call();
-    }).then(function(tokensupply) {
-      var _timePeriod = Date.now() + 120000000000 //long time from now
-      //console.log(weiPool/tokensupply)
-      var _projectCost = Math.round(20*(weiPool/tokensupply))      //cost of 20 tokens will be project cost, so proposer stake should be 1 token
-      return THR.proposeProject(_projectCost, _timePeriod, {from: account1})
-    }).then(function() {
-      return THR.projectNonce.call()
-    }).then(function(nonce) {
-      assert.notEqual(nonce, 0, "nonce not updated correctly")
-      proposerEvents.stopWatching();
-      return THR.balances.call(account1)
-    }).then(function(balance) {
-      assert.notEqual(balance, tempBalance, "account1 balances not updated correctly")
-      return THR.totalFreeCapitalTokenSupply.call()
-    }).then(function(freetokens) {
-      assert.notEqual(freeTokenTemp, freetokens, "free token supply not updated correctly")
-      return THR.totalCapitalTokenSupply.call()
-    }).then(function(totaltokens) {
-      assert.notEqual(totalTokenTemp, totaltokens, "total token supply not updated correctly")
-      proposerEvents.stopWatching();
-    });
+      let THR;
+      return getTHR()
+          .then((instance) => THR = instance)
+          .then(() => THR.weiBal.call())
+          .then((weiBal) => weiPool = weiBal)
+          .then(() => THR.totalCapitalTokenSupply.call())
+          .then((tokensupply) => {
+              _projectCost = Math.round(20*(weiPool/tokensupply))      //cost of 20 tokens will be project cost, so proposer stake should be 1 token
+              _timePeriod = Date.now() + 120000000000 //long time from now
+          })
+          .then(() => THR.proposeProject(_projectCost, _timePeriod, {from: account1}))
+          .then(() => THR.projectNonce.call())
+          .then((nonce) => assert.notEqual(nonce, 0, "nonce not updated correctly"))
+          .then(() => THR.balances.call(account1))
+          .then((balance) => assert.notEqual(balance, tempBalance, "account1 balances not updated correctly"))
+          .then(() => THR.totalFreeCapitalTokenSupply.call())
+          .then((freetokens) => assert.notEqual(freeTokenTemp, freetokens, "free token supply not updated correctly"))
+          .then(() => THR.totalCapitalTokenSupply.call())
+          .then((totaltokens) => assert.notEqual(totalTokenTemp, totaltokens, "total token supply not updated correctly"));
   });
 
 });
