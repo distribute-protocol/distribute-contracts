@@ -58,13 +58,34 @@ contract('Token holder', function() {
           })
           .then(() => THR.proposeProject(_projectCost, _timePeriod, {from: account1}))
           .then(() => THR.projectNonce.call())
-          .then((nonce) => assert.notEqual(nonce, 0, "nonce not updated correctly"))
+          .then((nonce) => assert.equal(nonce, 1, "nonce not updated correctly"))
           .then(() => THR.balances.call(account1))
-          .then((balance) => assert.notEqual(balance, tempBalance, "account1 balances not updated correctly"))
+          .then((balance) => assert.equal(balance, 99, "account1 balances not updated correctly"))
           .then(() => THR.totalFreeCapitalTokenSupply.call())
-          .then((freetokens) => assert.notEqual(freeTokenTemp, freetokens, "free token supply not updated correctly"))
+          .then((freetokens) => assert.equal(freetokens, 99, "free token supply not updated correctly"))
           .then(() => THR.totalCapitalTokenSupply.call())
-          .then((totaltokens) => assert.notEqual(totalTokenTemp, totaltokens, "total token supply not updated correctly"));
+          .then((totaltokens) => assert.equal(totaltokens, 100, "total token supply not updated correctly"));
   });
 
+  it("stakes on a project", function() {
+      let THR;
+      return getTHR()
+          .then((instance) => THR = instance)
+          .then(() => THR.stakeToken(1, 10, {from: account1}))      //stakes 10 tokens on project 1
+          .then(() => THR.balances.call(account1))
+          .then((balances) => assert.equal(balances, 89, "account1 balances not updated correctly"))
+          .then(() => THR.totalFreeCapitalTokenSupply.call())
+          .then((tokensupply) => assert.equal(tokensupply, 89, "free token supply not updated correctly"));
+      });
+
+  it("is refunded for proposal", function() {
+      let THR;
+      return getTHR()
+          .then((instance) => THR = instance)
+          .then(() => THR.refundProposer(1, {from: account1}))      //stakes 20 tokens on project 1
+          .then(() => THR.balances.call(account1))
+          .then((balances) => assert.equal(balances, 90, "account1 balances not updated correctly"))
+          .then(() => THR.totalFreeCapitalTokenSupply.call())
+          .then((tokensupply) => assert.equal(tokensupply, 90, "free token supply not updated correctly"));
+      });
 });

@@ -116,6 +116,8 @@ contract Project{
     proposerStake = _proposerStake;
     totalCapitalStaked = 0;
     totalWorkerStaked = 0;
+    capitalCost = 10 * _proposerStake;      //for testing
+    workerCost = 0;                         //for testing
   }
 
   // =====================================================================
@@ -181,6 +183,8 @@ contract Project{
     if (checkStateChange() == false &&
          stakedCapitalBalances[_staker] + _tokens > stakedCapitalBalances[_staker]) {
         stakedCapitalBalances[_staker] += _tokens;
+        totalCapitalStaked += _tokens;
+        checkStateChange();
         return true;
     } else {
       return false;
@@ -192,6 +196,7 @@ contract Project{
          stakedCapitalBalances[_staker] - _tokens < stakedCapitalBalances[_staker] &&   //check overflow
          stakedCapitalBalances[_staker] - _tokens >= 0) {    //make sure _staker has the tokens staked to unstake
            stakedCapitalBalances[_staker] -= _tokens;
+           totalCapitalStaked -= _tokens;
            return true;
     } else {
       return false;
