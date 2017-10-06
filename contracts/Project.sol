@@ -106,7 +106,7 @@ contract Project{
   // CONSTRUCTOR
   // =====================================================================
 
-  function Project(uint256 _id, uint256 _cost, uint256 _projectDeadline, uint256 _proposerStake) onlyTHR() {       //called by THR
+  function Project(uint256 _id, uint256 _cost, uint256 _projectDeadline, uint256 _proposerStake) {       //called by THR
     //all checks done in THR first
     tokenHolderRegistry = msg.sender;     //the token holder registry calls this function
     projectId = _id;

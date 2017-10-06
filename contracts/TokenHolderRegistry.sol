@@ -163,13 +163,14 @@ contract TokenHolderRegistry is ERC20 {
   // PROPOSER FUNCTIONS
   // =====================================================================
 
-  function proposeProject(uint256 _cost, uint256 _projectDeadline) payable {    //_cost of project in ether, _projectDeadline is for end of active period
+  function proposeProject(uint256 _cost, uint256 _projectDeadline) {    //_cost of project in ether, _projectDeadline is for end of active period
     //calculate cost of project in tokens currently (_cost in wei)
     //check proposer has at least 5% of the proposed cost in tokens
-    require(now > _projectDeadline);
-    uint256 _burnprice = burnAndRefundPrice();
-    uint256 currentTokenCost = _cost / _burnprice;
-    uint256 proposerTokenCost = currentTokenCost / proposeProportion;           //divide by 20 to get 5 percent of tokens
+    require(now < _projectDeadline);
+    //uint256 _burnprice = burnAndRefundPrice();
+    //uint256 currentTokenCost = _cost / _burnprice;
+    //uint256 proposerTokenCost = currentTokenCost / proposeProportion;           //divide by 20 to get 5 percent of tokens
+    uint256 proposerTokenCost = 10;
     require(balances[msg.sender] >= proposerTokenCost);
     balances[msg.sender] -= proposerTokenCost;
     totalFreeCapitalTokenSupply -= proposerTokenCost;
