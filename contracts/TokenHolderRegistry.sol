@@ -49,6 +49,7 @@ contract TokenHolderRegistry is ERC20 {
   event LogMint(uint256 amountMinted, uint256 totalCost);
   event LogWithdraw(uint256 amountWithdrawn, uint256 reward);
   event LogCostOfTokenUpdate(uint256 newCost);
+  event LogProposal(uint256 nonce, uint256 proposalCostInTokens);
 
 // =====================================================================
 // MODIFIERS
@@ -167,14 +168,15 @@ contract TokenHolderRegistry is ERC20 {
     //calculate cost of project in tokens currently (_cost in wei)
     //check proposer has at least 5% of the proposed cost in tokens
     require(now < _projectDeadline);
-    //uint256 _burnprice = burnAndRefundPrice();
-    //uint256 currentTokenCost = _cost / _burnprice;
-    //uint256 proposerTokenCost = currentTokenCost / proposeProportion;           //divide by 20 to get 5 percent of tokens
-    uint256 proposerTokenCost = 10;
+    uint256 _burnprice = burnAndRefundPrice();
+    uint256 currentTokenCost = _cost / _burnprice;
+    uint256 proposerTokenCost = currentTokenCost / proposeProportion;           //divide by 20 to get 5 percent of tokens
+    //uint256 proposerTokenCost = 10;
     require(balances[msg.sender] >= proposerTokenCost);
     balances[msg.sender] -= proposerTokenCost;
     totalFreeCapitalTokenSupply -= proposerTokenCost;
-    projectNonce += 1;                                                          //determine project id
+    projectNonce += 1;
+    LogProposal(projectNonce, proposerTokenCost);                                                     //determine project id
     Project newProject = new Project(projectNonce,
                                      _cost,
                                      _projectDeadline,
