@@ -36,7 +36,7 @@ contract TokenHolderRegistry is ERC20 {
 
   //minting & burning state variables from Simon de la Rouviere's code
   uint256 public constant MAX_UINT = (2**256) - 1;
-  uint256 baseCost = 100000000000000;                   //100000000000000 wei 0.0001 ether
+  uint256 baseCost = 10000000000000;                   //100000000000000 wei 0.00001 ether, about 1/3 cent as of $300 ether
   uint256 public costPerToken = 0;                      //current minting price
 
   //ether pool
@@ -76,7 +76,7 @@ contract TokenHolderRegistry is ERC20 {
   // GENERAL FUNCTION
   // =====================================================================
 
-  function getProjectAddress(uint _id) onlyWR() returns (address) {
+  function getProjectAddress(uint256 _id) onlyWR() returns (address) {
     if (_id <= projectNonce && _id > 0) {
       return projectId[_id];
     }
