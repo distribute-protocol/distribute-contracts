@@ -51,6 +51,7 @@ contract Project{
   uint256 totalValidateAffirmative;
   uint256 totalValidateNegative;
   uint256 validateReward;
+  bool validateFlag = false;            //turn this on if there were no opposing validators
 
   //keep track of voting complete project
   mapping (address => uint) votedAffirmative;
@@ -106,7 +107,7 @@ contract Project{
   // CONSTRUCTOR
   // =====================================================================
 
-  function Project(uint256 _id, uint256 _cost, uint256 _projectDeadline, uint256 _proposerStake) {       //called by THR
+  function Project(uint256 _id, uint256 _cost, uint256 _projectDeadline, uint256 _currentTokenCost, uint256 _proposerStake) {       //called by THR
     //all checks done in THR first
     tokenHolderRegistry = msg.sender;     //the token holder registry calls this function
     projectId = _id;
@@ -116,8 +117,9 @@ contract Project{
     proposerStake = _proposerStake;
     totalCapitalStaked = 0;
     totalWorkerStaked = 0;
-    capitalCost = 10 * _proposerStake;      //for testing
+    capitalCost = _currentTokenCost;          //hardcode this value for now
     workerCost = 0;
+    //workerCost = _currentTokenCost;
   }
 
   // =====================================================================
@@ -295,11 +297,17 @@ contract Project{
       totalCapitalStaked = 0;
       totalWorkerStaked = 0;
       validateReward = totalValidateAffirmative;
+      if (validateReward == 0) {
+        validateFlag = true;
+      }
       totalValidateAffirmative = 0;
     }
     else {                                              //project succeeds
       validateReward = totalValidateNegative;
+      if (validateReward == 0) {
+        validateFlag = true;
       totalValidateNegative = 0;
+      }
     }
   }
 
@@ -310,22 +318,40 @@ contract Project{
   function refundStaker(address _staker) returns (uint256 _refund) {  //called by THR or WR, allow return of staked, validated, and
     require(msg.sender == tokenHolderRegistry ||  msg.sender == workerRegistry);
     require(projectState == State.Validated || projectState == State.Failed);
-    uint256 refund;
+    uint256 refund;     //tokens
+    uint256 spoils;     //wei
     if (msg.sender == tokenHolderRegistry) {
+
       if(totalCapitalStaked != 0) {
         refund = stakedCapitalBalances[_staker];
         stakedCapitalBalances[_staker] = 0;
       }
+
       if(totalValidateNegative != 0) {
         refund += validatedNegative[_staker];
+        if (validateFlag == false) {
+          refund += validateReward * validatedNegative[_staker] / totalValidateNegative;
+        }
+        else if (validateFlag == true) {
+          spoils = capitalETHCost * validatedNegative[_staker] / totalValidateNegative;
+          TokenHolderRegistry(tokenHolderRegistry).rewardValidator(projectId, _staker, spoils);
+        }
         validatedNegative[_staker] = 0;
         //plus validation reward
       }
+
       if(totalValidateAffirmative != 0) {
         refund += validatedAffirmative[_staker];
+        if (validateFlag == false) {
+          refund += validateReward * validatedAffirmative[_staker] / totalValidateAffirmative;
+        }
+        else if (validateFlag == true) {
+          spoils = capitalETHCost * validatedAffirmative[_staker] / totalValidateAffirmative;
+          TokenHolderRegistry(tokenHolderRegistry).rewardValidator(projectId, _staker, spoils);
+        }
         validatedAffirmative[_staker] = 0;
-        //plus validation reward
       }
+
       refund += votedNegative[_staker];
       votedNegative[_staker] = 0;
       refund += votedAffirmative[_staker];

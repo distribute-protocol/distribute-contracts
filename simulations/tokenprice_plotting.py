@@ -26,6 +26,7 @@ def fracExp(k, q, n, p):
         s += k * N / B / (q**i)
         N = N * (n - 1)
         B = B * (i + 1)
+    print(s)
     return s
 
 def updateMintingPrice(_supply):

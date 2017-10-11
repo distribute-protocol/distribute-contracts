@@ -31,12 +31,13 @@ contract TokenHolderRegistry is ERC20 {
   }
 
   mapping(address => Proposer) proposers;                   //project -> Proposer
-  uint256 proposeProportion = 20;
+  uint256 proposeProportion = 20;                           // tokensupply/proposeProportion is the number of tokens the proposer must stake
   uint256 rewardProportion = 100;
 
   //minting & burning state variables from Simon de la Rouviere's code
   uint256 public constant MAX_UINT = (2**256) - 1;
-  uint256 baseCost = 100000000000000;
+  //uint256 baseCost = 100000000000000;
+  uint256 baseCost = 100000000000000;                   //.0001 ether --> 3 cents for the initial token
   uint256 public costPerToken = 0;                      //current minting price
 
   //ether pool
@@ -141,7 +142,7 @@ contract TokenHolderRegistry is ERC20 {
   function burnAndRefund(uint256 _amountToBurn) returns (bool success) {      //free tokens only
       if(_amountToBurn > 0 && (balances[msg.sender]) >= _amountToBurn) {
           //determine how much you can leave with.
-          uint256 reward = _amountToBurn * weiBal/totalCapitalTokenSupply;    //rounding? - remainder discarded
+          uint256 reward = _amountToBurn * weiBal/totalCapitalTokenSupply;    //truncation - remainder discarded
           balances[msg.sender] -= _amountToBurn;
           totalCapitalTokenSupply -= _amountToBurn;
           totalFreeCapitalTokenSupply -= _amountToBurn;
@@ -155,8 +156,8 @@ contract TokenHolderRegistry is ERC20 {
   }
 
   function burnAndRefundPrice() internal returns (uint256 price) {
-    //calculated current burn reward of 1 token
-    uint256 reward = weiBal/totalCapitalTokenSupply; //rounding? - remainder discarded
+    //calculated current burn reward of 1 token at current weiBal and token supply
+    uint256 reward = weiBal/totalCapitalTokenSupply; //truncation - remainder discarded
     return reward;                                   //reward in wei of burning 1 token
   }
 
@@ -169,7 +170,7 @@ contract TokenHolderRegistry is ERC20 {
     //check proposer has at least 5% of the proposed cost in tokens
     require(now < _projectDeadline);
     uint256 _burnprice = burnAndRefundPrice();
-    uint256 currentTokenCost = _cost / _burnprice;
+    uint256 currentTokenCost = _cost / _burnprice;      //project cost in tokens
     uint256 proposerTokenCost = currentTokenCost / proposeProportion;           //divide by 20 to get 5 percent of tokens
     require(balances[msg.sender] >= proposerTokenCost);
     balances[msg.sender] -= proposerTokenCost;
@@ -179,6 +180,7 @@ contract TokenHolderRegistry is ERC20 {
     Project newProject = new Project(projectNonce,
                                      _cost,
                                      _projectDeadline,
+                                     currentTokenCost,
                                      proposerTokenCost
                                      );
     address projectAddress = address(newProject);
@@ -247,13 +249,18 @@ contract TokenHolderRegistry is ERC20 {
     totalCapitalTokenSupply -= _tokens;
   }
 
-  function refundStaker(uint _projectId) {
+  function refundStaker(uint256 _projectId) {
     uint256 refund = Project(projectId[_projectId]).refundStaker(msg.sender);
     totalFreeCapitalTokenSupply += refund;
     balances[msg.sender] += refund;
   }
 
-  function rewardWorker(address _worker, uint _reward) onlyWR() {
+  function rewardValidator(uint256 _projectId, address _validator, uint256 _reward) {
+    require(projectId[_projectId] == msg.sender);
+    _validator.transfer(_reward);
+  }
+
+  function rewardWorker(address _worker, uint256 _reward) onlyWR() {
     _worker.transfer(_reward);
   }
 }
