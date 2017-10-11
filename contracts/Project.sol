@@ -21,7 +21,7 @@ contract Project{
 
   uint256 public capitalETHCost;
   uint256 capitalCost;            //total amount of staked capital in tokens needed
-  //uint256 workerCost;             //total amount of staked worker tokens needed, one to one with capital tokens
+  uint256 workerCost;             //total amount of staked worker tokens needed, one to one with capital tokens
 
   uint256 proposerStake;          //amount of capital tokens the proposer stakes
   uint256 projectDeadline;
@@ -117,6 +117,7 @@ contract Project{
     totalCapitalStaked = 0;
     totalWorkerStaked = 0;
     capitalCost = 10 * _proposerStake;      //for testing
+    workerCost = 0;
   }
 
   // =====================================================================
@@ -125,7 +126,7 @@ contract Project{
 
   function checkStateChange() internal returns (bool stateChange) {                              //general state change function
     if (projectState == State.Proposed) {
-      if (totalCapitalStaked >= capitalCost && totalWorkerStaked >= capitalCost)
+      if (totalCapitalStaked >= capitalCost && totalWorkerStaked >= workerCost)
         {
           projectState = State.Active;
           return true;

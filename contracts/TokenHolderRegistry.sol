@@ -36,7 +36,7 @@ contract TokenHolderRegistry is ERC20 {
 
   //minting & burning state variables from Simon de la Rouviere's code
   uint256 public constant MAX_UINT = (2**256) - 1;
-  uint256 baseCost = 10000000000000;                   //100000000000000 wei 0.00001 ether, about 1/3 cent as of $300 ether
+  uint256 baseCost = 100000000000000;
   uint256 public costPerToken = 0;                      //current minting price
 
   //ether pool
@@ -171,7 +171,6 @@ contract TokenHolderRegistry is ERC20 {
     uint256 _burnprice = burnAndRefundPrice();
     uint256 currentTokenCost = _cost / _burnprice;
     uint256 proposerTokenCost = currentTokenCost / proposeProportion;           //divide by 20 to get 5 percent of tokens
-    //uint256 proposerTokenCost = 10;
     require(balances[msg.sender] >= proposerTokenCost);
     balances[msg.sender] -= proposerTokenCost;
     totalFreeCapitalTokenSupply -= proposerTokenCost;
