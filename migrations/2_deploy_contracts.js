@@ -7,8 +7,6 @@ var ERC20Contract = artifacts.require("./ERC20");
   deploys and connects contracts
 */
 
-accounts = web3.eth.accounts
-
 module.exports = function(deployer) {
     deployer.deploy(ERC20Contract);
     deployer.then(function(){
@@ -19,6 +17,5 @@ module.exports = function(deployer) {
         return TokenHolderRegistry.deployed()
       }).then(function(instance){
         return instance.init(WorkerRegistry.address)
-    })
-    deployer.link(ERC20Contract, TokenHolderRegistry);
+    });
 };
