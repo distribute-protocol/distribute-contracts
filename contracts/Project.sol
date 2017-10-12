@@ -3,6 +3,7 @@ pragma solidity ^0.4.10;
 //import files
 import "./TokenHolderRegistry.sol";
 import "./WorkerRegistry.sol";
+import "./PLCRVoting.sol";
 
 /*
   a created project

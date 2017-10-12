@@ -10,22 +10,20 @@ contract ERC20 {
     mapping (address => mapping (address => uint256)) allowed;
 
     function transfer(address _to, uint256 _value) returns (bool success) {
-        if (balances[msg.sender] >= _value) {
-            balances[msg.sender] -= _value;
-            balances[_to] += _value;
-            Transfer(msg.sender, _to, _value);
-            return true;
-        } else { return false; }
+        require(balances[msg.sender] >= _value);
+        balances[msg.sender] -= _value;
+        balances[_to] += _value;
+        Transfer(msg.sender, _to, _value);
+        return true;
     }
 
     function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
-        if (balances[_from] >= _value && allowed[_from][msg.sender] >= _value) {
-            balances[_to] += _value;
-            balances[_from] -= _value;
-            allowed[_from][msg.sender] -= _value;
-            Transfer(_from, _to, _value);
-            return true;
-        } else { return false; }
+        require(balances[_from] >= _value && allowed[_from][msg.sender] >= _value);
+        balances[_to] += _value;
+        balances[_from] -= _value;
+        allowed[_from][msg.sender] -= _value;
+        Transfer(_from, _to, _value);
+        return true;
     }
 
     function approve(address _spender, uint256 _value) returns (bool success) {
