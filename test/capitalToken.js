@@ -82,7 +82,7 @@ contract('Token holder', function() {
           .then((tokensupply) => assert.equal(tokensupply, netTokens - (21 * _proposerStake), "free token supply not updated correctly"));
       });
 
-  it("is refunded for proposal", function() {
+  it("is refunded for proposal", function() {           //project contract has workerCost = 0
       let THR;
       return getTHR()
           .then((instance) => THR = instance)
