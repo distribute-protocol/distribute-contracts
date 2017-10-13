@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 baseCost = 1e15
 q = 618046
-totalSupply = 1000000
+totalSupply = 100
 
 def weiToETH(wei):
     ETH = wei/(1e18)

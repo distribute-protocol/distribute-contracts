@@ -2,7 +2,7 @@ pragma solidity ^0.4.10;
 
 //import files
 import "./Project.sol";
-import "./ERC20.sol";
+import "./StandardToken.sol";
 
 /*
   keeps track of token holder capital token balances of all
@@ -10,7 +10,7 @@ import "./ERC20.sol";
   mint, burn prices
 */
 
-contract TokenHolderRegistry is ERC20 {
+contract TokenHolderRegistry is StandardToken {
 
 // =====================================================================
 // STATE VARIABLES

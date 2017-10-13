@@ -1,19 +1,18 @@
 const Project = artifacts.require("./Project");
 const TokenHolderRegistry = artifacts.require("./TokenHolderRegistry");
 const WorkerRegistry = artifacts.require("./WorkerRegistry");
-const ERC20Contract = artifacts.require("./ERC20");
+const StandardToken = artifacts.require("./StandardToken")
 const PLCRVoting = artifacts.require('./PLCRVoting.sol');
 const HumanStandardToken = artifacts.require('./HumanStandardToken.sol');
 const DLL = artifacts.require('./DLL.sol');
 const AttributeStore = artifacts.require('./AttributeStore.sol');
-
-const fs = require('fs');
 
 /*
   deploys and connects contracts
 */
 
 module.exports = function(deployer, network, accounts) {
+/*
     // deploy libraries
     deployer.deploy(DLL);
     deployer.deploy(AttributeStore);
@@ -23,7 +22,7 @@ module.exports = function(deployer, network, accounts) {
     deployer.link(AttributeStore, PLCRVoting);
 
     //deploy other contract
-    deployer.deploy(ERC20Contract);
+    deployer.deploy(StandardToken);
 
       const tokenConf = {
         initialAmount: '0',
@@ -42,7 +41,7 @@ module.exports = function(deployer, network, accounts) {
           PLCRVoting,
           HumanStandardToken.address,
         ))
-
+*/
     deployer.then(function(){
         return deployer.deploy(TokenHolderRegistry)
       }).then(function(instance){
