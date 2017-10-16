@@ -21,7 +21,7 @@ contract('Token holder', function() {
           .then((tokensupply) => assert.equal(tokensupply, tokens, "total token supply not updated correctly"))
           .then(() => THR.totalFreeCapitalTokenSupply.call())
           .then((tokensupply) => assert.equal(tokensupply, tokens, "free token supply not updated correctly"))
-          .then(() => THR.balances.call(account1))
+          .then(() => THR.balanceOf().call(account1))
           .then((balance) => assert.equal(balance, tokens, "balances mapping not updated correctly"));
   });
 

@@ -1,14 +1,17 @@
 pragma solidity ^0.4.8;
-import "./HumanStandardToken.sol";
+
+//import files
 import "./DLL.sol";
 import "./AttributeStore.sol";
+
+import "./TokenHolderRegistry.sol";
+import "./WorkerRegistry.sol";
 
 /**
 @title Partial-Lock-Commit-Reveal Voting scheme with ERC20 tokens
 @author Team: Aspyn Palatnick, Cem Ozer, Yorke Rhodes
 */
 contract PLCRVoting {
-
 
     event VoteCommitted(address voter, uint pollID, uint numTokens);
     event VoteRevealed(address voter, uint pollID, uint numTokens, uint choice);
@@ -17,7 +20,8 @@ contract PLCRVoting {
     event VotingRightsWithdrawn(address voter, uint numTokens);
 
     /// maps user's address to voteToken balance
-    mapping(address => uint) public voteTokenBalance;
+    mapping(address => uint) public voteTokenBalanceTH;
+    mapping(address => uint) public voteTokenBalanceW;
 
     struct Poll {
         uint commitEndDate;     /// expiration date of commit period for poll
@@ -37,19 +41,30 @@ contract PLCRVoting {
     using AttributeStore for AttributeStore.Data;
     AttributeStore.Data store;
 
+    // =====================================================================
+    // MODIFIERS
+    // =====================================================================
+
+      modifier onlyTHRWR() {
+        require(msg.sender == workerRegistry || msg.sender == tokenHolderRegistry);
+        _;
+      }
+
     // ============
     // CONSTRUCTOR:
     // ============
 
-    uint constant INITIAL_POLL_NONCE = 0;
-    HumanStandardToken public token;
+    uint256 constant INITIAL_POLL_NONCE = 0;
+
+    address tokenHolderRegistry;
+    address workerRegistry;
 
     /**
     @dev Initializes voteQuorum, commitDuration, revealDuration, and pollNonce in addition to token contract and trusted mapping
-    @param _tokenAddr The address where the ERC20 token contract is deployed
     */
-    function PLCRVoting(address _tokenAddr) {
-        token = HumanStandardToken(_tokenAddr);
+    function PLCRVoting(address _tokenHolderRegistry, address _workerRegistry) public {
+        tokenHolderRegistry = TokenHolderRegistry(_tokenHolderRegistry);
+        workerRegistry = WorkerRegistry(_workerRegistry);
         pollNonce = INITIAL_POLL_NONCE;
     }
 
@@ -62,34 +77,46 @@ contract PLCRVoting {
     @dev Assumes that msg.sender has approved voting contract to spend on their behalf
     @param _numTokens The number of votingTokens desired in exchange for ERC20 tokens
     */
-    function requestVotingRights(uint _numTokens) external {
-        require(token.balanceOf(msg.sender) >= _numTokens);
-        require(token.transferFrom(msg.sender, this, _numTokens));
-        voteTokenBalance[msg.sender] += _numTokens;
-        VotingRightsGranted(msg.sender, _numTokens);
+    function requestVotingRights(address _staker, uint _numTokens) public onlyTHRWR() {
+        //checks done in THR/WR to ensure that staker has tokens to vote with
+        if (msg.sender == tokenHolderRegistry) {
+          voteTokenBalanceTH[_staker] += _numTokens;
+          VotingRightsGranted(_staker, _numTokens);
+        }
+        if (msg.sender == workerRegistry) {
+          voteTokenBalanceW[_staker] += _numTokens;
+          VotingRightsGranted(_staker, _numTokens);
+        }
     }
 
     /**
     @notice Withdraw _numTokens ERC20 tokens from the voting contract, revoking these voting rights
     @param _numTokens The number of ERC20 tokens desired in exchange for voting rights
     */
-    function withdrawVotingRights(uint _numTokens) external {
-        uint availableTokens = voteTokenBalance[msg.sender] - getLockedTokens(msg.sender);
-        require(availableTokens >= _numTokens);
-        require(token.transfer(msg.sender, _numTokens));
-        voteTokenBalance[msg.sender] -= _numTokens;
-        VotingRightsWithdrawn(msg.sender, _numTokens);
+    function withdrawVotingRights(address _staker, uint _numTokens) external onlyTHRWR() {
+        if (msg.sender == tokenHolderRegistry) {
+          uint256 availableTokens = voteTokenBalanceTH[_staker] - getLockedTokens(_staker);
+          require(availableTokens >= _numTokens);
+          voteTokenBalanceTH[_staker] -= _numTokens;
+          VotingRightsWithdrawn(_staker, _numTokens);
+        }
+        else if (msg.sender == workerRegistry) {
+          availableTokens = voteTokenBalanceW[_staker] - getLockedTokens(_staker);
+          require(availableTokens >= _numTokens);
+          voteTokenBalanceW[_staker] -= _numTokens;
+          VotingRightsWithdrawn(_staker, _numTokens);
+        }
     }
 
     /**
     @dev Unlocks tokens locked in unrevealed vote where poll has ended
     @param _pollID Integer identifier associated with the target poll
     */
-    function rescueTokens(uint _pollID) external {
+    function rescueTokens(address _staker, uint _pollID) onlyTHRWR() external {
         require(pollEnded(_pollID));
-        require(!hasBeenRevealed(msg.sender, _pollID));
-
-        dllMap[msg.sender].remove(_pollID);
+        if(!hasBeenRevealed(_staker, _pollID)) {
+            dllMap[_staker].remove(_pollID);
+        }
     }
 
     // =================
@@ -103,29 +130,36 @@ contract PLCRVoting {
     @param _numTokens The number of tokens to be committed towards the target poll
     @param _prevPollID The ID of the poll that the user has voted the maximum number of tokens in which is still less than or equal to numTokens
     */
-    function commitVote(uint _pollID, bytes32 _secretHash, uint _numTokens, uint _prevPollID) external {
+    function commitVote(address _staker, uint _pollID, bytes32 _secretHash, uint _numTokens, uint _prevPollID) onlyTHRWR() external {
         require(commitPeriodActive(_pollID));
-        require(voteTokenBalance[msg.sender] >= _numTokens); // prevent user from overspending
+
+        if (msg.sender == workerRegistry) {
+          require(voteTokenBalanceW[_staker] >= _numTokens); // prevent user from overspending
+        }
+        if (msg.sender == workerRegistry) {
+          require(voteTokenBalanceTH[_staker] >= _numTokens); // prevent user from overspending
+        }
+
         require(_pollID != 0);                // prevent user from committing to zero node placeholder
 
         // TODO: Move all insert validation into the DLL lib
         // Check if _prevPollID exists
-        require(_prevPollID == 0 || getCommitHash(msg.sender, _prevPollID) != 0);
+        require(_prevPollID == 0 || getCommitHash(_staker, _prevPollID) != 0);
 
-        uint nextPollID = dllMap[msg.sender].getNext(_prevPollID);
+        uint nextPollID = dllMap[_staker].getNext(_prevPollID);
 
         // if nextPollID is equal to _pollID, _pollID is being updated,
-        nextPollID = (nextPollID == _pollID) ? dllMap[msg.sender].getNext(_pollID) : nextPollID;
+        nextPollID = (nextPollID == _pollID) ? dllMap[_staker].getNext(_pollID) : nextPollID;
 
-        require(validPosition(_prevPollID, nextPollID, msg.sender, _numTokens));
-        dllMap[msg.sender].insert(_prevPollID, _pollID, nextPollID);
+        require(validPosition(_prevPollID, nextPollID, _staker, _numTokens));
+        dllMap[_staker].insert(_prevPollID, _pollID, nextPollID);
 
-        bytes32 UUID = attrUUID(msg.sender, _pollID);
+        bytes32 UUID = attrUUID(_staker, _pollID);
 
         store.attachAttribute(UUID, "numTokens", _numTokens);
         store.attachAttribute(UUID, "commitHash", uint(_secretHash));
 
-        VoteCommitted(msg.sender, _pollID, _numTokens);
+        VoteCommitted(_staker, _pollID, _numTokens);
     }
 
     /**
@@ -149,11 +183,11 @@ contract PLCRVoting {
     @param _voteOption Vote choice used to generate commitHash for associated poll
     @param _salt Secret number used to generate commitHash for associated poll
     */
-    function revealVote(uint _pollID, uint _voteOption, uint _salt) external {
+    function revealVote(uint _pollID, uint _voteOption, uint _salt) onlyTHRWR() external {
         // Make sure the reveal period is active
         require(revealPeriodActive(_pollID));
         require(!hasBeenRevealed(msg.sender, _pollID));                        // prevent user from revealing multiple times
-        require(sha3(_voteOption, _salt) == getCommitHash(msg.sender, _pollID)); // compare resultant hash from inputs to original commitHash
+        require(keccak256(_voteOption, _salt) == getCommitHash(msg.sender, _pollID)); // compare resultant hash from inputs to original commitHash
 
         uint numTokens = getNumTokens(msg.sender, _pollID);
 
@@ -177,7 +211,7 @@ contract PLCRVoting {
         require(hasBeenRevealed(_voter, _pollID));
 
         uint winningChoice = isPassed(_pollID) ? 1 : 0;
-        bytes32 winnerHash = sha3(winningChoice, _salt);
+        bytes32 winnerHash = keccak256(winningChoice, _salt);
         bytes32 commitHash = getCommitHash(_voter, _pollID);
 
         return (winnerHash == commitHash) ? getNumTokens(_voter, _pollID) : 0;
@@ -194,8 +228,8 @@ contract PLCRVoting {
     @param _revealDuration Length of desired reveal period in seconds
     */
     function startPoll(uint _voteQuorum, uint _commitDuration, uint _revealDuration) public returns (uint pollID) {
+        require(tokenHolderRegistry == msg.sender);
         pollNonce = pollNonce + 1;
-
         pollMap[pollNonce] = Poll({
             voteQuorum: _voteQuorum,
             commitEndDate: block.timestamp + _commitDuration,
@@ -213,7 +247,8 @@ contract PLCRVoting {
     @dev Check if votesFor out of totalVotes exceeds votesQuorum (requires pollEnded)
     @param _pollID Integer identifier associated with target poll
     */
-    function isPassed(uint _pollID) constant public returns (bool passed) {
+    function isPassed(uint _pollID) onlyTHRWR() constant public returns (bool passed) {
+        require(msg.sender == tokenHolderRegistry);
         require(pollEnded(_pollID));
 
         Poll memory poll = pollMap[_pollID];
@@ -385,7 +420,7 @@ contract PLCRVoting {
     @param _pollID Integer identifier associated with target poll
     @return UUID Hash which is deterministic from _user and _pollID
     */
-    function attrUUID(address _user, uint _pollID) public constant returns (bytes32 UUID) {
-        return sha3(_user, _pollID);
+    function attrUUID(address _user, uint _pollID) public pure returns (bytes32 UUID) {
+        return keccak256(_user, _pollID);
     }
 }

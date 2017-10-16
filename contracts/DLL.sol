@@ -1,4 +1,4 @@
-pragma solidity^0.4.11;
+pragma solidity^0.4.8;
 
 library DLL {
 	struct Node {
@@ -10,15 +10,15 @@ library DLL {
 		mapping(uint => Node) dll;
 	}
 
-	function getNext(Data storage self, uint _curr) returns (uint) {
+	function getNext(Data storage self, uint _curr) public view returns (uint) {
 		return self.dll[_curr].next;
 	}
 
-	function getPrev(Data storage self, uint _curr) returns (uint) {
+	function getPrev(Data storage self, uint _curr) public view returns (uint) {
 		return self.dll[_curr].prev;
 	}
 
-	function insert(Data storage self, uint _prev, uint _curr, uint _next) {
+	function insert(Data storage self, uint _prev, uint _curr, uint _next) public {
 		self.dll[_curr].prev = _prev;
 		self.dll[_curr].next = _next;
 
@@ -26,7 +26,7 @@ library DLL {
 		self.dll[_next].prev = _curr;
 	}
 
-	function remove(Data storage self, uint _curr) {
+	function remove(Data storage self, uint _curr) public {
 		uint next = getNext(self, _curr);
 		uint prev = getPrev(self, _curr);
 
