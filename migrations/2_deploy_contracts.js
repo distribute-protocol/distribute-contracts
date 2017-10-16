@@ -1,9 +1,9 @@
-const TokenHolderRegistry = artifacts.require("TokenHolderRegistry");
-const WorkerRegistry = artifacts.require("WorkerRegistry");
+const TokenHolderRegistry = artifacts.require('TokenHolderRegistry');
+const WorkerRegistry = artifacts.require('WorkerRegistry');
 const PLCRVoting = artifacts.require('PLCRVoting');
 const DLL = artifacts.require('DLL');
 const AttributeStore = artifacts.require('AttributeStore');
-
+const StandardToken = artifacts.require('StandardToken');
 /*
   deploys and connects contracts
 */
@@ -16,6 +16,8 @@ module.exports = function(deployer) {
     // link libraries
     deployer.link(DLL, PLCRVoting);
     deployer.link(AttributeStore, PLCRVoting);
+
+    deployer.deploy(StandardToken);
 
     deployer.then(function(){
         return deployer.deploy(TokenHolderRegistry)
@@ -32,4 +34,5 @@ module.exports = function(deployer) {
       }).then(function(instance){
         return instance.init(TokenHolderRegistry.address, PLCRVoting.address)
     });
+    deployer.link(StandardToken, TokenHolderRegistry)
 };
