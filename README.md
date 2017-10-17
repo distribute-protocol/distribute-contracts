@@ -1,5 +1,5 @@
 # Distribute
-##### an experiment in using the smart contract-enabled token economies to decentralize the governance, maintenance, and financial support of public utilities, communal infrastructure, and common pool resources.
+#### An experiment in using the smart contract-enabled token economies to decentralize the governance, maintenance, and financial support of public utilities, communal infrastructure, and common pool resources.
 
 The desired outcome of Distribute is a multifaceted incentive structure that makes sure that:
 
