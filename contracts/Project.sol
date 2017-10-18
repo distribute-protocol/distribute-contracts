@@ -205,6 +205,7 @@ contract Project{
   function stakeCapitalToken(uint256 _tokens, address _staker) public onlyTHR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {  //called by THR, increments _staker tokens in Project.sol
     if (checkStateChange() == false &&
          stakedCapitalBalances[_staker] + _tokens > stakedCapitalBalances[_staker]) {
+        require(_tokens <= capitalCost - totalCapitalStaked);
         stakedCapitalBalances[_staker] += _tokens;
         totalCapitalStaked += _tokens;
         checkStateChange();
