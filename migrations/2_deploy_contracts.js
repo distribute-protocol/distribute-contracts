@@ -1,24 +1,38 @@
-var Project = artifacts.require("./Project");
-var TokenHolderRegistry = artifacts.require("./TokenHolderRegistry");
-var WorkerRegistry = artifacts.require("./WorkerRegistry");
-var ERC20Contract = artifacts.require("./ERC20");
-
+const TokenHolderRegistry = artifacts.require('TokenHolderRegistry');
+const WorkerRegistry = artifacts.require('WorkerRegistry');
+const PLCRVoting = artifacts.require('PLCRVoting');
+const DLL = artifacts.require('DLL');
+const AttributeStore = artifacts.require('AttributeStore');
+const StandardToken = artifacts.require('StandardToken');
 /*
   deploys and connects contracts
 */
 
-accounts = web3.eth.accounts
-
 module.exports = function(deployer) {
-    deployer.deploy(ERC20Contract);
+
+    // deploy libraries
+    deployer.deploy(DLL);
+    deployer.deploy(AttributeStore);
+    // link libraries
+    deployer.link(DLL, PLCRVoting);
+    deployer.link(AttributeStore, PLCRVoting);
+
+    deployer.deploy(StandardToken);
+
     deployer.then(function(){
         return deployer.deploy(TokenHolderRegistry)
-      }).then(function(instance){
-        return deployer.deploy(WorkerRegistry, TokenHolderRegistry.address)
-      }).then(function(instance){
+      }).then(function(){
+        return deployer.deploy(WorkerRegistry)
+      }).then(function(){
+        return deployer.deploy(PLCRVoting, TokenHolderRegistry.address, WorkerRegistry.address)
+      }).then(function(){
         return TokenHolderRegistry.deployed()
       }).then(function(instance){
-        return instance.init(WorkerRegistry.address)
-    })
-    deployer.link(ERC20Contract, TokenHolderRegistry);
+        return instance.init(WorkerRegistry.address, PLCRVoting.address)
+      }).then(function(){
+        return WorkerRegistry.deployed()
+      }).then(function(instance){
+        return instance.init(TokenHolderRegistry.address, PLCRVoting.address)
+    });
+    deployer.link(StandardToken, TokenHolderRegistry)
 };

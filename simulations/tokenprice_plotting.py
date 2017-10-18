@@ -9,8 +9,16 @@ import matplotlib.pyplot as plt
 
 baseCost = 1e15
 q = 618046
-totalSupply = 1000000
+totalSupply = 100
 
+def weiToETH(wei):
+    ETH = wei/(1e18)
+    return ETH
+
+def weiToDollar(wei):
+    ETH = weiToETH(wei)
+    dollar = ETH*300
+    return dollar
 
 def fracExp(k, q, n, p):
     #via: http://ethereum.stackexchange.com/questions/10425/is-there-any-efficient-way-to-compute-the-exponentiation-of-a-fraction-and-an-in/10432#10432
@@ -26,12 +34,14 @@ def fracExp(k, q, n, p):
         s += k * N / B / (q**i)
         N = N * (n - 1)
         B = B * (i + 1)
-    print(s)
+    #print(s)
     return s
 
 def updateMintingPrice(_supply):
     costperToken = baseCost + fracExp(baseCost, q, _supply, 2) + baseCost*_supply/1000
-    return costperToken
+    costInDollars = weiToDollar(costperToken)
+    print(_supply, '     $', costInDollars)
+    return costInDollars
 
 def plotCurve():
     x = np.linspace(0, totalSupply, totalSupply + 1)
