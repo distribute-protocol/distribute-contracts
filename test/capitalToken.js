@@ -58,7 +58,7 @@ contract('Token holder', function() {
               _projectCost = Math.round(20*(weiPool/tokensupply))      //cost of 20 tokens will be project cost, so proposer stake should be 1 token
               _timePeriod = Date.now() + 120000000000 //long time from now
               _proposerStake = 1
-              //console.log(_projectCost)
+              console.log(_projectCost)
           })
           .then(() => THR.proposeProject(_projectCost, _timePeriod, {from: account1}))
           .then(() => THR.projectNonce.call())
@@ -75,11 +75,17 @@ contract('Token holder', function() {
       let THR;
       return getTHR()
           .then((instance) => THR = instance)
-          .then(() => THR.stakeToken(1, 20*_proposerStake, {from: account1}))      //stakes 10 tokens on project 1
+          .then(() => THR.stakeToken(1, 19*_proposerStake, {from: account1}))      //stakes 10 tokens on project 1
           .then(() => THR.balances.call(account1))
-          .then((balances) => assert.equal(balances, netTokens - (21 * _proposerStake), "account1 balances not updated correctly"))
+          .then((balances) => assert.equal(balances, netTokens - (20 * _proposerStake), "account1 balances not updated correctly"))
           .then(() => THR.totalFreeCapitalTokenSupply.call())
-          .then((tokensupply) => assert.equal(tokensupply, netTokens - (21 * _proposerStake), "free token supply not updated correctly"));
+          .then((tokensupply) => assert.equal(tokensupply, netTokens - (20 * _proposerStake), "free token supply not updated correctly"))
+          .then(() => THR.unstakeToken(1, 2*_proposerStake, {from: account1}))
+          .then(() => THR.balances.call(account1))
+          .then((balances) => assert.equal(balances, netTokens - (18 * _proposerStake), "account1 balances not updated correctly"))
+          .then(() => THR.totalFreeCapitalTokenSupply.call())
+          .then((tokensupply) => assert.equal(tokensupply, netTokens - (18 * _proposerStake), "free token supply not updated correctly"))
+          .then(() => THR.stakeToken(1, 3*_proposerStake, {from: account1}));
       });
 
   it("is refunded for proposal", function() {           //project contract has workerCost = 0
