@@ -75,7 +75,7 @@ contract('Token holder', function() {
       let THR;
       return getTHR()
           .then((instance) => THR = instance)
-          .then(() => THR.stakeToken(1, 21*_proposerStake, {from: account1}))      //stakes 10 tokens on project 1
+          .then(() => THR.stakeToken(1, 20*_proposerStake, {from: account1}))      //stakes 10 tokens on project 1
           .then(() => THR.balances.call(account1))
           .then((balances) => assert.equal(balances, netTokens - (21 * _proposerStake), "account1 balances not updated correctly"))
           .then(() => THR.totalFreeCapitalTokenSupply.call())
