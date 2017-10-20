@@ -50,9 +50,9 @@ contract WorkerRegistry{
   function stakeToken(uint256 _projectId, uint256 _tokens) public {
     address _projectAddress = TokenHolderRegistry(tokenHolderRegistry).getProjectAddress(_projectId);
     require(balances[msg.sender] >= _tokens);   //make sure project exists & TH has tokens to stake
+    balances[msg.sender] -= _tokens;
     bool success = Project(_projectAddress).stakeWorkerToken(_tokens, msg.sender);
     assert(success == true);
-    balances[msg.sender] -= _tokens;
     totalFreeWorkerTokenSupply -= _tokens;
   }
 
@@ -108,6 +108,7 @@ contract WorkerRegistry{
   // FAILED / VALIDATED PROJECT
   // =====================================================================
 
+  // We should document this function further, or make its name more descriptive
   function updateTotal(uint256 _projectId, uint256 _tokens) public {
     require(TokenHolderRegistry(tokenHolderRegistry).getProjectAddress(_projectId) == msg.sender);                  //check that valid project is calling this function
     totalWorkerTokenSupply -= _tokens;

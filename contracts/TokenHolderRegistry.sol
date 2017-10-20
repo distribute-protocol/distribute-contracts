@@ -43,7 +43,6 @@ contract TokenHolderRegistry is StandardToken {
 
   //minting & burning state variables from Simon de la Rouviere's code
   uint256 public constant MAX_UINT = (2**256) - 1;
-  //uint256 baseCost = 100000000000000;
   uint256 baseCost = 100000000000000;                   //.0001 ether --> 3 cents for the initial token
   uint256 public costPerToken = 0;                      //current minting price
 
@@ -212,6 +211,7 @@ contract TokenHolderRegistry is StandardToken {
     balances[msg.sender] += proposerStake;                                      //give proposer back their tokens
     totalFreeCapitalTokenSupply += proposerStake;
     uint256 proposerReward = proposers[_projectAddress].projectCost/rewardProportion;
+    // We can transfer capital tokens rather than eth so that we can just generate what is needed and they can withdraw at a value they see fit.
     msg.sender.transfer(proposerReward);                                        //how are we sure that this still exists in the ethpool?
   }
 
@@ -221,9 +221,10 @@ contract TokenHolderRegistry is StandardToken {
 
   function stakeToken(uint256 _projectId, uint256 _tokens) public {
     require(balances[msg.sender] >= _tokens && _projectId <= projectNonce && _projectId > 0);   //make sure project exists & TH has tokens to stake
+    // Change the order so the tokens are removed before transferred to prevent rentry incase this fails. 
+    balances[msg.sender] -= _tokens;
     bool success = Project(projectId[_projectId].projectAddress).stakeCapitalToken(_tokens, msg.sender);
     assert(success == true);
-    balances[msg.sender] -= _tokens;
     totalFreeCapitalTokenSupply -= _tokens;
   }
 
@@ -294,7 +295,7 @@ contract TokenHolderRegistry is StandardToken {
     bool success = PLCRVoting(plcrVoting).isPassed(projectId[_projectId].votingPollId);
     return success;
   }
-
+  // We should call this something like burnTokens to be more explicit
   function updateTotal(uint256 _projectId, uint256 _tokens) public {
     require(projectId[_projectId].projectAddress == msg.sender);                               //check that valid project is calling this function
     totalCapitalTokenSupply -= _tokens;
