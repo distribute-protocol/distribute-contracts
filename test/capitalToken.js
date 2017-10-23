@@ -58,7 +58,7 @@ contract('Token holder', function() {
               _projectCost = Math.round(20*(weiPool/tokensupply))      //cost of 20 tokens will be project cost, so proposer stake should be 1 token
               _timePeriod = Date.now() + 120000000000 //long time from now
               _proposerStake = 1
-              console.log(_projectCost)
+              //console.log(_projectCost)
           })
           .then(() => THR.proposeProject(_projectCost, _timePeriod, {from: account1}))
           .then(() => THR.projectNonce.call())

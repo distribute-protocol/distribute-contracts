@@ -1,10 +1,11 @@
 pragma solidity ^0.4.10;
 
+import "truffle/DeployedAddresses.sol";
 import "../contracts/TokenHolderRegistry.sol";
 import "./ThrowProxy.sol";
 
-contract TestThrower {
-  function testThrow() {
+contract TestOverstaking {
+  function testThrow() public {
     TokenHolderRegistry THR = new TokenHolderRegistry();
     ThrowProxy throwProxy = new ThrowProxy(address(THR)); //set TokenHolderRegistry as the contract to forward requests to. The target.
 
