@@ -1,3 +1,5 @@
 .DS_Store
 build/*
-*.sh
+git_push.sh
+secrets.json
+node_modules/

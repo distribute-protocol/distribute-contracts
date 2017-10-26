@@ -8,7 +8,7 @@ import "./WorkerRegistry.sol";
   a created project
 */
 
-contract Project{
+contract Project {
 
 // =====================================================================
 // STATE VARIABLES

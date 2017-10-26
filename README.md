@@ -11,6 +11,8 @@ The desired outcome of Distribute is a multifaceted incentive structure that mak
 4. the infrastructure itself is created, maintained, and operated by those who directly benefit from it;
 5. multiple utilities may interlock in the future to create a synergistic system of many distributed utilities and communal infrastructure projects.
 
+---
+
 ### Setup
 
 Make sure to have [Truffle 4 beta](https://github.com/trufflesuite/truffle/releases) installed. Using other versions of truffle will result in solc errors.
@@ -21,8 +23,7 @@ If you already have Truffle 3 installed, uninstall it first:
 Then install Truffle 4 beta:
 `$ npm install -g truffle@beta`
 
-
-If you haven't already, install [TestRPC](https://github.com/ethereumjs/testrpc): 
+If you haven't already, install [TestRPC](https://github.com/ethereumjs/testrpc):
 `$ npm install -g ethereum-js testrpc`
 
 ### Run Tests
