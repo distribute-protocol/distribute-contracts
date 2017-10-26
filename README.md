@@ -16,16 +16,13 @@ The desired outcome of Distribute is a multifaceted incentive structure that mak
 Make sure to have [Truffle 4 beta](https://github.com/trufflesuite/truffle/releases) installed. Using other versions of truffle will result in solc errors.
 
 If you already have Truffle 3 installed, uninstall it first:
-
 `$ npm uninstall -g truffle`
 
 Then install Truffle 4 beta:
-
 `$ npm install -g truffle@beta`
 
 
 If you haven't already, install [TestRPC](https://github.com/ethereumjs/testrpc): 
-
 `$ npm install -g ethereum-js testrpc`
 
 ### Run Tests
