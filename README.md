@@ -15,21 +15,22 @@ The desired outcome of Distribute is a multifaceted incentive structure that mak
 
 ### Setup
 
-Make sure to have [Truffle 4 beta](https://github.com/trufflesuite/truffle/releases) installed. Using other versions of truffle will result in solc errors.
+Make sure to have [Truffle v4.0.0](https://github.com/trufflesuite/truffle/releases/tag/v4.0.0) installed:
 
-If you already have Truffle 3 installed, uninstall it first:
-`$ npm uninstall -g truffle`
+`$ npm install -g truffle`
 
-Then install Truffle 4 beta:
-`$ npm install -g truffle@beta`
-
-If you haven't already, install [TestRPC](https://github.com/ethereumjs/testrpc):
-`$ npm install -g ethereum-js testrpc`
+Using other versions of truffle may result in solc warnings & errors.
 
 ### Run Tests
 
-In its own window, start a TestRPC instance:
-`$ testrpc`
+In a terminal window, run the following command:
 
-In another window, deploy the contracts and run the tests:
-`$ truffle test`
+`$ truffle develop`
+
+In the resulting command line interface (which contains an integrated test blockchain, removing the need for a TestRPC instance for testing), run the following commands:
+
+`truffle(develop)> compile`
+
+`truffle(develop)> migrate`
+
+`truffle(develop)> test`
