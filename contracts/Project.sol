@@ -14,8 +14,8 @@ contract Project {
 // STATE VARIABLES
 // =====================================================================
 
-  address tokenHolderRegistry;    //connect to THR
-  address workerRegistry;         //connect to WR
+  TokenHolderRegistry tokenHolderRegistry;    //connect to THR
+  WorkerRegistry workerRegistry;         //connect to WR
 
   uint256 projectId;
 
@@ -96,12 +96,12 @@ contract Project {
   }
 
   modifier onlyTHR() {
-    require(msg.sender == tokenHolderRegistry);
+    require(msg.sender == address(tokenHolderRegistry));
     _;
   }
 
   modifier onlyWR() {
-    require(msg.sender == workerRegistry);
+    require(msg.sender == address(workerRegistry));
     _;
   }
 
@@ -115,7 +115,7 @@ contract Project {
 
   function Project(uint256 _id, uint256 _cost, uint256 _projectDeadline, uint256 _currentTokenCost, uint256 _proposerStake) public {       //called by THR
     //all checks done in THR first
-    tokenHolderRegistry = msg.sender;     //the token holder registry calls this function
+    tokenHolderRegistry = TokenHolderRegistry(msg.sender);     //the token holder registry calls this function
     projectId = _id;
     capitalETHCost = _cost;
     projectDeadline = _projectDeadline;
@@ -163,7 +163,7 @@ contract Project {
 
     else if (projectState == State.Validating) {
       if(now > validationStart + validationPeriod) {
-        TokenHolderRegistry(tokenHolderRegistry).startPoll(projectId, 604800, 604800);   //1 week commit, 1 week reveal
+        tokenHolderRegistry.startPoll(projectId, 604800, 604800);   //1 week commit, 1 week reveal
         projectState = State.Voting;
         return true;
       }
@@ -174,11 +174,11 @@ contract Project {
 
     else if (projectState == State.Voting) {
       //call TokenHolderRegistry to call PLCR to see if the commit & reveal period is over
-      if(!TokenHolderRegistry(tokenHolderRegistry).pollEnded(projectId)) {
+      if(!tokenHolderRegistry.pollEnded(projectId)) {
         return false;
       }
       else {
-        bool passed = TokenHolderRegistry(tokenHolderRegistry).isPassed(projectId);
+        bool passed = tokenHolderRegistry.isPassed(projectId);
         handleVoteResult(passed);
         if (passed) {
           projectState = State.Validated;
@@ -296,7 +296,7 @@ contract Project {
 
   function handleVoteResult(bool passed) internal {
     if(!passed) {               //project fails
-      TokenHolderRegistry(tokenHolderRegistry).updateTotal(projectId, totalCapitalStaked);
+      tokenHolderRegistry.updateTotal(projectId, totalCapitalStaked);
       WorkerRegistry(workerRegistry).updateTotal(projectId, totalWorkerStaked);
       totalCapitalStaked = 0;
       totalWorkerStaked = 0;
@@ -320,11 +320,11 @@ contract Project {
   // =====================================================================
 
   function refundStaker(address _staker) public returns (uint256 _refund) {  //called by THR or WR, allow return of staked, validated, and
-    require(msg.sender == tokenHolderRegistry ||  msg.sender == workerRegistry);
+    require(msg.sender == address(tokenHolderRegistry) ||  msg.sender == address(workerRegistry));
     require(projectState == State.Validated || projectState == State.Failed);
     uint256 refund;     //tokens
     uint256 spoils;     //wei
-    if (msg.sender == tokenHolderRegistry) {
+    if (msg.sender == address(tokenHolderRegistry)) {
 
       if(totalCapitalStaked != 0) {
         refund = stakedCapitalBalances[_staker];
@@ -338,7 +338,7 @@ contract Project {
         }
         else if (validateFlag == true) {
           spoils = capitalETHCost * validatedNegative[_staker] / totalValidateNegative;
-          TokenHolderRegistry(tokenHolderRegistry).rewardValidator(projectId, _staker, spoils);
+          tokenHolderRegistry.rewardValidator(projectId, _staker, spoils);
         }
         validatedNegative[_staker] = 0;
       }
@@ -350,7 +350,7 @@ contract Project {
         }
         else if (validateFlag == true) {
           spoils = capitalETHCost * validatedAffirmative[_staker] / totalValidateAffirmative;
-          TokenHolderRegistry(tokenHolderRegistry).rewardValidator(projectId, _staker, spoils);
+          tokenHolderRegistry.rewardValidator(projectId, _staker, spoils);
         }
         validatedAffirmative[_staker] = 0;
       }
@@ -358,7 +358,7 @@ contract Project {
       return refund;
     }
 
-    else if (msg.sender == workerRegistry) {
+    else if (msg.sender == address(workerRegistry)) {
       if(totalWorkerStaked != 0) {
         refund = stakedWorkerBalances[_staker];
         stakedWorkerBalances[_staker] = 0;
