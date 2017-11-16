@@ -34,5 +34,4 @@ module.exports = function(deployer) {
       }).then(function(instance){
         return instance.init(TokenHolderRegistry.address, PLCRVoting.address)
     });
-    deployer.link(StandardToken, TokenHolderRegistry)
 };
