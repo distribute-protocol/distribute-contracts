@@ -233,17 +233,10 @@ contract TokenHolderRegistry is StandardToken {
 
   function stakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {
     require(balances[msg.sender] >= _tokens);   //make sure project exists & TH has tokens to stake
-
-  function stakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {
-    require(balances[msg.sender] >= _tokens;   //make sure project exists & TH has tokens to stake
     // Change the order so the tokens are removed before transferred to prevent rentry incase this fails.
     balances[msg.sender] -= _tokens;
     totalFreeCapitalTokenSupply -= _tokens;
     require(Project(projectId[_projectId].projectAddress).stakeCapitalToken(_tokens, msg.sender));
-  }
-
-  function unstakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {
-    require(Project(projectId[_projectId].projectAddress).unstakeCapitalToken(_tokens, msg.sender));
   }
 
   function unstakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {
@@ -258,11 +251,6 @@ contract TokenHolderRegistry is StandardToken {
 
   function validate(uint256 _projectId, uint256 _tokens, bool _validationState) public projectExists(_projectId) {
     require(balances[msg.sender] >= _tokens);
-    require(Project(projectId[_projectId].projectAddress).validate(msg.sender, _tokens, _validationState));
-}
-
-  function validate(uint256 _projectId, uint256 _tokens, bool _validationState) public projectExists(_projectId) {
-    require(balances[msg.sender] >= _tokens;
     balances[msg.sender] -= _tokens;
     totalFreeCapitalTokenSupply -= _tokens;
     require(Project(projectId[_projectId].projectAddress).validate(msg.sender, _tokens, _validationState));
