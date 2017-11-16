@@ -231,27 +231,22 @@ contract TokenHolderRegistry is StandardToken {
   // PROPOSED PROJECT - STAKING FUNCTIONALITYå
   // =====================================================================
 
-<<<<<<< HEAD
   function stakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {
     require(balances[msg.sender] >= _tokens);   //make sure project exists & TH has tokens to stake
-=======
-  function stakeToken(uint256 _projectId, uint256 _tokens) public {
-    require(balances[msg.sender] >= _tokens && _projectId <= projectNonce && _projectId > 0);   //make sure project exists & TH has tokens to stake
->>>>>>> 66ff5e36801b758902db963b4540e20c8fdf23de
+
+  function stakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {
+    require(balances[msg.sender] >= _tokens;   //make sure project exists & TH has tokens to stake
     // Change the order so the tokens are removed before transferred to prevent rentry incase this fails.
     balances[msg.sender] -= _tokens;
     totalFreeCapitalTokenSupply -= _tokens;
     require(Project(projectId[_projectId].projectAddress).stakeCapitalToken(_tokens, msg.sender));
   }
 
-<<<<<<< HEAD
   function unstakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {
-    bool success = Project(projectId[_projectId].projectAddress).unstakeCapitalToken(_tokens, msg.sender);
-    assert(success == true);
-=======
-  function unstakeToken(uint256 _projectId, uint256 _tokens) public {
-    require(_projectId <= projectNonce && _projectId > 0);
->>>>>>> 66ff5e36801b758902db963b4540e20c8fdf23de
+    require(Project(projectId[_projectId].projectAddress).unstakeCapitalToken(_tokens, msg.sender));
+  }
+
+  function unstakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {
     balances[msg.sender] += _tokens;
     totalFreeCapitalTokenSupply += _tokens;
     require(Project(projectId[_projectId].projectAddress).unstakeCapitalToken(_tokens, msg.sender));
@@ -261,15 +256,13 @@ contract TokenHolderRegistry is StandardToken {
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
   // =====================================================================
 
-<<<<<<< HEAD
   function validate(uint256 _projectId, uint256 _tokens, bool _validationState) public projectExists(_projectId) {
     require(balances[msg.sender] >= _tokens);
-    bool success = Project(projectId[_projectId].projectAddress).validate(msg.sender, _tokens, _validationState);
-    assert(success == true);
-=======
-  function validate(uint256 _projectId, uint256 _tokens, bool _validationState) public {
-    require(balances[msg.sender] >= _tokens && _projectId <= projectNonce && _projectId > 0);
->>>>>>> 66ff5e36801b758902db963b4540e20c8fdf23de
+    require(Project(projectId[_projectId].projectAddress).validate(msg.sender, _tokens, _validationState));
+}
+
+  function validate(uint256 _projectId, uint256 _tokens, bool _validationState) public projectExists(_projectId) {
+    require(balances[msg.sender] >= _tokens;
     balances[msg.sender] -= _tokens;
     totalFreeCapitalTokenSupply -= _tokens;
     require(Project(projectId[_projectId].projectAddress).validate(msg.sender, _tokens, _validationState));
@@ -277,8 +270,7 @@ contract TokenHolderRegistry is StandardToken {
 
   function startPoll(uint256 _projectId, uint256 _commitDuration, uint256 _revealDuration) public {
       require(projectId[_projectId].projectAddress == msg.sender);
-      uint256 _pollId = plcrVoting.startPoll(50, _commitDuration, _revealDuration);
-      projectId[_projectId].votingPollId = _pollId;
+      projectId[_projectId].votingPollId = plcrVoting.startPoll(50, _commitDuration, _revealDuration);
     }
 
   function voteCommit(uint256 _projectId, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) public projectExists(_projectId) {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
@@ -297,14 +289,13 @@ contract TokenHolderRegistry is StandardToken {
   }
 
   function voteReveal(uint256 _projectId, uint256 _voteOption, uint _salt) public {
-    uint256 pollId = projectId[_projectId].votingPollId;
-    plcrVoting.revealVote(pollId, _voteOption, _salt);
+    plcrVoting.revealVote(projectId[_projectId].votingPollId, _voteOption, _salt);
   }
 
   function refundVotingTokens(uint256 _tokens) public {
-    plcrVoting.withdrawVotingRights(msg.sender, _tokens);
     balances[msg.sender] += _tokens;
     totalFreeCapitalTokenSupply += _tokens;
+    plcrVoting.withdrawVotingRights(msg.sender, _tokens);
   }
 
   // =====================================================================
@@ -332,7 +323,6 @@ contract TokenHolderRegistry is StandardToken {
     uint256 refund = Project(projectId[_projectId].projectAddress).refundStaker(msg.sender);
     totalFreeCapitalTokenSupply += refund;
     balances[msg.sender] += refund;
-
     //rescue locked tokens that weren't revealed
     uint256 pollId = projectId[_projectId].votingPollId;
     plcrVoting.rescueTokens(msg.sender, pollId);
