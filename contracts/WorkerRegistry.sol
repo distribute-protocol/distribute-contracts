@@ -44,6 +44,11 @@ contract WorkerRegistry{
       plcrVoting = PLCRVoting(_plcrVoting);
   }
 
+  function registerWorker() public {
+    require(balances[msg.sender] == 0);
+    balances[msg.sender] = 1;
+  }
+
   // =====================================================================
   // PROPOSED PROJECT - STAKING FUNCTIONALITY
   // =====================================================================
