@@ -67,7 +67,10 @@ contract TokenHolderRegistry is StandardToken {
     _;
   }
 
-  //make a project exists modifier
+  modifier projectExists(uint256 _projectId) {
+    require(_projectId <= projectNonce && _projectId > 0);
+    _;
+  }
 
 // =====================================================================
 // FUNCTIONS
@@ -228,16 +231,27 @@ contract TokenHolderRegistry is StandardToken {
   // PROPOSED PROJECT - STAKING FUNCTIONALITYå
   // =====================================================================
 
+<<<<<<< HEAD
+  function stakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {
+    require(balances[msg.sender] >= _tokens);   //make sure project exists & TH has tokens to stake
+=======
   function stakeToken(uint256 _projectId, uint256 _tokens) public {
     require(balances[msg.sender] >= _tokens && _projectId <= projectNonce && _projectId > 0);   //make sure project exists & TH has tokens to stake
+>>>>>>> 66ff5e36801b758902db963b4540e20c8fdf23de
     // Change the order so the tokens are removed before transferred to prevent rentry incase this fails.
     balances[msg.sender] -= _tokens;
     totalFreeCapitalTokenSupply -= _tokens;
     require(Project(projectId[_projectId].projectAddress).stakeCapitalToken(_tokens, msg.sender));
   }
 
+<<<<<<< HEAD
+  function unstakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {
+    bool success = Project(projectId[_projectId].projectAddress).unstakeCapitalToken(_tokens, msg.sender);
+    assert(success == true);
+=======
   function unstakeToken(uint256 _projectId, uint256 _tokens) public {
     require(_projectId <= projectNonce && _projectId > 0);
+>>>>>>> 66ff5e36801b758902db963b4540e20c8fdf23de
     balances[msg.sender] += _tokens;
     totalFreeCapitalTokenSupply += _tokens;
     require(Project(projectId[_projectId].projectAddress).unstakeCapitalToken(_tokens, msg.sender));
@@ -247,8 +261,15 @@ contract TokenHolderRegistry is StandardToken {
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
   // =====================================================================
 
+<<<<<<< HEAD
+  function validate(uint256 _projectId, uint256 _tokens, bool _validationState) public projectExists(_projectId) {
+    require(balances[msg.sender] >= _tokens);
+    bool success = Project(projectId[_projectId].projectAddress).validate(msg.sender, _tokens, _validationState);
+    assert(success == true);
+=======
   function validate(uint256 _projectId, uint256 _tokens, bool _validationState) public {
     require(balances[msg.sender] >= _tokens && _projectId <= projectNonce && _projectId > 0);
+>>>>>>> 66ff5e36801b758902db963b4540e20c8fdf23de
     balances[msg.sender] -= _tokens;
     totalFreeCapitalTokenSupply -= _tokens;
     require(Project(projectId[_projectId].projectAddress).validate(msg.sender, _tokens, _validationState));
@@ -260,14 +281,14 @@ contract TokenHolderRegistry is StandardToken {
       projectId[_projectId].votingPollId = _pollId;
     }
 
-  function voteCommit(uint256 _projectId, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+  function voteCommit(uint256 _projectId, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) public projectExists(_projectId) {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
     uint256 pollId = projectId[_projectId].votingPollId;
     //calculate available tokens for voting
     uint256 availableTokens = plcrVoting.voteTokenBalanceTH(msg.sender) - plcrVoting.getLockedTokens(msg.sender);
     //make sure msg.sender has tokens available in PLCR contract
     //if not, request voting rights for token holder
     if (availableTokens < _tokens) {
-      require(balances[msg.sender] >= _tokens - availableTokens && _projectId <= projectNonce && _projectId > 0);
+      require(balances[msg.sender] >= _tokens - availableTokens);
       balances[msg.sender] -= _tokens;
       totalFreeCapitalTokenSupply -= _tokens;
       plcrVoting.requestVotingRights(msg.sender, _tokens - availableTokens);
