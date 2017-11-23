@@ -33,11 +33,13 @@ contract Project {
   mapping (address => uint) stakedWorkerBalances;
 
   Task[] tasks;   //array of tasks for this project
+  mapping (address => Task[]) submittedTasks;
 
   struct Task {
     address workerAddress;    //which worker is assigned to this task
     string description;       //brief description of task
     bool taskComplete;
+    string ipfsHash;
     //uint256 taskHash;
     //uint256 escrowTokens;   //tokens paid to sign up for task, amount they will earn if validated
     uint256 ETHReward;        //for now hard-coded
@@ -105,6 +107,10 @@ contract Project {
     _;
   }
 
+  modifier isStaker() {
+    require(stakedCapitalBalances[msg.sender] > 0 || stakedWorkerBalances[msg.sender] > 0);
+    _;
+  }
 // =====================================================================
 // FUNCTIONS
 // =====================================================================
@@ -251,8 +257,12 @@ contract Project {
   // =====================================================================
   // ACTIVE PROJECT FUNCTIONS
   // =====================================================================
+  function submitTaskList(Task[] tasksList) isStaker() {
+    submittedTasks[msg.sender] = taskList;
+    return true;
+  }
 
-  function addTask(address _workerAddress, string _description, uint256 _workerReward) public onlyInState(State.Active) onlyBefore(projectDeadline) {     //uclear who can call this, needs to be restricted to consensus-based tasks
+  function addTask(address _workerAddress, string _description, uint256 _workerReward) public onlyInState(State.Active) onlyBefore(projectDeadline) isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
     if (checkStateChange() == false) {
       tasks.push(Task(_workerAddress, _description, false, _workerReward));
     }

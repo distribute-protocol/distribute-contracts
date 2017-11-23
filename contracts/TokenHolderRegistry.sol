@@ -139,6 +139,7 @@ contract TokenHolderRegistry is StandardToken {
       LogCostOfTokenUpdate(costPerToken);
   }
 
+// This produces out of gas errors for numbers to high.
   function mint(uint _tokens) public payable {
       //token balance of msg.sender increases if paid right amount according to protocol
       //will mint as many tokens as it can depending on msg.value, requested # tokens, and MAX_UINT
