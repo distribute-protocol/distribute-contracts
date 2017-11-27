@@ -257,14 +257,14 @@ contract Project {
   // =====================================================================
   // ACTIVE PROJECT FUNCTIONS
   // =====================================================================
-  function submitTaskList(Task[] tasksList) isStaker() {
-    submittedTasks[msg.sender] = taskList;
+  /*function submitTaskList(Task[] tasksList) public isStaker() returns (bool success) {
+    submittedTasks[msg.sender] = tasksList;
     return true;
-  }
+  }*/
 
-  function addTask(address _workerAddress, string _description, uint256 _workerReward) public onlyInState(State.Active) onlyBefore(projectDeadline) isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
+  function addTask(address _workerAddress, string _description, uint256 _workerReward, string _ipfsHash) public onlyInState(State.Active) onlyBefore(projectDeadline) isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
     if (checkStateChange() == false) {
-      tasks.push(Task(_workerAddress, _description, false, _workerReward));
+      tasks.push(Task(_workerAddress, _description, false, _ipfsHash, _workerReward));
     }
   }
 

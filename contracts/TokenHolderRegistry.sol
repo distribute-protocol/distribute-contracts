@@ -143,7 +143,7 @@ contract TokenHolderRegistry is StandardToken {
   function mint(uint _tokens) public payable {
       //token balance of msg.sender increases if paid right amount according to protocol
       //will mint as many tokens as it can depending on msg.value, requested # tokens, and MAX_UINT
-      uint256 totalMinted = 0;
+      /*uint256 totalMinted = 0;
       uint256 fundsLeft = msg.value;
       //FIX THIS POTENTIAL BLOCK OVERFLOW :(
       while(fundsLeft >= costPerToken && totalMinted < _tokens) {       //leaves loop when minted proper number of tokens or ran out of funds or token supply hit maximum value
@@ -164,8 +164,36 @@ contract TokenHolderRegistry is StandardToken {
       balances[msg.sender] += totalMinted;
       weiBal += (msg.value - fundsLeft);
       LogMint(totalMinted, (msg.value - fundsLeft));
-      msg.sender.transfer(fundsLeft);
-    }
+      msg.sender.transfer(fundsLeft);*/
+      uint256 targetPrice;
+      if (totalCapitalTokenSupply == 0 || currentPrice() == 0) {
+        targetPrice = baseCost;
+      } else {
+        uint256 newSupply = totalCapitalTokenSupply + _tokens;
+        uint256 cp = currentPrice();
+        targetPrice = (cp * 100 + cp * percent(_tokens, newSupply, 3)) / 100;
+      }
+      uint256 ethRequired = (targetPrice * (totalCapitalTokenSupply + _tokens)) - weiBal;
+      require(msg.value >= ethRequired);
+      totalCapitalTokenSupply += _tokens;
+      totalFreeCapitalTokenSupply += _tokens;
+      balances[msg.sender] += _tokens;
+      weiBal += ethRequired;
+      LogMint(_tokens, ethRequired);
+      uint256 fundsLeft = msg.value - ethRequired;
+      if (fundsLeft > 0) {
+        msg.sender.transfer(fundsLeft);
+      }
+  }
+
+  function percent(uint256 numerator, uint256 denominator, uint256 precision) internal view returns (uint256 quotient) {
+
+         // caution, check safe-to-multiply here
+        uint256 _numerator  = numerator * 10 ** (precision+1);
+        // with rounding of last digit
+        uint256 _quotient =  ((_numerator / denominator) + 5) / 10;
+        return _quotient;
+  }
 
   function burnAndRefund(uint256 _amountToBurn) public {      //free tokens only
       require(_amountToBurn > 0 && (balances[msg.sender]) >= _amountToBurn);
@@ -184,6 +212,8 @@ contract TokenHolderRegistry is StandardToken {
     uint256 reward = weiBal/totalCapitalTokenSupply; //truncation - remainder discarded
     return reward;                                   //reward in wei of burning 1 token
   }
+  /*function futurePrice() internal view return (uint256 price) {
+  }*/
 
   // =====================================================================
   // PROPOSER FUNCTIONS
