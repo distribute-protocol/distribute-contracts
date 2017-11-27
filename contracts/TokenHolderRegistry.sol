@@ -169,11 +169,9 @@ contract TokenHolderRegistry is StandardToken {
       if (totalCapitalTokenSupply == 0 || currentPrice() == 0) {
         targetPrice = baseCost;
       } else {
-        uint256 newSupply = totalCapitalTokenSupply + _tokens;
-        uint256 cp = currentPrice();
-        targetPrice = (cp * 100 + cp * percent(_tokens, newSupply, 3)) / 100;
+        targetPrice = targetPrice(_tokens);
       }
-      uint256 ethRequired = (targetPrice * (totalCapitalTokenSupply + _tokens)) - weiBal;
+      uint256 ethRequired = ethRequired(targetPrice, _tokens);
       require(msg.value >= ethRequired);
       totalCapitalTokenSupply += _tokens;
       totalFreeCapitalTokenSupply += _tokens;
@@ -186,13 +184,23 @@ contract TokenHolderRegistry is StandardToken {
       }
   }
 
-  function percent(uint256 numerator, uint256 denominator, uint256 precision) internal view returns (uint256 quotient) {
+  function percent(uint256 numerator, uint256 denominator, uint256 precision) internal view returns (uint256) {
 
          // caution, check safe-to-multiply here
         uint256 _numerator  = numerator * 10 ** (precision+1);
         // with rounding of last digit
         uint256 _quotient =  ((_numerator / denominator) + 5) / 10;
         return _quotient;
+  }
+
+  function ethRequired(targetPrice, _tokens) returns (uint256) {
+    return (targetPrice * (totalCapitalTokenSupply + _tokens)) - weiBal;
+  }
+
+  function targetPrice(_tokens) public returns (uint256) {
+    uint256 newSupply = totalCapitalTokenSupply + _tokens;
+    uint256 cp = currentPrice();
+    return cp * (1000 + percent(_tokens, newSupply, 3)) / 1000;
   }
 
   function burnAndRefund(uint256 _amountToBurn) public {      //free tokens only
@@ -207,7 +215,7 @@ contract TokenHolderRegistry is StandardToken {
       msg.sender.transfer(reward);
   }
 
-  function currentPrice() internal view returns (uint256 price) {
+  function currentPrice() internal view returns (uint256) {
     //calculated current burn reward of 1 token at current weiBal and token supply
     uint256 reward = weiBal/totalCapitalTokenSupply; //truncation - remainder discarded
     return reward;                                   //reward in wei of burning 1 token
