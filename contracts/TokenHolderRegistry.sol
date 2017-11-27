@@ -83,7 +83,7 @@ contract TokenHolderRegistry is StandardToken {
     require(address(workerRegistry) == 0 && address(plcrVoting) == 0);
     workerRegistry = WorkerRegistry(_workerRegistry);
     plcrVoting = PLCRVoting(_plcrVoting);
-    updateMintingPrice(0);
+    //updateMintingPrice(0);
   }
 
   // =====================================================================

@@ -20,8 +20,8 @@ contract Project {
   uint256 projectId;
 
   uint256 public capitalETHCost;
-  uint256 capitalCost;            //total amount of staked capital in tokens needed
-  uint256 workerCost;             //total amount of staked worker tokens needed, one to one with capital tokens
+  uint256 capitalTokenCost;            //total amount of staked capital in tokens needed
+  uint256 workerTokenCost;             //total amount of staked worker tokens needed, valued separately
 
   uint256 proposerStake;          //amount of capital tokens the proposer stakes
   uint256 projectDeadline;
@@ -32,9 +32,10 @@ contract Project {
   mapping (address => uint) stakedCapitalBalances;
   mapping (address => uint) stakedWorkerBalances;
 
-  Task[] tasks;   //array of tasks for this project
-  mapping (address => Task[]) submittedTasks;
+  //Task[] tasks;   //array of tasks for this project
+  //mapping (address => Task[]) submittedTasks;
 
+  /*
   struct Task {
     address workerAddress;    //which worker is assigned to this task
     string description;       //brief description of task
@@ -44,7 +45,7 @@ contract Project {
     //uint256 escrowTokens;   //tokens paid to sign up for task, amount they will earn if validated
     uint256 ETHReward;        //for now hard-coded
   }
-
+*/
 
   //keep track of validating complete project
   mapping (address => uint) validatedAffirmative;
@@ -71,6 +72,7 @@ contract Project {
   State public projectState;
   enum State {
     Proposed,
+    Open,
     Active,
     Validating,
     Voting,
@@ -129,9 +131,9 @@ contract Project {
     proposerStake = _proposerStake;
     totalCapitalStaked = 0;
     totalWorkerStaked = 0;
-    capitalCost = _currentTokenCost;          //hardcode this value for now
-    workerCost = 0;
-    //workerCost = _currentTokenCost;
+    capitalTokenCost = _currentTokenCost;          //hardcode this value for now
+    workerTokenCost = 0;
+    //workerTokenCost = _currentTokenCost;
     votingCommitDuration = 604800;
     votingRevealDuration = 604800;
   }
@@ -142,7 +144,7 @@ contract Project {
 
   function checkStateChange() internal returns (bool stateChange) {                              //general state change function
     if (projectState == State.Proposed) {
-      if (totalCapitalStaked >= capitalCost && totalWorkerStaked >= workerCost)
+      if (totalCapitalStaked >= capitalTokenCost && totalWorkerStaked >= workerTokenCost)
         {
           projectState = State.Active;
           return true;
@@ -211,7 +213,7 @@ contract Project {
   function stakeCapitalToken(uint256 _tokens, address _staker) public onlyTHR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {  //called by THR, increments _staker tokens in Project.sol
     if (checkStateChange() == false &&
          stakedCapitalBalances[_staker] + _tokens > stakedCapitalBalances[_staker]) {
-        require(_tokens <= capitalCost - totalCapitalStaked);
+        require(_tokens <= capitalTokenCost - totalCapitalStaked);
         stakedCapitalBalances[_staker] += _tokens;
         totalCapitalStaked += _tokens;
         checkStateChange();
@@ -262,7 +264,7 @@ contract Project {
     return true;
   }*/
 
-  function addTask(address _workerAddress, string _description, uint256 _workerReward, string _ipfsHash) public onlyInState(State.Active) onlyBefore(projectDeadline) isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
+  function addTaskHash(bytes32 _ipfsHash) public onlyInState(State.Open) onlyBefore(taskTimePeriod) isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
     if (checkStateChange() == false) {
       tasks.push(Task(_workerAddress, _description, false, _ipfsHash, _workerReward));
     }
