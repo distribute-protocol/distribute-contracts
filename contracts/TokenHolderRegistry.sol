@@ -205,11 +205,10 @@ contract TokenHolderRegistry is StandardToken {
   function burnAndRefund(uint256 _amountToBurn) public {      //free tokens only
       require(_amountToBurn > 0 && (balances[msg.sender]) >= _amountToBurn);
       //determine how much you can leave with.
-      uint256 reward = _amountToBurn * weiBal/totalCapitalTokenSupply;    //truncation - remainder discarded
+      uint256 reward = _amountToBurn * currentPrice();    //truncation - remainder discarded
       balances[msg.sender] -= _amountToBurn;
       totalCapitalTokenSupply -= _amountToBurn;
       totalFreeCapitalTokenSupply -= _amountToBurn;
-      updateMintingPrice(totalCapitalTokenSupply);
       LogWithdraw(_amountToBurn, reward);
       msg.sender.transfer(reward);
   }
