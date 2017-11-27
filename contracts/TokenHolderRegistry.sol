@@ -105,14 +105,14 @@ contract TokenHolderRegistry is StandardToken {
   // MINTING FUNCTIONS
   // =====================================================================
 
-  function fracExp(uint256 k, uint256 q, uint256 n, uint256 p) internal pure returns (uint) {
+  /*function fracExp(uint256 k, uint256 q, uint256 n, uint256 p) internal pure returns (uint) {*/
     // via: http://ethereum.stackexchange.com/questions/10425/is-there-any-efficient-way-to-compute-the-exponentiation-of-a-fraction-and-an-in/10432#10432
     // Computes `k * (1+1/q) ^ N`, with precision `p`. The higher
     // the precision, the higher the gas cost. It should be
     // something around the log of `n`. When `p == n`, the
     // precision is absolute (sans possible integer overflows).
     // Much smaller values are sufficient to get a great approximation.
-    uint256 s = 0;
+    /*uint256 s = 0;
     uint256 N = 1;
     uint256 B = 1;
     for (uint256 i = 0; i < p; ++i){
@@ -121,11 +121,11 @@ contract TokenHolderRegistry is StandardToken {
       B  = B * (i+1);
     }
     return s;
-  }
+  }*/
 
   //TAKE WEIBAL INTO CONSIDERATION
   //TURN THIS INTO STEPS
-  function updateMintingPrice(uint256 _supply) internal {
+  /*function updateMintingPrice(uint256 _supply) internal {*/
       //base cost should be current cost
       /*
       if(totalsupply is 0 {
@@ -135,9 +135,9 @@ contract TokenHolderRegistry is StandardToken {
         basecost = currentprice
       }
       */
-      costPerToken = baseCost+fracExp(baseCost, 618046, _supply, 2)+baseCost*_supply/1000;
+      /*costPerToken = baseCost+fracExp(baseCost, 618046, _supply, 2)+baseCost*_supply/1000;
       LogCostOfTokenUpdate(costPerToken);
-  }
+  }*/
 
 // This produces out of gas errors for numbers to high.
   function mint(uint _tokens) public payable {
@@ -165,39 +165,38 @@ contract TokenHolderRegistry is StandardToken {
       weiBal += (msg.value - fundsLeft);
       LogMint(totalMinted, (msg.value - fundsLeft));
       msg.sender.transfer(fundsLeft);*/
-      uint256 targetPrice;
+      uint256 targetPriceVar;
       if (totalCapitalTokenSupply == 0 || currentPrice() == 0) {
-        targetPrice = baseCost;
+        targetPriceVar = baseCost;
       } else {
-        targetPrice = targetPrice(_tokens);
+        targetPriceVar = targetPrice(_tokens);
       }
-      uint256 ethRequired = ethRequired(targetPrice, _tokens);
-      require(msg.value >= ethRequired);
+      uint256 ethRequiredVar = ethRequired(targetPriceVar, _tokens);
+      require(msg.value >= ethRequiredVar);
       totalCapitalTokenSupply += _tokens;
       totalFreeCapitalTokenSupply += _tokens;
       balances[msg.sender] += _tokens;
-      weiBal += ethRequired;
-      LogMint(_tokens, ethRequired);
-      uint256 fundsLeft = msg.value - ethRequired;
+      weiBal += ethRequiredVar;
+      LogMint(_tokens, ethRequiredVar);
+      uint256 fundsLeft = msg.value - ethRequiredVar;
       if (fundsLeft > 0) {
         msg.sender.transfer(fundsLeft);
       }
   }
 
   function percent(uint256 numerator, uint256 denominator, uint256 precision) internal view returns (uint256) {
-
-         // caution, check safe-to-multiply here
-        uint256 _numerator  = numerator * 10 ** (precision+1);
-        // with rounding of last digit
-        uint256 _quotient =  ((_numerator / denominator) + 5) / 10;
-        return _quotient;
+     // caution, check safe-to-multiply here
+    uint256 _numerator  = numerator * 10 ** (precision+1);
+    // with rounding of last digit
+    uint256 _quotient =  ((_numerator / denominator) + 5) / 10;
+    return _quotient;
   }
 
-  function ethRequired(targetPrice, _tokens) returns (uint256) {
-    return (targetPrice * (totalCapitalTokenSupply + _tokens)) - weiBal;
+  function ethRequired(uint _targetPrice, uint _tokens) returns (uint256) {
+    return (_targetPrice * (totalCapitalTokenSupply + _tokens)) - weiBal;
   }
 
-  function targetPrice(_tokens) public returns (uint256) {
+  function targetPrice(uint _tokens) public returns (uint256) {
     uint256 newSupply = totalCapitalTokenSupply + _tokens;
     uint256 cp = currentPrice();
     return cp * (1000 + percent(_tokens, newSupply, 3)) / 1000;
