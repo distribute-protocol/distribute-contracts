@@ -67,8 +67,7 @@ contract Project {
     Dispute,
     Active,
     Validating,
-    VotingCommit,
-    VotingReveal,
+    Voting,
     Complete,
     Incomplete,
     Failed
@@ -306,29 +305,63 @@ contract Project {
   }
 
   function addTaskHash(bytes32 _ipfsHash) public onlyInState(State.Open) onlyBefore(taskTimePeriod) isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
-    //rewrote
+    //write
   }
 
-  function claimTask() {
-
+  function claimTask() public onlyInState(State.Active) onlyWR() {
+    //write
   }
 
-  function completeTask() onlyInState(State.Active) public onlyWR() returns (bool success) {  //can only be called by worker in task
-    if (checkStateChange() == false) {
-      for (uint256 i=0; i<tasks.length; i++) {
-        if(tasks[i].workerAddress == msg.sender && tasks[i].taskComplete == false) {
-          tasks[i].taskComplete = true;
-          return true;
-        }
-      }
-      return false;
-    }
-    return false;
+  function calculateWinningTaskHash() internal {
+    //write
+  }
+
+  function completeTask() public onlyInState(State.Active) onlyWR() {  //can only be called by worker in task
+    //write
   }
 
   // =====================================================================
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
   // =====================================================================
+
+  function checkValidate() internal onlyInState(State.Active) returns (bool) {
+    if (timesUp()) {
+      projectState = State.Validating;
+      nextDeadline = now + validationPeriod;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  function checkVoting() public onlyInState(State.Validating) returns (bool) {
+    if(timesUp()) {
+      projectState = State.Voting;
+      tokenHolderRegistry.startPoll(projectId, votingCommitPeriod, votingRevealPeriod);
+      nextDeadline = now + votingCommitPeriod;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  function checkEnd() public onlyInState(State.Voting) returns (bool) {
+    if(!tokenHolderRegistry.pollEnded(projectId)) {
+      return false;
+    }
+    else {
+      bool passed = tokenHolderRegistry.isPassed(projectId);
+      handleVoteResult(passed);
+      if (passed) {
+        projectState = State.Complete;
+        return true;
+      }
+      else {
+        projectState = State.Failed;
+        return true;
+      }
+    }
+  }
 
   function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTHR() onlyInState(State.Validating) returns (bool success) {
     //checks for free tokens done in THR
@@ -423,15 +456,8 @@ contract Project {
     }
   }
 
-  function rewardWorker(address _staker) public onlyWR() onlyInState(State.Validated) returns (uint256 _reward) {
-    uint256 reward = 0;
-    for (uint256 i=0; i<tasks.length; i++) {
-      if(tasks[i].workerAddress == _staker) {
-        reward += tasks[i].ETHReward;
-        tasks[i].ETHReward = 0;
-      }
-    }
-    return reward;
+  function rewardWorker(address _staker, uint256 _tokens, uint256 _wei) public onlyWR() onlyInState(State.Validated) returns (uint256 _reward) {
+    //write
   }
 
 }

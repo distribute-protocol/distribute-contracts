@@ -243,12 +243,13 @@ contract TokenHolderRegistry is StandardToken {
     require(Project(projectId[_projectId].projectAddress).validate(msg.sender, _tokens, _validationState));
   }
 
-  function startPoll(uint256 _projectId, uint256 _commitDuration, uint256 _revealDuration) public {
+  function startPoll(uint256 _projectId, uint256 _commitDuration, uint256 _revealDuration) public {       //can only be called by project in question
       require(projectId[_projectId].projectAddress == msg.sender);
       projectId[_projectId].votingPollId = plcrVoting.startPoll(50, _commitDuration, _revealDuration);
     }
 
   function voteCommit(uint256 _projectId, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) public projectExists(_projectId) {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+
     uint256 pollId = projectId[_projectId].votingPollId;
     //calculate available tokens for voting
     uint256 availableTokens = plcrVoting.voteTokenBalanceTH(msg.sender) - plcrVoting.getLockedTokens(msg.sender);
@@ -279,14 +280,12 @@ contract TokenHolderRegistry is StandardToken {
 
   function pollEnded(uint256 _projectId) public view returns (bool) {
     require(projectId[_projectId].projectAddress == msg.sender);
-    bool success = plcrVoting.pollEnded(projectId[_projectId].votingPollId);
-    return success;
+    return plcrVoting.pollEnded(projectId[_projectId].votingPollId);
   }
 
   function isPassed(uint256 _projectId) public view returns (bool) {
     require(projectId[_projectId].projectAddress == msg.sender);
-    bool success = plcrVoting.isPassed(projectId[_projectId].votingPollId);
-    return success;
+    return plcrVoting.isPassed(projectId[_projectId].votingPollId);
   }
   // We should call this something like burnTokens to be more explicit
   function updateTotal(uint256 _projectId, uint256 _tokens) public {
