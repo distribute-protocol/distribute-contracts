@@ -107,21 +107,17 @@ contract Project {
   // CONSTRUCTOR
   // =====================================================================
 
-  function Project(uint256 _id, uint256 _cost, uint256 _projectDeadline, uint256 _currentTokenCost, uint256 _proposerTokenStake) public {       //called by THR
+  function Project(uint256 _id, uint256 _cost, uint256 _stakingPeriod, uint256 _proposerTokenStake, uint256 _costProportion, address _wr) public {       //called by THR
     //all checks done in THR first
     tokenHolderRegistry = TokenHolderRegistry(msg.sender);     //the token holder registry calls this function
     projectId = _id;
     weiCost = _cost;
-    projectDeadline = _projectDeadline;
+    stakingPeriod = now + _stakingPeriod;
     projectState = State.Proposed;
     proposerTokenStake = _proposerTokenStake;
-    totalCapitalTokensStaked = 0;
     totalWorkerTokensStaked = 0;
-    capitalTokenCost = _currentTokenCost;          //hardcode this value for now
-    workerTokenCost = 0;
-    //workerTokenCost = _currentTokenCost;
-    votingCommitDuration = 604800;
-    votingRevealDuration = 604800;
+    workerRegistry = workerRegistry(_wr);
+    workerTokenCost = _costProportion * workerRegistry.totalFreeWorkerTokenSupply;
   }
 
   // =====================================================================

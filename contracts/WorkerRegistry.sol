@@ -21,10 +21,10 @@ contract WorkerRegistry{
   TokenHolderRegistry tokenHolderRegistry;
   PLCRVoting plcrVoting;
 
-  mapping (address => uint) balances;           //worker token balances
+  mapping (address => uint) balances;                   //worker token balances
 
-  uint256 totalWorkerTokenSupply;               //total supply of capital tokens in all states
-  uint256 totalFreeWorkerTokenSupply;           //total supply of free capital tokens (not staked, validated, or voted)
+  uint256 public totalWorkerTokenSupply;               //total supply of capital tokens in all states
+  uint256 public totalFreeWorkerTokenSupply;           //total supply of free capital tokens (not staked, validated, or voted)
 
 // =====================================================================
 // EVENTS
@@ -58,16 +58,14 @@ contract WorkerRegistry{
     require(balances[msg.sender] >= _tokens);   //make sure project exists & TH has tokens to stake
     balances[msg.sender] -= _tokens;
     totalFreeWorkerTokenSupply -= _tokens;
-    bool success = Project(_projectAddress).stakeWorkerToken(_tokens, msg.sender);
-    assert(success == true);
+    require(Project(_projectAddress).stakeWorkerToken(_tokens, msg.sender));
   }
 
   function unstakeToken(uint256 _projectId, uint256 _tokens) public {
     address _projectAddress = tokenHolderRegistry.getProjectAddress(_projectId);
     balances[msg.sender] += _tokens;
     totalFreeWorkerTokenSupply += _tokens;
-    bool success = Project(_projectAddress).unstakeWorkerToken(_tokens, msg.sender);
-    assert(success == true);
+    require(Project(_projectAddress).unstakeWorkerToken(_tokens, msg.sender));
   }
 
   // =====================================================================

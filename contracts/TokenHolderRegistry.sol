@@ -17,6 +17,7 @@ contract TokenHolderRegistry is StandardToken {
 // STATE VARIABLES
 // =====================================================================
   WorkerRegistry workerRegistry;
+  address wrAddress;
   PLCRVoting plcrVoting;
 
   uint256 public totalCapitalTokenSupply = 0;               //total supply of capital tokens in all staking states
@@ -81,6 +82,7 @@ contract TokenHolderRegistry is StandardToken {
   // =====================================================================
   function init(address _workerRegistry, address _plcrVoting) public {       //contract is created
     require(address(workerRegistry) == 0 && address(plcrVoting) == 0);
+    wrAddress = _workerRegistry;
     workerRegistry = WorkerRegistry(_workerRegistry);
     plcrVoting = PLCRVoting(_plcrVoting);
     //updateMintingPrice(0);
@@ -166,13 +168,14 @@ contract TokenHolderRegistry is StandardToken {
   // PROPOSER FUNCTIONS
   // =====================================================================
 
-  function proposeProject(uint256 _cost, uint256 _projectDeadline) public {    //_cost of project in ether, _projectDeadline is for end of active period
+  function proposeProject(uint256 _cost, uint256 _stakingPeriod) public {    //_cost of project in ether, _projectDeadline is for end of active period
     //calculate cost of project in tokens currently (_cost in wei)
     //check proposer has at least 5% of the proposed cost in tokens
-    require(now < _projectDeadline && _cost > 0);
+    require(now < _stakingPeriod && _cost > 0);
     uint256 _currentPrice = currentPrice();
     uint256 currentTokenCost = _cost / _currentPrice;      //project cost in tokens
     uint256 proposerTokenCost = currentTokenCost / proposeProportion;           //divide by 20 to get 5 percent of tokens
+    uint256 costProportion = _cost / weiBal;
     require(balances[msg.sender] >= proposerTokenCost);
     balances[msg.sender] -= proposerTokenCost;
     totalFreeCapitalTokenSupply -= proposerTokenCost;
@@ -180,9 +183,10 @@ contract TokenHolderRegistry is StandardToken {
     LogProposal(projectNonce, proposerTokenCost);                                                     //determine project id
     Project newProject = new Project(projectNonce,
                                      _cost,
-                                     _projectDeadline,
-                                     currentTokenCost,
-                                     proposerTokenCost
+                                     _stakingPeriod,
+                                     proposerTokenCost,
+                                     _costProportion,
+                                     wrAddress
                                      );
     //delete unnecessary variables
     address _projectAddress = address(newProject);
