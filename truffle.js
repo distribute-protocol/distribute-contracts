@@ -8,6 +8,7 @@ if (fs.existsSync('secrets.json')) {
 } else {
   mnemonic = '';
 }
+var infuraApikey = '11XiCuI1EjsowYvplZ24';
 
 module.exports = {
   networks: {
@@ -23,10 +24,10 @@ module.exports = {
       gasPrice: 20000000000
     },
     rinkeby: {
-      provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io'),
+      provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/' + infuraApikey),
       network_id: '*',
-      gas: 4700000,
+      gas: 6412500,
       gasPrice: 20000000000
     }
   }
-};
+}
