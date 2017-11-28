@@ -196,7 +196,7 @@ contract Project {
 
 */
   // =====================================================================
-  // PROPOSED PROJECT - STAKING FUNCTIONS
+  // PROPOSED PROJECT
   // =====================================================================
 
   function refundProposer() public onlyTHR() returns (uint256 _proposerTokenStake) {   //called by THR, decrements proposer tokens in Project.sol
@@ -210,7 +210,7 @@ contract Project {
     return (weiCost >= totalWeiStaked && workerTokenCost >= totalWorkerTokenSupply);
   }
 
-  function checkOpen() internal returns (bool) {
+  function checkOpen() onlyInState(State.Proposed) internal returns (bool) {
     if(isStaked()) {
       projectState = State.Open;
       nextDeadline = now + taskDiscussionPeriod;
@@ -224,7 +224,7 @@ contract Project {
     }
   }
 
-  function stakeCapitalToken(uint256 _tokens, address _staker, uint256 _weiVal) public onlyTHR() onlyInState(State.Proposed) returns (uint256 excess) {  //called by THR, increments _staker tokens in Project.sol
+  function stakeCapitalToken(uint256 _tokens, address _staker, uint256 _weiVal) public onlyTHR() onlyInState(State.Proposed) returns (uint256) {  //called by THR, increments _staker tokens in Project.sol
     require(!checkOpen());     //check to make sure ethBal hasn't been fulfilled
     require(weiCost > totalWeiStaked);
     if (weiCost >= _weiVal + totalWeiStaked) {
@@ -247,46 +247,50 @@ contract Project {
 
   function unstakeCapitalToken(uint256 _tokens, address _staker) public onlyTHR() onlyInState(State.Proposed) {    //called by THR only, decrements _staker tokens in Project.sol
     require(!checkOpen());
-    require(weiCost > totalWeiStaked &&
-         stakedCapitalTokenBalances[_staker] - _tokens < stakedCapitalTokenBalances[_staker] &&   //check overflow
+    require(stakedCapitalTokenBalances[_staker] - _tokens < stakedCapitalTokenBalances[_staker] &&   //check overflow
          stakedCapitalTokenBalances[_staker] - _tokens >= 0);   //make sure _staker has the tokens staked to unstake
     stakedCapitalTokenBalances[_staker] -= _tokens;
     totalCapitalTokensStaked -= _tokens;
     THR.transfer(_tokens/totalCapitalTokensStaked * weiCost);
   }
 
-  function stakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) returns (bool success) {
+  function stakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) {
     require(!checkOpen());
     require(workerTokenCost > totalWorkerTokenSupply);
-    if (checkStateChange() == false &&
-         stakedWorkerTokenBalances[_staker] + _tokens > stakedWorkerTokenBalances[_staker]) {
-        stakedWorkerTokenBalances[_staker] += _tokens;
-        return true;
-    } else {
-      return false;
-    }
+    require(stakedWorkerTokenBalances[_staker] + _tokens > stakedWorkerTokenBalances[_staker]);
+    stakedWorkerTokenBalances[_staker] += _tokens;
+    checkOpen();
   }
 
-  function unstakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) returns (bool success) {
-    if (checkStateChange() == false &&
-         stakedWorkerTokenBalances[_staker] - _tokens < stakedWorkerTokenBalances[_staker] &&   //check overflow
-         stakedWorkerTokenBalances[_staker] - _tokens >= 0) {    //make sure _staker has the tokens staked to unstake
-           stakedWorkerTokenBalances[_staker] -= _tokens;
-           return true;
-    } else {
-      return false;
-    }
+  function unstakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) {
+    require(!checkOpen());
+    require(stakedWorkerTokenBalances[_staker] - _tokens < stakedWorkerTokenBalances[_staker] &&   //check overflow
+         stakedWorkerTokenBalances[_staker] - _tokens >= 0);   //make sure _staker has the tokens staked to unstake
+    stakedWorkerTokenBalances[_staker] -= _tokens;
   }
-
-  function checkOpen() internal onlyInState(State.Proposed)
 
   // =====================================================================
-  // ACTIVE PROJECT FUNCTIONS
+  // OPEN/DISPUTE PROJECT FUNCTIONS
   // =====================================================================
   /*function submitTaskList(Task[] tasksList) public isStaker() returns (bool success) {
     submittedTasks[msg.sender] = tasksList;
     return true;
   }*/
+
+  function checkActive() onlyInState(State.Open) internal returns (bool) {
+    if(timesUp()) {
+      if(taskHashSubmissions.length() == 1) {
+        projectState = State.Active;
+        nextDeadline = now + workCompletingPeriod;
+        return true;
+      } else {
+      projectState = State.Dispute;
+      return true;
+      }
+    } else {
+      return false;
+    }
+  }
 
   function addTaskHash(bytes32 _ipfsHash) public onlyInState(State.Open) onlyBefore(taskTimePeriod) isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
     if (checkStateChange() == false) {

@@ -58,14 +58,14 @@ contract WorkerRegistry{
     require(balances[msg.sender] >= _tokens);   //make sure project exists & TH has tokens to stake
     balances[msg.sender] -= _tokens;
     totalFreeWorkerTokenSupply -= _tokens;
-    require(Project(_projectAddress).stakeWorkerToken(_tokens, msg.sender));
+    Project(_projectAddress).stakeWorkerToken(_tokens, msg.sender);
   }
 
   function unstakeToken(uint256 _projectId, uint256 _tokens) public {
     address _projectAddress = tokenHolderRegistry.getProjectAddress(_projectId);
     balances[msg.sender] += _tokens;
     totalFreeWorkerTokenSupply += _tokens;
-    require(Project(_projectAddress).unstakeWorkerToken(_tokens, msg.sender));
+    Project(_projectAddress).unstakeWorkerToken(_tokens, msg.sender);
   }
 
   // =====================================================================
