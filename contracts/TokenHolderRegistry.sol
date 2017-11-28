@@ -204,7 +204,7 @@ contract TokenHolderRegistry is StandardToken {
     uint256 proposerStake = Project(_projectAddress).refundProposer();           //call project to "send back" staked tokens to put in proposer's balances
     balances[msg.sender] += proposerStake;                                      //give proposer back their tokens
     totalFreeCapitalTokenSupply += proposerStake;
-    uint256 proposerReward = proposers[_projectAddress].projectCost/rewardProportion;
+    uint256 proposerReward = proposers[_projectAddress].projectCost / rewardProportion;
     // We can transfer capital tokens rather than eth so that we can just generate what is needed and they can withdraw at a value they see fit. Don't lose conversion fees.
     msg.sender.transfer(proposerReward);                                        //how are we sure that this still exists in the ethpool?
   }
@@ -215,10 +215,15 @@ contract TokenHolderRegistry is StandardToken {
 
   function stakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {
     require(balances[msg.sender] >= _tokens);   //make sure project exists & TH has tokens to stake
-    // Change the order so the tokens are removed before transferred to prevent rentry incase this fails.
+    uint256 weiVal = currentPrice() * _tokens;
     balances[msg.sender] -= _tokens;
     totalFreeCapitalTokenSupply -= _tokens;
-    require(Project(projectId[_projectId].projectAddress).stakeCapitalToken(_tokens, msg.sender));
+    Project(projectId[_projectId].projectAddress).transfer(weiVal);
+    uint256 returnedTokens = Project(projectId[_projectId].projectAddress).stakeCapitalToken(_tokens, msg.sender, weiVal);
+    if (returnedTokens > 0) {
+      balances[msg.sender] += returnedTokens;
+      totalFreeCapitalTokenSupply += returnedTokens;
+    }
   }
 
   function unstakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {

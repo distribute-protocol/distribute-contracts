@@ -23,21 +23,26 @@ contract Project {
   uint256 public weiCost;                     //set by proposer, total cost of project in ETH, to be fulfilled by capital token holders
   uint256 workerTokenCost;                    //total amount of staked worker tokens needed, TBD
 
+  uint256 nextDeadline;
+
   //PROPOSED PERIOD STATE VARIABLES
   uint256 proposerTokenStake;                 //amount of capital tokens the proposer stakes (5% of project ETH cost in tokens, exchanged from ETH at time of proposal)
   uint256 stakingPeriod;                      //set by proposer at time of proposal
 
   uint256 totalWeiStaked;                     //amount of wei currently staked
+  uint256 totalCapitalTokensStaked;           //amount of capital tokens currently staked
   uint256 totalWorkerTokensStaked;            //amount of worker tokens currently staked
   mapping (address => uint) stakedCapitalTokenBalances;
   mapping (address => uint) stakedWorkerTokenBalances;
 
   //OPEN PERIOD STATE VARIABLES
-  uint256 taskDiscussionPeriod;               //length in blocktimes of task discussion period
-  uint256 disputePeriod;                      //length in blocktimes of dispute period - may not reach this point
+  uint256 taskDiscussionPeriod = 1 weeks;
+  uint256 disputePeriod = 1 weeks;                      //length of dispute period - may not reach this point
+
+  taskHash[] taskHashSubmissions;                       //used to determine
 
   //ACTIVE PERIOD
-  uint256 workCompletingPeriod;
+  uint256 workCompletingPeriod = 1 weeks;
 
   //VALIDATION PERIOD
   mapping (address => uint) validatedAffirmative;
@@ -45,24 +50,26 @@ contract Project {
   uint256 totalValidateAffirmative;
   uint256 totalValidateNegative;
 
-  uint256 validationPeriod;
+  uint256 validationPeriod = 1 weeks;
 
   uint256 validateReward;
   bool validateFlag = false;            //turn this on if there were no opposing validators
 
   //VOTING PERIOD
-  uint256 votingCommitPeriod;
-  uint256 votingRevealPeriod;
+  uint256 votingCommitPeriod = 1 weeks;
+  uint256 votingRevealPeriod = 1 weeks;
 
   //project states & deadlines
   State public projectState;
   enum State {
     Proposed,
     Open,
+    Dispute,
     Active,
     Validating,
-    Voting,
-    Validated,
+    VotingCommit,
+    VotingReveal,
+    Complete,
     Incomplete,
     Failed
   }
@@ -124,6 +131,7 @@ contract Project {
   // GENERAL FUNCTIONS
   // =====================================================================
 
+/*
   function checkStateChange() internal returns (bool stateChange) {                              //general state change function
     if (projectState == State.Proposed) {
       if (totalCapitalTokensStaked >= capitalTokenCost && totalWorkerTokensStaked >= workerTokenCost)
@@ -181,6 +189,7 @@ contract Project {
     }
   }
 
+*/
   // =====================================================================
   // PROPOSED PROJECT - STAKING FUNCTIONS
   // =====================================================================
@@ -192,32 +201,40 @@ contract Project {
     return temp;
   }
 
-  function stakeCapitalToken(uint256 _tokens, address _staker) public onlyTHR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {  //called by THR, increments _staker tokens in Project.sol
-    if (checkStateChange() == false &&
-         stakedCapitalTokenBalances[_staker] + _tokens > stakedCapitalTokenBalances[_staker]) {
-        require(_tokens <= capitalTokenCost - totalCapitalTokensStaked);
-        stakedCapitalTokenBalances[_staker] += _tokens;
-        totalCapitalTokensStaked += _tokens;
-        checkStateChange();
-        return true;
+  function stakeCapitalToken(uint256 _tokens, address _staker, uint256 _weiVal) public onlyTHR() onlyInState(State.Proposed) returns (uint256 excess) {  //called by THR, increments _staker tokens in Project.sol
+    require(!checkOpen());     //check to make sure ethBal hasn't been fulfilled
+    require(weiCost > totalWeiStaked);
+    if (weiCost > _weiVal + totalWeiStaked) {
+      stakedCapitalTokenBalances[_staker] += _tokens;
+      totalCapitalTokensStaked += _tokens;
+      totalWeiStaked += _weiVal;
+      checkOpen();
+      return 0;
     } else {
-      return false;
+      uint256 weiOver = totalWeiStaked + _weiVal - weiCost;
+      uint256 tokensOver = (weiOver / _weiVal) * _tokens;
+      THR.transfer(weiOver);
+      stakedCapitalTokenBalances[_staker] += _tokens - tokensOver;
+      totalCapitalTokensStaked += _tokens - tokensOver;
+      totalWeiStaked += _weiVal - weiOver;
+      checkOpen();
+      return tokensOver;
     }
   }
 
-  function unstakeCapitalToken(uint256 _tokens, address _staker) public onlyTHR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {    //called by THR only, decrements _staker tokens in Project.sol
-    if (checkStateChange() == false &&
+  function unstakeCapitalToken(uint256 _tokens, address _staker) public onlyTHR() onlyInState(State.Proposed) {    //called by THR only, decrements _staker tokens in Project.sol
+    require(!checkOpen());
+    require(weiCost > totalWeiStaked &&
          stakedCapitalTokenBalances[_staker] - _tokens < stakedCapitalTokenBalances[_staker] &&   //check overflow
-         stakedCapitalTokenBalances[_staker] - _tokens >= 0) {    //make sure _staker has the tokens staked to unstake
-           stakedCapitalTokenBalances;[_staker] -= _tokens;
-           totalCapitalTokensStaked -= _tokens;
-           return true;
-    } else {
-      return false;
-    }
+         stakedCapitalTokenBalances[_staker] - _tokens >= 0);   //make sure _staker has the tokens staked to unstake
+    stakedCapitalTokenBalances[_staker] -= _tokens;
+    totalCapitalTokensStaked -= _tokens;
+    THR.transfer(_tokens/totalCapitalTokensStaked * weiCost);
   }
 
   function stakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {
+    require(!checkOpen());
+    require(workerTokenCost > totalWorkerTokenSupply);
     if (checkStateChange() == false &&
          stakedWorkerTokenBalances[_staker] + _tokens > stakedWorkerTokenBalances[_staker]) {
         stakedWorkerTokenBalances[_staker] += _tokens;
@@ -229,7 +246,7 @@ contract Project {
 
   function unstakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {
     if (checkStateChange() == false &&
-         stakedWorkerTokenBalances[_staker] - _tokens < stakedWorkerTokenBalances;[_staker] &&   //check overflow
+         stakedWorkerTokenBalances[_staker] - _tokens < stakedWorkerTokenBalances[_staker] &&   //check overflow
          stakedWorkerTokenBalances[_staker] - _tokens >= 0) {    //make sure _staker has the tokens staked to unstake
            stakedWorkerTokenBalances[_staker] -= _tokens;
            return true;
@@ -237,6 +254,8 @@ contract Project {
       return false;
     }
   }
+
+  function checkOpen() internal onlyInState(State.Proposed)
 
   // =====================================================================
   // ACTIVE PROJECT FUNCTIONS
