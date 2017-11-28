@@ -316,13 +316,10 @@ contract Project {
     //write
   }
 
-  function completeTask() public onlyInState(State.Active) onlyWR() {  //can only be called by worker in task
-    //write
-  }
+  // =====================================================================
+  // ACTIVE PROJECT
+  // =====================================================================
 
-  // =====================================================================
-  // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
-  // =====================================================================
 
   function checkValidate() internal onlyInState(State.Active) returns (bool) {
     if (timesUp()) {
@@ -333,6 +330,16 @@ contract Project {
       return false;
     }
   }
+
+
+  function completeTask() public onlyInState(State.Active) onlyWR() {  //can only be called by worker in task
+    //write
+  }
+
+  // =====================================================================
+  // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
+  // =====================================================================
+
 
   function checkVoting() public onlyInState(State.Validating) returns (bool) {
     if(timesUp()) {
@@ -345,7 +352,21 @@ contract Project {
     }
   }
 
-  function checkEnd() public onlyInState(State.Voting) returns (bool) {
+  function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTHR() onlyInState(State.Validating) returns (bool success) {
+    //checks for free tokens done in THR
+    //increments validation tokens in Project.sol only
+    require(!checkVoting);
+    if (_validationState == true && validatedAffirmative[_staker] + _tokens > validatedAffirmative[_staker] && totalValidateAffirmative + _tokens > totalValidateAffirmative) {
+      validatedAffirmative[_staker] += _tokens;
+      totalValidateAffirmative += _tokens;
+    }
+    else if (_validationState == false && validatedNegative[_staker] + _tokens > validatedNegative[_staker] && totalValidateNegative + _tokens > totalValidateNegative){
+      validatedNegative[msg.sender] += _tokens;
+      totalValidateNegative += _tokens;
+    }
+  }
+
+  function checkEnd() public onlyInState(State.Voting) returns (bool) {     //don't know where this gets called - maybe separate UI thing
     if(!tokenHolderRegistry.pollEnded(projectId)) {
       return false;
     }
@@ -363,29 +384,10 @@ contract Project {
     }
   }
 
-  function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTHR() onlyInState(State.Validating) returns (bool success) {
-    //checks for free tokens done in THR
-    //increments validation tokens in Project.sol only
-    if (checkStateChange() == false) {
-      require(now < validationStart + validationPeriod);
-      if (_validationState == true && validatedAffirmative[_staker] + _tokens > validatedAffirmative[_staker] && totalValidateAffirmative + _tokens > totalValidateAffirmative) {
-        validatedAffirmative[_staker] += _tokens;
-        totalValidateAffirmative += _tokens;
-        return true;
-      }
-      else if (_validationState == false && validatedNegative[_staker] + _tokens > validatedNegative[_staker] && totalValidateNegative + _tokens > totalValidateNegative){
-        validatedNegative[msg.sender] += _tokens;
-        totalValidateNegative += _tokens;
-        return true;
-      }
-      return false;
-    }
-  }
-
   function handleVoteResult(bool passed) internal {
     if(!passed) {               //project fails
-      tokenHolderRegistry.updateTotal(projectId, totalCapitalTokensStaked);
-      WorkerRegistry(workerRegistry).updateTotal(projectId, totalWorkerTokensStaked);
+      tokenHolderRegistry.burnTokens(projectId, totalCapitalTokensStaked);
+      WorkerRegistry(workerRegistry).burnTokens(projectId, totalWorkerTokensStaked);
       totalCapitalTokensStaked = 0;
       totalWorkerTokensStaked = 0;
       validateReward = totalValidateAffirmative;

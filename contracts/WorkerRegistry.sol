@@ -119,7 +119,7 @@ contract WorkerRegistry{
   // =====================================================================
 
   // We should document this function further, or make its name more descriptive
-  function updateTotal(uint256 _projectId, uint256 _tokens) public {
+  function burnTokens(uint256 _projectId, uint256 _tokens) public {
     require(tokenHolderRegistry.getProjectAddress(_projectId) == msg.sender);                  //check that valid project is calling this function
     totalWorkerTokenSupply -= _tokens;
   }

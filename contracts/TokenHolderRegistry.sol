@@ -240,7 +240,7 @@ contract TokenHolderRegistry is StandardToken {
     require(balances[msg.sender] >= _tokens);
     balances[msg.sender] -= _tokens;
     totalFreeCapitalTokenSupply -= _tokens;
-    require(Project(projectId[_projectId].projectAddress).validate(msg.sender, _tokens, _validationState));
+    Project(projectId[_projectId].projectAddress).validate(msg.sender, _tokens, _validationState);
   }
 
   function startPoll(uint256 _projectId, uint256 _commitDuration, uint256 _revealDuration) public {       //can only be called by project in question
@@ -288,7 +288,7 @@ contract TokenHolderRegistry is StandardToken {
     return plcrVoting.isPassed(projectId[_projectId].votingPollId);
   }
   // We should call this something like burnTokens to be more explicit
-  function updateTotal(uint256 _projectId, uint256 _tokens) public {
+  function burnTokens(uint256 _projectId, uint256 _tokens) public {
     require(projectId[_projectId].projectAddress == msg.sender);                               //check that valid project is calling this function
     totalCapitalTokenSupply -= _tokens;
   }
