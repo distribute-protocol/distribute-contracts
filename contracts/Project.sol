@@ -87,10 +87,12 @@ contract Project {
     _;
   }
 
+/*
   modifier onlyBefore(uint256 time) {
     require(now < time);
     _;
   }
+  */
 
   modifier onlyTHR() {
     require(msg.sender == address(tokenHolderRegistry));
@@ -131,6 +133,9 @@ contract Project {
   // GENERAL FUNCTIONS
   // =====================================================================
 
+  function timesUp() internal returns (bool) {
+    return (now > nextDeadline);
+  }
 /*
   function checkStateChange() internal returns (bool stateChange) {                              //general state change function
     if (projectState == State.Proposed) {
@@ -201,10 +206,28 @@ contract Project {
     return temp;
   }
 
+  function isStaked() internal returns (bool) {
+    return (weiCost >= totalWeiStaked && workerTokenCost >= totalWorkerTokenSupply);
+  }
+
+  function checkOpen() internal returns (bool) {
+    if(isStaked()) {
+      projectState = State.Open;
+      nextDeadline = now + taskDiscussionPeriod;
+      return true;
+    } else if(timesUp()) {
+      projectState = State.Failed;
+      proposerTokenStake = 0;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   function stakeCapitalToken(uint256 _tokens, address _staker, uint256 _weiVal) public onlyTHR() onlyInState(State.Proposed) returns (uint256 excess) {  //called by THR, increments _staker tokens in Project.sol
     require(!checkOpen());     //check to make sure ethBal hasn't been fulfilled
     require(weiCost > totalWeiStaked);
-    if (weiCost > _weiVal + totalWeiStaked) {
+    if (weiCost >= _weiVal + totalWeiStaked) {
       stakedCapitalTokenBalances[_staker] += _tokens;
       totalCapitalTokensStaked += _tokens;
       totalWeiStaked += _weiVal;
@@ -232,7 +255,7 @@ contract Project {
     THR.transfer(_tokens/totalCapitalTokensStaked * weiCost);
   }
 
-  function stakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {
+  function stakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) returns (bool success) {
     require(!checkOpen());
     require(workerTokenCost > totalWorkerTokenSupply);
     if (checkStateChange() == false &&
@@ -244,7 +267,7 @@ contract Project {
     }
   }
 
-  function unstakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {
+  function unstakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) returns (bool success) {
     if (checkStateChange() == false &&
          stakedWorkerTokenBalances[_staker] - _tokens < stakedWorkerTokenBalances[_staker] &&   //check overflow
          stakedWorkerTokenBalances[_staker] - _tokens >= 0) {    //make sure _staker has the tokens staked to unstake
@@ -269,6 +292,10 @@ contract Project {
     if (checkStateChange() == false) {
       tasks.push(Task(_workerAddress, _description, false, _ipfsHash, _workerReward));
     }
+  }
+
+  function claimTask() {
+
   }
 
   function completeTask() onlyInState(State.Active) public onlyWR() returns (bool success) {  //can only be called by worker in task
@@ -334,7 +361,7 @@ contract Project {
 
   function refundStaker(address _staker) public returns (uint256 _refund) {  //called by THR or WR, allow return of staked, validated, and
     require(msg.sender == address(tokenHolderRegistry) ||  msg.sender == address(workerRegistry));
-    require(projectState == State.Validated || projectState == State.Failed);
+    require(projectState == State.Complete || projectState == State.Failed);
     uint256 refund;     //tokens
     uint256 spoils;     //wei
     if (msg.sender == address(tokenHolderRegistry)) {
