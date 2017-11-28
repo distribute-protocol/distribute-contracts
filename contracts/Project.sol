@@ -39,7 +39,7 @@ contract Project {
   uint256 taskDiscussionPeriod = 1 weeks;
   uint256 disputePeriod = 1 weeks;                      //length of dispute period - may not reach this point
 
-  taskHash[] taskHashSubmissions;                       //used to determine
+  bytes32[] taskHashSubmissions;                       //used to determine if dispute period needs to happen
 
   //ACTIVE PERIOD
   uint256 workCompletingPeriod = 1 weeks;
@@ -86,13 +86,6 @@ contract Project {
     _;
   }
 
-/*
-  modifier onlyBefore(uint256 time) {
-    require(now < time);
-    _;
-  }
-  */
-
   modifier onlyTHR() {
     require(msg.sender == address(tokenHolderRegistry));
     _;
@@ -135,65 +128,7 @@ contract Project {
   function timesUp() internal returns (bool) {
     return (now > nextDeadline);
   }
-/*
-  function checkStateChange() internal returns (bool stateChange) {                              //general state change function
-    if (projectState == State.Proposed) {
-      if (totalCapitalTokensStaked >= capitalTokenCost && totalWorkerTokensStaked >= workerTokenCost)
-        {
-          projectState = State.Active;
-          return true;
-        }
-        else {
-          return false;
-      }
-    }
 
-    else if (projectState == State.Active) {
-      for (uint256 i = 0; i < tasks.length; i++) {
-        if (tasks[i].taskComplete == false) {
-          if (now > projectDeadline) {
-            projectState = State.Incomplete;
-            return true;
-          }
-          return false;
-        }
-      }
-      validationStart = now;
-      projectState = State.Validating;
-      return true;
-      }
-
-    else if (projectState == State.Validating) {
-      if(now > validationStart + validationPeriod) {
-        tokenHolderRegistry.startPoll(projectId, 604800, 604800);   //1 week commit, 1 week reveal
-        projectState = State.Voting;
-        return true;
-      }
-      else {
-        return false;
-      }
-    }
-
-    else if (projectState == State.Voting) {
-      //call TokenHolderRegistry to call PLCR to see if the commit & reveal period is over
-      if(!tokenHolderRegistry.pollEnded(projectId)) {
-        return false;
-      }
-      else {
-        bool passed = tokenHolderRegistry.isPassed(projectId);
-        handleVoteResult(passed);
-        if (passed) {
-          projectState = State.Validated;
-        }
-        else {
-          projectState = State.Failed;
-        }
-        return true;
-      }
-    }
-  }
-
-*/
   // =====================================================================
   // PROPOSED PROJECT
   // =====================================================================
@@ -304,7 +239,7 @@ contract Project {
     }
   }
 
-  function addTaskHash(bytes32 _ipfsHash) public onlyInState(State.Open) onlyBefore(taskTimePeriod) isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
+  function addTaskHash(bytes32 _ipfsHash) public onlyInState(State.Open) isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
     //write
   }
 
