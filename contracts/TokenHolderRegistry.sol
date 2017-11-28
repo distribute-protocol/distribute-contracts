@@ -105,80 +105,22 @@ contract TokenHolderRegistry is StandardToken {
   // MINTING FUNCTIONS
   // =====================================================================
 
-  /*function fracExp(uint256 k, uint256 q, uint256 n, uint256 p) internal pure returns (uint) {*/
-    // via: http://ethereum.stackexchange.com/questions/10425/is-there-any-efficient-way-to-compute-the-exponentiation-of-a-fraction-and-an-in/10432#10432
-    // Computes `k * (1+1/q) ^ N`, with precision `p`. The higher
-    // the precision, the higher the gas cost. It should be
-    // something around the log of `n`. When `p == n`, the
-    // precision is absolute (sans possible integer overflows).
-    // Much smaller values are sufficient to get a great approximation.
-    /*uint256 s = 0;
-    uint256 N = 1;
-    uint256 B = 1;
-    for (uint256 i = 0; i < p; ++i){
-      s += k * N / B / (q**i);
-      N  = N * (n-i);
-      B  = B * (i+1);
-    }
-    return s;
-  }*/
-
-  //TAKE WEIBAL INTO CONSIDERATION
-  //TURN THIS INTO STEPS
-  /*function updateMintingPrice(uint256 _supply) internal {*/
-      //base cost should be current cost
-      /*
-      if(totalsupply is 0 {
-        use basecost0
-      }
-      else {
-        basecost = currentprice
-      }
-      */
-      /*costPerToken = baseCost+fracExp(baseCost, 618046, _supply, 2)+baseCost*_supply/1000;
-      LogCostOfTokenUpdate(costPerToken);
-  }*/
-
 // This produces out of gas errors for numbers to high.
   function mint(uint _tokens) public payable {
-      //token balance of msg.sender increases if paid right amount according to protocol
-      //will mint as many tokens as it can depending on msg.value, requested # tokens, and MAX_UINT
-      /*uint256 totalMinted = 0;
-      uint256 fundsLeft = msg.value;
-      //FIX THIS POTENTIAL BLOCK OVERFLOW :(
-      while(fundsLeft >= costPerToken && totalMinted < _tokens) {       //leaves loop when minted proper number of tokens or ran out of funds or token supply hit maximum value
-        if (totalCapitalTokenSupply + totalMinted < MAX_UINT) {
-          fundsLeft -= costPerToken;                                    //subtract token cost from amount paid
-          totalMinted += 1;                                             //update the amount of tokens minted
-          updateMintingPrice((totalCapitalTokenSupply + totalMinted));  //update costPerToken for next token
-        }
-        else{
-          revert();                                                      //token supply hit maximum value
-        }
-      }
-      if(totalMinted < _tokens) {                     //if ran out of funds, revert transaction
-        revert();
-      }
-      totalCapitalTokenSupply += totalMinted;
-      totalFreeCapitalTokenSupply += totalMinted;
-      balances[msg.sender] += totalMinted;
-      weiBal += (msg.value - fundsLeft);
-      LogMint(totalMinted, (msg.value - fundsLeft));
-      msg.sender.transfer(fundsLeft);*/
       uint256 targetPriceVar;
       if (totalCapitalTokenSupply == 0 || currentPrice() == 0) {
         targetPriceVar = baseCost;
       } else {
         targetPriceVar = targetPrice(_tokens);
       }
-      uint256 ethRequiredVar = ethRequired(targetPriceVar, _tokens);
-      require(msg.value >= ethRequiredVar);
+      uint256 weiRequiredVar = weiRequired(targetPriceVar, _tokens);
+      require(msg.value >= weiRequiredVar);
       totalCapitalTokenSupply += _tokens;
       totalFreeCapitalTokenSupply += _tokens;
       balances[msg.sender] += _tokens;
-      weiBal += ethRequiredVar;
-      LogMint(_tokens, ethRequiredVar);
-      uint256 fundsLeft = msg.value - ethRequiredVar;
+      weiBal += weiRequiredVar;
+      LogMint(_tokens, weiRequiredVar);
+      uint256 fundsLeft = msg.value - weiRequiredVar;
       if (fundsLeft > 0) {
         msg.sender.transfer(fundsLeft);
       }
@@ -192,11 +134,11 @@ contract TokenHolderRegistry is StandardToken {
     return _quotient;
   }
 
-  function ethRequired(uint _targetPrice, uint _tokens) returns (uint256) {
-    return (_targetPrice * (totalCapitalTokenSupply + _tokens)) - weiBal;
+  function weiRequired(uint _targetPrice, uint _tokens) returns (uint256) {
+    return (_targetPrice * (totalCapitalTokenSupply + _tokens)) - currentPrice() * totalCapitalTokenSupply;
   }
 
-  function targetPrice(uint _tokens) public returns (uint256) {
+  function targetPrice(uint _tokens) public view returns (uint256) {
     uint256 newSupply = totalCapitalTokenSupply + _tokens;
     uint256 cp = currentPrice();
     return cp * (1000 + percent(_tokens, newSupply, 3)) / 1000;
@@ -214,9 +156,8 @@ contract TokenHolderRegistry is StandardToken {
   }
 
   function currentPrice() internal view returns (uint256) {
-    //calculated current burn reward of 1 token at current weiBal and token supply
-    uint256 reward = weiBal/totalCapitalTokenSupply; //truncation - remainder discarded
-    return reward;                                   //reward in wei of burning 1 token
+    //calculated current burn reward of 1 token at current weiBal and free token supply
+    return weiBal/freeCapitalTokenSupply; //truncation - remainder discarded
   }
   /*function futurePrice() internal view return (uint256 price) {
   }*/

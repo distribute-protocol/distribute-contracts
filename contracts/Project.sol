@@ -14,59 +14,45 @@ contract Project {
 // STATE VARIABLES
 // =====================================================================
 
+  //GENERAL STATE VARIABLES
   TokenHolderRegistry tokenHolderRegistry;    //connect to THR
-  WorkerRegistry workerRegistry;         //connect to WR
+  WorkerRegistry workerRegistry;              //connect to WR
 
-  uint256 projectId;
+  uint256 projectId;                          //project id of this particular project, to be held in mapping in THR
 
-  uint256 public capitalETHCost;
-  uint256 capitalTokenCost;            //total amount of staked capital in tokens needed
-  uint256 workerTokenCost;             //total amount of staked worker tokens needed, valued separately
+  uint256 public weiCost;                     //set by proposer, total cost of project in ETH, to be fulfilled by capital token holders
+  uint256 workerTokenCost;                    //total amount of staked worker tokens needed, TBD
 
-  uint256 proposerStake;          //amount of capital tokens the proposer stakes
-  uint256 projectDeadline;
+  //PROPOSED PERIOD STATE VARIABLES
+  uint256 proposerTokenStake;                 //amount of capital tokens the proposer stakes (5% of project ETH cost in tokens, exchanged from ETH at time of proposal)
+  uint256 stakingPeriod;                      //set by proposer at time of proposal
 
-  //keep track of staking on proposed project
-  uint256 totalCapitalStaked;     //amount of capital tokens currently staked
-  uint256 totalWorkerStaked;      //amount of worker tokens currently staked
-  mapping (address => uint) stakedCapitalBalances;
-  mapping (address => uint) stakedWorkerBalances;
+  uint256 totalWeiStaked;                     //amount of wei currently staked
+  uint256 totalWorkerTokensStaked;            //amount of worker tokens currently staked
+  mapping (address => uint) stakedCapitalTokenBalances;
+  mapping (address => uint) stakedWorkerTokenBalances;
 
-  //Task[] tasks;   //array of tasks for this project
-  //mapping (address => Task[]) submittedTasks;
+  //OPEN PERIOD STATE VARIABLES
+  uint256 taskDiscussionPeriod;               //length in blocktimes of task discussion period
+  uint256 disputePeriod;                      //length in blocktimes of dispute period - may not reach this point
 
-  /*
-  struct Task {
-    address workerAddress;    //which worker is assigned to this task
-    string description;       //brief description of task
-    bool taskComplete;
-    string ipfsHash;
-    //uint256 taskHash;
-    //uint256 escrowTokens;   //tokens paid to sign up for task, amount they will earn if validated
-    uint256 ETHReward;        //for now hard-coded
-  }
-*/
+  //ACTIVE PERIOD
+  uint256 workCompletingPeriod;
 
-  //keep track of validating complete project
+  //VALIDATION PERIOD
   mapping (address => uint) validatedAffirmative;
   mapping (address => uint) validatedNegative;
-  uint256 validationStart;
-  uint256 validationPeriod;
   uint256 totalValidateAffirmative;
   uint256 totalValidateNegative;
+
+  uint256 validationPeriod;
+
   uint256 validateReward;
   bool validateFlag = false;            //turn this on if there were no opposing validators
 
-/*
-  //keep track of voting complete project
-  mapping (address => uint) votedAffirmative;
-  mapping (address => uint) votedNegative;
-  uint256 totalVoteAffirmative;
-  uint256 totalVoteNegative;
-*/
-
-  uint256 votingCommitDuration;
-  uint256 votingRevealDuration;
+  //VOTING PERIOD
+  uint256 votingCommitPeriod;
+  uint256 votingRevealPeriod;
 
   //project states & deadlines
   State public projectState;
@@ -110,7 +96,7 @@ contract Project {
   }
 
   modifier isStaker() {
-    require(stakedCapitalBalances[msg.sender] > 0 || stakedWorkerBalances[msg.sender] > 0);
+    require(stakedCapitalTokenBalances[msg.sender] > 0 || stakedWorkerTokenBalances[msg.sender] > 0);
     _;
   }
 // =====================================================================
@@ -121,16 +107,16 @@ contract Project {
   // CONSTRUCTOR
   // =====================================================================
 
-  function Project(uint256 _id, uint256 _cost, uint256 _projectDeadline, uint256 _currentTokenCost, uint256 _proposerStake) public {       //called by THR
+  function Project(uint256 _id, uint256 _cost, uint256 _projectDeadline, uint256 _currentTokenCost, uint256 _proposerTokenStake) public {       //called by THR
     //all checks done in THR first
     tokenHolderRegistry = TokenHolderRegistry(msg.sender);     //the token holder registry calls this function
     projectId = _id;
-    capitalETHCost = _cost;
+    weiCost = _cost;
     projectDeadline = _projectDeadline;
     projectState = State.Proposed;
-    proposerStake = _proposerStake;
-    totalCapitalStaked = 0;
-    totalWorkerStaked = 0;
+    proposerTokenStake = _proposerTokenStake;
+    totalCapitalTokensStaked = 0;
+    totalWorkerTokensStaked = 0;
     capitalTokenCost = _currentTokenCost;          //hardcode this value for now
     workerTokenCost = 0;
     //workerTokenCost = _currentTokenCost;
@@ -144,7 +130,7 @@ contract Project {
 
   function checkStateChange() internal returns (bool stateChange) {                              //general state change function
     if (projectState == State.Proposed) {
-      if (totalCapitalStaked >= capitalTokenCost && totalWorkerStaked >= workerTokenCost)
+      if (totalCapitalTokensStaked >= capitalTokenCost && totalWorkerTokensStaked >= workerTokenCost)
         {
           projectState = State.Active;
           return true;
@@ -203,19 +189,19 @@ contract Project {
   // PROPOSED PROJECT - STAKING FUNCTIONS
   // =====================================================================
 
-  function refundProposer() public onlyTHR() returns (uint256 _proposerStake) {   //called by THR, decrements proposer tokens in Project.sol
-    require(projectState != State.Proposed && proposerStake != 0);         //make sure out of proposed state & msg.sender is the proposer
-    uint256 temp = proposerStake;
-    proposerStake = 0;
+  function refundProposer() public onlyTHR() returns (uint256 _proposerTokenStake) {   //called by THR, decrements proposer tokens in Project.sol
+    require(projectState != State.Proposed && proposerTokenStake != 0);         //make sure out of proposed state & msg.sender is the proposer
+    uint256 temp = proposerTokenStake;
+    proposerTokenStake = 0;
     return temp;
   }
 
   function stakeCapitalToken(uint256 _tokens, address _staker) public onlyTHR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {  //called by THR, increments _staker tokens in Project.sol
     if (checkStateChange() == false &&
-         stakedCapitalBalances[_staker] + _tokens > stakedCapitalBalances[_staker]) {
-        require(_tokens <= capitalTokenCost - totalCapitalStaked);
-        stakedCapitalBalances[_staker] += _tokens;
-        totalCapitalStaked += _tokens;
+         stakedCapitalTokenBalances[_staker] + _tokens > stakedCapitalTokenBalances[_staker]) {
+        require(_tokens <= capitalTokenCost - totalCapitalTokensStaked);
+        stakedCapitalTokenBalances[_staker] += _tokens;
+        totalCapitalTokensStaked += _tokens;
         checkStateChange();
         return true;
     } else {
@@ -225,10 +211,10 @@ contract Project {
 
   function unstakeCapitalToken(uint256 _tokens, address _staker) public onlyTHR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {    //called by THR only, decrements _staker tokens in Project.sol
     if (checkStateChange() == false &&
-         stakedCapitalBalances[_staker] - _tokens < stakedCapitalBalances[_staker] &&   //check overflow
-         stakedCapitalBalances[_staker] - _tokens >= 0) {    //make sure _staker has the tokens staked to unstake
-           stakedCapitalBalances[_staker] -= _tokens;
-           totalCapitalStaked -= _tokens;
+         stakedCapitalTokenBalances[_staker] - _tokens < stakedCapitalTokenBalances[_staker] &&   //check overflow
+         stakedCapitalTokenBalances[_staker] - _tokens >= 0) {    //make sure _staker has the tokens staked to unstake
+           stakedCapitalTokenBalances;[_staker] -= _tokens;
+           totalCapitalTokensStaked -= _tokens;
            return true;
     } else {
       return false;
@@ -237,8 +223,8 @@ contract Project {
 
   function stakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {
     if (checkStateChange() == false &&
-         stakedWorkerBalances[_staker] + _tokens > stakedWorkerBalances[_staker]) {
-        stakedWorkerBalances[_staker] += _tokens;
+         stakedWorkerTokenBalances[_staker] + _tokens > stakedWorkerTokenBalances[_staker]) {
+        stakedWorkerTokenBalances[_staker] += _tokens;
         return true;
     } else {
       return false;
@@ -247,9 +233,9 @@ contract Project {
 
   function unstakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) onlyBefore(projectDeadline) returns (bool success) {
     if (checkStateChange() == false &&
-         stakedWorkerBalances[_staker] - _tokens < stakedWorkerBalances[_staker] &&   //check overflow
-         stakedWorkerBalances[_staker] - _tokens >= 0) {    //make sure _staker has the tokens staked to unstake
-           stakedWorkerBalances[_staker] -= _tokens;
+         stakedWorkerTokenBalances[_staker] - _tokens < stakedWorkerTokenBalances;[_staker] &&   //check overflow
+         stakedWorkerTokenBalances[_staker] - _tokens >= 0) {    //make sure _staker has the tokens staked to unstake
+           stakedWorkerTokenBalances[_staker] -= _tokens;
            return true;
     } else {
       return false;
@@ -308,10 +294,10 @@ contract Project {
 
   function handleVoteResult(bool passed) internal {
     if(!passed) {               //project fails
-      tokenHolderRegistry.updateTotal(projectId, totalCapitalStaked);
-      WorkerRegistry(workerRegistry).updateTotal(projectId, totalWorkerStaked);
-      totalCapitalStaked = 0;
-      totalWorkerStaked = 0;
+      tokenHolderRegistry.updateTotal(projectId, totalCapitalTokensStaked);
+      WorkerRegistry(workerRegistry).updateTotal(projectId, totalWorkerTokensStaked);
+      totalCapitalTokensStaked = 0;
+      totalWorkerTokensStaked = 0;
       validateReward = totalValidateAffirmative;
       if (validateReward == 0) {
         validateFlag = true;
@@ -338,9 +324,9 @@ contract Project {
     uint256 spoils;     //wei
     if (msg.sender == address(tokenHolderRegistry)) {
 
-      if(totalCapitalStaked != 0) {
-        refund = stakedCapitalBalances[_staker];
-        stakedCapitalBalances[_staker] = 0;
+      if(totalCapitalTokensStaked != 0) {
+        refund = stakedCapitalTokenBalances;[_staker];
+        stakedCapitalTokenBalances;[_staker] = 0;
       }
 
       if(totalValidateNegative != 0) {
@@ -349,7 +335,7 @@ contract Project {
           refund += validateReward * validatedNegative[_staker] / totalValidateNegative;
         }
         else if (validateFlag == true) {
-          spoils = capitalETHCost * validatedNegative[_staker] / totalValidateNegative;
+          spoils = weiCost * validatedNegative[_staker] / totalValidateNegative;
           tokenHolderRegistry.rewardValidator(projectId, _staker, spoils);
         }
         validatedNegative[_staker] = 0;
@@ -361,7 +347,7 @@ contract Project {
           refund += validateReward * validatedAffirmative[_staker] / totalValidateAffirmative;
         }
         else if (validateFlag == true) {
-          spoils = capitalETHCost * validatedAffirmative[_staker] / totalValidateAffirmative;
+          spoils = weiCost * validatedAffirmative[_staker] / totalValidateAffirmative;
           tokenHolderRegistry.rewardValidator(projectId, _staker, spoils);
         }
         validatedAffirmative[_staker] = 0;
@@ -371,9 +357,9 @@ contract Project {
     }
 
     else if (msg.sender == address(workerRegistry)) {
-      if(totalWorkerStaked != 0) {
-        refund = stakedWorkerBalances[_staker];
-        stakedWorkerBalances[_staker] = 0;
+      if(totalWorkerTokensStaked != 0) {
+        refund = stakedWorkerTokenBalances;[_staker];
+        stakedWorkerTokenBalances;[_staker] = 0;
       }
 
       return refund;
