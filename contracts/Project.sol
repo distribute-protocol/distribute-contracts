@@ -277,25 +277,36 @@ contract Project {
     return true;
   }*/
 
-  function checkActive() onlyInState(State.Open) internal returns (bool) {
-    if(timesUp()) {
-      if(taskHashSubmissions.length() == 1) {
+  function checkActive() internal returns (bool) {
+    require(projectState == State.Open || projectState == State.Dispute);
+    if (projectState == State.Open) {
+      if(timesUp()) {
+        if(taskHashSubmissions.length() == 1) {
+          projectState = State.Active;
+          nextDeadline = now + workCompletingPeriod;
+          return true;
+        } else {
+        projectState = State.Dispute;
+        nextDeadline = now + disputePeriod;
+        return true;
+        }
+      } else {
+        return false;
+      }
+    } else {          //if projectState == State.Dispute
+      if(timesUp()) {
+        calculateWinningTaskHash();
         projectState = State.Active;
         nextDeadline = now + workCompletingPeriod;
         return true;
       } else {
-      projectState = State.Dispute;
-      return true;
+        return false;
       }
-    } else {
-      return false;
     }
   }
 
   function addTaskHash(bytes32 _ipfsHash) public onlyInState(State.Open) onlyBefore(taskTimePeriod) isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
-    if (checkStateChange() == false) {
-      tasks.push(Task(_workerAddress, _description, false, _ipfsHash, _workerReward));
-    }
+    //rewrote
   }
 
   function claimTask() {
