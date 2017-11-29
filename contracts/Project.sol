@@ -396,20 +396,19 @@ contract Project {
   function rewardWorker(address _staker, uint256 _tokens, uint256 _wei) public onlyWR() onlyInState(State.Complete) returns (uint256 _reward) {
     //write
   }
-
   function() payable {
-    
+
   }
-  bytes32 taskHash
-  mapping(address => bytes32) submittedTasksHash
-  mapping(bytes32 => uint) taskHashCount
-  bytes32[] tasksHashArr
+  bytes32 taskHash;
+  mapping(address => bytes32) submittedTasksHash;
+  mapping(bytes32 => uint) taskHashCount;
+  bytes32[] tasksHashArr;
 
   function submitTaskHash(bytes32 _taskHash) isStaker() isValidTaskPeriod() {
-    require(!timesUp())
+    require(!timesUp());
     if (taskHashCount[_taskHash] == 0) {
-      tasksHashArr.push(_taskHash)
-      submitTaskHash[msg.sender] = _taskHash
+      tasksHashArr.push(_taskHash);
+      submitTaskHash[msg.sender] = _taskHash;
     }
   }
 }
