@@ -111,13 +111,14 @@ contract Project {
   function Project(uint256 _id, uint256 _cost, uint256 _stakingPeriod, uint256 _proposerTokenStake, uint256 _costProportion, address _wr) public {       //called by THR
     //all checks done in THR first
     tokenHolderRegistry = TokenHolderRegistry(msg.sender);     //the token holder registry calls this function
+    workerRegistry = WorkerRegistry(_wr);
     projectId = _id;
     weiCost = _cost;
     stakingPeriod = now + _stakingPeriod;
     projectState = State.Proposed;
     proposerTokenStake = _proposerTokenStake;
+    totalCapitalTokensStaked = 0;
     totalWorkerTokensStaked = 0;
-    workerRegistry = WorkerRegistry(_wr);
     workerTokenCost = _costProportion * workerRegistry.totalFreeWorkerTokenSupply();
   }
 
@@ -397,8 +398,8 @@ contract Project {
     //write
   }
 
-  function() payable {
-    
+  function() public payable {
+
   }
 
 }

@@ -128,7 +128,7 @@ contract TokenHolderRegistry is StandardToken {
       }
   }
 
-  function percent(uint256 numerator, uint256 denominator, uint256 precision) internal view returns (uint256) {
+  function percent(uint256 numerator, uint256 denominator, uint256 precision) internal pure returns (uint256) {
      // caution, check safe-to-multiply here
     uint256 _numerator  = numerator * 10 ** (precision+1);
     // with rounding of last digit
@@ -136,7 +136,7 @@ contract TokenHolderRegistry is StandardToken {
     return _quotient;
   }
 
-  function weiRequired(uint _targetPrice, uint _tokens) returns (uint256) {
+  function weiRequired(uint _targetPrice, uint _tokens) public returns (uint256) {
     return (_targetPrice * (totalCapitalTokenSupply + _tokens)) - currentPrice() * totalCapitalTokenSupply;
   }
 
@@ -311,7 +311,7 @@ contract TokenHolderRegistry is StandardToken {
     _worker.transfer(_reward);
   }
 
-  function() payable {
+  function() public payable {
 
   }
 }
