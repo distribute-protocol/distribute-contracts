@@ -40,6 +40,17 @@ contract Project {
   uint256 disputePeriod = 1 weeks;                      //length of dispute period - may not reach this point
 
   bytes32[] taskHashSubmissions;
+  //open
+  address firstSubmitter;
+  bytes32 firstSubmission;                                 //used to determine if dispute period needs to happen
+  uint256 numTotalSubmissions;
+  mapping(address => bytes32) openTaskHashSubmissions;
+  mapping(bytes32 => uint256) numSubmissions;
+
+  //dispute
+  bytes32 disputeTopTaskHash;
+  mapping(address => bytes32) disputeTaskHashSubmissions;
+  mapping(bytes32 => uint256) numSubmissionsByWeight;
 
   //ACTIVE PERIOD
   uint256 workCompletingPeriod = 1 weeks;
@@ -216,7 +227,7 @@ contract Project {
     require(projectState == State.Open || projectState == State.Dispute);
     if (projectState == State.Open) {
       if(timesUp()) {
-        if(taskHashSubmissions.length == 1) {
+        if(taskHashSubmissions.length == 1) {         //FIX THIS AHH
           projectState = State.Active;
           nextDeadline = now + workCompletingPeriod;
           return true;
@@ -238,18 +249,6 @@ contract Project {
       }
     }
   }
-
-  //open
-  address firstSubmitter;
-  bytes32 firstSubmission;                                 //used to determine if dispute period needs to happen
-  uint256 numTotalSubmissions;
-  mapping(address => bytes32) openTaskHashSubmissions;
-  mapping(bytes32 => uint256) numSubmissions;
-
-  //dispute
-  bytes32 disputeTopTaskHash;
-  mapping(address => bytes32) disputeTaskHashSubmissions;
-  mapping(bytes32 => uint256) numSubmissionsByWeight;
 
 
   function addTaskHash(bytes32 _ipfsHash, address _address) public isStaker(_address) {
