@@ -35,11 +35,10 @@ contract Project {
   mapping (address => uint) stakedCapitalTokenBalances;
   mapping (address => uint) stakedWorkerTokenBalances;
 
-  //OPEN PERIOD STATE VARIABLES
+  //OPEN/DISPUTE PERIOD STATE VARIABLES
   uint256 taskDiscussionPeriod = 1 weeks;
   uint256 disputePeriod = 1 weeks;                      //length of dispute period - may not reach this point
 
-  bytes32[] taskHashSubmissions;
   //open
   address firstSubmitter;
   bytes32 firstSubmission;                                 //used to determine if dispute period needs to happen
@@ -218,16 +217,12 @@ contract Project {
   // =====================================================================
   // OPEN/DISPUTE PROJECT FUNCTIONS
   // =====================================================================
-  /*function submitTaskList(Task[] tasksList) public isStaker() returns (bool success) {
-    submittedTasks[msg.sender] = tasksList;
-    return true;
-  }*/
 
   function checkActive() internal returns (bool) {
     require(projectState == State.Open || projectState == State.Dispute);
     if (projectState == State.Open) {
       if(timesUp()) {
-        if(taskHashSubmissions.length == 1) {         //FIX THIS AHH
+        if(numTotalSubmissions == numSubmissions[firstSubmission]) {         //FIX THIS AHH
           projectState = State.Active;
           nextDeadline = now + workCompletingPeriod;
           return true;
