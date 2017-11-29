@@ -58,18 +58,23 @@ contract WorkerRegistry{
     require(balances[msg.sender] >= _tokens);   //make sure project exists & TH has tokens to stake
     balances[msg.sender] -= _tokens;
     totalFreeWorkerTokenSupply -= _tokens;
-    require(Project(_projectAddress).stakeWorkerToken(_tokens, msg.sender));
+    Project(_projectAddress).stakeWorkerToken(_tokens, msg.sender);
   }
 
   function unstakeToken(uint256 _projectId, uint256 _tokens) public {
     address _projectAddress = tokenHolderRegistry.getProjectAddress(_projectId);
     balances[msg.sender] += _tokens;
     totalFreeWorkerTokenSupply += _tokens;
-    require(Project(_projectAddress).unstakeWorkerToken(_tokens, msg.sender));
+    Project(_projectAddress).unstakeWorkerToken(_tokens, msg.sender);
   }
 
   // =====================================================================
+  // ACTIVE PERIOD FUNCTIONALITY
   // =====================================================================
+
+  function claimTask() public {
+
+  }
 
   function completeTask(uint _projectId) public {
     address _projectAddress = tokenHolderRegistry.getProjectAddress(_projectId);
@@ -77,10 +82,11 @@ contract WorkerRegistry{
   }
 
   // =====================================================================
-  // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
+  // VALIDATE/VOTING FUNCTIONALITY
   // =====================================================================
 
   function voteCommit(uint256 _projectId, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+    require(balances[msg.sender] > 1);      //worker can't vote with only 1 token
     uint256 pollId = tokenHolderRegistry.getPollId(_projectId);
     uint256 nonce = tokenHolderRegistry.projectNonce();
     //calculate available tokens for voting
@@ -113,7 +119,7 @@ contract WorkerRegistry{
   // =====================================================================
 
   // We should document this function further, or make its name more descriptive
-  function updateTotal(uint256 _projectId, uint256 _tokens) public {
+  function burnTokens(uint256 _projectId, uint256 _tokens) public {
     require(tokenHolderRegistry.getProjectAddress(_projectId) == msg.sender);                  //check that valid project is calling this function
     totalWorkerTokenSupply -= _tokens;
   }
@@ -126,9 +132,10 @@ contract WorkerRegistry{
     balances[msg.sender] += _refund;
   }
 
-  function rewardWorker(uint256 _projectId) public {                                   //called by worker who completed a task
+  function rewardWorker(uint256 _projectId, uint256 _tokens, uint256 _wei) public {                                   //called by worker who completed a task
     address _projectAddress = tokenHolderRegistry.getProjectAddress(_projectId);
-    uint256 _reward = Project(_projectAddress).rewardWorker(msg.sender);
+    uint256 _reward = Project(_projectAddress).rewardWorker(msg.sender, _tokens, _wei);
+    //check that hash is correct somehow here
     if (_reward > 0) {
       tokenHolderRegistry.rewardWorker(msg.sender, _reward);
     }

@@ -39,7 +39,7 @@ contract Project {
   uint256 taskDiscussionPeriod = 1 weeks;
   uint256 disputePeriod = 1 weeks;                      //length of dispute period - may not reach this point
 
-  taskHash[] taskHashSubmissions;                       //used to determine
+  bytes32[] taskHashSubmissions;                       //used to determine if dispute period needs to happen
 
   //ACTIVE PERIOD
   uint256 workCompletingPeriod = 1 weeks;
@@ -67,8 +67,7 @@ contract Project {
     Dispute,
     Active,
     Validating,
-    VotingCommit,
-    VotingReveal,
+    Voting,
     Complete,
     Incomplete,
     Failed
@@ -86,13 +85,6 @@ contract Project {
     require(projectState == _state);
     _;
   }
-
-/*
-  modifier onlyBefore(uint256 time) {
-    require(now < time);
-    _;
-  }
-  */
 
   modifier onlyTHR() {
     require(msg.sender == address(tokenHolderRegistry));
@@ -125,8 +117,8 @@ contract Project {
     projectState = State.Proposed;
     proposerTokenStake = _proposerTokenStake;
     totalWorkerTokensStaked = 0;
-    workerRegistry = workerRegistry(_wr);
-    workerTokenCost = _costProportion * workerRegistry.totalFreeWorkerTokenSupply;
+    workerRegistry = WorkerRegistry(_wr);
+    workerTokenCost = _costProportion * workerRegistry.totalFreeWorkerTokenSupply();
   }
 
   // =====================================================================
@@ -136,67 +128,9 @@ contract Project {
   function timesUp() internal returns (bool) {
     return (now > nextDeadline);
   }
-/*
-  function checkStateChange() internal returns (bool stateChange) {                              //general state change function
-    if (projectState == State.Proposed) {
-      if (totalCapitalTokensStaked >= capitalTokenCost && totalWorkerTokensStaked >= workerTokenCost)
-        {
-          projectState = State.Active;
-          return true;
-        }
-        else {
-          return false;
-      }
-    }
 
-    else if (projectState == State.Active) {
-      for (uint256 i = 0; i < tasks.length; i++) {
-        if (tasks[i].taskComplete == false) {
-          if (now > projectDeadline) {
-            projectState = State.Incomplete;
-            return true;
-          }
-          return false;
-        }
-      }
-      validationStart = now;
-      projectState = State.Validating;
-      return true;
-      }
-
-    else if (projectState == State.Validating) {
-      if(now > validationStart + validationPeriod) {
-        tokenHolderRegistry.startPoll(projectId, 604800, 604800);   //1 week commit, 1 week reveal
-        projectState = State.Voting;
-        return true;
-      }
-      else {
-        return false;
-      }
-    }
-
-    else if (projectState == State.Voting) {
-      //call TokenHolderRegistry to call PLCR to see if the commit & reveal period is over
-      if(!tokenHolderRegistry.pollEnded(projectId)) {
-        return false;
-      }
-      else {
-        bool passed = tokenHolderRegistry.isPassed(projectId);
-        handleVoteResult(passed);
-        if (passed) {
-          projectState = State.Validated;
-        }
-        else {
-          projectState = State.Failed;
-        }
-        return true;
-      }
-    }
-  }
-
-*/
   // =====================================================================
-  // PROPOSED PROJECT - STAKING FUNCTIONS
+  // PROPOSED PROJECT
   // =====================================================================
 
   function refundProposer() public onlyTHR() returns (uint256 _proposerTokenStake) {   //called by THR, decrements proposer tokens in Project.sol
@@ -207,10 +141,10 @@ contract Project {
   }
 
   function isStaked() internal returns (bool) {
-    return (weiCost >= totalWeiStaked && workerTokenCost >= totalWorkerTokenSupply);
+    return (weiCost >= totalWeiStaked && workerTokenCost >= totalWorkerTokensStaked);
   }
 
-  function checkOpen() internal returns (bool) {
+  function checkOpen() onlyInState(State.Proposed) internal returns (bool) {
     if(isStaked()) {
       projectState = State.Open;
       nextDeadline = now + taskDiscussionPeriod;
@@ -224,7 +158,7 @@ contract Project {
     }
   }
 
-  function stakeCapitalToken(uint256 _tokens, address _staker, uint256 _weiVal) public onlyTHR() onlyInState(State.Proposed) returns (uint256 excess) {  //called by THR, increments _staker tokens in Project.sol
+  function stakeCapitalToken(uint256 _tokens, address _staker, uint256 _weiVal) public onlyTHR() onlyInState(State.Proposed) returns (uint256) {  //called by THR, increments _staker tokens in Project.sol
     require(!checkOpen());     //check to make sure ethBal hasn't been fulfilled
     require(weiCost > totalWeiStaked);
     if (weiCost >= _weiVal + totalWeiStaked) {
@@ -236,7 +170,7 @@ contract Project {
     } else {
       uint256 weiOver = totalWeiStaked + _weiVal - weiCost;
       uint256 tokensOver = (weiOver / _weiVal) * _tokens;
-      THR.transfer(weiOver);
+      tokenHolderRegistry.transfer(weiOver);
       stakedCapitalTokenBalances[_staker] += _tokens - tokensOver;
       totalCapitalTokensStaked += _tokens - tokensOver;
       totalWeiStaked += _weiVal - weiOver;
@@ -247,97 +181,148 @@ contract Project {
 
   function unstakeCapitalToken(uint256 _tokens, address _staker) public onlyTHR() onlyInState(State.Proposed) {    //called by THR only, decrements _staker tokens in Project.sol
     require(!checkOpen());
-    require(weiCost > totalWeiStaked &&
-         stakedCapitalTokenBalances[_staker] - _tokens < stakedCapitalTokenBalances[_staker] &&   //check overflow
+    require(stakedCapitalTokenBalances[_staker] - _tokens < stakedCapitalTokenBalances[_staker] &&   //check overflow
          stakedCapitalTokenBalances[_staker] - _tokens >= 0);   //make sure _staker has the tokens staked to unstake
     stakedCapitalTokenBalances[_staker] -= _tokens;
     totalCapitalTokensStaked -= _tokens;
-    THR.transfer(_tokens/totalCapitalTokensStaked * weiCost);
+    tokenHolderRegistry.transfer(_tokens/totalCapitalTokensStaked * weiCost);
   }
 
-  function stakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) returns (bool success) {
+  function stakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) {
     require(!checkOpen());
-    require(workerTokenCost > totalWorkerTokenSupply);
-    if (checkStateChange() == false &&
-         stakedWorkerTokenBalances[_staker] + _tokens > stakedWorkerTokenBalances[_staker]) {
-        stakedWorkerTokenBalances[_staker] += _tokens;
-        return true;
-    } else {
-      return false;
-    }
+    require(workerTokenCost > totalWorkerTokensStaked);
+    require(stakedWorkerTokenBalances[_staker] + _tokens > stakedWorkerTokenBalances[_staker]);
+    stakedWorkerTokenBalances[_staker] += _tokens;
+    checkOpen();
   }
 
-  function unstakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) returns (bool success) {
-    if (checkStateChange() == false &&
-         stakedWorkerTokenBalances[_staker] - _tokens < stakedWorkerTokenBalances[_staker] &&   //check overflow
-         stakedWorkerTokenBalances[_staker] - _tokens >= 0) {    //make sure _staker has the tokens staked to unstake
-           stakedWorkerTokenBalances[_staker] -= _tokens;
-           return true;
-    } else {
-      return false;
-    }
+  function unstakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) {
+    require(!checkOpen());
+    require(stakedWorkerTokenBalances[_staker] - _tokens < stakedWorkerTokenBalances[_staker] &&   //check overflow
+         stakedWorkerTokenBalances[_staker] - _tokens >= 0);   //make sure _staker has the tokens staked to unstake
+    stakedWorkerTokenBalances[_staker] -= _tokens;
   }
-
-  function checkOpen() internal onlyInState(State.Proposed)
 
   // =====================================================================
-  // ACTIVE PROJECT FUNCTIONS
+  // OPEN/DISPUTE PROJECT FUNCTIONS
   // =====================================================================
   /*function submitTaskList(Task[] tasksList) public isStaker() returns (bool success) {
     submittedTasks[msg.sender] = tasksList;
     return true;
   }*/
 
-  function addTaskHash(bytes32 _ipfsHash) public onlyInState(State.Open) onlyBefore(taskTimePeriod) isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
-    if (checkStateChange() == false) {
-      tasks.push(Task(_workerAddress, _description, false, _ipfsHash, _workerReward));
+  function checkActive() internal returns (bool) {
+    require(projectState == State.Open || projectState == State.Dispute);
+    if (projectState == State.Open) {
+      if(timesUp()) {
+        if(taskHashSubmissions.length == 1) {
+          projectState = State.Active;
+          nextDeadline = now + workCompletingPeriod;
+          return true;
+        } else {
+        projectState = State.Dispute;
+        nextDeadline = now + disputePeriod;
+        return true;
+        }
+      } else {
+        return false;
+      }
+    } else {          //if projectState == State.Dispute
+      if(timesUp()) {
+        calculateWinningTaskHash();
+        projectState = State.Active;
+        nextDeadline = now + workCompletingPeriod;
+        return true;
+      } else {
+        return false;
+      }
     }
   }
 
-  function claimTask() {
-
+  function addTaskHash(bytes32 _ipfsHash) public onlyInState(State.Open) isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
+    //write
   }
 
-  function completeTask() onlyInState(State.Active) public onlyWR() returns (bool success) {  //can only be called by worker in task
-    if (checkStateChange() == false) {
-      for (uint256 i=0; i<tasks.length; i++) {
-        if(tasks[i].workerAddress == msg.sender && tasks[i].taskComplete == false) {
-          tasks[i].taskComplete = true;
-          return true;
-        }
-      }
+  function claimTask() public onlyInState(State.Active) onlyWR() {
+    //write
+  }
+
+  function calculateWinningTaskHash() internal {
+    //write
+  }
+
+  // =====================================================================
+  // ACTIVE PROJECT
+  // =====================================================================
+
+
+  function checkValidate() internal onlyInState(State.Active) returns (bool) {
+    if (timesUp()) {
+      projectState = State.Validating;
+      nextDeadline = now + validationPeriod;
+      return true;
+    } else {
       return false;
     }
-    return false;
+  }
+
+
+  function completeTask() public onlyInState(State.Active) onlyWR() {  //can only be called by worker in task
+    //write
   }
 
   // =====================================================================
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
   // =====================================================================
 
+
+  function checkVoting() public onlyInState(State.Validating) returns (bool) {
+    if(timesUp()) {
+      projectState = State.Voting;
+      tokenHolderRegistry.startPoll(projectId, votingCommitPeriod, votingRevealPeriod);
+      nextDeadline = now + votingCommitPeriod;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTHR() onlyInState(State.Validating) returns (bool success) {
     //checks for free tokens done in THR
     //increments validation tokens in Project.sol only
-    if (checkStateChange() == false) {
-      require(now < validationStart + validationPeriod);
-      if (_validationState == true && validatedAffirmative[_staker] + _tokens > validatedAffirmative[_staker] && totalValidateAffirmative + _tokens > totalValidateAffirmative) {
-        validatedAffirmative[_staker] += _tokens;
-        totalValidateAffirmative += _tokens;
-        return true;
-      }
-      else if (_validationState == false && validatedNegative[_staker] + _tokens > validatedNegative[_staker] && totalValidateNegative + _tokens > totalValidateNegative){
-        validatedNegative[msg.sender] += _tokens;
-        totalValidateNegative += _tokens;
-        return true;
-      }
+    require(checkVoting() == false);
+    if (_validationState == true && validatedAffirmative[_staker] + _tokens > validatedAffirmative[_staker] && totalValidateAffirmative + _tokens > totalValidateAffirmative) {
+      validatedAffirmative[_staker] += _tokens;
+      totalValidateAffirmative += _tokens;
+    }
+    else if (_validationState == false && validatedNegative[_staker] + _tokens > validatedNegative[_staker] && totalValidateNegative + _tokens > totalValidateNegative){
+      validatedNegative[msg.sender] += _tokens;
+      totalValidateNegative += _tokens;
+    }
+  }
+
+  function checkEnd() public onlyInState(State.Voting) returns (bool) {     //don't know where this gets called - maybe separate UI thing
+    if(!tokenHolderRegistry.pollEnded(projectId)) {
       return false;
+    }
+    else {
+      bool passed = tokenHolderRegistry.isPassed(projectId);
+      handleVoteResult(passed);
+      if (passed) {
+        projectState = State.Complete;
+        return true;
+      }
+      else {
+        projectState = State.Failed;
+        return true;
+      }
     }
   }
 
   function handleVoteResult(bool passed) internal {
     if(!passed) {               //project fails
-      tokenHolderRegistry.updateTotal(projectId, totalCapitalTokensStaked);
-      WorkerRegistry(workerRegistry).updateTotal(projectId, totalWorkerTokensStaked);
+      tokenHolderRegistry.burnTokens(projectId, totalCapitalTokensStaked);
+      WorkerRegistry(workerRegistry).burnTokens(projectId, totalWorkerTokensStaked);
       totalCapitalTokensStaked = 0;
       totalWorkerTokensStaked = 0;
       validateReward = totalValidateAffirmative;
@@ -367,8 +352,8 @@ contract Project {
     if (msg.sender == address(tokenHolderRegistry)) {
 
       if(totalCapitalTokensStaked != 0) {
-        refund = stakedCapitalTokenBalances;[_staker];
-        stakedCapitalTokenBalances;[_staker] = 0;
+        refund = stakedCapitalTokenBalances[_staker];
+        stakedCapitalTokenBalances[_staker] = 0;
       }
 
       if(totalValidateNegative != 0) {
@@ -400,23 +385,20 @@ contract Project {
 
     else if (msg.sender == address(workerRegistry)) {
       if(totalWorkerTokensStaked != 0) {
-        refund = stakedWorkerTokenBalances;[_staker];
-        stakedWorkerTokenBalances;[_staker] = 0;
+        refund = stakedWorkerTokenBalances[_staker];
+        stakedWorkerTokenBalances[_staker] = 0;
       }
 
       return refund;
     }
   }
 
-  function rewardWorker(address _staker) public onlyWR() onlyInState(State.Validated) returns (uint256 _reward) {
-    uint256 reward = 0;
-    for (uint256 i=0; i<tasks.length; i++) {
-      if(tasks[i].workerAddress == _staker) {
-        reward += tasks[i].ETHReward;
-        tasks[i].ETHReward = 0;
-      }
-    }
-    return reward;
+  function rewardWorker(address _staker, uint256 _tokens, uint256 _wei) public onlyWR() onlyInState(State.Complete) returns (uint256 _reward) {
+    //write
+  }
+
+  function() payable {
+    
   }
 
 }

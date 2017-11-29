@@ -159,7 +159,7 @@ contract TokenHolderRegistry is StandardToken {
 
   function currentPrice() internal view returns (uint256) {
     //calculated current burn reward of 1 token at current weiBal and free token supply
-    return weiBal/freeCapitalTokenSupply; //truncation - remainder discarded
+    return weiBal/totalFreeCapitalTokenSupply; //truncation - remainder discarded
   }
   /*function futurePrice() internal view return (uint256 price) {
   }*/
@@ -175,7 +175,7 @@ contract TokenHolderRegistry is StandardToken {
     uint256 _currentPrice = currentPrice();
     uint256 currentTokenCost = _cost / _currentPrice;      //project cost in tokens
     uint256 proposerTokenCost = currentTokenCost / proposeProportion;           //divide by 20 to get 5 percent of tokens
-    uint256 costProportion = _cost / weiBal;
+    uint256 _costProportion = _cost / weiBal;
     require(balances[msg.sender] >= proposerTokenCost);
     balances[msg.sender] -= proposerTokenCost;
     totalFreeCapitalTokenSupply -= proposerTokenCost;
@@ -229,7 +229,7 @@ contract TokenHolderRegistry is StandardToken {
   function unstakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {
     balances[msg.sender] += _tokens;
     totalFreeCapitalTokenSupply += _tokens;
-    require(Project(projectId[_projectId].projectAddress).unstakeCapitalToken(_tokens, msg.sender));
+    Project(projectId[_projectId].projectAddress).unstakeCapitalToken(_tokens, msg.sender);
   }
 
   // =====================================================================
@@ -240,15 +240,16 @@ contract TokenHolderRegistry is StandardToken {
     require(balances[msg.sender] >= _tokens);
     balances[msg.sender] -= _tokens;
     totalFreeCapitalTokenSupply -= _tokens;
-    require(Project(projectId[_projectId].projectAddress).validate(msg.sender, _tokens, _validationState));
+    Project(projectId[_projectId].projectAddress).validate(msg.sender, _tokens, _validationState);
   }
 
-  function startPoll(uint256 _projectId, uint256 _commitDuration, uint256 _revealDuration) public {
+  function startPoll(uint256 _projectId, uint256 _commitDuration, uint256 _revealDuration) public {       //can only be called by project in question
       require(projectId[_projectId].projectAddress == msg.sender);
       projectId[_projectId].votingPollId = plcrVoting.startPoll(50, _commitDuration, _revealDuration);
     }
 
   function voteCommit(uint256 _projectId, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) public projectExists(_projectId) {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+
     uint256 pollId = projectId[_projectId].votingPollId;
     //calculate available tokens for voting
     uint256 availableTokens = plcrVoting.voteTokenBalanceTH(msg.sender) - plcrVoting.getLockedTokens(msg.sender);
@@ -279,17 +280,15 @@ contract TokenHolderRegistry is StandardToken {
 
   function pollEnded(uint256 _projectId) public view returns (bool) {
     require(projectId[_projectId].projectAddress == msg.sender);
-    bool success = plcrVoting.pollEnded(projectId[_projectId].votingPollId);
-    return success;
+    return plcrVoting.pollEnded(projectId[_projectId].votingPollId);
   }
 
   function isPassed(uint256 _projectId) public view returns (bool) {
     require(projectId[_projectId].projectAddress == msg.sender);
-    bool success = plcrVoting.isPassed(projectId[_projectId].votingPollId);
-    return success;
+    return plcrVoting.isPassed(projectId[_projectId].votingPollId);
   }
   // We should call this something like burnTokens to be more explicit
-  function updateTotal(uint256 _projectId, uint256 _tokens) public {
+  function burnTokens(uint256 _projectId, uint256 _tokens) public {
     require(projectId[_projectId].projectAddress == msg.sender);                               //check that valid project is calling this function
     totalCapitalTokenSupply -= _tokens;
   }
@@ -310,5 +309,9 @@ contract TokenHolderRegistry is StandardToken {
 
   function rewardWorker(address _worker, uint256 _reward) public onlyWR() {
     _worker.transfer(_reward);
+  }
+
+  function() payable {
+
   }
 }
