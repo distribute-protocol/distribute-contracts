@@ -291,11 +291,9 @@ contract Project {
     }
   }
 
-  function calculateWeightOfAddress(address _address) internal returns (uint256) {
+  function calculateWeightOfAddress(address _address) internal view returns (uint256) {
     return (stakedWorkerTokenBalances[_address] + stakedCapitalTokenBalances[_address]);
   }
-
-
 
   // =====================================================================
   // ACTIVE PROJECT
@@ -309,14 +307,6 @@ contract Project {
     } else {
       return false;
     }
-  }
-
-  function claimTask() public onlyInState(State.Active) onlyWR() {
-    //write
-  }
-
-  function completeTask() public onlyInState(State.Active) onlyWR() {  //can only be called by worker in task
-    //write
   }
 
   // =====================================================================

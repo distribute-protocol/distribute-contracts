@@ -77,14 +77,6 @@ contract WorkerRegistry{
   // ACTIVE PERIOD FUNCTIONALITY
   // =====================================================================
 
-  function claimTask() public {
-
-  }
-
-  function completeTask(uint _projectId) public {
-    //write function
-  }
-
   // =====================================================================
   // VALIDATE/VOTING FUNCTIONALITY
   // =====================================================================

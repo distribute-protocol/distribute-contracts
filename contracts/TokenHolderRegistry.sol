@@ -134,7 +134,7 @@ contract TokenHolderRegistry is StandardToken {
     return _quotient;
   }
 
-  function weiRequired(uint256 _targetPrice, uint256 _tokens) public returns (uint256) {
+  function weiRequired(uint256 _targetPrice, uint256 _tokens) public view returns (uint256) {
     return ((_targetPrice * (totalCapitalTokenSupply + _tokens)) - currentPrice() * totalCapitalTokenSupply);
   }
 
