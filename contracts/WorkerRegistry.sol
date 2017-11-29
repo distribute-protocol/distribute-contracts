@@ -54,6 +54,7 @@ contract WorkerRegistry{
   // =====================================================================
 
   function stakeToken(uint256 _projectId, uint256 _tokens) public {
+    require(balances[msg.sender] > 1);
     address _projectAddress = tokenHolderRegistry.getProjectAddress(_projectId);
     require(balances[msg.sender] >= _tokens);   //make sure project exists & TH has tokens to stake
     balances[msg.sender] -= _tokens;
