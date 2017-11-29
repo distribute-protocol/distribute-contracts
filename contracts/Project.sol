@@ -53,6 +53,7 @@ contract Project {
 
   //ACTIVE PERIOD
   uint256 workCompletingPeriod = 1 weeks;
+  bytes32[] taskList;
 
   //VALIDATION PERIOD
   mapping (address => uint) validatedAffirmative;
@@ -245,7 +246,6 @@ contract Project {
     }
   }
 
-
   function addTaskHash(bytes32 _ipfsHash, address _address) public isStaker(_address) {
     require(projectState == State.Open || projectState == State.Dispute);
     require(msg.sender == address(tokenHolderRegistry) ||  msg.sender == address(workerRegistry));
@@ -301,6 +301,32 @@ contract Project {
     } else {
       return false;
     }
+  }
+
+  function submitHashList(bytes32[] _hashes) onlyInState(State.Active) public {
+    require(msg.sender == address(tokenHolderRegistry) ||  msg.sender == address(workerRegistry));
+    if (disputeTopTaskHash != 0) {
+      require(keccak256(_hashes) == disputeTopTaskHash);
+    } else {
+      require(keccak256(_hashes) == firstSubmission);
+    }
+      taskList = _hashes;
+  }
+
+  struct Reward {
+    uint256 weiReward;
+    uint256 workerTokenReward;
+    address claimer;
+  }
+
+  mapping(bytes32 => Reward) workerRewards;       //hash to worker rewards
+
+  function claimTask(uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _tokenVal, address _address) public onlyWR() onlyInState(State.Active) {
+    require(taskList[_index] == keccak256(_taskDescription, _weiVal, _tokenVal));
+    require(workerRewards[taskList[_index]].claimer == 0);
+    workerRewards[taskList[_index]].claimer = _address;
+    workerRewards[taskList[_index]].weiReward = _weiVal;
+    workerRewards[taskList[_index]].workerTokenReward = _tokenVal;
   }
 
   // =====================================================================
@@ -425,8 +451,15 @@ contract Project {
     }
   }
 
-  function rewardWorker(address _staker, uint256 _tokens, uint256 _wei) public onlyWR() onlyInState(State.Complete) returns (uint256 _reward) {
-    //write
+  function rewardWorker(bytes32 _taskHash, address _address) public onlyWR() onlyInState(State.Complete) returns (uint256) {
+    require(workerRewards[_taskHash].claimer == _address);
+    uint256 weiTemp = workerRewards[_taskHash].weiReward;
+    uint256 tokenTemp = workerRewards[_taskHash].workerTokenReward;
+    workerRewards[_taskHash].claimer = 0;
+    workerRewards[_taskHash].weiReward = 0;
+    workerRewards[_taskHash].workerTokenReward = 0;
+    _address.transfer(weiTemp);
+    return tokenTemp;
   }
 
   function() payable {

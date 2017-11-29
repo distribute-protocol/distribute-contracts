@@ -21,7 +21,7 @@ contract WorkerRegistry{
   TokenHolderRegistry tokenHolderRegistry;
   PLCRVoting plcrVoting;
 
-  mapping (address => uint) balances;                   //worker token balances
+  mapping (address => uint) public balances;                   //worker token balances
 
   uint256 public totalWorkerTokenSupply;               //total supply of capital tokens in all states
   uint256 public totalFreeWorkerTokenSupply;           //total supply of free capital tokens (not staked, validated, or voted)
@@ -78,6 +78,18 @@ contract WorkerRegistry{
   // ACTIVE PERIOD FUNCTIONALITY
   // =====================================================================
 
+  function submitHashList(uint256 _projectId, bytes32[] _hashes) public {
+    address _projectAddress = tokenHolderRegistry.getProjectAddress(_projectId);
+    Project(_projectAddress).submitHashList(_hashes);
+  }
+
+  function claimTask(uint256 _projectId, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _tokenVal) public {
+    require(balances[msg.sender] >= _tokenVal);
+    address _projectAddress = tokenHolderRegistry.getProjectAddress(_projectId);
+    balances[msg.sender] -= _tokenVal;
+    Project(_projectAddress).claimTask(_index, _taskDescription, _weiVal, _tokenVal, msg.sender);
+  }
+
   // =====================================================================
   // VALIDATE/VOTING FUNCTIONALITY
   // =====================================================================
@@ -129,13 +141,10 @@ contract WorkerRegistry{
     balances[msg.sender] += _refund;
   }
 
-  function rewardWorker(uint256 _projectId, uint256 _tokens, uint256 _wei) public {                                   //called by worker who completed a task
+  function rewardWorker(uint256 _projectId, bytes32 _taskHash) public {                                   //called by worker who completed a task
     address _projectAddress = tokenHolderRegistry.getProjectAddress(_projectId);
-    uint256 _reward = Project(_projectAddress).rewardWorker(msg.sender, _tokens, _wei);
-    //check that hash is correct somehow here
-    if (_reward > 0) {
-      tokenHolderRegistry.rewardWorker(msg.sender, _reward);
-    }
-
+    uint256 reward = Project(_projectAddress).rewardWorker(_taskHash, msg.sender);
+    totalFreeWorkerTokenSupply += reward;
+    balances[msg.sender] += reward;
   }
 }

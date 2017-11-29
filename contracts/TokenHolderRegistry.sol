@@ -243,6 +243,14 @@ contract TokenHolderRegistry is StandardToken {
   }
 
   // =====================================================================
+  // ACTIVE PROJECT
+  // =====================================================================
+
+  function submitHashList(uint256 _projectId, bytes32[] _hashes) public {
+    Project(projectId[_projectId].projectAddress).submitHashList(_hashes);
+  }
+
+  // =====================================================================
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
   // =====================================================================
 
@@ -315,10 +323,6 @@ contract TokenHolderRegistry is StandardToken {
   function rewardValidator(uint256 _projectId, address _validator, uint256 _reward) public {
     require(projectId[_projectId].projectAddress == msg.sender);
     _validator.transfer(_reward);
-  }
-
-  function rewardWorker(address _worker, uint256 _reward) public onlyWR() {
-    _worker.transfer(_reward);
   }
 
   function() public payable {
