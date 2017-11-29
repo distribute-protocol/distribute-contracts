@@ -418,9 +418,7 @@ contract Project {
   function rewardWorker(address _staker, uint256 _tokens, uint256 _wei) public onlyWR() onlyInState(State.Complete) returns (uint256 _reward) {
     //write
   }
-
-  function() public payable {
+  function() payable {
 
   }
-
 }
