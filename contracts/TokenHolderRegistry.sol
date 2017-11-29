@@ -159,7 +159,7 @@ contract TokenHolderRegistry is StandardToken {
 
   function currentPrice() internal view returns (uint256) {
     //calculated current burn reward of 1 token at current weiBal and free token supply
-    return weiBal/freeCapitalTokenSupply; //truncation - remainder discarded
+    return weiBal/totalFreeCapitalTokenSupply; //truncation - remainder discarded
   }
   /*function futurePrice() internal view return (uint256 price) {
   }*/
@@ -175,7 +175,7 @@ contract TokenHolderRegistry is StandardToken {
     uint256 _currentPrice = currentPrice();
     uint256 currentTokenCost = _cost / _currentPrice;      //project cost in tokens
     uint256 proposerTokenCost = currentTokenCost / proposeProportion;           //divide by 20 to get 5 percent of tokens
-    uint256 costProportion = _cost / weiBal;
+    uint256 _costProportion = _cost / weiBal;
     require(balances[msg.sender] >= proposerTokenCost);
     balances[msg.sender] -= proposerTokenCost;
     totalFreeCapitalTokenSupply -= proposerTokenCost;
@@ -229,7 +229,7 @@ contract TokenHolderRegistry is StandardToken {
   function unstakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {
     balances[msg.sender] += _tokens;
     totalFreeCapitalTokenSupply += _tokens;
-    require(Project(projectId[_projectId].projectAddress).unstakeCapitalToken(_tokens, msg.sender));
+    Project(projectId[_projectId].projectAddress).unstakeCapitalToken(_tokens, msg.sender);
   }
 
   // =====================================================================
@@ -309,5 +309,9 @@ contract TokenHolderRegistry is StandardToken {
 
   function rewardWorker(address _worker, uint256 _reward) public onlyWR() {
     _worker.transfer(_reward);
+  }
+
+  function() payable {
+
   }
 }

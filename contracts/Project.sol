@@ -117,8 +117,8 @@ contract Project {
     projectState = State.Proposed;
     proposerTokenStake = _proposerTokenStake;
     totalWorkerTokensStaked = 0;
-    workerRegistry = workerRegistry(_wr);
-    workerTokenCost = _costProportion * workerRegistry.totalFreeWorkerTokenSupply;
+    workerRegistry = WorkerRegistry(_wr);
+    workerTokenCost = _costProportion * workerRegistry.totalFreeWorkerTokenSupply();
   }
 
   // =====================================================================
@@ -141,7 +141,7 @@ contract Project {
   }
 
   function isStaked() internal returns (bool) {
-    return (weiCost >= totalWeiStaked && workerTokenCost >= totalWorkerTokenSupply);
+    return (weiCost >= totalWeiStaked && workerTokenCost >= totalWorkerTokensStaked);
   }
 
   function checkOpen() onlyInState(State.Proposed) internal returns (bool) {
@@ -170,7 +170,7 @@ contract Project {
     } else {
       uint256 weiOver = totalWeiStaked + _weiVal - weiCost;
       uint256 tokensOver = (weiOver / _weiVal) * _tokens;
-      THR.transfer(weiOver);
+      tokenHolderRegistry.transfer(weiOver);
       stakedCapitalTokenBalances[_staker] += _tokens - tokensOver;
       totalCapitalTokensStaked += _tokens - tokensOver;
       totalWeiStaked += _weiVal - weiOver;
@@ -185,12 +185,12 @@ contract Project {
          stakedCapitalTokenBalances[_staker] - _tokens >= 0);   //make sure _staker has the tokens staked to unstake
     stakedCapitalTokenBalances[_staker] -= _tokens;
     totalCapitalTokensStaked -= _tokens;
-    THR.transfer(_tokens/totalCapitalTokensStaked * weiCost);
+    tokenHolderRegistry.transfer(_tokens/totalCapitalTokensStaked * weiCost);
   }
 
   function stakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) {
     require(!checkOpen());
-    require(workerTokenCost > totalWorkerTokenSupply);
+    require(workerTokenCost > totalWorkerTokensStaked);
     require(stakedWorkerTokenBalances[_staker] + _tokens > stakedWorkerTokenBalances[_staker]);
     stakedWorkerTokenBalances[_staker] += _tokens;
     checkOpen();
@@ -215,7 +215,7 @@ contract Project {
     require(projectState == State.Open || projectState == State.Dispute);
     if (projectState == State.Open) {
       if(timesUp()) {
-        if(taskHashSubmissions.length() == 1) {
+        if(taskHashSubmissions.length == 1) {
           projectState = State.Active;
           nextDeadline = now + workCompletingPeriod;
           return true;
@@ -290,7 +290,7 @@ contract Project {
   function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTHR() onlyInState(State.Validating) returns (bool success) {
     //checks for free tokens done in THR
     //increments validation tokens in Project.sol only
-    require(!checkVoting);
+    require(checkVoting() == false);
     if (_validationState == true && validatedAffirmative[_staker] + _tokens > validatedAffirmative[_staker] && totalValidateAffirmative + _tokens > totalValidateAffirmative) {
       validatedAffirmative[_staker] += _tokens;
       totalValidateAffirmative += _tokens;
@@ -352,8 +352,8 @@ contract Project {
     if (msg.sender == address(tokenHolderRegistry)) {
 
       if(totalCapitalTokensStaked != 0) {
-        refund = stakedCapitalTokenBalances;[_staker];
-        stakedCapitalTokenBalances;[_staker] = 0;
+        refund = stakedCapitalTokenBalances[_staker];
+        stakedCapitalTokenBalances[_staker] = 0;
       }
 
       if(totalValidateNegative != 0) {
@@ -385,16 +385,20 @@ contract Project {
 
     else if (msg.sender == address(workerRegistry)) {
       if(totalWorkerTokensStaked != 0) {
-        refund = stakedWorkerTokenBalances;[_staker];
-        stakedWorkerTokenBalances;[_staker] = 0;
+        refund = stakedWorkerTokenBalances[_staker];
+        stakedWorkerTokenBalances[_staker] = 0;
       }
 
       return refund;
     }
   }
 
-  function rewardWorker(address _staker, uint256 _tokens, uint256 _wei) public onlyWR() onlyInState(State.Validated) returns (uint256 _reward) {
+  function rewardWorker(address _staker, uint256 _tokens, uint256 _wei) public onlyWR() onlyInState(State.Complete) returns (uint256 _reward) {
     //write
+  }
+
+  function() payable {
+    
   }
 
 }
