@@ -39,7 +39,7 @@ contract Project {
   uint256 taskDiscussionPeriod = 1 weeks;
   uint256 disputePeriod = 1 weeks;                      //length of dispute period - may not reach this point
 
-  bytes32[] taskHashSubmissions;                       //used to determine if dispute period needs to happen
+  bytes32[] taskHashSubmissions;
 
   //ACTIVE PERIOD
   uint256 workCompletingPeriod = 1 weeks;
@@ -96,8 +96,8 @@ contract Project {
     _;
   }
 
-  modifier isStaker() {
-    require(stakedCapitalTokenBalances[msg.sender] > 0 || stakedWorkerTokenBalances[msg.sender] > 0);
+  modifier isStaker(address _address) {
+    require(stakedCapitalTokenBalances[_address] > 0 || stakedWorkerTokenBalances[_address] > 0);
     _;
   }
 // =====================================================================
@@ -240,11 +240,26 @@ contract Project {
     }
   }
 
-  function addTaskHash(bytes32 _ipfsHash) public onlyInState(State.Open) isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
-    //write
-  }
+/*
+  bytes32[] taskHashSubmissions;                                  //used to determine if dispute period needs to happen
+  mapping(address => bytes32) openTaskHashSubmissions;
 
-  function claimTask() public onlyInState(State.Active) onlyWR() {
+  bytes32 disputeTopTaskHash;
+  mapping(address => bytes32) disputeTaskHashSubmissions;
+  mapping(bytes32 => uint256) taskHashTop;
+
+
+  function addTaskHash(bytes32 _ipfsHash, address _address) public isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
+    require(msg.sender == address(tokenHolderRegistry) ||  msg.sender == address(workerRegistry));
+    if (projectState == State.Open) {
+
+    } else if (projectState == State.Dispute) {
+
+    }
+  }
+*/
+
+  function addTaskHash(bytes32 _ipfsHash, address _address) public isStaker(_address) {
     //write
   }
 
@@ -252,10 +267,13 @@ contract Project {
     //write
   }
 
+
+
+
+
   // =====================================================================
   // ACTIVE PROJECT
   // =====================================================================
-
 
   function checkValidate() internal onlyInState(State.Active) returns (bool) {
     if (timesUp()) {
@@ -267,6 +285,9 @@ contract Project {
     }
   }
 
+  function claimTask() public onlyInState(State.Active) onlyWR() {
+    //write
+  }
 
   function completeTask() public onlyInState(State.Active) onlyWR() {  //can only be called by worker in task
     //write

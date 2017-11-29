@@ -68,6 +68,11 @@ contract WorkerRegistry{
     Project(_projectAddress).unstakeWorkerToken(_tokens, msg.sender);
   }
 
+  function submitTaskHash(uint256 _projectId, bytes32 _taskHash) public {
+    address _projectAddress = tokenHolderRegistry.getProjectAddress(_projectId);
+    Project(_projectAddress).addTaskHash(_taskHash, msg.sender);
+  }
+
   // =====================================================================
   // ACTIVE PERIOD FUNCTIONALITY
   // =====================================================================
@@ -77,8 +82,7 @@ contract WorkerRegistry{
   }
 
   function completeTask(uint _projectId) public {
-    address _projectAddress = tokenHolderRegistry.getProjectAddress(_projectId);
-    Project(_projectAddress).completeTask();
+    //write function
   }
 
   // =====================================================================
