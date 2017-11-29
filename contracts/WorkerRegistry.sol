@@ -54,6 +54,7 @@ contract WorkerRegistry{
   // =====================================================================
 
   function stakeToken(uint256 _projectId, uint256 _tokens) public {
+    require(balances[msg.sender] > 1);
     address _projectAddress = tokenHolderRegistry.getProjectAddress(_projectId);
     require(balances[msg.sender] >= _tokens);   //make sure project exists & TH has tokens to stake
     balances[msg.sender] -= _tokens;
@@ -68,18 +69,14 @@ contract WorkerRegistry{
     Project(_projectAddress).unstakeWorkerToken(_tokens, msg.sender);
   }
 
+  function submitTaskHash(uint256 _projectId, bytes32 _taskHash) public {
+    address _projectAddress = tokenHolderRegistry.getProjectAddress(_projectId);
+    Project(_projectAddress).addTaskHash(_taskHash, msg.sender);
+  }
+
   // =====================================================================
   // ACTIVE PERIOD FUNCTIONALITY
   // =====================================================================
-
-  function claimTask() public {
-
-  }
-
-  function completeTask(uint _projectId) public {
-    address _projectAddress = tokenHolderRegistry.getProjectAddress(_projectId);
-    Project(_projectAddress).completeTask();
-  }
 
   // =====================================================================
   // VALIDATE/VOTING FUNCTIONALITY

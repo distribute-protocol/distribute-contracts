@@ -39,7 +39,18 @@ contract Project {
   uint256 taskDiscussionPeriod = 1 weeks;
   uint256 disputePeriod = 1 weeks;                      //length of dispute period - may not reach this point
 
-  bytes32[] taskHashSubmissions;                       //used to determine if dispute period needs to happen
+  bytes32[] taskHashSubmissions;
+  //open
+  address firstSubmitter;
+  bytes32 firstSubmission;                                 //used to determine if dispute period needs to happen
+  uint256 numTotalSubmissions;
+  mapping(address => bytes32) openTaskHashSubmissions;
+  mapping(bytes32 => uint256) numSubmissions;
+
+  //dispute
+  bytes32 disputeTopTaskHash;
+  mapping(address => bytes32) disputeTaskHashSubmissions;
+  mapping(bytes32 => uint256) numSubmissionsByWeight;
 
   //ACTIVE PERIOD
   uint256 workCompletingPeriod = 1 weeks;
@@ -96,8 +107,8 @@ contract Project {
     _;
   }
 
-  modifier isStaker() {
-    require(stakedCapitalTokenBalances[msg.sender] > 0 || stakedWorkerTokenBalances[msg.sender] > 0);
+  modifier isStaker(address _address) {
+    require(stakedCapitalTokenBalances[_address] > 0 || stakedWorkerTokenBalances[_address] > 0);
     _;
   }
 // =====================================================================
@@ -111,13 +122,14 @@ contract Project {
   function Project(uint256 _id, uint256 _cost, uint256 _stakingPeriod, uint256 _proposerTokenStake, uint256 _costProportion, address _wr) public {       //called by THR
     //all checks done in THR first
     tokenHolderRegistry = TokenHolderRegistry(msg.sender);     //the token holder registry calls this function
+    workerRegistry = WorkerRegistry(_wr);
     projectId = _id;
     weiCost = _cost;
     stakingPeriod = now + _stakingPeriod;
     projectState = State.Proposed;
     proposerTokenStake = _proposerTokenStake;
+    totalCapitalTokensStaked = 0;
     totalWorkerTokensStaked = 0;
-    workerRegistry = WorkerRegistry(_wr);
     workerTokenCost = _costProportion * workerRegistry.totalFreeWorkerTokenSupply();
   }
 
@@ -215,7 +227,7 @@ contract Project {
     require(projectState == State.Open || projectState == State.Dispute);
     if (projectState == State.Open) {
       if(timesUp()) {
-        if(taskHashSubmissions.length == 1) {
+        if(taskHashSubmissions.length == 1) {         //FIX THIS AHH
           projectState = State.Active;
           nextDeadline = now + workCompletingPeriod;
           return true;
@@ -229,7 +241,6 @@ contract Project {
       }
     } else {          //if projectState == State.Dispute
       if(timesUp()) {
-        calculateWinningTaskHash();
         projectState = State.Active;
         nextDeadline = now + workCompletingPeriod;
         return true;
@@ -239,22 +250,53 @@ contract Project {
     }
   }
 
-  function addTaskHash(bytes32 _ipfsHash) public onlyInState(State.Open) isStaker() {     //uclear who can call this, needs to be restricted to consensus-based tasks
-    //write
+
+  function addTaskHash(bytes32 _ipfsHash, address _address) public isStaker(_address) {
+    require(projectState == State.Open || projectState == State.Dispute);
+    require(msg.sender == address(tokenHolderRegistry) ||  msg.sender == address(workerRegistry));
+    if (projectState == State.Open) {
+      checkActive();
+      if(openTaskHashSubmissions[_address] == 0) {    //first time submission for this particular address
+        if(firstSubmission == 0) {                    //first hash submission at all?
+            firstSubmission = _ipfsHash;
+            firstSubmitter = _address;
+        }
+        openTaskHashSubmissions[_address] == _ipfsHash;
+        numSubmissions[_ipfsHash] += 1;
+        numTotalSubmissions += 1;
+      } else {                                     //not a first time hash submission
+        if(firstSubmitter == _address) {      //first hash submitter resubmits?
+          firstSubmission = _ipfsHash;
+        }
+        bytes32 temp = openTaskHashSubmissions[_address];
+        openTaskHashSubmissions[_address] == _ipfsHash;
+        numSubmissions[temp] -= 1;
+        numSubmissions[_ipfsHash] += 1;
+      }
+    } else {
+      checkActive();
+      if(disputeTaskHashSubmissions[_address] == 0) {   //first time submission for this particular address
+        disputeTaskHashSubmissions[_address] = _ipfsHash;
+        numSubmissionsByWeight[_ipfsHash] += calculateWeightOfAddress(_address);
+      } else {
+        bytes32 temp2 = disputeTaskHashSubmissions[_address];
+        disputeTaskHashSubmissions[_address] = _ipfsHash;
+        numSubmissionsByWeight[temp2] -= calculateWeightOfAddress(_address);
+        numSubmissionsByWeight[_ipfsHash] += calculateWeightOfAddress(_address);
+      }
+      if(numSubmissionsByWeight[_ipfsHash] > numSubmissionsByWeight[disputeTopTaskHash]) {
+        disputeTopTaskHash = _ipfsHash;
+      }
+    }
   }
 
-  function claimTask() public onlyInState(State.Active) onlyWR() {
-    //write
-  }
-
-  function calculateWinningTaskHash() internal {
-    //write
+  function calculateWeightOfAddress(address _address) internal view returns (uint256) {
+    return (stakedWorkerTokenBalances[_address] + stakedCapitalTokenBalances[_address]);
   }
 
   // =====================================================================
   // ACTIVE PROJECT
   // =====================================================================
-
 
   function checkValidate() internal onlyInState(State.Active) returns (bool) {
     if (timesUp()) {
@@ -264,11 +306,6 @@ contract Project {
     } else {
       return false;
     }
-  }
-
-
-  function completeTask() public onlyInState(State.Active) onlyWR() {  //can only be called by worker in task
-    //write
   }
 
   // =====================================================================
@@ -287,7 +324,7 @@ contract Project {
     }
   }
 
-  function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTHR() onlyInState(State.Validating) returns (bool success) {
+  function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTHR() onlyInState(State.Validating) {
     //checks for free tokens done in THR
     //increments validation tokens in Project.sol only
     require(checkVoting() == false);
@@ -396,19 +433,9 @@ contract Project {
   function rewardWorker(address _staker, uint256 _tokens, uint256 _wei) public onlyWR() onlyInState(State.Complete) returns (uint256 _reward) {
     //write
   }
+
   function() payable {
 
   }
-  bytes32 taskHash;
-  mapping(address => bytes32) submittedTasksHash;
-  mapping(bytes32 => uint) taskHashCount;
-  bytes32[] tasksHashArr;
 
-  function submitTaskHash(bytes32 _taskHash) isStaker() isValidTaskPeriod() {
-    require(!timesUp());
-    if (taskHashCount[_taskHash] == 0) {
-      tasksHashArr.push(_taskHash);
-      submitTaskHash[msg.sender] = _taskHash;
-    }
-  }
 }

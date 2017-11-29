@@ -93,15 +93,13 @@ contract TokenHolderRegistry is StandardToken {
   // =====================================================================
 
   function getProjectAddress(uint256 _id) public view onlyWR() returns (address) {
-    if (_id <= projectNonce && _id > 0) {
-      return projectId[_id].projectAddress;
-    }
+    require(_id <= projectNonce && _id > 0);
+    return projectId[_id].projectAddress;
   }
 
   function getPollId(uint256 _id) public view onlyWR() returns (uint256) {
-    if (_id <= projectNonce && _id > 0) {
-      return projectId[_id].votingPollId;
-    }
+    require(_id <= projectNonce && _id > 0);
+    return projectId[_id].votingPollId;
   }
   // =====================================================================
   // MINTING FUNCTIONS
@@ -128,7 +126,7 @@ contract TokenHolderRegistry is StandardToken {
       }
   }
 
-  function percent(uint256 numerator, uint256 denominator, uint256 precision) internal view returns (uint256) {
+  function percent(uint256 numerator, uint256 denominator, uint256 precision) internal pure returns (uint256) {
      // caution, check safe-to-multiply here
     uint256 _numerator  = numerator * 10 ** (precision+1);
     // with rounding of last digit
@@ -136,8 +134,8 @@ contract TokenHolderRegistry is StandardToken {
     return _quotient;
   }
 
-  function weiRequired(uint _targetPrice, uint _tokens) returns (uint256) {
-    return (_targetPrice * (totalCapitalTokenSupply + _tokens)) - currentPrice() * totalCapitalTokenSupply;
+  function weiRequired(uint256 _targetPrice, uint256 _tokens) public view returns (uint256) {
+    return ((_targetPrice * (totalCapitalTokenSupply + _tokens)) - currentPrice() * totalCapitalTokenSupply);
   }
 
   function targetPrice(uint _tokens) public view returns (uint256) {
@@ -159,7 +157,11 @@ contract TokenHolderRegistry is StandardToken {
 
   function currentPrice() internal view returns (uint256) {
     //calculated current burn reward of 1 token at current weiBal and free token supply
+    if (totalFreeCapitalTokenSupply == 0) {
+      return baseCost;
+    } else {
     return weiBal/totalFreeCapitalTokenSupply; //truncation - remainder discarded
+    }
   }
   /*function futurePrice() internal view return (uint256 price) {
   }*/
@@ -230,6 +232,14 @@ contract TokenHolderRegistry is StandardToken {
     balances[msg.sender] += _tokens;
     totalFreeCapitalTokenSupply += _tokens;
     Project(projectId[_projectId].projectAddress).unstakeCapitalToken(_tokens, msg.sender);
+  }
+
+  // =====================================================================
+  // OPEN/DISPUTE PROJECT
+  // =====================================================================
+
+  function submitTaskHash(uint256 _projectId, bytes32 _taskHash) public projectExists(_projectId) {
+    Project(projectId[_projectId].projectAddress).addTaskHash(_taskHash, msg.sender);
   }
 
   // =====================================================================
@@ -311,7 +321,7 @@ contract TokenHolderRegistry is StandardToken {
     _worker.transfer(_reward);
   }
 
-  function() payable {
+  function() public payable {
 
   }
 }
