@@ -400,5 +400,16 @@ contract Project {
   function() payable {
     
   }
+  bytes32 taskHash
+  mapping(address => bytes32) submittedTasksHash
+  mapping(bytes32 => uint) taskHashCount
+  bytes32[] tasksHashArr
 
+  function submitTaskHash(bytes32 _taskHash) isStaker() isValidTaskPeriod() {
+    require(!timesUp())
+    if (taskHashCount[_taskHash] == 0) {
+      tasksHashArr.push(_taskHash)
+      submitTaskHash[msg.sender] = _taskHash
+    }
+  }
 }
