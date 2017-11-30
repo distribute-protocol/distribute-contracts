@@ -245,7 +245,6 @@ contract Project {
     require(projectState == State.Open || projectState == State.Dispute);
     require(msg.sender == address(tokenHolderRegistry) ||  msg.sender == address(workerRegistry));
     if (projectState == State.Open) {
-      checkActive();
       if(openTaskHashSubmissions[_address] == 0) {    //first time submission for this particular address
         if(firstSubmission == 0) {                    //first hash submission at all?
             firstSubmission = _ipfsHash;
@@ -264,7 +263,6 @@ contract Project {
         numSubmissions[_ipfsHash] += 1;
       }
     } else {
-      checkActive();
       if(disputeTaskHashSubmissions[_address] == 0) {   //first time submission for this particular address
         disputeTaskHashSubmissions[_address] = _ipfsHash;
         numSubmissionsByWeight[_ipfsHash] += calculateWeightOfAddress(_address);
@@ -278,6 +276,7 @@ contract Project {
         disputeTopTaskHash = _ipfsHash;
       }
     }
+    checkActive();
   }
 
   function calculateWeightOfAddress(address _address) internal view returns (uint256) {

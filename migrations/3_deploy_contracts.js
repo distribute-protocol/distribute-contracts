@@ -9,16 +9,6 @@ const StandardToken = artifacts.require('StandardToken');
 */
 
 module.exports = function(deployer) {
-
-    // deploy libraries
-    deployer.deploy(DLL);
-    deployer.deploy(AttributeStore);
-    // link libraries
-    deployer.link(DLL, PLCRVoting);
-    deployer.link(AttributeStore, PLCRVoting);
-
-    deployer.deploy(StandardToken);
-
     deployer.then(function(){
         return deployer.deploy(TokenHolderRegistry)
       }).then(function(){
