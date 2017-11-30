@@ -138,7 +138,7 @@ struct Validator {
   // GENERAL FUNCTIONS
   // =====================================================================
 
-  function timesUp() internal returns (bool) {
+  function timesUp() internal view returns (bool) {
     return (now > nextDeadline);
   }
 
@@ -153,7 +153,7 @@ struct Validator {
     return temp;
   }
 
-  function isStaked() internal returns (bool) {
+  function isStaked() internal view returns (bool) {
     return (weiCost >= totalWeiStaked && workerTokenCost >= totalWorkerTokensStaked);
   }
 
@@ -375,8 +375,8 @@ struct Validator {
       validateReward = totalValidateNegative;
       if (validateReward == 0) {
         validateFlag = true;
-      totalValidateNegative = 0;
       }
+      totalValidateNegative = 0;
     }
   }
 
@@ -387,30 +387,24 @@ struct Validator {
   function refundStaker(address _staker) public returns (uint256 _refund) {  //called by THR or WR, allow return of staked, validated, and
     require(msg.sender == address(tokenHolderRegistry) ||  msg.sender == address(workerRegistry));
     require(projectState == State.Complete || projectState == State.Failed);
-    uint256 refund;     //tokensxw
+    uint256 refund;     //tokens
     if (msg.sender == address(tokenHolderRegistry)) {
-      if(totalCapitalTokensStaked > 0) {
+      if(totalCapitalTokensStaked != 0) {
         refund = stakedCapitalTokenBalances[_staker];
         stakedCapitalTokenBalances[_staker] = 0;
       }
-      if(totalValidateNegative > 0 || totalValidateAffirmative > 0) {
+      if(totalValidateNegative != 0 || totalValidateAffirmative != 0) {
         refund += validators[_staker].stake;
-        if (validateFlag == false) {
-          if (projectState == State.Complete) {
-            refund += validateReward * validators[_staker].stake / totalValidateAffirmative;
-          } else {
-            refund += validateReward * validators[_staker].stake / totalValidateNegative;
-          }
+        uint256 denom;
+        if (projectState == State.Failed) {
+          denom = totalValidateNegative;
+        } else {
+          denom = totalValidateAffirmative;
         }
-        else if (validateFlag == true) {
-          uint256 spoils;     //wei
-          if (projectState == State.Complete) {
-            spoils = weiCost * validators[_staker].stake / totalValidateNegative;
-          }
-          else {
-            spoils = weiCost * validators[_staker].stake / totalValidateAffirmative;
-          }
-          tokenHolderRegistry.rewardValidator(projectId, _staker, spoils);
+        if (validateFlag == false) {
+          refund += validateReward * validators[_staker].stake / denom;
+        } else {
+          tokenHolderRegistry.rewardValidator(projectId, _staker, (weiCost * validators[_staker].stake / denom));
         }
         validators[_staker].stake = 0;
       }
