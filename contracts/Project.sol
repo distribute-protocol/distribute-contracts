@@ -146,7 +146,7 @@ contract Project {
   // =====================================================================
 
   function refundProposer() public onlyTHR() returns (uint256 _proposerTokenStake) {   //called by THR, decrements proposer tokens in Project.sol
-    require(projectState != State.Proposed && proposerTokenStake != 0);         //make sure out of proposed state & msg.sender is the proposer
+    require(projectState == State.Open && proposerTokenStake != 0);         //make sure out of proposed state & msg.sender is the proposer
     uint256 temp = proposerTokenStake;
     proposerTokenStake = 0;
     return temp;
@@ -164,35 +164,32 @@ contract Project {
     } else if(timesUp()) {
       projectState = State.Failed;
       proposerTokenStake = 0;
-      return true;
+      return false;
     } else {
       return false;
     }
   }
 
   function stakeCapitalToken(uint256 _tokens, address _staker, uint256 _weiVal) public onlyTHR() onlyInState(State.Proposed) returns (uint256) {  //called by THR, increments _staker tokens in Project.sol
-    require(!checkOpen());     //check to make sure ethBal hasn't been fulfilled
+    uint256 tokensOver = 0;
     require(weiCost > totalWeiStaked);
     if (weiCost >= _weiVal + totalWeiStaked) {
       stakedCapitalTokenBalances[_staker] += _tokens;
       totalCapitalTokensStaked += _tokens;
       totalWeiStaked += _weiVal;
-      checkOpen();
-      return 0;
     } else {
       uint256 weiOver = totalWeiStaked + _weiVal - weiCost;
-      uint256 tokensOver = (weiOver / _weiVal) * _tokens;
+      tokensOver = (weiOver / _weiVal) * _tokens;
       tokenHolderRegistry.transfer(weiOver);
       stakedCapitalTokenBalances[_staker] += _tokens - tokensOver;
       totalCapitalTokensStaked += _tokens - tokensOver;
       totalWeiStaked += _weiVal - weiOver;
-      checkOpen();
-      return tokensOver;
     }
+    checkOpen();
+    return tokensOver;
   }
 
   function unstakeCapitalToken(uint256 _tokens, address _staker) public onlyTHR() onlyInState(State.Proposed) {    //called by THR only, decrements _staker tokens in Project.sol
-    require(!checkOpen());
     require(stakedCapitalTokenBalances[_staker] - _tokens < stakedCapitalTokenBalances[_staker] &&   //check overflow
          stakedCapitalTokenBalances[_staker] - _tokens >= 0);   //make sure _staker has the tokens staked to unstake
     stakedCapitalTokenBalances[_staker] -= _tokens;
@@ -201,7 +198,6 @@ contract Project {
   }
 
   function stakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) {
-    require(!checkOpen());
     require(workerTokenCost > totalWorkerTokensStaked);
     require(stakedWorkerTokenBalances[_staker] + _tokens > stakedWorkerTokenBalances[_staker]);
     stakedWorkerTokenBalances[_staker] += _tokens;
@@ -209,7 +205,6 @@ contract Project {
   }
 
   function unstakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) {
-    require(!checkOpen());
     require(stakedWorkerTokenBalances[_staker] - _tokens < stakedWorkerTokenBalances[_staker] &&   //check overflow
          stakedWorkerTokenBalances[_staker] - _tokens >= 0);   //make sure _staker has the tokens staked to unstake
     stakedWorkerTokenBalances[_staker] -= _tokens;
