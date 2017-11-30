@@ -173,7 +173,7 @@ struct Validator {
 
   function stakeCapitalToken(uint256 _tokens, address _staker, uint256 _weiVal) public onlyTHR() onlyInState(State.Proposed) returns (uint256) {  //called by THR, increments _staker tokens in Project.sol
     uint256 tokensOver = 0;
-    require(weiCost > totalWeiStaked);
+    /*require(weiCost > totalWeiStaked);*/
     if (weiCost >= _weiVal + totalWeiStaked) {
       stakedCapitalTokenBalances[_staker] += _tokens;
       totalCapitalTokensStaked += _tokens;
@@ -192,22 +192,23 @@ struct Validator {
 
   function unstakeCapitalToken(uint256 _tokens, address _staker) public onlyTHR() onlyInState(State.Proposed) {    //called by THR only, decrements _staker tokens in Project.sol
     require(stakedCapitalTokenBalances[_staker] - _tokens < stakedCapitalTokenBalances[_staker] &&   //check overflow
-         stakedCapitalTokenBalances[_staker] - _tokens >= 0);   //make sure _staker has the tokens staked to unstake
+         stakedCapitalTokenBalances[_staker] > _tokens);   //make sure _staker has the tokens staked to unstake
     stakedCapitalTokenBalances[_staker] -= _tokens;
     totalCapitalTokensStaked -= _tokens;
     tokenHolderRegistry.transfer(_tokens/totalCapitalTokensStaked * weiCost);
   }
 
   function stakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) {
-    require(workerTokenCost > totalWorkerTokensStaked);
-    require(stakedWorkerTokenBalances[_staker] + _tokens > stakedWorkerTokenBalances[_staker]);
+    // require(workerTokenCost > totalWorkerTokensStaked); I don't think this can be reached, because it would move to Open after
+    /*require(stakedWorkerTokenBalances[_staker] + _tokens > stakedWorkerTokenBalances[_staker]);*/
+    require(_tokens > 0);
     stakedWorkerTokenBalances[_staker] += _tokens;
     checkOpen();
   }
 
   function unstakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) {
-    require(stakedWorkerTokenBalances[_staker] - _tokens < stakedWorkerTokenBalances[_staker] &&   //check overflow
-         stakedWorkerTokenBalances[_staker] - _tokens >= 0);   //make sure _staker has the tokens staked to unstake
+    require(stakedWorkerTokenBalances[_staker] - _tokens < stakedWorkerTokenBalances[_staker] &&  //check overflow /
+      stakedWorkerTokenBalances[_staker] > _tokens); //make sure _staker has the tokens staked to unstake
     stakedWorkerTokenBalances[_staker] -= _tokens;
   }
 
@@ -217,28 +218,17 @@ struct Validator {
 
   function checkActive() internal returns (bool) {
     require(projectState == State.Open || projectState == State.Dispute);
-    if (projectState == State.Open) {
-      if(timesUp()) {
-        if(numTotalSubmissions == numSubmissions[firstSubmission]) {         //FIX THIS AHH
-          projectState = State.Active;
-          nextDeadline = now + workCompletingPeriod;
-          return true;
-        } else {
-        projectState = State.Dispute;
-        nextDeadline = now + disputePeriod;
-        return true;
-        }
-      } else {
-        return false;
-      }
-    } else {          //if projectState == State.Dispute
-      if(timesUp()) {
+    if(timesUp()) {
+      if(numTotalSubmissions == numSubmissions[firstSubmission] || projectState == State.Dispute) {         //FIX THIS AHH
         projectState = State.Active;
         nextDeadline = now + workCompletingPeriod;
-        return true;
       } else {
-        return false;
+        projectState = State.Dispute;
+        nextDeadline = now + disputePeriod;
       }
+      return true;
+    } else {
+      return false;
     }
   }
 
@@ -251,7 +241,6 @@ struct Validator {
             firstSubmission = _ipfsHash;
             firstSubmitter = _address;
         }
-        openTaskHashSubmissions[_address] == _ipfsHash;
         numSubmissions[_ipfsHash] += 1;
         numTotalSubmissions += 1;
       } else {                                     //not a first time hash submission
@@ -259,20 +248,17 @@ struct Validator {
           firstSubmission = _ipfsHash;
         }
         bytes32 temp = openTaskHashSubmissions[_address];
-        openTaskHashSubmissions[_address] == _ipfsHash;
         numSubmissions[temp] -= 1;
         numSubmissions[_ipfsHash] += 1;
       }
+      openTaskHashSubmissions[_address] == _ipfsHash;
     } else {
-      if(disputeTaskHashSubmissions[_address] == 0) {   //first time submission for this particular address
-        disputeTaskHashSubmissions[_address] = _ipfsHash;
-        numSubmissionsByWeight[_ipfsHash] += calculateWeightOfAddress(_address);
-      } else {
+      if(disputeTaskHashSubmissions[_address] != 0) {   //first time submission for this particular address
         bytes32 temp2 = disputeTaskHashSubmissions[_address];
-        disputeTaskHashSubmissions[_address] = _ipfsHash;
         numSubmissionsByWeight[temp2] -= calculateWeightOfAddress(_address);
-        numSubmissionsByWeight[_ipfsHash] += calculateWeightOfAddress(_address);
       }
+      numSubmissionsByWeight[_ipfsHash] += calculateWeightOfAddress(_address);
+      disputeTaskHashSubmissions[_address] = _ipfsHash;
       if(numSubmissionsByWeight[_ipfsHash] > numSubmissionsByWeight[disputeTopTaskHash]) {
         disputeTopTaskHash = _ipfsHash;
       }
@@ -418,13 +404,13 @@ struct Validator {
         }
         else if (validateFlag == true) {
           uint256 spoils;     //wei
-          /*if (projectState == State.Complete) {
+          if (projectState == State.Complete) {
             spoils = weiCost * validators[_staker].stake / totalValidateNegative;
           }
           else {
             spoils = weiCost * validators[_staker].stake / totalValidateAffirmative;
           }
-          tokenHolderRegistry.rewardValidator(projectId, _staker, spoils);*/
+          tokenHolderRegistry.rewardValidator(projectId, _staker, spoils);
         }
         validators[_staker].stake = 0;
       }
