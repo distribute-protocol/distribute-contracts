@@ -56,15 +56,16 @@ contract Project {
   bytes32[] taskList;
 
   //VALIDATION PERIOD
-  mapping (address => uint) validatedAffirmative;
-  mapping (address => uint) validatedNegative;
+struct Validator {
+    uint256 status;
+    uint256 stake;
+  }
+  mapping (address => Validator) validators;
   uint256 totalValidateAffirmative;
   uint256 totalValidateNegative;
-
   uint256 validationPeriod = 1 weeks;
-
   uint256 validateReward;
-  bool validateFlag = false;            //turn this on if there were no opposing validators
+  bool validateFlag = false;
 
   //VOTING PERIOD
   uint256 votingCommitPeriod = 1 weeks;
@@ -342,14 +343,16 @@ contract Project {
   function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTHR() onlyInState(State.Validating) {
     //checks for free tokens done in THR
     //increments validation tokens in Project.sol only
-    require(checkVoting() == false);
-    if (_validationState == true && validatedAffirmative[_staker] + _tokens > validatedAffirmative[_staker] && totalValidateAffirmative + _tokens > totalValidateAffirmative) {
-      validatedAffirmative[_staker] += _tokens;
-      totalValidateAffirmative += _tokens;
-    }
-    else if (_validationState == false && validatedNegative[_staker] + _tokens > validatedNegative[_staker] && totalValidateNegative + _tokens > totalValidateNegative){
-      validatedNegative[msg.sender] += _tokens;
-      totalValidateNegative += _tokens;
+    require(!checkVoting());
+    if (_tokens > 0) {
+      if (_validationState == true) {
+        validators[_staker] = Validator(1, _tokens);
+        totalValidateAffirmative += _tokens;
+      }
+      else if (_validationState == false){
+        validators[_staker] = Validator(0, _tokens);
+        totalValidateNegative += _tokens;
+      }
     }
   }
 
@@ -362,12 +365,11 @@ contract Project {
       handleVoteResult(passed);
       if (passed) {
         projectState = State.Complete;
-        return true;
       }
       else {
         projectState = State.Failed;
-        return true;
       }
+      return true;
     }
   }
 
@@ -399,52 +401,41 @@ contract Project {
   function refundStaker(address _staker) public returns (uint256 _refund) {  //called by THR or WR, allow return of staked, validated, and
     require(msg.sender == address(tokenHolderRegistry) ||  msg.sender == address(workerRegistry));
     require(projectState == State.Complete || projectState == State.Failed);
-    uint256 refund;     //tokens
-    uint256 spoils;     //wei
+    uint256 refund;     //tokensxw
     if (msg.sender == address(tokenHolderRegistry)) {
-
-      if(totalCapitalTokensStaked != 0) {
+      if(totalCapitalTokensStaked > 0) {
         refund = stakedCapitalTokenBalances[_staker];
         stakedCapitalTokenBalances[_staker] = 0;
       }
-
-      if(totalValidateNegative != 0) {
-        refund += validatedNegative[_staker];
+      if(totalValidateNegative > 0 || totalValidateAffirmative > 0) {
+        refund += validators[_staker].stake;
         if (validateFlag == false) {
-          refund += validateReward * validatedNegative[_staker] / totalValidateNegative;
+          if (projectState == State.Complete) {
+            refund += validateReward * validators[_staker].stake / totalValidateAffirmative;
+          } else {
+            refund += validateReward * validators[_staker].stake / totalValidateNegative;
+          }
         }
         else if (validateFlag == true) {
-          spoils = weiCost * validatedNegative[_staker] / totalValidateNegative;
-          tokenHolderRegistry.rewardValidator(projectId, _staker, spoils);
+          uint256 spoils;     //wei
+          /*if (projectState == State.Complete) {
+            spoils = weiCost * validators[_staker].stake / totalValidateNegative;
+          }
+          else {
+            spoils = weiCost * validators[_staker].stake / totalValidateAffirmative;
+          }
+          tokenHolderRegistry.rewardValidator(projectId, _staker, spoils);*/
         }
-        validatedNegative[_staker] = 0;
+        validators[_staker].stake = 0;
       }
-
-      if(totalValidateAffirmative != 0) {
-        refund += validatedAffirmative[_staker];
-        if (validateFlag == false) {
-          refund += validateReward * validatedAffirmative[_staker] / totalValidateAffirmative;
-        }
-        else if (validateFlag == true) {
-          spoils = weiCost * validatedAffirmative[_staker] / totalValidateAffirmative;
-          tokenHolderRegistry.rewardValidator(projectId, _staker, spoils);
-        }
-        validatedAffirmative[_staker] = 0;
-      }
-
-      return refund;
-    }
-
-    else if (msg.sender == address(workerRegistry)) {
+    } else if (msg.sender == address(workerRegistry)) {
       if(totalWorkerTokensStaked != 0) {
         refund = stakedWorkerTokenBalances[_staker];
         stakedWorkerTokenBalances[_staker] = 0;
       }
-
-      return refund;
     }
+    return refund;
   }
-
   function rewardWorker(bytes32 _taskHash, address _address) public onlyWR() onlyInState(State.Complete) returns (uint256) {
     require(workerRewards[_taskHash].claimer == _address);
     uint256 weiTemp = workerRewards[_taskHash].weiReward;
@@ -456,7 +447,7 @@ contract Project {
     return tokenTemp;
   }
 
-  function() payable {
+  function() public payable {
 
   }
 
