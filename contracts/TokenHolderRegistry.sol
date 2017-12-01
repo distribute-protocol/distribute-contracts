@@ -148,6 +148,7 @@ contract TokenHolderRegistry is StandardToken {
       balances[msg.sender] -= _amountToBurn;
       totalCapitalTokenSupply -= _amountToBurn;
       totalFreeCapitalTokenSupply -= _amountToBurn;
+      weiBal -= reward;
       LogWithdraw(_amountToBurn, reward);
       msg.sender.transfer(reward);
   }
