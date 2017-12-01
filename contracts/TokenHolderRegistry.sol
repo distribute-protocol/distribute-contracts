@@ -42,10 +42,7 @@ contract TokenHolderRegistry is StandardToken {
   uint256 proposeProportion = 20;                           // tokensupply/proposeProportion is the number of tokens the proposer must stake
   uint256 rewardProportion = 100;
 
-  //minting & burning state variables from Simon de la Rouviere's code
-  uint256 public constant MAX_UINT = (2**256) - 1;
   uint256 baseCost = 100000000000000;                   //.0001 ether --> 3 cents for the initial token, only used once
-  uint256 public costPerToken = 0;                      //current minting price
 
   //ether pool
   uint256 public weiBal;   //in wei
