@@ -70,6 +70,11 @@ contract TokenHolderRegistry is StandardToken {
     _;
   }
 
+  modifier isProject(uint256 _projectId) {
+      require(projectId[_projectId].projectAddress == msg.sender);
+      _;
+  }
+
 // =====================================================================
 // FUNCTIONS
 // =====================================================================
@@ -259,8 +264,7 @@ contract TokenHolderRegistry is StandardToken {
     Project(projectId[_projectId].projectAddress).validate(msg.sender, _tokens, _validationState);
   }
 
-  function startPoll(uint256 _projectId, uint256 _commitDuration, uint256 _revealDuration) public {       //can only be called by project in question
-      require(projectId[_projectId].projectAddress == msg.sender);
+  function startPoll(uint256 _projectId, uint256 _commitDuration, uint256 _revealDuration) public isProject(_projectId) {       //can only be called by project in question
       projectId[_projectId].votingPollId = plcrVoting.startPoll(50, _commitDuration, _revealDuration);
     }
 
@@ -294,18 +298,14 @@ contract TokenHolderRegistry is StandardToken {
   // FAILED / VALIDATED PROJECT
   // =====================================================================
 
-  function pollEnded(uint256 _projectId) public view returns (bool) {
-    require(projectId[_projectId].projectAddress == msg.sender);
+  function pollEnded(uint256 _projectId) public isProject(_projectId) view returns (bool) {
     return plcrVoting.pollEnded(projectId[_projectId].votingPollId);
   }
 
-  function isPassed(uint256 _projectId) public view returns (bool) {
-    require(projectId[_projectId].projectAddress == msg.sender);
+  function isPassed(uint256 _projectId) public isProject(_projectId) view returns (bool) {
     return plcrVoting.isPassed(projectId[_projectId].votingPollId);
   }
-  // We should call this something like burnTokens to be more explicit
-  function burnTokens(uint256 _projectId, uint256 _tokens) public {
-    require(projectId[_projectId].projectAddress == msg.sender);                               //check that valid project is calling this function
+  function burnTokens(uint256 _projectId, uint256 _tokens) public isProject(_projectId) {                            //check that valid project is calling this function
     totalCapitalTokenSupply -= _tokens;
   }
 
@@ -318,8 +318,7 @@ contract TokenHolderRegistry is StandardToken {
     plcrVoting.rescueTokens(msg.sender, pollId);
   }
 
-  function rewardValidator(uint256 _projectId, address _validator, uint256 _reward) public {
-    require(projectId[_projectId].projectAddress == msg.sender);
+  function rewardValidator(uint256 _projectId, address _validator, uint256 _reward) public isProject(_projectId) {
     _validator.transfer(_reward);
   }
 
