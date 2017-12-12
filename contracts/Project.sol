@@ -1,8 +1,9 @@
 pragma solidity ^0.4.10;
 
 //import files
-import "./TokenHolderRegistry.sol";
-import "./WorkerRegistry.sol";
+import "./TokenRegistry.sol";
+import "./ReputationRegistry.sol";
+import "./DistributeToken.sol";
 
 /*
   a created project
@@ -15,13 +16,17 @@ contract Project {
 // =====================================================================
 
   //GENERAL STATE VARIABLES
-  TokenHolderRegistry tokenHolderRegistry;    //connect to THR
-  WorkerRegistry workerRegistry;              //connect to WR
+  TokenRegistry tokenRegistry;
+  ReputationRegistry reputationRegistry;
+  DistributeToken distributeToken;
 
-  uint256 projectId;                          //project id of this particular project, to be held in mapping in THR
+  //project id of this particular project, to be held in mapping in PR
+  uint256 projectId;
 
-  uint256 public weiCost;                     //set by proposer, total cost of project in ETH, to be fulfilled by capital token holders
-  uint256 workerTokenCost;                    //total amount of staked worker tokens needed, TBD
+  //set by proposer, total cost of project in ETH, to be fulfilled by capital token holders
+  uint256 public weiCost;
+  //total amount of staked worker tokens needed, TBD
+  uint256 reputationCost;
 
   uint256 nextDeadline;
 
@@ -30,10 +35,10 @@ contract Project {
   uint256 stakingPeriod;                      //set by proposer at time of proposal
 
   uint256 totalWeiStaked;                     //amount of wei currently staked
-  uint256 totalCapitalTokensStaked;           //amount of capital tokens currently staked
-  uint256 totalWorkerTokensStaked;            //amount of worker tokens currently staked
-  mapping (address => uint) stakedCapitalTokenBalances;
-  mapping (address => uint) stakedWorkerTokenBalances;
+  uint256 totalTokensStaked;           //amount of capital tokens currently staked
+  uint256 totalReputationStaked;            //amount of worker tokens currently staked
+  mapping (address => uint) stakedTokenBalances;
+  mapping (address => uint) stakedReputationBalances;
 
   //OPEN/DISPUTE PERIOD STATE VARIABLES
   uint256 taskDiscussionPeriod = 1 weeks;
@@ -56,7 +61,7 @@ contract Project {
   bytes32[] taskList;
 
   //VALIDATION PERIOD
-struct Validator {
+  struct Validator {
     uint256 status;
     uint256 stake;
   }
@@ -98,18 +103,18 @@ struct Validator {
     _;
   }
 
-  modifier onlyTHR() {
-    require(msg.sender == address(tokenHolderRegistry));
+  modifier onlyTR() {
+    require(msg.sender == address(tokenRegistry));
     _;
   }
 
-  modifier onlyWR() {
-    require(msg.sender == address(workerRegistry));
+  modifier onlyRR() {
+    require(msg.sender == address(reputationRegistry));
     _;
   }
 
   modifier isStaker(address _address) {
-    require(stakedCapitalTokenBalances[_address] > 0 || stakedWorkerTokenBalances[_address] > 0);
+    require(stakedTokenBalances[_address] > 0 || stakedReputationBalances[_address] > 0);
     _;
   }
 // =====================================================================
@@ -120,18 +125,18 @@ struct Validator {
   // CONSTRUCTOR
   // =====================================================================
 
-  function Project(uint256 _id, uint256 _cost, uint256 _stakingPeriod, uint256 _proposerTokenStake, uint256 _costProportion, address _wr) public {       //called by THR
+  function Project(uint256 _id, uint256 _cost, uint256 _stakingPeriod, uint256 _proposerTokenStake, uint256 _costProportion, address _rr, address _dt) public {       //called by THR
     //all checks done in THR first
-    tokenHolderRegistry = TokenHolderRegistry(msg.sender);     //the token holder registry calls this function
-    workerRegistry = WorkerRegistry(_wr);
+    tokenRegistry = TokenRegistry(msg.sender);     //the token holder registry calls this function
+    reputationRegistry = ReputationRegistry(_rr);
     projectId = _id;
     weiCost = _cost;
     stakingPeriod = now + _stakingPeriod;
     projectState = State.Proposed;
     proposerTokenStake = _proposerTokenStake;
-    totalCapitalTokensStaked = 0;
-    totalWorkerTokensStaked = 0;
-    workerTokenCost = _costProportion * workerRegistry.totalFreeWorkerTokenSupply();
+    totalTokensStaked = 0;
+    totalReputationStaked = 0;
+    workerTokenCost = _costProportion * reputationRegistry.totalFreeWorkerTokenSupply();
   }
 
   // =====================================================================
@@ -146,7 +151,7 @@ struct Validator {
   // PROPOSED PROJECT
   // =====================================================================
 
-  function refundProposer() public onlyTHR() returns (uint256 _proposerTokenStake) {   //called by THR, decrements proposer tokens in Project.sol
+  function refundProposer() public onlyTR() returns (uint256 _proposerTokenStake) {   //called by THR, decrements proposer tokens in Project.sol
     require(projectState == State.Open && proposerTokenStake != 0);         //make sure out of proposed state & msg.sender is the proposer
     uint256 temp = proposerTokenStake;
     proposerTokenStake = 0;
@@ -154,7 +159,7 @@ struct Validator {
   }
 
   function isStaked() internal view returns (bool) {
-    return (weiCost >= totalWeiStaked && workerTokenCost >= totalWorkerTokensStaked);
+    return (weiCost >= totalWeiStaked && workerTokenCost >= totalReputationStaked);
   }
 
   function checkOpen() onlyInState(State.Proposed) internal returns (bool) {
@@ -171,45 +176,45 @@ struct Validator {
     }
   }
 
-  function stakeCapitalToken(uint256 _tokens, address _staker, uint256 _weiVal) public onlyTHR() onlyInState(State.Proposed) returns (uint256) {  //called by THR, increments _staker tokens in Project.sol
+  function stakeToken(uint256 _tokens, address _staker, uint256 _weiVal) public onlyTR() onlyInState(State.Proposed) returns (uint256) {  //called by THR, increments _staker tokens in Project.sol
     uint256 tokensOver = 0;
     /*require(weiCost > totalWeiStaked);*/
     if (weiCost >= _weiVal + totalWeiStaked) {
-      stakedCapitalTokenBalances[_staker] += _tokens;
-      totalCapitalTokensStaked += _tokens;
+      stakedTokenBalances[_staker] += _tokens;
+      totalTokensStaked += _tokens;
       totalWeiStaked += _weiVal;
     } else {
       uint256 weiOver = totalWeiStaked + _weiVal - weiCost;
       tokensOver = (weiOver / _weiVal) * _tokens;
-      tokenHolderRegistry.transfer(weiOver);
-      stakedCapitalTokenBalances[_staker] += _tokens - tokensOver;
-      totalCapitalTokensStaked += _tokens - tokensOver;
+      tokenRegistry.transfer(weiOver);
+      stakedTokenBalances[_staker] += _tokens - tokensOver;
+      totalTokensStaked += _tokens - tokensOver;
       totalWeiStaked += _weiVal - weiOver;
     }
     checkOpen();
     return tokensOver;
   }
 
-  function unstakeCapitalToken(uint256 _tokens, address _staker) public onlyTHR() onlyInState(State.Proposed) {    //called by THR only, decrements _staker tokens in Project.sol
-    require(stakedCapitalTokenBalances[_staker] - _tokens < stakedCapitalTokenBalances[_staker] &&   //check overflow
-         stakedCapitalTokenBalances[_staker] > _tokens);   //make sure _staker has the tokens staked to unstake
-    stakedCapitalTokenBalances[_staker] -= _tokens;
-    totalCapitalTokensStaked -= _tokens;
-    tokenHolderRegistry.transfer(_tokens/totalCapitalTokensStaked * weiCost);
+  function unstakeToken(uint256 _tokens, address _staker) public onlyTR() onlyInState(State.Proposed) returns (uint256) {    //called by THR only, decrements _staker tokens in Project.sol
+    require(stakedTokenBalances[_staker] - _tokens < stakedTokenBalances[_staker] &&   //check overflow
+         stakedTokenBalances[_staker] > _tokens);   //make sure _staker has the tokens staked to unstake
+    stakedTokenBalances[_staker] -= _tokens;
+    totalTokensStaked -= _tokens;
+    return (_tokens / totalTokensStaked) * weiCost;
   }
 
-  function stakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) {
-    // require(workerTokenCost > totalWorkerTokensStaked); I don't think this can be reached, because it would move to Open after
-    /*require(stakedWorkerTokenBalances[_staker] + _tokens > stakedWorkerTokenBalances[_staker]);*/
+  function stakeReputation(uint256 _tokens, address _staker) public onlyRR() onlyInState(State.Proposed) {
+    // require(workerTokenCost > totalReputationStaked); I don't think this can be reached, because it would move to Open after
+    /*require(stakedReputationBalances[_staker] + _tokens > stakedReputationBalances[_staker]);*/
     require(_tokens > 0);
-    stakedWorkerTokenBalances[_staker] += _tokens;
+    stakedReputationBalances[_staker] += _tokens;
     checkOpen();
   }
 
-  function unstakeWorkerToken(uint256 _tokens, address _staker) public onlyWR() onlyInState(State.Proposed) {
-    require(stakedWorkerTokenBalances[_staker] - _tokens < stakedWorkerTokenBalances[_staker] &&  //check overflow /
-      stakedWorkerTokenBalances[_staker] > _tokens); //make sure _staker has the tokens staked to unstake
-    stakedWorkerTokenBalances[_staker] -= _tokens;
+  function unstakeReputation(uint256 _tokens, address _staker) public onlyRR() onlyInState(State.Proposed) {
+    require(stakedReputationBalances[_staker] - _tokens < stakedReputationBalances[_staker] &&  //check overflow /
+      stakedReputationBalances[_staker] > _tokens); //make sure _staker has the tokens staked to unstake
+    stakedReputationBalances[_staker] -= _tokens;
   }
 
   // =====================================================================
@@ -234,7 +239,7 @@ struct Validator {
 
   function addTaskHash(bytes32 _ipfsHash, address _address) public isStaker(_address) {
     require(projectState == State.Open || projectState == State.Dispute);
-    require(msg.sender == address(tokenHolderRegistry) ||  msg.sender == address(workerRegistry));
+    require(msg.sender == address(tokenRegistry) ||  msg.sender == address(reputationRegistry));
     if (projectState == State.Open) {
       if(openTaskHashSubmissions[_address] == 0) {    //first time submission for this particular address
         if(firstSubmission == 0) {                    //first hash submission at all?
@@ -267,7 +272,7 @@ struct Validator {
   }
 
   function calculateWeightOfAddress(address _address) internal view returns (uint256) {
-    return (stakedWorkerTokenBalances[_address] + stakedCapitalTokenBalances[_address]);
+    return (stakedReputationBalances[_address] + stakedTokenBalances[_address]);
   }
 
   // =====================================================================
@@ -285,7 +290,7 @@ struct Validator {
   }
 
   function submitHashList(bytes32[] _hashes) onlyInState(State.Active) public {
-    require(msg.sender == address(tokenHolderRegistry) ||  msg.sender == address(workerRegistry));
+    require(msg.sender == address(tokenRegistry) ||  msg.sender == address(reputationRegistry));
     if (disputeTopTaskHash != 0) {
       require(keccak256(_hashes) == disputeTopTaskHash);
     } else {
@@ -296,18 +301,18 @@ struct Validator {
 
   struct Reward {
     uint256 weiReward;
-    uint256 workerTokenReward;
+    uint256 reputationReward;
     address claimer;
   }
 
-  mapping(bytes32 => Reward) workerRewards;       //hash to worker rewards
+  mapping(bytes32 => Reward) taskRewards;       //hash to worker rewards
 
-  function claimTask(uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _tokenVal, address _address) public onlyWR() onlyInState(State.Active) {
+  function claimTask(uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _tokenVal, address _address) public onlyRR() onlyInState(State.Active) {
     require(taskList[_index] == keccak256(_taskDescription, _weiVal, _tokenVal));
-    require(workerRewards[taskList[_index]].claimer == 0);
-    workerRewards[taskList[_index]].claimer = _address;
-    workerRewards[taskList[_index]].weiReward = _weiVal;
-    workerRewards[taskList[_index]].workerTokenReward = _tokenVal;
+    require(taskRewards[taskList[_index]].claimer == 0);
+    taskRewards[taskList[_index]].claimer = _address;
+    taskRewards[taskList[_index]].weiReward = _weiVal;
+    taskRewards[taskList[_index]].workerTokenReward = _tokenVal;
   }
 
   // =====================================================================
@@ -318,7 +323,7 @@ struct Validator {
   function checkVoting() public onlyInState(State.Validating) returns (bool) {
     if(timesUp()) {
       projectState = State.Voting;
-      tokenHolderRegistry.startPoll(projectId, votingCommitPeriod, votingRevealPeriod);
+      tokenRegistry.startPoll(projectId, votingCommitPeriod, votingRevealPeriod);
       nextDeadline = now + votingCommitPeriod;
       return true;
     } else {
@@ -326,7 +331,7 @@ struct Validator {
     }
   }
 
-  function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTHR() onlyInState(State.Validating) {
+  function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTR() onlyInState(State.Validating) {
     //checks for free tokens done in THR
     //increments validation tokens in Project.sol only
     require(!checkVoting());
@@ -343,11 +348,11 @@ struct Validator {
   }
 
   function checkEnd() public onlyInState(State.Voting) returns (bool) {     //don't know where this gets called - maybe separate UI thing
-    if(!tokenHolderRegistry.pollEnded(projectId)) {
+    if(!tokenRegistry.pollEnded(projectId)) {
       return false;
     }
     else {
-      bool passed = tokenHolderRegistry.isPassed(projectId);
+      bool passed = tokenRegistry.isPassed(projectId);
       handleVoteResult(passed);
       if (passed) {
         projectState = State.Complete;
@@ -361,10 +366,10 @@ struct Validator {
 
   function handleVoteResult(bool passed) internal {
     if(!passed) {               //project fails
-      tokenHolderRegistry.burnTokens(projectId, totalCapitalTokensStaked);
-      WorkerRegistry(workerRegistry).burnTokens(projectId, totalWorkerTokensStaked);
-      totalCapitalTokensStaked = 0;
-      totalWorkerTokensStaked = 0;
+      tokenRegistry.burnTokens(projectId, totalTokensStaked);
+      WorkerRegistry(reputationRegistry).burnTokens(projectId, totalReputationStaked);
+      totalTokensStaked = 0;
+      totalReputationStaked = 0;
       validateReward = totalValidateAffirmative;
       if (validateReward == 0) {
         validateFlag = true;
@@ -385,13 +390,13 @@ struct Validator {
   // =====================================================================
 
   function refundStaker(address _staker) public returns (uint256 _refund) {  //called by THR or WR, allow return of staked, validated, and
-    require(msg.sender == address(tokenHolderRegistry) ||  msg.sender == address(workerRegistry));
+    require(msg.sender == address(tokenRegistry) ||  msg.sender == address(reputationRegistry));
     require(projectState == State.Complete || projectState == State.Failed);
     uint256 refund;     //tokens
-    if (msg.sender == address(tokenHolderRegistry)) {
-      if(totalCapitalTokensStaked != 0) {
-        refund = stakedCapitalTokenBalances[_staker];
-        stakedCapitalTokenBalances[_staker] = 0;
+    if (msg.sender == address(tokenRegistry)) {
+      if(totalTokensStaked != 0) {
+        refund = stakedTokenBalances[_staker];
+        stakedTokenBalances[_staker] = 0;
       }
       if(totalValidateNegative != 0 || totalValidateAffirmative != 0) {
         refund += validators[_staker].stake;
@@ -404,25 +409,25 @@ struct Validator {
         if (validateFlag == false) {
           refund += validateReward * validators[_staker].stake / denom;
         } else {
-          tokenHolderRegistry.rewardValidator(projectId, _staker, (weiCost * validators[_staker].stake / denom));
+          tokenRegistry.rewardValidator(projectId, _staker, (weiCost * validators[_staker].stake / denom));
         }
         validators[_staker].stake = 0;
       }
-    } else if (msg.sender == address(workerRegistry)) {
-      if(totalWorkerTokensStaked != 0) {
-        refund = stakedWorkerTokenBalances[_staker];
-        stakedWorkerTokenBalances[_staker] = 0;
+    } else if (msg.sender == address(reputationRegistry)) {
+      if(totalReputationStaked != 0) {
+        refund = stakedReputationBalances[_staker];
+        stakedReputationBalances[_staker] = 0;
       }
     }
     return refund;
   }
-  function rewardWorker(bytes32 _taskHash, address _address) public onlyWR() onlyInState(State.Complete) returns (uint256) {
-    require(workerRewards[_taskHash].claimer == _address);
-    uint256 weiTemp = workerRewards[_taskHash].weiReward;
-    uint256 tokenTemp = workerRewards[_taskHash].workerTokenReward;
-    workerRewards[_taskHash].claimer = 0;
-    workerRewards[_taskHash].weiReward = 0;
-    workerRewards[_taskHash].workerTokenReward = 0;
+  function claimTaskReward(bytes32 _taskHash, address _address) public onlyRR() onlyInState(State.Complete) returns (uint256) {
+    require(taskRewards[_taskHash].claimer == _address);
+    uint256 weiTemp = taskRewards[_taskHash].weiReward;
+    uint256 tokenTemp = taskRewards[_taskHash].workerTokenReward;
+    taskRewards[_taskHash].claimer = 0;
+    taskRewards[_taskHash].weiReward = 0;
+    taskRewards[_taskHash].workerTokenReward = 0;
     _address.transfer(weiTemp);
     return tokenTemp;
   }

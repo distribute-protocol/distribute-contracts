@@ -1,19 +1,18 @@
-const PLCRVoting = artifacts.require('PLCRVoting');
-const DLL = artifacts.require('DLL');
-const AttributeStore = artifacts.require('AttributeStore');
-const StandardToken = artifacts.require('StandardToken');
+const PLCRVoting = artifacts.require('library/PLCRVoting')
+const DLL = artifacts.require('library/DLL')
+const Token = artifacts.require('library/Token')
+const AttributeStore = artifacts.require('library/AttributeStore')
+const StandardToken = artifacts.require('library/StandardToken')
 /*
   deploys and connects contracts
 */
-
 module.exports = function(deployer) {
-
     // deploy libraries
-    deployer.deploy(DLL);
-    deployer.deploy(AttributeStore);
+    deployer.deploy(DLL)
+    deployer.deploy(AttributeStore)
+    deployer.deploy(Token)
+    deployer.deploy(StandardToken)
     // link libraries
-    deployer.link(DLL, PLCRVoting);
-    deployer.link(AttributeStore, PLCRVoting);
-
-    deployer.deploy(StandardToken);
-};
+    deployer.link(DLL, PLCRVoting)
+    deployer.link(AttributeStore, PLCRVoting)
+}
