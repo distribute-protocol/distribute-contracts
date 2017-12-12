@@ -6,7 +6,7 @@ import "./DistributeToken.sol";
 import "./library/PLCRVoting.sol";
 
 
-contract TokenHolderRegistry {
+contract TokenRegistry {
 
 // =====================================================================
 // STATE VARIABLES
@@ -28,7 +28,6 @@ contract TokenHolderRegistry {
 
   event LogMint(uint256 amountMinted, uint256 totalCost);
   event LogWithdraw(uint256 amountWithdrawn, uint256 reward);
-  event LogCostOfTokenUpdate(uint256 newCost);
   event LogProposal(uint256 nonce, uint256 proposalCostInTokens);
 
 // =====================================================================
@@ -41,7 +40,7 @@ contract TokenHolderRegistry {
   }*/
 
   modifier sentFromProject(uint256 _projectId) {
-      require(Project.getProjectAddress(_projectId) == msg.sender);
+      require(projectRegistry.getProjectAddress(_projectId) == msg.sender);
       _;
   }
 
@@ -53,7 +52,7 @@ contract TokenHolderRegistry {
   // QUASI-CONSTRUCTOR
   // =====================================================================
   function init(address _distributeToken, address _reputationRegistry, address _projectRegistry, address _plcrVoting) public {       //contract is created
-    require(address(distributeToken) && address(reputationRegistry) == 0 && address(projectRegistry) == 0 && address(plcrVoting) == 0);
+    require(address(distributeToken) == 0 && address(reputationRegistry) == 0 && address(projectRegistry) == 0 && address(plcrVoting) == 0);
     rrAddress = _reputationRegistry;
     dtAddress = _distributeToken;
     distributeToken = DistributeToken(_distributeToken);
@@ -72,13 +71,13 @@ contract TokenHolderRegistry {
     //check proposer has at least 5% of the proposed cost in tokens
     require(now < _stakingPeriod && _cost > 0);
     uint256 proposerTokenCost = (_cost / distributeToken.currentPrice()) / proposeProportion;           //divide by 20 to get 5 percent of tokens
-    uint256 costProportion = _cost / weiBal;
+    uint256 costProportion = _cost / distributeToken.weiBal();
     require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
     distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
 
     projectRegistry.incrementProjectNonce();
-    LogProposal(projectNonce, proposerTokenCost);                                                     //determine project id
-    Project newProject = new Project(projectNonce,
+    LogProposal(projectRegistry.projectNonce(), proposerTokenCost);                                                     //determine project id
+    Project newProject = new Project(projectRegistry.projectNonce(),
                                      _cost,
                                      _stakingPeriod,
                                      proposerTokenCost,
@@ -87,7 +86,7 @@ contract TokenHolderRegistry {
                                      dtAddress
                                      );
     address _projectAddress = address(newProject);
-    projectRegistry.setProject(projectNonce, _projectAddress);
+    projectRegistry.setProject(projectRegistry.projectNonce(), _projectAddress);
     projectRegistry.setProposer(_projectAddress, msg.sender, proposerTokenCost, _cost);
   }
   function refundProposer(uint256 _projectId) public {                                 //called by proposer to get refund once project is active
@@ -106,28 +105,25 @@ contract TokenHolderRegistry {
     require(projectRegistry.projectExists(_projectId));
     require(distributeToken.balanceOf(msg.sender) >= _tokens);   //make sure project exists & TH has tokens to stake
     uint256 weiVal = distributeToken.currentPrice() * _tokens;
-    distributeToken.transferToEscrow(msg.sender, _tokens);
-    distributeToken.transferWeiToProject(projectRegistry.getProjectAddress(_projectId), weiVal);
-    uint256 returnedTokens = Project(projectId[_projectId].projectAddress).stakeCapitalToken(_tokens, msg.sender, weiVal);
-    if (returnedTokens > 0) {
-      distributeToken.transferFromEscrow(msg.sender, returnedTokens);
-    }
+    address projectAddress = projectRegistry.getProjectAddress(_projectId);
+    distributeToken.transferWeiTo(projectAddress, weiVal);
+    uint256 returnedTokens = Project(projectAddress).stakeToken(_tokens, msg.sender, weiVal);
+    distributeToken.transferToEscrow(msg.sender, _tokens - returnedTokens);
   }
 
-  function unstakeToken(uint256 _projectId, uint256 _tokens) public projectExists(_projectId) {
-    balances[msg.sender] += _tokens;
-    totalFreeCapitalTokenSupply += _tokens;
-    uint256 weiRefund = Project(projectRegistry.getProjectAddress(_projectId)).unstakeCapitalToken(_tokens, dtAddress);
-    DistributeToken(dtAddress).transfer(
-    /*distributeToken*/
+  function unstakeToken(uint256 _projectId, uint256 _tokens) public {
+    require(projectRegistry.projectExists(_projectId));
+    distributeToken.transferFromEscrow(msg.sender, _tokens);
+    Project(projectRegistry.getProjectAddress(_projectId)).unstakeToken(_tokens, dtAddress);
   }
 
   // =====================================================================
   // OPEN/DISPUTE PROJECT
   // =====================================================================
 
-  function submitTaskHash(uint256 _projectId, bytes32 _taskHash) public projectExists(_projectId) {
-    Project(projectId[_projectId].projectAddress).addTaskHash(_taskHash, msg.sender);
+  function submitTaskHash(uint256 _projectId, bytes32 _taskHash) public {
+    require(projectRegistry.projectExists(_projectId));
+    Project(projectRegistry.getProjectAddress(_projectId)).addTaskHash(_taskHash, msg.sender);
   }
 
   // =====================================================================
@@ -135,47 +131,45 @@ contract TokenHolderRegistry {
   // =====================================================================
 
   function submitHashList(uint256 _projectId, bytes32[] _hashes) public {
-    Project(projectId[_projectId].projectAddress).submitHashList(_hashes);
+    Project(projectRegistry.getProjectAddress(_projectId)).submitHashList(_hashes);
   }
 
   // =====================================================================
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
   // =====================================================================
 
-  function validate(uint256 _projectId, uint256 _tokens, bool _validationState) public projectExists(_projectId) {
-    require(balances[msg.sender] >= _tokens);
-    balances[msg.sender] -= _tokens;
-    totalFreeCapitalTokenSupply -= _tokens;
-    Project(projectId[_projectId].projectAddress).validate(msg.sender, _tokens, _validationState);
+  function validate(uint256 _projectId, uint256 _tokens, bool _validationState) public {
+    require(projectRegistry.projectExists(_projectId));
+    require(distributeToken.balanceOf(msg.sender) >= _tokens);
+    distributeToken.transferToEscrow(msg.sender, _tokens);
+    Project(projectRegistry.getProjectAddress(_projectId)).validate(msg.sender, _tokens, _validationState);
   }
 
-  function startPoll(uint256 _projectId, uint256 _commitDuration, uint256 _revealDuration) public isProject(_projectId) {       //can only be called by project in question
-      projectId[_projectId].votingPollId = plcrVoting.startPoll(50, _commitDuration, _revealDuration);
+  function startPoll(uint256 _projectId, uint256 _commitDuration, uint256 _revealDuration) public sentFromProject(_projectId) {       //can only be called by project in question
+      projectRegistry.setPollId(_projectId, plcrVoting.startPoll(50, _commitDuration, _revealDuration));
     }
 
-  function voteCommit(uint256 _projectId, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) public projectExists(_projectId) {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
-
-    uint256 pollId = projectId[_projectId].votingPollId;
+  function voteCommit(uint256 _projectId, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+    require(projectRegistry.projectExists(_projectId));
+    uint256 pollId = projectRegistry.getPollId(_projectId);
     //calculate available tokens for voting
-    uint256 availableTokens = plcrVoting.voteTokenBalanceTH(msg.sender) - plcrVoting.getLockedTokens(msg.sender);
+    uint256 availableTokens = plcrVoting.voteTokenBalance(msg.sender) - plcrVoting.getLockedTokens(msg.sender);
     //make sure msg.sender has tokens available in PLCR contract
     //if not, request voting rights for token holder
     if (availableTokens < _tokens) {
-      require(balances[msg.sender] >= _tokens - availableTokens);
-      balances[msg.sender] -= _tokens;
-      totalFreeCapitalTokenSupply -= _tokens;
+      require(distributeToken.balanceOf(msg.sender) >= _tokens - availableTokens);
+      distributeToken.transferToEscrow(msg.sender, _tokens);
       plcrVoting.requestVotingRights(msg.sender, _tokens - availableTokens);
     }
     plcrVoting.commitVote(msg.sender, pollId, _secretHash, _tokens, _prevPollID);
   }
 
   function voteReveal(uint256 _projectId, uint256 _voteOption, uint _salt) public {
-    plcrVoting.revealVote(projectId[_projectId].votingPollId, _voteOption, _salt);
+    plcrVoting.revealVote(projectRegistry.getPollId(_projectId), _voteOption, _salt);
   }
 
   function refundVotingTokens(uint256 _tokens) public {
-    balances[msg.sender] += _tokens;
-    totalFreeCapitalTokenSupply += _tokens;
+    distributeToken.transferFromEscrow(msg.sender, _tokens);
     plcrVoting.withdrawVotingRights(msg.sender, _tokens);
   }
 
@@ -183,28 +177,27 @@ contract TokenHolderRegistry {
   // FAILED / VALIDATED PROJECT
   // =====================================================================
 
-  function pollEnded(uint256 _projectId) public isProject(_projectId) view returns (bool) {
-    return plcrVoting.pollEnded(projectId[_projectId].votingPollId);
+  function pollEnded(uint256 _projectId) public sentFromProject(_projectId) view returns (bool) {
+    return plcrVoting.pollEnded(projectRegistry.getPollId(_projectId));
   }
 
-  function isPassed(uint256 _projectId) public isProject(_projectId) view returns (bool) {
-    return plcrVoting.isPassed(projectId[_projectId].votingPollId);
+  function isPassed(uint256 _projectId) public sentFromProject(_projectId) view returns (bool) {
+    return plcrVoting.isPassed(projectRegistry.getPollId(_projectId));
   }
-  function burnTokens(uint256 _projectId, uint256 _tokens) public isProject(_projectId) {                            //check that valid project is calling this function
-    totalCapitalTokenSupply -= _tokens;
+  function burnTokens(uint256 _projectId, uint256 _tokens) public sentFromProject(_projectId) {                            //check that valid project is calling this function
+    distributeToken.burnTokens(_tokens);
   }
 
   function refundStaker(uint256 _projectId) public {
-    uint256 refund = Project(projectId[_projectId].projectAddress).refundStaker(msg.sender);
-    totalFreeCapitalTokenSupply += refund;
-    balances[msg.sender] += refund;
+    uint256 refund = Project(projectRegistry.getProjectAddress(_projectId)).refundStaker(msg.sender);
+    distributeToken.transferFromEscrow(msg.sender, refund);
     //rescue locked tokens that weren't revealed
-    uint256 pollId = projectId[_projectId].votingPollId;
+    uint256 pollId = projectRegistry.getPollId(_projectId);
     plcrVoting.rescueTokens(msg.sender, pollId);
   }
 
-  function rewardValidator(uint256 _projectId, address _validator, uint256 _reward) public isProject(_projectId) {
-    _validator.transfer(_reward);
+  function rewardValidator(uint256 _projectId, address _validator, uint256 _reward) public sentFromProject(_projectId) {
+    distributeToken.transferWeiTo(_validator, _reward);
   }
 
   function() public payable {

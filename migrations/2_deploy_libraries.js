@@ -10,7 +10,7 @@ module.exports = function(deployer) {
     // deploy libraries
     deployer.deploy(DLL)
     deployer.deploy(AttributeStore)
-    deployer.deploy(Token)
+    // deployer.deploy(Token)
     deployer.deploy(StandardToken)
     // link libraries
     deployer.link(DLL, PLCRVoting)

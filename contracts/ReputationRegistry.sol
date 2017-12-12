@@ -2,7 +2,6 @@ pragma solidity ^0.4.10;
 
 //import files
 import "./Project.sol";
-import "./TokenRegistry.sol";
 import "./ProjectRegistry.sol";
 import "./library/PLCRVoting.sol";
 
@@ -19,7 +18,6 @@ contract ReputationRegistry{
 // STATE VARIABLES
 // =====================================================================
 
-  TokenRegistry tokenRegistry;
   ProjectRegistry projectRegistry;
   PLCRVoting plcrVoting;
 
@@ -40,9 +38,8 @@ contract ReputationRegistry{
   // CONSTRUCTOR
   // =====================================================================
 
-  function init(address _tokenRegistry, address _projectRegistry, address _plcrVoting) public {
-      require(address(tokenRegistry) == 0 && address(projectRegistry) == 0 && address(plcrVoting) == 0);
-      tokenRegistry = TokenRegistry(_tokenRegistry);
+  function init(address _projectRegistry, address _plcrVoting) public {
+      require(address(projectRegistry) == 0 && address(plcrVoting) == 0);
       projectRegistry = ProjectRegistry(_projectRegistry);
       plcrVoting = PLCRVoting(_plcrVoting);
   }
@@ -87,7 +84,7 @@ contract ReputationRegistry{
   }
 
   function claimTask(uint256 _projectId, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _repVal) public {
-    require(balances[msg.sender] >= _tokenVal);
+    require(balances[msg.sender] >= _repVal);
     address _projectAddress = projectRegistry.getProjectAddress(_projectId);
     balances[msg.sender] -= _repVal;
     Project(_projectAddress).claimTask(_index, _taskDescription, _weiVal, _repVal, msg.sender);
@@ -100,9 +97,9 @@ contract ReputationRegistry{
   function voteCommit(uint256 _projectId, uint256 _reputation, bytes32 _secretHash, uint256 _prevPollID) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
     require(balances[msg.sender] > 1);      //worker can't vote with only 1 token
     uint256 pollId = projectRegistry.getPollId(_projectId);
-    uint256 nonce = tokenRegistry.projectNonce();
+    uint256 nonce = projectRegistry.projectNonce();
     //calculate available tokens for voting
-    uint256 availableTokens = plcrVoting.voteTokenBalanceW(msg.sender) - plcrVoting.getLockedTokens(msg.sender);
+    uint256 availableTokens = plcrVoting.voteReputationBalance(msg.sender) - plcrVoting.getLockedTokens(msg.sender);
     //make sure msg.sender has tokens available in PLCR contract
     //if not, request voting rights for token holder
     if (availableTokens < _reputation) {

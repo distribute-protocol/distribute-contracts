@@ -1,10 +1,8 @@
-const TokenRegistry = artifacts.require('TokenRegistry');
-const ReputationRegistry = artifacts.require('ReputationRegistry');
-const ProjectRegistry = artifacts.require('ProjectRegistry');
-const PLCRVoting = artifacts.require('PLCRVoting');
-const DLL = artifacts.require('DLL');
-const AttributeStore = artifacts.require('AttributeStore');
-const DistributeToken = artifacts.require('DistributeToken');
+const TokenRegistry = artifacts.require('TokenRegistry')
+const ReputationRegistry = artifacts.require('ReputationRegistry')
+const ProjectRegistry = artifacts.require('ProjectRegistry')
+const PLCRVoting = artifacts.require('PLCRVoting')
+const DistributeToken = artifacts.require('DistributeToken')
 /*
   deploys and connects contracts
 */
@@ -23,10 +21,10 @@ module.exports = function (deployer) {
   }).then(function () {
     return TokenRegistry.deployed()
   }).then(function (instance) {
-    return instance.init(DistributeToken.address, ReputationRegistry.address, ProjectRegistry, PLCRVoting.address)
+    return instance.init(DistributeToken.address, ReputationRegistry.address, ProjectRegistry.address, PLCRVoting.address)
   }).then(function () {
     return ReputationRegistry.deployed()
   }).then(function (instance) {
-    return instance.init(TokenRegistry.address, PLCRVoting.address)
+    return instance.init(ProjectRegistry.address, PLCRVoting.address)
   })
 }

@@ -1,5 +1,8 @@
 pragma solidity ^0.4.8;
 
+import "./library/StandardToken.sol";
+import "./TokenRegistry.sol";
+
 contract DistributeToken is StandardToken {
   TokenRegistry tokenRegistry;
   /*address trAddress;*/
@@ -21,6 +24,12 @@ contract DistributeToken is StandardToken {
    require(address(tokenRegistry) == 0);
    tokenRegistry = TokenRegistry(_tokenRegistry);
  }
+ // =====================================================================
+ // EVENTS
+ // =====================================================================
+
+   event LogMint(uint256 amountMinted, uint256 totalCost);
+   event LogWithdraw(uint256 amountWithdrawn, uint256 reward);
 
  // =====================================================================
  // MODIFIERS
@@ -31,12 +40,12 @@ contract DistributeToken is StandardToken {
    _;
  }
 
- function transferWeiToProject(address _projectAddress, uint256 _weiVal) public onlyTR() returns (bool) {
+ function transferWeiTo(address _address, uint256 _weiVal) public onlyTR() returns (bool) {
    weiBal -= _weiVal;
-   Project(_projectAddress).transfer(_weiVal);
+   _address.transfer(_weiVal);
    return true;
  }
- function transferWeiFromProject() onlyTR() public payable returns (bool) {
+ function transferWeiFrom() public payable returns (bool) {
    weiBal += msg.value;
    return true;
  }
@@ -117,7 +126,12 @@ contract DistributeToken is StandardToken {
     return cp * (1000 + percent(_tokens, newSupply, 3)) / 1000;
   }
 
-  function burnAndRefund(uint256 _amountToBurn) public {      //free tokens only
+  function burnTokens(uint256 _amountToBurn) public onlyTR() returns (bool) {
+    totalSupply -= _amountToBurn;
+    return true;
+  }
+
+  function burnAndRefundTokens(uint256 _amountToBurn) public {      //free tokens only
       require(_amountToBurn > 0 && (balances[msg.sender]) >= _amountToBurn);
       //determine how much you can leave with.
       uint256 reward = _amountToBurn * currentPrice();    //truncation - remainder discarded
@@ -129,7 +143,7 @@ contract DistributeToken is StandardToken {
       msg.sender.transfer(reward);
   }
 
-  function currentPrice() internal view returns (uint256) {
+  function currentPrice() public view returns (uint256) {
     //calculated current burn reward of 1 token at current weiBal and free token supply
     if (totalFreeSupply == 0) {
       return baseCost;

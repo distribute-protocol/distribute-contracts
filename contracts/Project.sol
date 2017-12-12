@@ -129,6 +129,7 @@ contract Project {
     //all checks done in THR first
     tokenRegistry = TokenRegistry(msg.sender);     //the token holder registry calls this function
     reputationRegistry = ReputationRegistry(_rr);
+    distributeToken = DistributeToken(_dt);
     projectId = _id;
     weiCost = _cost;
     stakingPeriod = now + _stakingPeriod;
@@ -136,7 +137,7 @@ contract Project {
     proposerTokenStake = _proposerTokenStake;
     totalTokensStaked = 0;
     totalReputationStaked = 0;
-    workerTokenCost = _costProportion * reputationRegistry.totalFreeWorkerTokenSupply();
+    reputationCost = _costProportion * reputationRegistry.totalFreeReputationSupply();
   }
 
   // =====================================================================
@@ -159,7 +160,7 @@ contract Project {
   }
 
   function isStaked() internal view returns (bool) {
-    return (weiCost >= totalWeiStaked && workerTokenCost >= totalReputationStaked);
+    return (weiCost >= totalWeiStaked && reputationCost >= totalReputationStaked);
   }
 
   function checkOpen() onlyInState(State.Proposed) internal returns (bool) {
@@ -186,7 +187,7 @@ contract Project {
     } else {
       uint256 weiOver = totalWeiStaked + _weiVal - weiCost;
       tokensOver = (weiOver / _weiVal) * _tokens;
-      tokenRegistry.transfer(weiOver);
+      distributeToken.transfer(weiOver);
       stakedTokenBalances[_staker] += _tokens - tokensOver;
       totalTokensStaked += _tokens - tokensOver;
       totalWeiStaked += _weiVal - weiOver;
@@ -200,11 +201,11 @@ contract Project {
          stakedTokenBalances[_staker] > _tokens);   //make sure _staker has the tokens staked to unstake
     stakedTokenBalances[_staker] -= _tokens;
     totalTokensStaked -= _tokens;
-    return (_tokens / totalTokensStaked) * weiCost;
+    distributeToken.transfer((_tokens / totalTokensStaked) * weiCost);
   }
 
   function stakeReputation(uint256 _tokens, address _staker) public onlyRR() onlyInState(State.Proposed) {
-    // require(workerTokenCost > totalReputationStaked); I don't think this can be reached, because it would move to Open after
+    // require(reputationCost > totalReputationStaked); I don't think this can be reached, because it would move to Open after
     /*require(stakedReputationBalances[_staker] + _tokens > stakedReputationBalances[_staker]);*/
     require(_tokens > 0);
     stakedReputationBalances[_staker] += _tokens;
@@ -312,7 +313,7 @@ contract Project {
     require(taskRewards[taskList[_index]].claimer == 0);
     taskRewards[taskList[_index]].claimer = _address;
     taskRewards[taskList[_index]].weiReward = _weiVal;
-    taskRewards[taskList[_index]].workerTokenReward = _tokenVal;
+    taskRewards[taskList[_index]].reputationReward = _tokenVal;
   }
 
   // =====================================================================
@@ -367,7 +368,7 @@ contract Project {
   function handleVoteResult(bool passed) internal {
     if(!passed) {               //project fails
       tokenRegistry.burnTokens(projectId, totalTokensStaked);
-      WorkerRegistry(reputationRegistry).burnTokens(projectId, totalReputationStaked);
+      reputationRegistry.burnReputation(projectId, totalReputationStaked);
       totalTokensStaked = 0;
       totalReputationStaked = 0;
       validateReward = totalValidateAffirmative;
@@ -424,10 +425,10 @@ contract Project {
   function claimTaskReward(bytes32 _taskHash, address _address) public onlyRR() onlyInState(State.Complete) returns (uint256) {
     require(taskRewards[_taskHash].claimer == _address);
     uint256 weiTemp = taskRewards[_taskHash].weiReward;
-    uint256 tokenTemp = taskRewards[_taskHash].workerTokenReward;
+    uint256 tokenTemp = taskRewards[_taskHash].reputationReward;
     taskRewards[_taskHash].claimer = 0;
     taskRewards[_taskHash].weiReward = 0;
-    taskRewards[_taskHash].workerTokenReward = 0;
+    taskRewards[_taskHash].reputationReward = 0;
     _address.transfer(weiTemp);
     return tokenTemp;
   }

@@ -1,6 +1,8 @@
 pragma solidity ^0.4.8;
 
 import "./Project.sol";
+import "./TokenRegistry.sol";
+import "./ReputationRegistry.sol";
 
 contract ProjectRegistry {
   TokenRegistry tokenRegistry;
@@ -50,7 +52,7 @@ contract ProjectRegistry {
       _;
   }*/
 
-  function projectExists(uint256 _projectId) public returns (bool) {
+  function projectExists(uint256 _projectId) public view returns (bool) {
     return _projectId <= projectNonce && _projectId > 0;
   }
 
@@ -66,24 +68,29 @@ contract ProjectRegistry {
     return proposers[_projectAddress].proposer;
   }
 
-  function getPollId(uint256 _id) public view onlyRR() returns (uint256) {
+  function getPollId(uint256 _id) public view returns (uint256) {
     require(_id <= projectNonce && _id > 0);
     return projectId[_id].votingPollId;
   }
 
+  function setPollId(uint256 _projectId, uint256 _pollID) public returns (bool) {
+    Projects storage project = projectId[_projectId];
+    project.votingPollId = _pollID;
+    return true;
+  }
   function setProject(uint256 _projectNonce, address _projectAddress) public onlyTR() returns (bool) {
-    Projects project = projectId[_projectNonce];
+    Projects storage project = projectId[_projectNonce];
     project.projectAddress = _projectAddress;
     return true;
   }
   function incrementProjectNonce() public onlyTR() returns (bool) {
     projectNonce += 1;
-    return true
+    return true;
   }
 
 
   function setProposer(address _projectAddress, address _proposer, uint256 _proposerStake, uint256 _cost) public onlyTR() returns (bool) {
-    Proposer proposer = proposers[_projectAddress];
+    Proposer storage proposer = proposers[_projectAddress];
     proposer.proposer = _proposer;
     proposer.proposerStake = _proposerStake;
     proposer.projectCost = _cost;
