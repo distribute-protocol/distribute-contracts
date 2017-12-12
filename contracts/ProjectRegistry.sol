@@ -3,10 +3,12 @@ pragma solidity ^0.4.8;
 import "./Project.sol";
 import "./TokenRegistry.sol";
 import "./ReputationRegistry.sol";
+import "./library/PLCRVoting.sol";
 
 contract ProjectRegistry {
   TokenRegistry tokenRegistry;
   ReputationRegistry reputationRegistry;
+  PLCRVoting plcrVoting;
   address rrAddress;
   address dtAddress;
   address trAddress;
@@ -16,7 +18,6 @@ contract ProjectRegistry {
 
   uint256 public projectNonce = 0;                          //no projects in existence when contract initialized
   mapping(uint256 => Projects) public projectId;                    //projectId to project address
-
 
 
   struct Projects {
@@ -69,10 +70,11 @@ contract ProjectRegistry {
 
   /*mapping(address => Proposer) proposers;                   //project -> Proposer*/
 
-  function ProjectRegistry(address _tokenRegistry, address _reputationRegistry, address _distributeToken) public {       //contract is created
+  function ProjectRegistry(address _tokenRegistry, address _reputationRegistry, address _distributeToken, address _plcrVoting) public {       //contract is created
     require(address(tokenRegistry) == 0 && address(reputationRegistry) == 0);
     tokenRegistry = TokenRegistry(_tokenRegistry);
     reputationRegistry = ReputationRegistry(_reputationRegistry);
+    plcrVoting = PLCRVoting(_plcrVoting);
     trAddress = _tokenRegistry;
     dtAddress = _distributeToken;
     rrAddress = _reputationRegistry;
@@ -116,31 +118,43 @@ contract ProjectRegistry {
     return proposedProjects[_projectAddress].proposer;
   }
 
+  function startPoll(uint256 _projectId, uint256 _commitDuration, uint256 _revealDuration) public {       //can only be called by project in question
+    setPollId(_projectId, plcrVoting.startPoll(50, _commitDuration, _revealDuration));
+  }
+
   function getPollId(uint256 _id) public view returns (uint256) {
     require(_id <= projectNonce && _id > 0);
     return projectId[_id].votingPollId;
   }
 
-  function setPollId(uint256 _projectId, uint256 _pollID) public returns (bool) {
+  function setPollId(uint256 _projectId, uint256 _pollID) public {
     Projects storage project = projectId[_projectId];
     project.votingPollId = _pollID;
-    return true;
   }
-  function setProject(uint256 _projectNonce, address _projectAddress) public onlyTR() returns (bool) {
+
+  function setProject(uint256 _projectNonce, address _projectAddress) public onlyTR() {
     Projects storage project = projectId[_projectNonce];
     project.projectAddress = _projectAddress;
-    return true;
   }
-  function incrementProjectNonce() public onlyTR() returns (bool) {
+  function incrementProjectNonce() public onlyTR() {
     projectNonce += 1;
-    return true;
   }
+  function pollEnded(uint256 _projectId) public view returns (bool) {
+    return plcrVoting.pollEnded(getPollId(_projectId));
+  }
+
+  function isPassed(uint256 _projectId) public {
+    bool passed = plcrVoting.isPassed(getPollId(_projectId));
+    Project(projectId[_projectId].projectAddress).rewardValidator(passed);
+    //set to complete or failed
+  }
+
 
   // =====================================================================
   // PROPOSER FUNCTIONS
   // =====================================================================
 
-  function createProject(uint256 _cost, uint256 _costProportion, uint _numTokens) {
+  function createProject(uint256 _cost, uint256 _costProportion, uint _numTokens) public {
 
     Project newProject = new Project(_cost,
                                      _costProportion,

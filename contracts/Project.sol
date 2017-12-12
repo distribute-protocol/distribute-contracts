@@ -116,6 +116,28 @@ contract Project {
       }
     }
   }
+
+  function rewardValidator(bool isPassed) public onlyPR() {
+  if(!isPassed) {               //project fails
+    tokenRegistry.burnTokens(totalTokensStaked);
+    reputationRegistry.burnReputation(totalReputationStaked);
+    totalTokensStaked = 0;
+    totalReputationStaked = 0;
+    validateReward = totalValidateAffirmative;
+    if (validateReward == 0) {
+      validateFlag = true;
+    }
+    totalValidateAffirmative = 0;
+  }
+  else {                                              //project succeeds
+    validateReward = totalValidateNegative;
+    if (validateReward == 0) {
+      validateFlag = true;
+    }
+    totalValidateNegative = 0;
+  }
+}
+
   function refundStaker(address _staker) public returns (uint256 _refund) {  //called by THR or WR, allow return of staked, validated, and
     /*require(msg.sender == address(tokenRegistry) ||  msg.sender == address(reputationRegistry));*/
     require(state == 7|| state == 9);
@@ -136,7 +158,7 @@ contract Project {
         if (validateFlag == false) {
           refund += validateReward * validators[_staker].stake / denom;
         } else {
-          tokenRegistry.rewardValidator(_staker, (weiCost * validators[_staker].stake / denom));
+          /*tokenRegistry.rewardValidator(_staker, (weiCost * validators[_staker].stake / denom));*/
         }
         validators[_staker].stake = 0;
       }
