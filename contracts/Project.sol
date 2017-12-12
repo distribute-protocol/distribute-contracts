@@ -177,7 +177,7 @@ contract Project {
     }
   }
 
-  function stakeToken(uint256 _tokens, address _staker, uint256 _weiVal) public onlyTR() onlyInState(State.Proposed) returns (uint256) {  //called by THR, increments _staker tokens in Project.sol
+  function stakeTokens(uint256 _tokens, address _staker, uint256 _weiVal) public onlyTR() onlyInState(State.Proposed) returns (uint256) {  //called by THR, increments _staker tokens in Project.sol
     uint256 tokensOver = 0;
     /*require(weiCost > totalWeiStaked);*/
     if (weiCost >= _weiVal + totalWeiStaked) {
@@ -196,7 +196,7 @@ contract Project {
     return tokensOver;
   }
 
-  function unstakeToken(uint256 _tokens, address _staker) public onlyTR() onlyInState(State.Proposed) returns (uint256) {    //called by THR only, decrements _staker tokens in Project.sol
+  function unstakeTokens(uint256 _tokens, address _staker) public onlyTR() onlyInState(State.Proposed) returns (uint256) {    //called by THR only, decrements _staker tokens in Project.sol
     require(stakedTokenBalances[_staker] - _tokens < stakedTokenBalances[_staker] &&   //check overflow
          stakedTokenBalances[_staker] > _tokens);   //make sure _staker has the tokens staked to unstake
     stakedTokenBalances[_staker] -= _tokens;

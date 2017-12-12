@@ -26,8 +26,6 @@ contract TokenRegistry {
 // EVENTS
 // =====================================================================
 
-  event LogMint(uint256 amountMinted, uint256 totalCost);
-  event LogWithdraw(uint256 amountWithdrawn, uint256 reward);
   event LogProposal(uint256 nonce, uint256 proposalCostInTokens);
 
 // =====================================================================
@@ -101,20 +99,20 @@ contract TokenRegistry {
   // PROPOSED PROJECT - STAKING FUNCTIONALITYå
   // =====================================================================
 
-  function stakeToken(uint256 _projectId, uint256 _tokens) public {
+  function stakeTokens(uint256 _projectId, uint256 _tokens) public {
     require(projectRegistry.projectExists(_projectId));
     require(distributeToken.balanceOf(msg.sender) >= _tokens);   //make sure project exists & TH has tokens to stake
     uint256 weiVal = distributeToken.currentPrice() * _tokens;
     address projectAddress = projectRegistry.getProjectAddress(_projectId);
     distributeToken.transferWeiTo(projectAddress, weiVal);
-    uint256 returnedTokens = Project(projectAddress).stakeToken(_tokens, msg.sender, weiVal);
+    uint256 returnedTokens = Project(projectAddress).stakeTokens(_tokens, msg.sender, weiVal);
     distributeToken.transferToEscrow(msg.sender, _tokens - returnedTokens);
   }
 
-  function unstakeToken(uint256 _projectId, uint256 _tokens) public {
+  function unstakeTokens(uint256 _projectId, uint256 _tokens) public {
     require(projectRegistry.projectExists(_projectId));
     distributeToken.transferFromEscrow(msg.sender, _tokens);
-    Project(projectRegistry.getProjectAddress(_projectId)).unstakeToken(_tokens, dtAddress);
+    Project(projectRegistry.getProjectAddress(_projectId)).unstakeTokens(_tokens, dtAddress);
   }
 
   // =====================================================================

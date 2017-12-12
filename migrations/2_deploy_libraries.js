@@ -1,6 +1,5 @@
 const PLCRVoting = artifacts.require('library/PLCRVoting')
 const DLL = artifacts.require('library/DLL')
-const Token = artifacts.require('library/Token')
 const AttributeStore = artifacts.require('library/AttributeStore')
 const StandardToken = artifacts.require('library/StandardToken')
 /*

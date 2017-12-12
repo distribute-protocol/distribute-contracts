@@ -1,16 +1,28 @@
-const TokenHolderRegistry = artifacts.require("./TokenHolderRegistry.sol");
-const WorkerRegistry = artifacts.require("./WorkerRegistry.sol");
-const Project = artifacts.require("./Project.sol");
+const TokenRegistry = artifacts.require('./TokenRegistry.sol')
+const ReputationRegistry = artifacts.require('./ReputationRegistry.sol')
+const ProjectRegistry = artifacts.require('./ProjectRegistry.sol')
+const DistributeToken = artifacts.require('./DistributeToken.sol')
+const Project = artifacts.require('./Project.sol')
 
-module.exports = function() {
-
+module.exports = function () {
     // returns deployed TokenHolderRegistry
-    this.getTHR = function() {
-      return TokenHolderRegistry.deployed();
-    }
-
+  this.getTR = function () {
+    return TokenRegistry.deployed()
+  }
     // returns deployed WorkerRegistry
-    this.getWR = function() {
-      return WorkerRegistry.deployed();
-    }
+  this.getRR = function () {
+    return ReputationRegistry.deployed()
+  }
+
+  this.getPR = function () {
+    return ProjectRegistry.deployed()
+  }
+
+  this.getDT = function () {
+    return DistributeToken.deployed()
+  }
+
+  this.project = function () {
+    return Project.deployed()
+  }
 }

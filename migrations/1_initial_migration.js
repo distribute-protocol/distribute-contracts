@@ -1,5 +1,5 @@
-var Migrations = artifacts.require("./Migrations");
+var Migrations = artifacts.require("./library/Migrations");
 
 module.exports = function(deployer) {
-  deployer.deploy(Migrations);
+  deployer.deploy(Migrations, {gas: 6000000});
 };
