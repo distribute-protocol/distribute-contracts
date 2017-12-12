@@ -7,27 +7,75 @@ import "./ReputationRegistry.sol";
 contract ProjectRegistry {
   TokenRegistry tokenRegistry;
   ReputationRegistry reputationRegistry;
+  address rrAddress;
+  address dtAddress;
+  address trAddress;
+
+  uint256 workCompletingPeriod = 1 weeks;
+
 
   uint256 public projectNonce = 0;                          //no projects in existence when contract initialized
   mapping(uint256 => Projects) public projectId;                    //projectId to project address
+
+
 
   struct Projects {
     address projectAddress;
     uint256 votingPollId;             //for voting
   }
 
-  struct Proposer {
+  struct ProposedState {
     address proposer;         //who is the proposer
     uint256 proposerStake;    //how much did they stake in tokens
-    uint256 projectCost;      //cost of the project in ETH/tokens?
+    uint256 cost;      //cost of the project in ETH/tokens?
+    uint256 stakingPeriod;
+  }
+  struct OpenState {
+    //open
+    address firstSubmitter;
+    bytes32 firstSubmission;                                 //used to determine if dispute period needs to happen
+    uint256 numTotalSubmissions;
+    mapping(address => bytes32) openTaskHashSubmissions;
+    mapping(bytes32 => uint256) numSubmissions;
   }
 
-  mapping(address => Proposer) proposers;                   //project -> Proposer
+  uint256 taskDiscussionPeriod = 1 weeks;
+  uint256 disputePeriod = 1 weeks;
 
-  function ProjectRegistry(address _tokenRegistry, address _reputationRegistry) public {       //contract is created
+
+  struct DisputeState {
+    bytes32 disputeTopTaskHash;
+    mapping(address => bytes32) disputeTaskHashSubmissions;
+    mapping(bytes32 => uint256) numSubmissionsByWeight;
+  }
+
+  struct ActiveState {
+    bytes32[] taskList;
+  }
+
+  struct Validation {
+    uint256 validateReward;
+    bool validateFlag;
+  }
+
+  uint256 validationPeriod = 1 weeks;
+  uint256 votingCommitPeriod = 1 weeks;
+  uint256 votingRevealPeriod = 1 weeks;
+
+  mapping (address => ProposedState) proposedProjects;
+  mapping (address => OpenState) openProjects;
+  mapping (address => DisputeState) disputedProjects;
+
+
+  /*mapping(address => Proposer) proposers;                   //project -> Proposer*/
+
+  function ProjectRegistry(address _tokenRegistry, address _reputationRegistry, address _distributeToken) public {       //contract is created
     require(address(tokenRegistry) == 0 && address(reputationRegistry) == 0);
     tokenRegistry = TokenRegistry(_tokenRegistry);
     reputationRegistry = ReputationRegistry(_reputationRegistry);
+    trAddress = _tokenRegistry;
+    dtAddress = _distributeToken;
+    rrAddress = _reputationRegistry;
     //updateMintingPrice(0);
   }
   // =====================================================================
@@ -65,7 +113,7 @@ contract ProjectRegistry {
     return projectId[_id].projectAddress;
   }
   function getProposerAddress(address _projectAddress) public view returns (address) {
-    return proposers[_projectAddress].proposer;
+    return proposedProjects[_projectAddress].proposer;
   }
 
   function getPollId(uint256 _id) public view returns (uint256) {
@@ -88,12 +136,40 @@ contract ProjectRegistry {
     return true;
   }
 
+  // =====================================================================
+  // PROPOSER FUNCTIONS
+  // =====================================================================
 
-  function setProposer(address _projectAddress, address _proposer, uint256 _proposerStake, uint256 _cost) public onlyTR() returns (bool) {
-    Proposer storage proposer = proposers[_projectAddress];
-    proposer.proposer = _proposer;
-    proposer.proposerStake = _proposerStake;
-    proposer.projectCost = _cost;
-    return true;
+  function createProject(uint256 _cost, uint256 _costProportion, uint _numTokens) {
+
+    Project newProject = new Project(_cost,
+                                     _costProportion,
+                                     rrAddress,
+                                     trAddress,
+                                     dtAddress
+                                     );
+   address _projectAddress = address(newProject);
+   /*proposerTokenCost*/
+   incrementProjectNonce();
+   setProject(projectNonce, _projectAddress);
+   setProposer(_projectAddress, msg.sender, _numTokens, _cost);
+  }
+
+  function setProposer(address _projectAddress, address _proposer, uint256 _proposerStake, uint256 _cost) public onlyTR() {
+    // Proposer storage proposer = proposers[_projectAddress];
+    proposedProjects[_projectAddress].proposer = _proposer;
+    proposedProjects[_projectAddress].proposerStake = _proposerStake;
+    proposedProjects[_projectAddress].cost = _cost;
+  }
+
+  function refundProposer(address _projectAddress) public onlyTR() returns (uint256[2]) {
+    require(now > proposedProjects[_projectAddress].stakingPeriod);
+    uint256[2] storage returnValues;
+    uint256 proposerStake = proposedProjects[_projectAddress].proposerStake;
+    require(proposerStake > 0);
+    returnValues[0] = proposedProjects[_projectAddress].cost;
+    returnValues[1] = proposerStake;
+    proposedProjects[_projectAddress].proposerStake = 0;
+    return returnValues;
   }
 }

@@ -59,19 +59,19 @@ contract ReputationRegistry{
     require(balances[msg.sender] >= _reputation);   //make sure project exists & TH has tokens to stake
     balances[msg.sender] -= _reputation;
     totalFreeReputationSupply -= _reputation;
-    Project(_projectAddress).stakeReputation(_reputation, msg.sender);
+    Project(_projectAddress).stakeReputation(msg.sender, _reputation);
   }
 
   function unstakeReputation(uint256 _projectId, uint256 _reputation) public {
     address _projectAddress = projectRegistry.getProjectAddress(_projectId);
     balances[msg.sender] += _reputation;
     totalFreeReputationSupply += _reputation;
-    Project(_projectAddress).unstakeReputation(_reputation, msg.sender);
+    Project(_projectAddress).unstakeReputation(msg.sender, _reputation);
   }
 
   function submitTaskHash(uint256 _projectId, bytes32 _taskHash) public {
     address _projectAddress = projectRegistry.getProjectAddress(_projectId);
-    Project(_projectAddress).addTaskHash(_taskHash, msg.sender);
+    // Project(_projectAddress).addTaskHash(_taskHash, msg.sender);
   }
 
   // =====================================================================
@@ -80,14 +80,14 @@ contract ReputationRegistry{
 
   function submitHashList(uint256 _projectId, bytes32[] _hashes) public {
     address _projectAddress = projectRegistry.getProjectAddress(_projectId);
-    Project(_projectAddress).submitHashList(_hashes);
+    // Project(_projectAddress).submitHashList(_hashes);
   }
 
   function claimTask(uint256 _projectId, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _repVal) public {
     require(balances[msg.sender] >= _repVal);
     address _projectAddress = projectRegistry.getProjectAddress(_projectId);
     balances[msg.sender] -= _repVal;
-    Project(_projectAddress).claimTask(_index, _taskDescription, _weiVal, _repVal, msg.sender);
+    // Project(_projectAddress).claimTask(_index, _taskDescription, _weiVal, _repVal, msg.sender);
   }
 
   // =====================================================================
@@ -143,7 +143,9 @@ contract ReputationRegistry{
 
   function rewardTask(uint256 _projectId, bytes32 _taskHash) public {                                   //called by worker who completed a task
     address _projectAddress = projectRegistry.getProjectAddress(_projectId);
-    uint256 reward = Project(_projectAddress).claimTaskReward(_taskHash, msg.sender);
+    // uint256 reward = Project(_projectAddress).claimTaskReward(_taskHash, msg.sender);
+
+    uint256 reward = 0;
     totalFreeReputationSupply += reward;
     balances[msg.sender] += reward;
   }

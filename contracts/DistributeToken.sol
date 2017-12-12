@@ -40,12 +40,12 @@ contract DistributeToken is StandardToken {
    _;
  }
 
- function transferWeiTo(address _address, uint256 _weiVal) public onlyTR() returns (bool) {
+ function transferWeiFrom(address _address, uint256 _weiVal) public onlyTR() returns (bool) {
    weiBal -= _weiVal;
    _address.transfer(_weiVal);
    return true;
  }
- function transferWeiFrom() public payable returns (bool) {
+ function transferWeiTo() public payable returns (bool) {
    weiBal += msg.value;
    return true;
  }
@@ -60,9 +60,6 @@ contract DistributeToken is StandardToken {
 
  function transferFromEscrow(address _owner, uint256 _value) public onlyTR() returns (bool) {
    require(balances[msg.sender] >= _value);
-   if (balances[msg.sender] < _value) {
-     mint(_value - balances[msg.sender]);
-   }
    balances[msg.sender] -= _value;
    totalFreeSupply += _value;
    balances[_owner] += _value;
@@ -74,10 +71,10 @@ contract DistributeToken is StandardToken {
   // =====================================================================
 
   function mint(uint _tokens) public payable {
-    if (msg.sender == address(tokenRegistry)) {
+    /*if (msg.sender == address(tokenRegistry)) {
       balances[msg.sender] += _tokens;
       totalSupply += _tokens;
-    } else {
+    } else {*/
       uint256 targetPriceVal;
       /*
         if total supply is 0 or the currentPrice is 0
@@ -105,7 +102,7 @@ contract DistributeToken is StandardToken {
       if (fundsLeft > 0) {
         msg.sender.transfer(fundsLeft);
       }
-    }
+    /*}*/
   }
 
   function percent(uint256 numerator, uint256 denominator, uint256 precision) internal pure returns (uint256) {
@@ -153,6 +150,6 @@ contract DistributeToken is StandardToken {
   }
 
   function() public payable {
-
+    weiBal += msg.value;
   }
 }
