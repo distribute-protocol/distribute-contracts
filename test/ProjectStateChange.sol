@@ -1,6 +1,8 @@
 pragma solidity ^0.4.10;
 
-contract ProjectLibrary {
+import "./Project.sol";
+
+contract ProjectStateChange {
   function isStaked() internal view returns (bool) {
     return (weiCost >= totalWeiStaked && reputationCost >= totalReputationStaked);
   }

@@ -1,3 +1,9 @@
+
+// ===================================================================== //
+// This contract manages the ether and balances of stakers & validators of a given project.
+// It holds its own state as well, set by a call from the PR.
+// ===================================================================== //
+
 pragma solidity ^0.4.10;
 
 import "./TokenRegistry.sol";
@@ -10,16 +16,16 @@ contract Project {
   ReputationRegistry reputationRegistry;
   ProjectRegistry projectRegistry;
   DistributeToken distributeToken;
-  uint256 state;
+  uint256 public state;
   uint256 public weiBal;
   uint256 nextDeadline;
   //set by proposer, total cost of project in ETH, to be fulfilled by capital token holders
   uint256 public weiCost;
   //total amount of staked worker tokens needed, TBD
-  uint256 reputationCost;
+  uint256 public reputationCost;
 
-  uint256 totalTokensStaked;           //amount of capital tokens currently staked
-  uint256 totalReputationStaked;            //amount of worker tokens currently staked
+  uint256 public totalTokensStaked;           //amount of capital tokens currently staked
+  uint256 public totalReputationStaked;            //amount of worker tokens currently staked
   mapping (address => uint) stakedTokenBalances;
   mapping (address => uint) stakedReputationBalances;
 
@@ -28,11 +34,11 @@ contract Project {
     uint256 stake;
   }
  bool validateFlag = false;
- uint256 validateReward;
+ uint256 public validateReward;
 
   mapping (address => Validator) validators;
-  uint256 totalValidateAffirmative;
-  uint256 totalValidateNegative;
+  uint256 public totalValidateAffirmative;
+  uint256 public totalValidateNegative;
 
   modifier onlyInState(uint256 _state) {
     require(state == _state);
@@ -55,7 +61,6 @@ contract Project {
   }
 
   function Project(uint256 _cost, uint256 _costProportion, address _rr, address _tr, address _dt) public {       //called by THR
-    //all checks done in THR first
     tokenRegistry = TokenRegistry(_tr);     //the token holder registry calls this function
     reputationRegistry = ReputationRegistry(_rr);
     projectRegistry = ProjectRegistry(msg.sender);
@@ -64,22 +69,23 @@ contract Project {
     reputationCost = _costProportion * reputationRegistry.totalFreeReputationSupply();
   }
 
-  function timesUp() internal view returns (bool) {
+  function timesUp() public view returns (bool) {
     return (now > nextDeadline);
   }
 
-  function setState(uint256 _state) public onlyPR() {
+  function setState(uint256 _state, uint256 _nextDeadline) public onlyPR() {
     state = _state;
+    nextDeadline = _nextDeadline;
   }
 
-  function stakeTokens(address _staker, uint256 _tokens, uint256 _weiVal) public onlyTR() onlyInState(1) returns (uint256) {  //called by THR, increments _staker tokens in Project.sol*/
+  function stakeTokens(address _staker, uint256 _tokens, uint256 _weiVal) public onlyTR() onlyInState(1) returns (uint256) {
     stakedTokenBalances[_staker] += _tokens;
     totalTokensStaked += _tokens;
     weiBal += _weiVal;
     // ProjectRegistry.checkOpen();
   }
 
-  function unstakeTokens(address _staker, uint256 _tokens) public onlyTR() onlyInState(1) returns (uint256) {    //called by THR only, decrements _staker tokens in Project.sol
+  function unstakeTokens(address _staker, uint256 _tokens) public onlyTR() onlyInState(1) returns (uint256) {
     require(stakedTokenBalances[_staker] - _tokens < stakedTokenBalances[_staker] &&   //check overflow
          stakedTokenBalances[_staker] > _tokens);   //make sure _staker has the tokens staked to unstake
     stakedTokenBalances[_staker] -= _tokens;
@@ -158,7 +164,7 @@ contract Project {
         if (validateFlag == false) {
           refund += validateReward * validators[_staker].stake / denom;
         } else {
-          /*tokenRegistry.rewardValidator(_staker, (weiCost * validators[_staker].stake / denom));*/
+          tokenRegistry.rewardValidator(_staker, (weiCost * validators[_staker].stake / denom));
         }
         validators[_staker].stake = 0;
       }
@@ -169,6 +175,32 @@ contract Project {
       }
     }
     return refund;
+  }
+
+  function clearStake() public onlyPR() {
+    totalReputationStaked = 0;
+    totalTokensStaked = 0;
+  }
+
+  function setValidateReward(bool _validateReward) public onlyPR() {
+    _validateReward == true ? validateReward = totalValidateAffirmative :
+                              validateReward = totalValidateNegative;
+  }
+
+  function setValidateFlag(bool _flag) public onlyPR() {
+    validateFlag = _flag;
+  }
+
+  function setTotalValidateAffirmative(uint256 _totalValidateAffirmative) public onlyPR() {
+    totalValidateAffirmative = _totalValidateAffirmative;
+  }
+
+  function setTotalValidateNegative(uint256 _totalValidateNegative) public onlyPR() {
+    totalValidateAffirmative = _totalValidateNegative;
+  }
+
+  function isStaked() public view returns (bool) {
+    return weiCost >= weiBal && reputationCost >= totalReputationStaked;
   }
 
   function() public payable {

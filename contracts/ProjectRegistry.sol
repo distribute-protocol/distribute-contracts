@@ -1,3 +1,8 @@
+
+// ===================================================================== //
+// This contract manages the state and state-related details of each project.
+// ===================================================================== //
+
 pragma solidity ^0.4.8;
 
 import "./Project.sol";
@@ -13,17 +18,14 @@ contract ProjectRegistry {
   address dtAddress;
   address trAddress;
 
-  uint256 workCompletingPeriod = 1 weeks;
+  uint256 openStatePeriod = 1 weeks;
+  uint256 disputeStatePeriod = 1 weeks;
+  uint256 activeStatePeriod = 1 weeks;
+  uint256 validateStatePeriod = 1 weeks;
+  uint256 voteCommitPeriod = 1 weeks;
+  uint256 voteRevealPeriod = 1 weeks;
 
-
-  uint256 public projectNonce = 0;                          //no projects in existence when contract initialized
-  mapping(uint256 => Projects) public projectId;                    //projectId to project address
-
-
-  struct Projects {
-    address projectAddress;
-    uint256 votingPollId;             //for voting
-  }
+  mapping(address => uint256) public votingPollId;                    //projectId to project address
 
   struct ProposedState {
     address proposer;         //who is the proposer
@@ -92,61 +94,30 @@ contract ProjectRegistry {
     require(msg.sender == address(reputationRegistry));
     _;
   }
-  /*modifier projectExists(uint256 _projectId) {
-    require(_projectId <= projectNonce && _projectId > 0);
-    _;
-  }
-
-  modifier isProject(uint256 _projectId) {
-      require(projectId[_projectId].projectAddress == msg.sender);
-      _;
-  }*/
-
-  function projectExists(uint256 _projectId) public view returns (bool) {
-    return _projectId <= projectNonce && _projectId > 0;
-  }
 
   // =====================================================================
   // GENERAL FUNCTIONS
   // =====================================================================
 
-  function getProjectAddress(uint256 _id) public view returns (address) {
-    require(_id <= projectNonce && _id > 0);
-    return projectId[_id].projectAddress;
-  }
   function getProposerAddress(address _projectAddress) public view returns (address) {
     return proposedProjects[_projectAddress].proposer;
   }
 
-  function startPoll(uint256 _projectId, uint256 _commitDuration, uint256 _revealDuration) public {       //can only be called by project in question
-    setPollId(_projectId, plcrVoting.startPoll(50, _commitDuration, _revealDuration));
+  function startPoll(address _projectAddress, uint256 _commitDuration, uint256 _revealDuration) public {       //can only be called by project in question
+    setPollId(_projectAddress, plcrVoting.startPoll(51, _commitDuration, _revealDuration));
   }
 
-  function getPollId(uint256 _id) public view returns (uint256) {
-    require(_id <= projectNonce && _id > 0);
-    return projectId[_id].votingPollId;
+  function setPollId(address _projectAddress, uint256 _pollId) public {
+    votingPollId[_projectAddress] = _pollId;
+  }
+  function pollEnded(address _projectAddress) public view returns (bool) {
+    return plcrVoting.pollEnded(votingPollId[_projectAddress]);
   }
 
-  function setPollId(uint256 _projectId, uint256 _pollID) public {
-    Projects storage project = projectId[_projectId];
-    project.votingPollId = _pollID;
-  }
-
-  function setProject(uint256 _projectNonce, address _projectAddress) public onlyTR() {
-    Projects storage project = projectId[_projectNonce];
-    project.projectAddress = _projectAddress;
-  }
-  function incrementProjectNonce() public onlyTR() {
-    projectNonce += 1;
-  }
-  function pollEnded(uint256 _projectId) public view returns (bool) {
-    return plcrVoting.pollEnded(getPollId(_projectId));
-  }
-
-  function isPassed(uint256 _projectId) public {
-    bool passed = plcrVoting.isPassed(getPollId(_projectId));
-    Project(projectId[_projectId].projectAddress).rewardValidator(passed);
-    //set to complete or failed
+  function isPassed(address _projectAddress) public returns (bool) {
+    bool passed = plcrVoting.isPassed(votingPollId[_projectAddress]);
+    Project(_projectAddress).rewardValidator(passed);
+    return passed;
   }
 
 
@@ -154,7 +125,7 @@ contract ProjectRegistry {
   // PROPOSER FUNCTIONS
   // =====================================================================
 
-  function createProject(uint256 _cost, uint256 _costProportion, uint _numTokens) public {
+  function createProject(uint256 _cost, uint256 _costProportion, uint _numTokens, address _proposer) public {
 
     Project newProject = new Project(_cost,
                                      _costProportion,
@@ -163,10 +134,7 @@ contract ProjectRegistry {
                                      dtAddress
                                      );
    address _projectAddress = address(newProject);
-   /*proposerTokenCost*/
-   incrementProjectNonce();
-   setProject(projectNonce, _projectAddress);
-   setProposer(_projectAddress, msg.sender, _numTokens, _cost);
+   setProposer(_projectAddress, _proposer, _numTokens, _cost);
   }
 
   function setProposer(address _projectAddress, address _proposer, uint256 _proposerStake, uint256 _cost) public onlyTR() {
@@ -185,5 +153,100 @@ contract ProjectRegistry {
     returnValues[1] = proposerStake;
     proposedProjects[_projectAddress].proposerStake = 0;
     return returnValues;
+  }
+
+  // =====================================================================
+  // STATE CHANGE
+  // =====================================================================
+
+  function checkOpen(address _projectAddress) public returns (bool) {
+    require(Project(_projectAddress).state() == 1);    //check that project is in the proposed state
+    if(Project(_projectAddress).isStaked()) {
+      uint256 nextDeadline = now + openStatePeriod;
+      Project(_projectAddress).setState(2, nextDeadline);
+      return true;
+    } else if(Project(_projectAddress).timesUp()) {
+      Project(_projectAddress).setState(9, 0);
+      proposedProjects[_projectAddress].proposerStake = 0;
+      return false;
+    } else {
+      return false;
+    }
+  }
+
+  function checkActive(address _projectAddress) public returns (bool) {
+    require(Project(_projectAddress).state() == 2 || Project(_projectAddress).state() == 3);
+    if(Project(_projectAddress).timesUp()) {
+      uint256 nextDeadline;
+      if(openProjects[_projectAddress].numTotalSubmissions == openProjects[_projectAddress].numSubmissions[openProjects[_projectAddress].firstSubmission] || Project(_projectAddress).state() == 3) {
+        nextDeadline = now + activeStatePeriod;
+        Project(_projectAddress).setState(4, nextDeadline);
+      } else {
+        nextDeadline = now + disputeStatePeriod;
+        Project(_projectAddress).setState(3, nextDeadline);
+      }
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  function checkValidate(address _projectAddress) public returns (bool) {
+    require(Project(_projectAddress).state() == 4);
+    if (Project(_projectAddress).timesUp()) {
+      uint256 nextDeadline = now + validateStatePeriod;
+      Project(_projectAddress).setState(4, nextDeadline);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  function checkVoting(address _projectAddress) public returns (bool) {
+    require(Project(_projectAddress).state()== 5);
+    if(Project(_projectAddress).timesUp()) {
+      Project(_projectAddress).setState(4, 0);
+      startPoll(_projectAddress, votingCommitPeriod, votingRevealPeriod);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  function checkEnd(address _projectAddress) public returns (bool) {     //don't know where this gets called - maybe separate UI thing
+    if(!pollEnded(_projectAddress)) {
+      return false;
+    } else {
+      bool passed = isPassed(_projectAddress);
+      handleVoteResult(_projectAddress, passed);
+      if (passed) {
+        Project(_projectAddress).setState(7, 0);
+      }
+      else {
+        Project(_projectAddress).setState(9, 0);
+      }
+      return true;
+    }
+  }
+
+  function handleVoteResult(address _projectAddress, bool passed) internal {
+    Project project = Project(_projectAddress);
+    if(!passed) {               //project fails
+      tokenRegistry.burnTokens(project.totalTokensStaked());
+      reputationRegistry.burnReputation(project.totalReputationStaked());
+      project.clearStake();
+      project.setValidateReward(true);
+      if (project.validateReward() == 0) {
+        project.setValidateFlag(true);
+      }
+      project.setTotalValidateAffirmative(0);
+    }
+    else {                                              //project succeeds
+      project.setValidateReward(false);
+      if (project.validateReward() == 0) {
+        project.setValidateFlag(false);
+      }
+      project.setTotalValidateNegative(0);
+    }
   }
 }
