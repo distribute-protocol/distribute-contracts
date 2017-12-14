@@ -74,10 +74,10 @@ contract ReputationRegistry{
   // ACTIVE PERIOD FUNCTIONALITY
   // =====================================================================
 
-  function claimTask(address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _repVal) public {
-    require(balances[msg.sender] >= _repVal);
-    balances[msg.sender] -= _repVal;
-    projectRegistry.claimTask(_projectAddress, _index, _taskDescription, _weiVal, _repVal, msg.sender);
+  function claimTask(address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _reputationVal) public {
+    require(balances[msg.sender] >= _reputationVal);
+    balances[msg.sender] -= _reputationVal;
+    projectRegistry.claimTask(_projectAddress, _index, _taskDescription, _weiVal, _reputationVal, msg.sender);
   }
 
   // =====================================================================

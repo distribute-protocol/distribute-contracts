@@ -15,7 +15,6 @@ contract Project {
   TokenRegistry tokenRegistry;
   ReputationRegistry reputationRegistry;
   ProjectRegistry projectRegistry;
-  DistributeToken distributeToken;
   uint256 public state;
   uint256 public weiBal;
   uint256 nextDeadline;
@@ -127,11 +126,10 @@ contract Project {
   // =====================================================================
   // CONSTRUCTOR
   // =====================================================================
-  function Project(uint256 _cost, uint256 _costProportion, address _rr, address _tr, address _dt) public {       //called by THR
-    tokenRegistry = TokenRegistry(_tr);     //the token holder registry calls this function
-    reputationRegistry = ReputationRegistry(_rr);
+  function Project(uint256 _cost, uint256 _costProportion, address _reputationRegistry, address _tokenRegistry) public {       //called by THR
+    tokenRegistry = TokenRegistry(_tokenRegistry);     //the token holder registry calls this function
+    reputationRegistry = ReputationRegistry(_reputationRegistry);
     projectRegistry = ProjectRegistry(msg.sender);
-    distributeToken = DistributeToken(_dt);
     weiCost = _cost;
     reputationCost = _costProportion * reputationRegistry.totalFreeSupply();
   }
@@ -140,10 +138,11 @@ contract Project {
   // =====================================================================
   // STAKE FUNCTIONS
   // =====================================================================
-  function stakeTokens(address _staker, uint256 _tokens, uint256 _weiVal) public onlyTR() onlyInState(1) returns (uint256) {
+  function stakeTokens(address _staker, uint256 _tokens, uint256 _weiValue) public onlyTR() onlyInState(1) returns (uint256) {
     stakedTokenBalances[_staker] += _tokens;
     totalTokensStaked += _tokens;
-    weiBal += _weiVal;
+    weiBal += _weiValue;
+    return _tokens;
   }
 
   function unstakeTokens(address _staker, uint256 _tokens) public onlyTR() onlyInState(1) returns (uint256) {
@@ -151,7 +150,7 @@ contract Project {
          stakedTokenBalances[_staker] > _tokens);   //make sure _staker has the tokens staked to unstake
     stakedTokenBalances[_staker] -= _tokens;
     totalTokensStaked -= _tokens;
-    distributeToken.transfer((_tokens / totalTokensStaked) * weiCost);
+    return (_tokens / totalTokensStaked) * weiCost;
   }
 
   function stakeReputation(address _staker, uint256 _tokens) public onlyRR() onlyInState(1) {
@@ -241,25 +240,25 @@ contract Project {
   // TASK FUNCTIONS
   // =====================================================================
 
-  function claimTask(bytes32 _taskHash, uint256 _weiVal, uint256 _repVal, address _claimer) public onlyInState(4) {
+  function claimTask(bytes32 _taskHash, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyInState(4) {
     require(taskRewards[_taskHash].claimer == 0);
     Reward storage taskReward = taskRewards[_taskHash];
     taskReward.claimer = _claimer;
     taskReward.weiReward = _weiVal;
-    taskReward.reputationReward = _repVal;
+    taskReward.reputationReward = _reputationVal;
   }
 
 
   function claimTaskReward(bytes32 _taskHash, address _claimer) public onlyInState(7) returns (uint256) {
     require(taskRewards[_taskHash].claimer == _claimer);
-    Reward storage taskReward = taskRewards[_taskHash];
-    uint256 weiTemp = taskReward.weiReward;
-    uint256 repTemp = taskReward.reputationReward;
-    taskReward.claimer = 0;
-    taskReward.weiReward = 0;
-    taskReward.reputationReward = 0;
+    Reward storage singleTaskReward = taskRewards[_taskHash];
+    uint256 weiTemp = singleTaskReward.weiReward;
+    uint256 reputationTemp = singleTaskReward.reputationReward;
+    singleTaskReward.claimer = 0;
+    singleTaskReward.weiReward = 0;
+    singleTaskReward.reputationReward = 0;
     tokenRegistry.transferWeiReward(_claimer, weiTemp);
-    return repTemp;
+    return reputationTemp;
   }
 
   function() public payable {

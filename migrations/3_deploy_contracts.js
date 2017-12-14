@@ -15,9 +15,9 @@ module.exports = function (deployer) {
   }).then(function () {
     return deployer.deploy(DistributeToken, TokenRegistry.address)
   }).then(function () {
-    return deployer.deploy(ProjectRegistry, TokenRegistry.address, ReputationRegistry.address, DistributeToken.address)
-  }).then(function () {
     return deployer.deploy(PLCRVoting, TokenRegistry.address, ReputationRegistry.address)
+  }).then(function () {
+    return deployer.deploy(ProjectRegistry, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address)
   }).then(function () {
     return TokenRegistry.deployed()
   }).then(function (instance) {

@@ -58,14 +58,12 @@ contract DistributeToken is StandardToken {
  // TRANSFER FUNCTIONS
  // =====================================================================
 
- function transferWeiFrom(address _address, uint256 _weiVal) public onlyTR() returns (bool) {
-   weiBal -= _weiVal;
-   _address.transfer(_weiVal);
-   return true;
+ function transferWeiFrom(address _address, uint256 _weiValue) public onlyTR() {
+   weiBal -= _weiValue;
+   _address.transfer(_weiValue);
  }
- function transferWeiTo() public payable returns (bool) {
+ function transferWeiTo() public payable {
    weiBal += msg.value;
-   return true;
  }
 
  function transferToEscrow(address _owner, uint256 _value) public onlyTR() returns (bool) {
@@ -156,6 +154,6 @@ contract DistributeToken is StandardToken {
   }
 
   function() public payable {
-    weiBal += msg.value;
+    /*weiBal += msg.value;*/
   }
 }

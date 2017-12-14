@@ -14,9 +14,8 @@ contract ProjectRegistry {
   TokenRegistry tokenRegistry;
   ReputationRegistry reputationRegistry;
   PLCRVoting plcrVoting;
-  address rrAddress;
-  address dtAddress;
-  address trAddress;
+  address reputationRegistryAddress;
+  address tokenRegistryAddress;
 
   uint256 openStatePeriod = 1 weeks;
   uint256 disputeStatePeriod = 1 weeks;
@@ -70,14 +69,13 @@ contract ProjectRegistry {
   // =====================================================================
   // CONSTRUCTOR
   // =====================================================================
-  function ProjectRegistry(address _tokenRegistry, address _reputationRegistry, address _distributeToken, address _plcrVoting) public {       //contract is created
+  function ProjectRegistry(address _tokenRegistry, address _reputationRegistry, address _plcrVoting) public {       //contract is created
     require(address(tokenRegistry) == 0 && address(reputationRegistry) == 0);
     tokenRegistry = TokenRegistry(_tokenRegistry);
     reputationRegistry = ReputationRegistry(_reputationRegistry);
     plcrVoting = PLCRVoting(_plcrVoting);
-    trAddress = _tokenRegistry;
-    dtAddress = _distributeToken;
-    rrAddress = _reputationRegistry;
+    reputationRegistryAddress = _reputationRegistry;
+    tokenRegistryAddress = _tokenRegistry;
   }
   // =====================================================================
   // MODIFIERS
@@ -123,9 +121,8 @@ contract ProjectRegistry {
 
     Project newProject = new Project(_cost,
                                      _costProportion,
-                                     rrAddress,
-                                     trAddress,
-                                     dtAddress
+                                     reputationRegistryAddress,
+                                     tokenRegistryAddress
                                      );
    address _projectAddress = address(newProject);
    setProposer(_projectAddress, _proposer, _numTokens, _cost);
@@ -286,12 +283,12 @@ contract ProjectRegistry {
   // ACTIVE PROJECT
   // =====================================================================
   function claimTask(
-    address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _repVal, address _claimer
+    address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _reputationVal, address _claimer
   ) public onlyRR() {
     bytes32 taskHash = projectTaskList[_projectAddress][_index];
     Project project = Project(_projectAddress);
-    require(taskHash == keccak256(_taskDescription, _weiVal, _repVal));
-    project.claimTask(taskHash, _weiVal, _repVal, _claimer);
+    require(taskHash == keccak256(_taskDescription, _weiVal, _reputationVal));
+    project.claimTask(taskHash, _weiVal, _reputationVal, _claimer);
   }
 
   // =====================================================================

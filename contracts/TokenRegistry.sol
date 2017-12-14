@@ -21,8 +21,6 @@ contract TokenRegistry {
   ProjectRegistry projectRegistry;
   DistributeToken distributeToken;
   PLCRVoting plcrVoting;
-  address dtAddress;
-  address rrAddress;
 
   uint256 proposeProportion = 20;                           // tokensupply/proposeProportion is the number of tokens the proposer must stake
   uint256 rewardProportion = 100;
@@ -52,8 +50,6 @@ contract TokenRegistry {
   // =====================================================================
   function init(address _distributeToken, address _reputationRegistry, address _projectRegistry, address _plcrVoting) public {       //contract is created
     require(address(distributeToken) == 0 && address(reputationRegistry) == 0 && address(projectRegistry) == 0 && address(plcrVoting) == 0);
-    rrAddress = _reputationRegistry;
-    dtAddress = _distributeToken;
     distributeToken = DistributeToken(_distributeToken);
     reputationRegistry = ReputationRegistry(_reputationRegistry);
     projectRegistry = ProjectRegistry(_projectRegistry);
@@ -91,7 +87,7 @@ contract TokenRegistry {
   function stakeTokens(address _projectAddress, uint256 _tokens) public {
     require(distributeToken.balanceOf(msg.sender) >= _tokens);
     Project project = Project(_projectAddress);
-    require(project.getState() == 1);
+    require(project.state() == 1);
     uint256 currentPrice = distributeToken.currentPrice();
     uint256 weiRemaining = project.weiCost() - project.weiBal();
     uint256 weiVal =  currentPrice * _tokens;
@@ -105,7 +101,8 @@ contract TokenRegistry {
   }
 
   function unstakeTokens(address _projectAddress, uint256 _tokens) public {
-    Project(_projectAddress).unstakeTokens(dtAddress, _tokens);
+    uint256 weiVal = Project(_projectAddress).unstakeTokens(msg.sender, _tokens);
+    distributeToken.transferWeiFrom(msg.sender, weiVal);
     distributeToken.transferFromEscrow(msg.sender, _tokens);
   }
 
