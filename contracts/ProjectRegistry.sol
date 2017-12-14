@@ -35,10 +35,10 @@ contract ProjectRegistry {
   }
   struct OpenState {
     //open
-    address firstSubmitter;
-    bytes32 firstSubmission;                                 //used to determine if dispute period needs to happen
+    bytes32 first;
+    uint256 conflict;                                 //used to determine if dispute period needs to happen
     uint256 numTotalSubmissions;
-    mapping(address => bytes32) openTaskHashSubmissions;
+    mapping(address => bytes32) taskHashSubmissions;
     mapping(bytes32 => uint256) numSubmissions;
   }
 
@@ -47,14 +47,12 @@ contract ProjectRegistry {
 
 
   struct DisputeState {
-    bytes32 disputeTopTaskHash;
-    mapping(address => bytes32) disputeTaskHashSubmissions;
+    bytes32 topTaskHash;
+    mapping(address => bytes32) taskHashSubmissions;
     mapping(bytes32 => uint256) numSubmissionsByWeight;
   }
 
-  struct ActiveState {
-    bytes32[] taskList;
-  }
+  mapping (address => bytes32[]) projectTaskList;
 
   struct Validation {
     uint256 validateReward;
@@ -146,7 +144,7 @@ contract ProjectRegistry {
 
   function refundProposer(address _projectAddress) public onlyTR() returns (uint256[2]) {
     require(now > proposedProjects[_projectAddress].stakingPeriod);
-    uint256[2] storage returnValues;
+    uint256[2] memory returnValues;
     uint256 proposerStake = proposedProjects[_projectAddress].proposerStake;
     require(proposerStake > 0);
     returnValues[0] = proposedProjects[_projectAddress].cost;
@@ -175,15 +173,17 @@ contract ProjectRegistry {
   }
 
   function checkActive(address _projectAddress) public returns (bool) {
-    require(Project(_projectAddress).state() == 2 || Project(_projectAddress).state() == 3);
-    if(Project(_projectAddress).timesUp()) {
+    Project project = Project(_projectAddress);
+    uint256 projectState = project.state();
+    require(projectState == 2 || projectState == 3);
+    if(project.timesUp()) {
       uint256 nextDeadline;
-      if(openProjects[_projectAddress].numTotalSubmissions == openProjects[_projectAddress].numSubmissions[openProjects[_projectAddress].firstSubmission] || Project(_projectAddress).state() == 3) {
+      if(openProjects[_projectAddress].conflict == 0 || projectState == 3) {
         nextDeadline = now + activeStatePeriod;
-        Project(_projectAddress).setState(4, nextDeadline);
+        project.setState(4, nextDeadline);
       } else {
         nextDeadline = now + disputeStatePeriod;
-        Project(_projectAddress).setState(3, nextDeadline);
+        project.setState(3, nextDeadline);
       }
       return true;
     } else {
@@ -229,6 +229,64 @@ contract ProjectRegistry {
     }
   }
 
+  // =====================================================================
+  // OPEN/DISPUTE PROJECT FUNCTIONS
+  // =====================================================================
+
+  function addTaskHash(address _projectAddress, bytes32 _ipfsHash) public  {
+    Project project = Project(_projectAddress);
+    require(project.isStaker(msg.sender) == true);
+    require(project.state() == 2 || project.state() == 3);
+    if (project.state() == 2) {
+      openTaskHash(msg.sender, _projectAddress, _ipfsHash);
+    } else {
+      uint256 stakerWeight = project.calculateWeightOfAddress(msg.sender);
+      disputeTaskHash(msg.sender, _projectAddress, _ipfsHash, stakerWeight);
+    }
+    checkActive(_projectAddress);
+  }
+
+  function openTaskHash(address _staker, address _projectAddress, bytes32 _ipfsHash) internal {
+    OpenState storage os = openProjects[_projectAddress];
+    if(os.taskHashSubmissions[_staker] == 0) {    //first time submission for this particular address
+      os.numTotalSubmissions += 1;
+      if (os.first == 0) { os.first = _ipfsHash; }
+      else {                                  //not a first time hash submission
+        /*bytes32 temp = os.taskHashSubmissions[_staker];*/
+        os.numSubmissions[os.taskHashSubmissions[_staker]] -= 1;
+      }
+    if (os.first != _ipfsHash) { os.conflict = 1; }
+    os.numSubmissions[_ipfsHash] += 1;
+    os.taskHashSubmissions[_staker] == _ipfsHash;
+    }
+  }
+
+  function disputeTaskHash(address _staker, address _projectAddress, bytes32 _ipfsHash, uint256 stakerWeight) internal {
+    DisputeState storage ds = disputedProjects[_projectAddress];
+    if(ds.taskHashSubmissions[_staker] !=  0) {   //first time submission for this particular address
+      bytes32 submittedTaskHash = ds.taskHashSubmissions[_staker];
+      ds.numSubmissionsByWeight[submittedTaskHash] -= stakerWeight;
+    }
+    ds.numSubmissionsByWeight[_ipfsHash] += stakerWeight;
+    ds.taskHashSubmissions[_staker] = _ipfsHash;
+    if(ds.numSubmissionsByWeight[_ipfsHash]
+      > ds.numSubmissionsByWeight[ds.topTaskHash]) {
+      ds.topTaskHash = _ipfsHash;
+    }
+  }
+
+  function submitHashList(address _projectAddress, bytes32[] _hashes) public {
+    Project project = Project(_projectAddress);
+    require(project.isStaker(msg.sender) == true);
+    require(project.state() == 4);
+    if (disputedProjects[_projectAddress].topTaskHash != 0) {
+      require(keccak256(_hashes) == disputedProjects[_projectAddress].topTaskHash);
+    } else {
+      require(keccak256(_hashes) == openProjects[_projectAddress].first);
+    }
+      projectTaskList[_projectAddress] = _hashes;
+  }
+
   function handleVoteResult(address _projectAddress, bool passed) internal {
     Project project = Project(_projectAddress);
     if(!passed) {               //project fails
@@ -249,4 +307,22 @@ contract ProjectRegistry {
       project.setTotalValidateNegative(0);
     }
   }
+
+
+  function claimTask(
+    address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _repVal, address _claimer
+  ) public onlyRR() {
+    bytes32 taskHash = projectTaskList[_projectAddress][_index];
+    Project project = Project(_projectAddress);
+    require(taskHash == keccak256(_taskDescription, _weiVal, _repVal));
+    project.claimTask(taskHash, _weiVal, _repVal, _claimer);
+  }
+
 }
+// =====================================================================
+// COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
+// =====================================================================
+
+// =====================================================================
+// VALIDATED / FAILED PROJECT
+// =====================================================================

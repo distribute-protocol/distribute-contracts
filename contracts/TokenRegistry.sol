@@ -43,6 +43,11 @@ contract TokenRegistry {
     _;
   }*/
 
+  modifier onlyValidProject() {
+    require(projectRegistry.votingPollId(msg.sender) > 0);
+    _;
+  }
+
 
 // =====================================================================
 // FUNCTIONS
@@ -115,17 +120,9 @@ contract TokenRegistry {
   // OPEN/DISPUTE PROJECT
   // =====================================================================
 
-  function submitTaskHash(address _projectAddress, bytes32 _taskHash) public view {
-    // Project(projectRegistry.getProjectAddress(_projectId)).addTaskHash(_taskHash, msg.sender);
-  }
-
   // =====================================================================
   // ACTIVE PROJECT
   // =====================================================================
-
-  function submitHashList(address _projectAddress, bytes32[] _hashes) public pure {
-    // Project(projectRegistry.getProjectAddress(_projectId)).submitHashList(_hashes);
-  }
 
   // =====================================================================
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
@@ -167,7 +164,7 @@ contract TokenRegistry {
   // =====================================================================
 
   // called by project if a project fails
-  function burnTokens(uint256 _tokens) public {                            //check that valid project is calling this function
+  function burnTokens(uint256 _tokens) public onlyValidProject() {                            //check that valid project is calling this function
     distributeToken.burnTokens(_tokens);
   }
   function refundStaker(address _projectAddress) public {
@@ -178,10 +175,14 @@ contract TokenRegistry {
     plcrVoting.rescueTokens(msg.sender, pollId);
   }
 
-  function rewardValidator(address _validator, uint256 _reward) public {
+  function rewardValidator(address _validator, uint256 _reward) public onlyValidProject() {
     require(Project(msg.sender).state() == 7 || Project(msg.sender).state() == 9);
     require(projectRegistry.votingPollId(msg.sender) != 0);
     distributeToken.transferWeiFrom(_validator, _reward);
+  }
+
+  function transferWeiReward(address _destination, uint256 _weiVal) public onlyValidProject() {
+    distributeToken.transferWeiFrom(_destination, _weiVal);
   }
 
   function() public payable {

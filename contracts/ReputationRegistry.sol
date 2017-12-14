@@ -29,8 +29,8 @@ contract ReputationRegistry{
 
   mapping (address => uint) public balances;                   //worker token balances
 
-  uint256 public totalReputationSupply;               //total supply of reputation in all states
-  uint256 public totalFreeReputationSupply;           //total supply of free reputation (not staked, validated, or voted)
+  uint256 public totalSupply;               //total supply of reputation in all states
+  uint256 public totalFreeSupply;           //total supply of free reputation (not staked, validated, or voted)
 
 // =====================================================================
 // EVENTS
@@ -64,36 +64,25 @@ contract ReputationRegistry{
 
     require(balances[msg.sender] >= _reputation);   //make sure project exists & TH has tokens to stake
     balances[msg.sender] -= _reputation;
-    totalFreeReputationSupply -= _reputation;
+    totalFreeSupply -= _reputation;
     Project(_projectAddress).stakeReputation(msg.sender, _reputation);
   }
 
   function unstakeReputation(address _projectAddress, uint256 _reputation) public {
-
     balances[msg.sender] += _reputation;
-    totalFreeReputationSupply += _reputation;
+    totalFreeSupply += _reputation;
     Project(_projectAddress).unstakeReputation(msg.sender, _reputation);
-  }
-
-  function submitTaskHash(address _projectAddress, bytes32 _taskHash) public view {
-    /**/
-    // Project(_projectAddress).addTaskHash(_taskHash, msg.sender);
   }
 
   // =====================================================================
   // ACTIVE PERIOD FUNCTIONALITY
   // =====================================================================
 
-  function submitHashList(address _projectAddress, bytes32[] _hashes) public view {
-    /**/
-    // Project(_projectAddress).submitHashList(_hashes);
-  }
-
   function claimTask(address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _repVal) public {
     require(balances[msg.sender] >= _repVal);
     /**/
     balances[msg.sender] -= _repVal;
-    // Project(_projectAddress).claimTask(_index, _taskDescription, _weiVal, _repVal, msg.sender);
+    projectRegistry.claimTask(_projectAddress, _index, _taskDescription, _weiVal, _repVal, msg.sender);
   }
 
   // =====================================================================
@@ -111,7 +100,7 @@ contract ReputationRegistry{
     if (availableTokens < _reputation) {
       require(balances[msg.sender] >= _reputation - availableTokens && pollId != 0);
       balances[msg.sender] -= _reputation;
-      totalFreeReputationSupply -= _reputation;
+      totalFreeSupply -= _reputation;
       plcrVoting.requestVotingRights(msg.sender, _reputation - availableTokens);
     }
     plcrVoting.commitVote(msg.sender, pollId, _secretHash, _reputation, _prevPollID);
@@ -125,7 +114,7 @@ contract ReputationRegistry{
   function refundVotingReputation(uint256 _reputation) public {
     plcrVoting.withdrawVotingRights(msg.sender, _reputation);
     balances[msg.sender] += _reputation;
-    totalFreeReputationSupply += _reputation;
+    totalFreeSupply += _reputation;
   }
 
 
@@ -136,21 +125,18 @@ contract ReputationRegistry{
   // called by project if a project fails
   function burnReputation(uint256 _reputation) public {
     //check that valid project is calling this function
-    totalReputationSupply -= _reputation;
+    totalSupply -= _reputation;
   }
 
   function refundStaker(address _projectAddress) public {                                                                       //called by worker who staked or voted
     uint256 _refund = Project(_projectAddress).refundStaker(msg.sender);
-    totalFreeReputationSupply += _refund;
+    totalFreeSupply += _refund;
     balances[msg.sender] += _refund;
   }
 
   function rewardTask(address _projectAddress, bytes32 _taskHash) public {                                   //called by worker who completed a task
-    /**/
-    // uint256 reward = Project(_projectAddress).claimTaskReward(_taskHash, msg.sender);
-
-    uint256 reward = 0;
-    totalFreeReputationSupply += reward;
+    uint256 reward = Project(_projectAddress).claimTaskReward(_taskHash, msg.sender);
+    totalFreeSupply += reward;
     balances[msg.sender] += reward;
   }
 }

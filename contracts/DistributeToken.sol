@@ -7,12 +7,12 @@ contract DistributeToken is StandardToken {
   TokenRegistry tokenRegistry;
   /*address trAddress;*/
 
-  string public constant symbol = "FIXED";
-  string public constant name = "Example Fixed Supply Token";
+  string public constant symbol = "DST";
+  string public constant name = "Distribute Token";
   uint8 public constant decimals = 18;
 
-  uint256 public totalSupply = 0;               //total supply of capital tokens in all staking states
-  uint256 public totalFreeSupply = 0;           //total supply of free capital tokens (not staked, validated, or voted)
+  uint256 public totalSupply = 0;               //total supply of tokens in all staking states
+  uint256 public totalFreeSupply = 0;           //total supply of free tokens (not staked, validated, or voted)
 
   uint256 public weiBal;
 
@@ -41,6 +41,7 @@ contract DistributeToken is StandardToken {
  }
 
  function transferWeiFrom(address _address, uint256 _weiVal) public onlyTR() returns (bool) {
+   require(weiBal >= _weiVal);
    weiBal -= _weiVal;
    _address.transfer(_weiVal);
    return true;
@@ -50,20 +51,18 @@ contract DistributeToken is StandardToken {
    return true;
  }
 
- function transferToEscrow(address _owner, uint256 _value) public onlyTR() returns (bool) {
+ function transferToEscrow(address _owner, uint256 _value) public onlyTR() {
    require(balances[_owner] >= _value);
    balances[_owner] -= _value;
    totalFreeSupply -= _value;
    balances[msg.sender] += _value;
-   return true;
  }
 
- function transferFromEscrow(address _owner, uint256 _value) public onlyTR() returns (bool) {
+ function transferFromEscrow(address _owner, uint256 _value) public onlyTR() {
    require(balances[msg.sender] >= _value);
    balances[msg.sender] -= _value;
    totalFreeSupply += _value;
    balances[_owner] += _value;
-   return true;
  }
 
   // =====================================================================

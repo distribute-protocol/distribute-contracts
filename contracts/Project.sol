@@ -24,6 +24,7 @@ contract Project {
   //total amount of staked worker tokens needed, TBD
   uint256 public reputationCost;
 
+  uint256 public totalStakers;
   uint256 public totalTokensStaked;           //amount of capital tokens currently staked
   uint256 public totalReputationStaked;            //amount of worker tokens currently staked
   mapping (address => uint) stakedTokenBalances;
@@ -60,13 +61,22 @@ contract Project {
     _;
   }
 
+  function isStaker(address _staker) public view returns(bool) {
+    return stakedTokenBalances[_staker] > 0 || stakedReputationBalances[_staker] > 0;
+  }
+
+  function calculateWeightOfAddress(address _address) public view returns (uint256) {
+    return (stakedReputationBalances[_address] + stakedTokenBalances[_address]);
+  }
+
+
   function Project(uint256 _cost, uint256 _costProportion, address _rr, address _tr, address _dt) public {       //called by THR
     tokenRegistry = TokenRegistry(_tr);     //the token holder registry calls this function
     reputationRegistry = ReputationRegistry(_rr);
     projectRegistry = ProjectRegistry(msg.sender);
     distributeToken = DistributeToken(_dt);
     weiCost = _cost;
-    reputationCost = _costProportion * reputationRegistry.totalFreeReputationSupply();
+    reputationCost = _costProportion * reputationRegistry.totalFreeSupply();
   }
 
   function timesUp() public view returns (bool) {
@@ -81,6 +91,7 @@ contract Project {
   function stakeTokens(address _staker, uint256 _tokens, uint256 _weiVal) public onlyTR() onlyInState(1) returns (uint256) {
     stakedTokenBalances[_staker] += _tokens;
     totalTokensStaked += _tokens;
+    totalStakers += 1;
     weiBal += _weiVal;
     // ProjectRegistry.checkOpen();
   }
@@ -90,6 +101,7 @@ contract Project {
          stakedTokenBalances[_staker] > _tokens);   //make sure _staker has the tokens staked to unstake
     stakedTokenBalances[_staker] -= _tokens;
     totalTokensStaked -= _tokens;
+    totalStakers -= 1;
     distributeToken.transfer((_tokens / totalTokensStaked) * weiCost);
   }
 
@@ -97,6 +109,7 @@ contract Project {
     // require(reputationCost > totalReputationStaked); I don't think this can be reached, because it would move to Open after
     /*require(stakedReputationBalances[_staker] + _tokens > stakedReputationBalances[_staker]);*/
     require(_tokens > 0);
+    totalStakers += 1;
     stakedReputationBalances[_staker] += _tokens;
     // ProjectRegistry.checkOpen();
   }
@@ -104,6 +117,7 @@ contract Project {
   function unstakeReputation(address _staker, uint256 _tokens) public onlyRR() onlyInState(1) {
     require(stakedReputationBalances[_staker] - _tokens < stakedReputationBalances[_staker] &&  //check overflow /
       stakedReputationBalances[_staker] > _tokens); //make sure _staker has the tokens staked to unstake
+    totalStakers -= 1;
     stakedReputationBalances[_staker] -= _tokens;
   }
 
@@ -145,7 +159,7 @@ contract Project {
 }
 
   function refundStaker(address _staker) public returns (uint256 _refund) {  //called by THR or WR, allow return of staked, validated, and
-    /*require(msg.sender == address(tokenRegistry) ||  msg.sender == address(reputationRegistry));*/
+    require(msg.sender == address(tokenRegistry) ||  msg.sender == address(reputationRegistry));
     require(state == 7|| state == 9);
     uint256 refund;     //tokens
     if (msg.sender == address(tokenRegistry)) {
@@ -175,6 +189,35 @@ contract Project {
       }
     }
     return refund;
+  }
+
+  struct Reward {
+    uint256 weiReward;
+    uint256 reputationReward;
+    address claimer;
+  }
+
+  mapping (bytes32 => Reward) public taskRewards;
+
+  function claimTask(bytes32 _taskHash, uint256 _weiVal, uint256 _repVal, address _claimer) public onlyInState(4) {
+    require(taskRewards[_taskHash].claimer == 0);
+    Reward storage taskReward = taskRewards[_taskHash];
+    taskReward.claimer = _claimer;
+    taskReward.weiReward = _weiVal;
+    taskReward.reputationReward = _repVal;
+  }
+
+
+  function claimTaskReward(bytes32 _taskHash, address _claimer) public onlyInState(7) returns (uint256) {
+    require(taskRewards[_taskHash].claimer == _claimer);
+    Reward storage taskReward = taskRewards[_taskHash];
+    uint256 weiTemp = taskReward.weiReward;
+    uint256 repTemp = taskReward.reputationReward;
+    taskReward.claimer = 0;
+    taskReward.weiReward = 0;
+    taskReward.reputationReward = 0;
+    tokenRegistry.transferWeiReward(_claimer, weiTemp);
+    return repTemp;
   }
 
   function clearStake() public onlyPR() {
