@@ -41,6 +41,18 @@ contract Project {
   uint256 public totalValidateAffirmative;
   uint256 public totalValidateNegative;
 
+  struct Reward {
+    uint256 weiReward;
+    uint256 reputationReward;
+    address claimer;
+  }
+
+  mapping (bytes32 => Reward) public taskRewards;
+
+  // =====================================================================
+  // MODIFIERS
+  // =====================================================================
+
   modifier onlyInState(uint256 _state) {
     require(state == _state);
     _;
@@ -61,6 +73,10 @@ contract Project {
     _;
   }
 
+  // =====================================================================
+  // UTILITY FUNCTIONS
+  // =====================================================================
+
   function isStaker(address _staker) public view returns(bool) {
     return stakedTokenBalances[_staker] > 0 || stakedReputationBalances[_staker] > 0;
   }
@@ -69,7 +85,48 @@ contract Project {
     return (stakedReputationBalances[_address] + stakedTokenBalances[_address]);
   }
 
+  function timesUp() public view returns (bool) {
+    return (now > nextDeadline);
+  }
 
+  function clearStake() public onlyPR() {
+    totalReputationStaked = 0;
+    totalTokensStaked = 0;
+  }
+
+  function isStaked() public view returns (bool) {
+    return weiCost >= weiBal && reputationCost >= totalReputationStaked;
+  }
+
+  // =====================================================================
+  // GETTER/SETTER FUNCTIONS
+  // =====================================================================
+
+  function setState(uint256 _state, uint256 _nextDeadline) public onlyPR() {
+    state = _state;
+    nextDeadline = _nextDeadline;
+  }
+
+  function setValidateReward(bool _validateReward) public onlyPR() {
+    _validateReward == true ? validateReward = totalValidateAffirmative :
+                              validateReward = totalValidateNegative;
+  }
+
+  function setValidateFlag(bool _flag) public onlyPR() {
+    validateFlag = _flag;
+  }
+
+  function setTotalValidateAffirmative(uint256 _totalValidateAffirmative) public onlyPR() {
+    totalValidateAffirmative = _totalValidateAffirmative;
+  }
+
+  function setTotalValidateNegative(uint256 _totalValidateNegative) public onlyPR() {
+    totalValidateAffirmative = _totalValidateNegative;
+  }
+
+  // =====================================================================
+  // CONSTRUCTOR
+  // =====================================================================
   function Project(uint256 _cost, uint256 _costProportion, address _rr, address _tr, address _dt) public {       //called by THR
     tokenRegistry = TokenRegistry(_tr);     //the token holder registry calls this function
     reputationRegistry = ReputationRegistry(_rr);
@@ -79,21 +136,14 @@ contract Project {
     reputationCost = _costProportion * reputationRegistry.totalFreeSupply();
   }
 
-  function timesUp() public view returns (bool) {
-    return (now > nextDeadline);
-  }
 
-  function setState(uint256 _state, uint256 _nextDeadline) public onlyPR() {
-    state = _state;
-    nextDeadline = _nextDeadline;
-  }
-
+  // =====================================================================
+  // STAKE FUNCTIONS
+  // =====================================================================
   function stakeTokens(address _staker, uint256 _tokens, uint256 _weiVal) public onlyTR() onlyInState(1) returns (uint256) {
     stakedTokenBalances[_staker] += _tokens;
     totalTokensStaked += _tokens;
-    totalStakers += 1;
     weiBal += _weiVal;
-    // ProjectRegistry.checkOpen();
   }
 
   function unstakeTokens(address _staker, uint256 _tokens) public onlyTR() onlyInState(1) returns (uint256) {
@@ -101,62 +151,19 @@ contract Project {
          stakedTokenBalances[_staker] > _tokens);   //make sure _staker has the tokens staked to unstake
     stakedTokenBalances[_staker] -= _tokens;
     totalTokensStaked -= _tokens;
-    totalStakers -= 1;
     distributeToken.transfer((_tokens / totalTokensStaked) * weiCost);
   }
 
   function stakeReputation(address _staker, uint256 _tokens) public onlyRR() onlyInState(1) {
-    // require(reputationCost > totalReputationStaked); I don't think this can be reached, because it would move to Open after
-    /*require(stakedReputationBalances[_staker] + _tokens > stakedReputationBalances[_staker]);*/
-    require(_tokens > 0);
-    totalStakers += 1;
+    require(stakedReputationBalances[_staker] + _tokens > stakedReputationBalances[_staker]);
     stakedReputationBalances[_staker] += _tokens;
-    // ProjectRegistry.checkOpen();
   }
 
   function unstakeReputation(address _staker, uint256 _tokens) public onlyRR() onlyInState(1) {
     require(stakedReputationBalances[_staker] - _tokens < stakedReputationBalances[_staker] &&  //check overflow /
       stakedReputationBalances[_staker] > _tokens); //make sure _staker has the tokens staked to unstake
-    totalStakers -= 1;
     stakedReputationBalances[_staker] -= _tokens;
   }
-
-  function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTR() onlyInState(5) {
-    //checks for free tokens done in THR
-    //increments validation tokens in Project.sol only
-    // require(ProjectRegistry.checkVoting());
-    if (_tokens > 0) {
-      if (_validationState == true) {
-        validators[_staker] = Validator(1, _tokens);
-        totalValidateAffirmative += _tokens;
-      }
-      else if (_validationState == false){
-        validators[_staker] = Validator(0, _tokens);
-        totalValidateNegative += _tokens;
-      }
-    }
-  }
-
-  function rewardValidator(bool isPassed) public onlyPR() {
-  if(!isPassed) {               //project fails
-    tokenRegistry.burnTokens(totalTokensStaked);
-    reputationRegistry.burnReputation(totalReputationStaked);
-    totalTokensStaked = 0;
-    totalReputationStaked = 0;
-    validateReward = totalValidateAffirmative;
-    if (validateReward == 0) {
-      validateFlag = true;
-    }
-    totalValidateAffirmative = 0;
-  }
-  else {                                              //project succeeds
-    validateReward = totalValidateNegative;
-    if (validateReward == 0) {
-      validateFlag = true;
-    }
-    totalValidateNegative = 0;
-  }
-}
 
   function refundStaker(address _staker) public returns (uint256 _refund) {  //called by THR or WR, allow return of staked, validated, and
     require(msg.sender == address(tokenRegistry) ||  msg.sender == address(reputationRegistry));
@@ -191,13 +198,49 @@ contract Project {
     return refund;
   }
 
-  struct Reward {
-    uint256 weiReward;
-    uint256 reputationReward;
-    address claimer;
+  // =====================================================================
+  // VALIDATOR FUNCTIONS
+  // =====================================================================
+  function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTR() onlyInState(5) {
+    //checks for free tokens done in THR
+    //increments validation tokens in Project.sol only
+    // require(ProjectRegistry.checkVoting());
+    if (_tokens > 0) {
+      if (_validationState == true) {
+        validators[_staker] = Validator(1, _tokens);
+        totalValidateAffirmative += _tokens;
+      }
+      else if (_validationState == false){
+        validators[_staker] = Validator(0, _tokens);
+        totalValidateNegative += _tokens;
+      }
+    }
   }
 
-  mapping (bytes32 => Reward) public taskRewards;
+  function rewardValidator(bool isPassed) public onlyPR() {
+    if(!isPassed) {               //project fails
+      tokenRegistry.burnTokens(totalTokensStaked);
+      reputationRegistry.burnReputation(totalReputationStaked);
+      totalTokensStaked = 0;
+      totalReputationStaked = 0;
+      validateReward = totalValidateAffirmative;
+      if (validateReward == 0) {
+        validateFlag = true;
+      }
+      totalValidateAffirmative = 0;
+    }
+    else {                                              //project succeeds
+      validateReward = totalValidateNegative;
+      if (validateReward == 0) {
+        validateFlag = true;
+      }
+      totalValidateNegative = 0;
+    }
+  }
+
+  // =====================================================================
+  // TASK FUNCTIONS
+  // =====================================================================
 
   function claimTask(bytes32 _taskHash, uint256 _weiVal, uint256 _repVal, address _claimer) public onlyInState(4) {
     require(taskRewards[_taskHash].claimer == 0);
@@ -218,32 +261,6 @@ contract Project {
     taskReward.reputationReward = 0;
     tokenRegistry.transferWeiReward(_claimer, weiTemp);
     return repTemp;
-  }
-
-  function clearStake() public onlyPR() {
-    totalReputationStaked = 0;
-    totalTokensStaked = 0;
-  }
-
-  function setValidateReward(bool _validateReward) public onlyPR() {
-    _validateReward == true ? validateReward = totalValidateAffirmative :
-                              validateReward = totalValidateNegative;
-  }
-
-  function setValidateFlag(bool _flag) public onlyPR() {
-    validateFlag = _flag;
-  }
-
-  function setTotalValidateAffirmative(uint256 _totalValidateAffirmative) public onlyPR() {
-    totalValidateAffirmative = _totalValidateAffirmative;
-  }
-
-  function setTotalValidateNegative(uint256 _totalValidateNegative) public onlyPR() {
-    totalValidateAffirmative = _totalValidateNegative;
-  }
-
-  function isStaked() public view returns (bool) {
-    return weiCost >= weiBal && reputationCost >= totalReputationStaked;
   }
 
   function() public payable {

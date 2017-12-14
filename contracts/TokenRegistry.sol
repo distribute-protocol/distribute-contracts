@@ -38,11 +38,6 @@ contract TokenRegistry {
 // MODIFIERS
 // =====================================================================
 
-  /*modifier onlyRR() {
-    require(msg.sender == address(reputationRegistry));
-    _;
-  }*/
-
   modifier onlyValidProject() {
     require(projectRegistry.votingPollId(msg.sender) > 0);
     _;
@@ -109,20 +104,13 @@ contract TokenRegistry {
     uint256 weiChange = flag ? weiVal - weiRemaining : weiVal;
     distributeToken.transferWeiFrom(_projectAddress, weiChange);
     distributeToken.transferToEscrow(msg.sender, tokens);
+    projectRegistry.checkOpen(_projectAddress);
   }
 
   function unstakeTokens(address _projectAddress, uint256 _tokens) public {
     Project(_projectAddress).unstakeTokens(dtAddress, _tokens);
     distributeToken.transferFromEscrow(msg.sender, _tokens);
   }
-
-  // =====================================================================
-  // OPEN/DISPUTE PROJECT
-  // =====================================================================
-
-  // =====================================================================
-  // ACTIVE PROJECT
-  // =====================================================================
 
   // =====================================================================
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY

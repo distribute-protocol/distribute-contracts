@@ -60,8 +60,6 @@ contract ReputationRegistry{
   // =====================================================================
 
   function stakeReputation(address _projectAddress, uint256 _reputation) public {
-    /*require(balances[msg.sender] > 1);*/
-
     require(balances[msg.sender] >= _reputation);   //make sure project exists & TH has tokens to stake
     balances[msg.sender] -= _reputation;
     totalFreeSupply -= _reputation;

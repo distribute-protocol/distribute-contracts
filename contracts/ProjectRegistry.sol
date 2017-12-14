@@ -102,12 +102,9 @@ contract ProjectRegistry {
   }
 
   function startPoll(address _projectAddress, uint256 _commitDuration, uint256 _revealDuration) public {       //can only be called by project in question
-    setPollId(_projectAddress, plcrVoting.startPoll(51, _commitDuration, _revealDuration));
+    votingPollId[_projectAddress] =  plcrVoting.startPoll(51, _commitDuration, _revealDuration);
   }
 
-  function setPollId(address _projectAddress, uint256 _pollId) public {
-    votingPollId[_projectAddress] = _pollId;
-  }
   function pollEnded(address _projectAddress) public view returns (bool) {
     return plcrVoting.pollEnded(votingPollId[_projectAddress]);
   }
@@ -287,6 +284,22 @@ contract ProjectRegistry {
       projectTaskList[_projectAddress] = _hashes;
   }
 
+  // =====================================================================
+  // ACTIVE PROJECT
+  // =====================================================================
+  function claimTask(
+    address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _repVal, address _claimer
+  ) public onlyRR() {
+    bytes32 taskHash = projectTaskList[_projectAddress][_index];
+    Project project = Project(_projectAddress);
+    require(taskHash == keccak256(_taskDescription, _weiVal, _repVal));
+    project.claimTask(taskHash, _weiVal, _repVal, _claimer);
+  }
+
+  // =====================================================================
+  // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
+  // =====================================================================
+
   function handleVoteResult(address _projectAddress, bool passed) internal {
     Project project = Project(_projectAddress);
     if(!passed) {               //project fails
@@ -307,22 +320,4 @@ contract ProjectRegistry {
       project.setTotalValidateNegative(0);
     }
   }
-
-
-  function claimTask(
-    address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _repVal, address _claimer
-  ) public onlyRR() {
-    bytes32 taskHash = projectTaskList[_projectAddress][_index];
-    Project project = Project(_projectAddress);
-    require(taskHash == keccak256(_taskDescription, _weiVal, _repVal));
-    project.claimTask(taskHash, _weiVal, _repVal, _claimer);
-  }
-
 }
-// =====================================================================
-// COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
-// =====================================================================
-
-// =====================================================================
-// VALIDATED / FAILED PROJECT
-// =====================================================================
