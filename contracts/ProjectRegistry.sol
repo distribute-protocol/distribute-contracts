@@ -41,10 +41,6 @@ contract ProjectRegistry {
     mapping(bytes32 => uint256) numSubmissions;
   }
 
-  uint256 taskDiscussionPeriod = 1 weeks;
-  uint256 disputePeriod = 1 weeks;
-
-
   struct DisputeState {
     bytes32 topTaskHash;
     mapping(address => bytes32) taskHashSubmissions;
@@ -57,10 +53,6 @@ contract ProjectRegistry {
     uint256 validateReward;
     bool validateFlag;
   }
-
-  uint256 validationPeriod = 1 weeks;
-  uint256 votingCommitPeriod = 1 weeks;
-  uint256 votingRevealPeriod = 1 weeks;
 
   mapping (address => ProposedState) proposedProjects;
   mapping (address => OpenState) openProjects;
@@ -199,7 +191,7 @@ contract ProjectRegistry {
     require(Project(_projectAddress).state()== 5);
     if(Project(_projectAddress).timesUp()) {
       Project(_projectAddress).setState(4, 0);
-      startPoll(_projectAddress, votingCommitPeriod, votingRevealPeriod);
+      startPoll(_projectAddress, voteCommitPeriod, voteRevealPeriod);
       return true;
     } else {
       return false;
