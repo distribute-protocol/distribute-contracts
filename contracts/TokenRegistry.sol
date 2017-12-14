@@ -30,7 +30,8 @@ contract TokenRegistry {
 // EVENTS
 // =====================================================================
 
-  event LogProposal(uint256 nonce, uint256 proposalCostInTokens);
+  event LogProjectCreated(address indexed projectAddress, uint256 projectCost, uint256 proposerStake);
+
 
 // =====================================================================
 // MODIFIERS
@@ -69,9 +70,10 @@ contract TokenRegistry {
     require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
     uint256 costProportion = _cost / distributeToken.weiBal();
     distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
-    projectRegistry.createProject(_cost, costProportion, proposerTokenCost, msg.sender);
-    /*LogProposal(projectRegistry.projectNonce(), proposerTokenCost);                                                     //determine project id*/
+    address projectAddress = projectRegistry.createProject(_cost, costProportion, proposerTokenCost, msg.sender);
+    LogProjectCreated(projectAddress, _cost, proposerTokenCost);
   }
+
 
   function refundProposer(address _projectAddress) public {                                 //called by proposer to get refund once project is active
 

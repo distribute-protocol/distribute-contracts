@@ -83,6 +83,12 @@ contract ProjectRegistry {
   }
 
   // =====================================================================
+  // EVENTS
+  // =====================================================================
+
+  event LogProjectCreated(address projectAddress, address proposerAddress, uint256 projectCost, uint256 proposerStake);
+
+  // =====================================================================
   // GENERAL FUNCTIONS
   // =====================================================================
 
@@ -109,7 +115,7 @@ contract ProjectRegistry {
   // PROPOSER FUNCTIONS
   // =====================================================================
 
-  function createProject(uint256 _cost, uint256 _costProportion, uint _numTokens, address _proposer) public {
+  function createProject(uint256 _cost, uint256 _costProportion, uint _numTokens, address _proposer) public returns (address) {
 
     Project newProject = new Project(_cost,
                                      _costProportion,
@@ -118,6 +124,8 @@ contract ProjectRegistry {
                                      );
    address _projectAddress = address(newProject);
    setProposer(_projectAddress, _proposer, _numTokens, _cost);
+   LogProjectCreated(_projectAddress, _proposer, _cost, _numTokens);
+   return _projectAddress;
   }
 
   function setProposer(address _projectAddress, address _proposer, uint256 _proposerStake, uint256 _cost) public onlyTR() {
