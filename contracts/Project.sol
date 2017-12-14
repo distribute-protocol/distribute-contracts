@@ -202,9 +202,8 @@ contract Project {
   // VALIDATOR FUNCTIONS
   // =====================================================================
   function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTR() onlyInState(5) {
-    //checks for free tokens done in THR
+    //check for free tokens done in THR
     //increments validation tokens in Project.sol only
-    // require(ProjectRegistry.checkVoting());
     if (_tokens > 0) {
       if (_validationState == true) {
         validators[_staker] = Validator(1, _tokens);

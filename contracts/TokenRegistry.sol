@@ -43,7 +43,6 @@ contract TokenRegistry {
     _;
   }
 
-
 // =====================================================================
 // FUNCTIONS
 // =====================================================================
@@ -90,14 +89,12 @@ contract TokenRegistry {
   // =====================================================================
 
   function stakeTokens(address _projectAddress, uint256 _tokens) public {
-    //make sure project exists & TH has tokens to stake
     require(distributeToken.balanceOf(msg.sender) >= _tokens);
-    //CHECK STATE CHANGE BY CALLING LIBRARY AND PASSING THE PROJECT ADDRESS
-    // require(projectRegistry.projectState(_projectAddress) == 1);
+    Project project = Project(_projectAddress);
+    require(project.getState() == 1);
     uint256 currentPrice = distributeToken.currentPrice();
-    uint256 weiRemaining = Project(_projectAddress).weiCost() - Project(_projectAddress).weiBal();
+    uint256 weiRemaining = project.weiCost() - project.weiBal();
     uint256 weiVal =  currentPrice * _tokens;
-
     Project(_projectAddress).stakeTokens(msg.sender, _tokens, weiVal);
     bool flag = weiVal > weiRemaining;
     uint256 tokens = flag ? ((weiVal - weiRemaining) / currentPrice) : _tokens;
@@ -152,7 +149,7 @@ contract TokenRegistry {
   // =====================================================================
 
   // called by project if a project fails
-  function burnTokens(uint256 _tokens) public onlyValidProject() {                            //check that valid project is calling this function
+  function burnTokens(uint256 _tokens) public onlyValidProject() {              //check that valid project is calling this function
     distributeToken.burnTokens(_tokens);
   }
   function refundStaker(address _projectAddress) public {

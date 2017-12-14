@@ -67,9 +67,9 @@ contract ProjectRegistry {
   mapping (address => OpenState) openProjects;
   mapping (address => DisputeState) disputedProjects;
 
-
-  /*mapping(address => Proposer) proposers;                   //project -> Proposer*/
-
+  // =====================================================================
+  // CONSTRUCTOR
+  // =====================================================================
   function ProjectRegistry(address _tokenRegistry, address _reputationRegistry, address _distributeToken, address _plcrVoting) public {       //contract is created
     require(address(tokenRegistry) == 0 && address(reputationRegistry) == 0);
     tokenRegistry = TokenRegistry(_tokenRegistry);
@@ -78,7 +78,6 @@ contract ProjectRegistry {
     trAddress = _tokenRegistry;
     dtAddress = _distributeToken;
     rrAddress = _reputationRegistry;
-    //updateMintingPrice(0);
   }
   // =====================================================================
   // MODIFIERS
@@ -249,7 +248,6 @@ contract ProjectRegistry {
       os.numTotalSubmissions += 1;
       if (os.first == 0) { os.first = _ipfsHash; }
       else {                                  //not a first time hash submission
-        /*bytes32 temp = os.taskHashSubmissions[_staker];*/
         os.numSubmissions[os.taskHashSubmissions[_staker]] -= 1;
       }
     if (os.first != _ipfsHash) { os.conflict = 1; }

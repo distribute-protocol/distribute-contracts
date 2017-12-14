@@ -19,11 +19,6 @@ contract DistributeToken is StandardToken {
   // .0001 ether --> 3 cents
   uint256 baseCost = 100000000000000;
 
- // Constructor
- function DistributeToken(address _tokenRegistry) public {       //contract is created
-   require(address(tokenRegistry) == 0);
-   tokenRegistry = TokenRegistry(_tokenRegistry);
- }
  // =====================================================================
  // EVENTS
  // =====================================================================
@@ -31,6 +26,13 @@ contract DistributeToken is StandardToken {
    event LogMint(uint256 amountMinted, uint256 totalCost);
    event LogWithdraw(uint256 amountWithdrawn, uint256 reward);
 
+   // =====================================================================
+   // CONSTRUCTOR
+   // =====================================================================
+   function DistributeToken(address _tokenRegistry) public {
+     require(address(tokenRegistry) == 0);
+     tokenRegistry = TokenRegistry(_tokenRegistry);
+   }
  // =====================================================================
  // MODIFIERS
  // =====================================================================
@@ -87,10 +89,6 @@ contract DistributeToken is StandardToken {
   // =====================================================================
 
   function mint(uint _tokens) public payable {
-    /*if (msg.sender == address(tokenRegistry)) {
-      balances[msg.sender] += _tokens;
-      totalSupply += _tokens;
-    } else {*/
       uint256 targetPriceVal;
       /*
         if total supply is 0 or the currentPrice is 0
@@ -118,7 +116,6 @@ contract DistributeToken is StandardToken {
       if (fundsLeft > 0) {
         msg.sender.transfer(fundsLeft);
       }
-    /*}*/
   }
   // =====================================================================
   // BURN FUNCTIONS

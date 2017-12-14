@@ -16,8 +16,6 @@ import "./library/PLCRVoting.sol";
   states (free, staked, voted
 */
 
-//INCOMPLETE
-
 contract ReputationRegistry{
 
 // =====================================================================
@@ -27,7 +25,7 @@ contract ReputationRegistry{
   ProjectRegistry projectRegistry;
   PLCRVoting plcrVoting;
 
-  mapping (address => uint) public balances;                   //worker token balances
+  mapping (address => uint) public balances; //worker token balances
 
   uint256 public totalSupply;               //total supply of reputation in all states
   uint256 public totalFreeSupply;           //total supply of free reputation (not staked, validated, or voted)
@@ -78,7 +76,6 @@ contract ReputationRegistry{
 
   function claimTask(address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _repVal) public {
     require(balances[msg.sender] >= _repVal);
-    /**/
     balances[msg.sender] -= _repVal;
     projectRegistry.claimTask(_projectAddress, _index, _taskDescription, _weiVal, _repVal, msg.sender);
   }
@@ -114,7 +111,6 @@ contract ReputationRegistry{
     balances[msg.sender] += _reputation;
     totalFreeSupply += _reputation;
   }
-
 
   // =====================================================================
   // FAILED / VALIDATED PROJECT
