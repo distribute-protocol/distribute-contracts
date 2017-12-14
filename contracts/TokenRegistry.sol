@@ -64,7 +64,8 @@ contract TokenRegistry {
     //calculate cost of project in tokens currently (_cost in wei)
     //check proposer has at least 5% of the proposed cost in tokens
     require(now < _stakingPeriod && _cost > 0);
-    uint256 proposerTokenCost = (_cost / distributeToken.currentPrice()) / proposeProportion;           //divide by 20 to get 5 percent of tokens
+    uint256 proposerTokenCost = _cost / distributeToken.currentPrice();
+    proposerTokenCost = proposerTokenCost / proposeProportion;           //divide by 20 to get 5 percent of tokens
     require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
     uint256 costProportion = _cost / distributeToken.weiBal();
     distributeToken.transferToEscrow(msg.sender, proposerTokenCost);

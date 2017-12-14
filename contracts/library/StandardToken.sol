@@ -55,6 +55,6 @@ contract StandardToken is Token {
       return allowed[_owner][_spender];
     }
 
-    mapping (address => uint256) public balances;
+    mapping (address => uint256) balances;
     mapping (address => mapping (address => uint256)) allowed;
 }

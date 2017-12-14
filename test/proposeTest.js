@@ -12,6 +12,7 @@ const ReputationRegistry = artifacts.require('ReputationRegistry')
 const DistributeToken = artifacts.require('DistributeToken')
 const Promise = require('bluebird')
 const getEthPriceNow = require('get-eth-price')
+const assertThrown = require('./utils/assertThrown')
 //const ethJSABI = require("ethjs-abi")
 web3.eth = Promise.promisifyAll(web3.eth)
 
@@ -20,11 +21,13 @@ contract('proposeProject', (accounts) => {
   let RR
   let DT
   let proposer = accounts[0]
-  let not_proposer = accounts[1]
+  let nonProposer = accounts[1]
   let tokens = 10000
   let stakingPeriod = 2000000000
   let projectCost = web3.toWei(1, 'ether')
   let proposeProportion = 20
+  let totalTokenSupply
+  let totalFreeSupply
 
   before(async function() {
     // define variables to hold deployed contracts
@@ -40,30 +43,42 @@ contract('proposeProject', (accounts) => {
 
     // fund proposer with 10000 tokens and make sure they are minted successfully
     await DT.mint(tokens, {from: proposer, value: mintingCost});
-    let mintedTokens = await DT.balances(proposer)
+    let proposerBalance = await DT.balanceOf(proposer)
     //console.log(mintedTokens.toNumber())
-    assert.equal(tokens, mintedTokens, 'proposer did not successfully mint tokens')
+    totalTokenSupply = await DT.totalSupply()
+    totalFreeSupply = await DT.totalFreeSupply()
+    assert.equal(tokens, proposerBalance, 'proposer did not successfully mint tokens')
+    assert.equal(tokens, totalTokenSupply, 'total supply did not update correctly')
+    assert.equal(tokens, totalFreeSupply, 'total free supply did not update correctly')
   })
 
   it('Proposer can propose project', async function() {
     // propose project & calculate proposer stake
+    let currentPrice = await DT.currentPrice()              //put this before propose project because current price changes slightly (rounding errors)
+    //console.log('current price', currentPrice.toNumber())
     await TR.proposeProject(projectCost, stakingPeriod, {from: proposer})
-    let currentPrice = await DT.currentPrice()
-    let proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion)
-    let proposerTokenBalance = await DT.balances(proposer)
-    console.log(proposerTokenBalance.toNumber())
-    assert.equal(proposerTokenBalance, tokens - proposerTokenCost, 'DT did not set aside appropriate proportion to escrow')
+    let proposerTokenCost = Math.trunc(Math.trunc(projectCost / currentPrice) / proposeProportion)
+    //console.log('proposer token cost', proposerTokenCost)
+    let proposerBalance = await DT.balanceOf(proposer)
+    //console.log('proposer balance', proposerBalance.toNumber())
+    totalFreeSupply = await DT.totalFreeSupply()
+    assert.equal(tokens - proposerTokenCost, totalFreeSupply.toNumber(), 'total free supply did not update correctly')
+    assert.equal(tokens, totalTokenSupply, 'total supply shouldn\'t have updated')
+    assert.equal(proposerBalance.toNumber(), tokens - proposerTokenCost, 'DT did not set aside appropriate proportion to escrow')
   })
 
-  it('Non-proposer cannot propose project', async function() {
+  it('Non-proposer can\'t propose project', async function() {
     // propose project & calculate proposer stake
-    await TR.proposeProject(projectCost, stakingPeriod, {from: proposer})
-    let currentPrice = await DT.currentPrice()
-    let proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion)
-    let proposerTokenBalance = await DT.balances(proposer)
-    console.log(proposerTokenBalance.toNumber())
-    assert.equal(proposerTokenBalance, tokens - proposerTokenCost, 'DT did not set aside appropriate proportion to escrow')
+    errorThrown = false
+    try {
+      await TR.proposeProject(projectCost, stakingPeriod, {from: nonProposer})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
   })
+
+// write out what happens in each flow so we know what to test
 
 
 })
