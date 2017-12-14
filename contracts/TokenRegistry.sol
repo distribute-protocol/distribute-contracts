@@ -60,7 +60,7 @@ contract TokenRegistry {
   // PROPOSER FUNCTIONS
   // =====================================================================
 
-  function proposeProject(uint256 _cost, uint256 _stakingPeriod) public {    //_cost of project in ether, _projectDeadline is for end of active period
+  function proposeProject(uint256 _cost, uint256 _stakingPeriod) public {    //_cost of project in ether
     //calculate cost of project in tokens currently (_cost in wei)
     //check proposer has at least 5% of the proposed cost in tokens
     require(now < _stakingPeriod && _cost > 0);

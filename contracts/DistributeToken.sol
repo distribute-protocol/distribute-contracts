@@ -91,13 +91,11 @@ contract DistributeToken is StandardToken {
       /*
         if total supply is 0 or the currentPrice is 0
         return the baseCost, otherwise return the calculated
-        targetPrice.
+        targetPrice (handled by targetPrice function).
       */
-      if (totalSupply == 0 || currentPrice() == 0) {
-        targetPriceVal = baseCost;
-      } else {
-        targetPriceVal = targetPrice(_tokens);
-      }
+
+      targetPriceVal = targetPrice(_tokens);
+
       // calculate the amount of wei required to create the tokens
       uint256 weiRequiredVal = weiRequired(targetPriceVal, _tokens);
       require(msg.value >= weiRequiredVal);
