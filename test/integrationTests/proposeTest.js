@@ -8,17 +8,20 @@ console.log(ethPrice)
 */
 
 const TokenRegistry = artifacts.require('TokenRegistry')
-const ReputationRegistry = artifacts.require('ReputationRegistry')
 const DistributeToken = artifacts.require('DistributeToken')
+const ProjectRegistry = artifacts.require('ProjectRegistry')
 const Promise = require('bluebird')
 const getEthPriceNow = require('get-eth-price')
 const assertThrown = require('../utils/assertThrown')
+const lightwallet = require('eth-signer')
+const waitForTxReceipt = require('./utils/waitForTxReceipt')
+
 //const ethJSABI = require("ethjs-abi")
 web3.eth = Promise.promisifyAll(web3.eth)
 
 contract('proposeProject', (accounts) => {
   let TR
-  let RR
+  let PR
   let DT
   let proposer = accounts[0]
   let nonProposer = accounts[1]
@@ -32,8 +35,8 @@ contract('proposeProject', (accounts) => {
   before(async function() {
     // define variables to hold deployed contracts
     TR = await TokenRegistry.deployed()
-    RR = await ReputationRegistry.deployed()
     DT = await DistributeToken.deployed()
+    PR = await ProjectRegistry.deployed()
 
     // calculate price of 1000 tokens
     let targetPriceVal = await DT.targetPrice(tokens, {from: proposer})
@@ -76,6 +79,18 @@ contract('proposeProject', (accounts) => {
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('Token registry emits accurate event on project creation', async function() {
+    let currentPrice = await DT.currentPrice()              //put this before propose project because current price changes slightly (rounding errors)
+    let tx = await TR.proposeProject(projectCost, stakingPeriod, {from: proposer})
+    let proposerTokenCost = Math.trunc(Math.trunc(projectCost / currentPrice) / proposeProportion)
+    let log = tx.logs[0].args
+    let newProjectAddress = log.projectAddress.toString()
+    let storedProposer = await PR.getProposerAddress(newProjectAddress)
+    //console.log(storedProposer)
+    assert.equal(proposerTokenCost, log.proposerStake.toNumber(), 'event logged incorrect proposer stake')
+    assert.equal(storedProposer, proposer, 'PR stored incorrect proposer address')
   })
 
 // write out what happens in each flow so we know what to test
