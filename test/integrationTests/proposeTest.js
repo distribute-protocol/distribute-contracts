@@ -12,7 +12,7 @@ const ReputationRegistry = artifacts.require('ReputationRegistry')
 const DistributeToken = artifacts.require('DistributeToken')
 const Promise = require('bluebird')
 const getEthPriceNow = require('get-eth-price')
-const assertThrown = require('./utils/assertThrown')
+const assertThrown = require('../utils/assertThrown')
 //const ethJSABI = require("ethjs-abi")
 web3.eth = Promise.promisifyAll(web3.eth)
 
