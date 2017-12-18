@@ -23,11 +23,10 @@ contract Project {
   //total amount of staked worker tokens needed, TBD
   uint256 public reputationCost;
 
-  uint256 public totalStakers;
   uint256 public totalTokensStaked;           //amount of capital tokens currently staked
   uint256 public totalReputationStaked;            //amount of worker tokens currently staked
-  mapping (address => uint) stakedTokenBalances;
-  mapping (address => uint) stakedReputationBalances;
+  mapping (address => uint) public stakedTokenBalances;
+  mapping (address => uint) public stakedReputationBalances;
 
   struct Validator {
     uint256 status;
@@ -94,7 +93,7 @@ contract Project {
   }
 
   function isStaked() public view returns (bool) {
-    return weiCost >= weiBal && reputationCost >= totalReputationStaked;
+    return weiCost <= weiBal && reputationCost <= totalReputationStaked;
   }
 
   // =====================================================================
@@ -126,23 +125,24 @@ contract Project {
   // =====================================================================
   // CONSTRUCTOR
   // =====================================================================
-  function Project(uint256 _cost, uint256 _costProportion, address _reputationRegistry, address _tokenRegistry) public {       //called by THR
+  function Project(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _reputationRegistry, address _tokenRegistry) public {       //called by THR
     tokenRegistry = TokenRegistry(_tokenRegistry);     //the token holder registry calls this function
     reputationRegistry = ReputationRegistry(_reputationRegistry);
     projectRegistry = ProjectRegistry(msg.sender);
     weiCost = _cost;
     reputationCost = _costProportion * reputationRegistry.totalFreeSupply();
+    state = 1;
+    nextDeadline = _stakingPeriod;
   }
 
 
   // =====================================================================
   // STAKE FUNCTIONS
   // =====================================================================
-  function stakeTokens(address _staker, uint256 _tokens, uint256 _weiValue) public onlyTR() onlyInState(1) returns (uint256) {
+  function stakeTokens(address _staker, uint256 _tokens, uint256 _weiValue) public onlyTR() onlyInState(1) {
     stakedTokenBalances[_staker] += _tokens;
     totalTokensStaked += _tokens;
     weiBal += _weiValue;
-    return _tokens;
   }
 
   function unstakeTokens(address _staker, uint256 _tokens) public onlyTR() onlyInState(1) returns (uint256) {

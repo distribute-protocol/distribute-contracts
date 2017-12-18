@@ -70,7 +70,7 @@ contract TokenRegistry {
     require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
     uint256 costProportion = _cost / distributeToken.weiBal();
     distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
-    address projectAddress = projectRegistry.createProject(_cost, costProportion, proposerTokenCost, msg.sender);
+    address projectAddress = projectRegistry.createProject(_cost, costProportion, proposerTokenCost, _stakingPeriod, msg.sender);
     LogProjectCreated(projectAddress, _cost, proposerTokenCost);
   }
 
@@ -96,10 +96,9 @@ contract TokenRegistry {
     uint256 weiVal =  currentPrice * _tokens;
     Project(_projectAddress).stakeTokens(msg.sender, _tokens, weiVal);
     bool flag = weiVal > weiRemaining;
-    uint256 tokens = flag ? ((weiVal - weiRemaining) / currentPrice) : _tokens;
     uint256 weiChange = flag ? weiVal - weiRemaining : weiVal;
     distributeToken.transferWeiFrom(_projectAddress, weiChange);
-    distributeToken.transferToEscrow(msg.sender, tokens);
+    distributeToken.transferToEscrow(msg.sender, _tokens);
     projectRegistry.checkOpen(_projectAddress);
   }
 

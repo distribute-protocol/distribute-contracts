@@ -115,10 +115,11 @@ contract ProjectRegistry {
   // PROPOSER FUNCTIONS
   // =====================================================================
 
-  function createProject(uint256 _cost, uint256 _costProportion, uint _numTokens, address _proposer) public returns (address) {
+  function createProject(uint256 _cost, uint256 _costProportion, uint256 _numTokens, uint256 _stakingPeriod, address _proposer) public returns (address) {
 
     Project newProject = new Project(_cost,
                                      _costProportion,
+                                     _stakingPeriod,
                                      reputationRegistryAddress,
                                      tokenRegistryAddress
                                      );
