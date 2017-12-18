@@ -87,17 +87,14 @@ contract DistributeToken is StandardToken {
   // =====================================================================
 
   function mint(uint _tokens) public payable {
-      uint256 targetPriceVal;
       /*
         if total supply is 0 or the currentPrice is 0
         return the baseCost, otherwise return the calculated
         targetPrice (handled by targetPrice function).
       */
 
-      targetPriceVal = targetPrice(_tokens);
-
       // calculate the amount of wei required to create the tokens
-      uint256 weiRequiredVal = weiRequired(targetPriceVal, _tokens);
+      uint256 weiRequiredVal = weiRequired(_tokens);
       require(msg.value >= weiRequiredVal);
 
       totalSupply += _tokens;
@@ -125,11 +122,14 @@ contract DistributeToken is StandardToken {
     return _quotient;
   }
 
-  function weiRequired(uint256 _targetPrice, uint256 _tokens) public view returns (uint256) {
-    return ((_targetPrice * (totalSupply + _tokens)) - currentPrice() * totalSupply);
+  function weiRequired(uint256 _tokens) public view returns (uint256) {
+    return ((targetPrice(_tokens) * (totalSupply + _tokens)) - currentPrice() * totalSupply);
   }
 
   function targetPrice(uint _tokens) public view returns (uint256) {
+    if (totalSupply == 0 || weiBal == 0) {
+      return baseCost;
+    }
     uint256 newSupply = totalSupply + _tokens;
     uint256 cp = currentPrice();
     return cp * (1000 + percent(_tokens, newSupply, 3)) / 1000;
