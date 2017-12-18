@@ -8,13 +8,12 @@ console.log(ethPrice)
 */
 
 const TokenRegistry = artifacts.require('TokenRegistry')
-const ReputationRegistry = artifacts.require('ReputationRegistry')
 const DistributeToken = artifacts.require('DistributeToken')
 const ProjectRegistry = artifacts.require('ProjectRegistry')
 const Project = artifacts.require('Project')
 const Promise = require('bluebird')
 const getEthPriceNow = require('get-eth-price')
-const assertThrown = require('./utils/assertThrown')
+const assertThrown = require('./utils/AssertThrown')
 const lightwallet = require('eth-signer')
 const waitForTxReceipt = require('./utils/waitForTxReceipt')
 //const ethJSABI = require("ethjs-abi")
@@ -22,7 +21,6 @@ web3.eth = Promise.promisifyAll(web3.eth)
 
 contract('proposeProject', (accounts) => {
   let TR
-  let RR
   let PR
   let DT
   let PROJ
@@ -44,26 +42,20 @@ contract('proposeProject', (accounts) => {
   before(async function() {
     // define variables to hold deployed contracts
     TR = await TokenRegistry.deployed()
-    RR = await ReputationRegistry.deployed()
     DT = await DistributeToken.deployed()
     PR = await ProjectRegistry.deployed()
 
     // calculate price of 1000 tokens
-    let targetPriceVal = await DT.targetPrice(tokens, {from: proposer})
-    //console.log('targetPriceVal: ', targetPriceVal.toNumber())
-    let mintingCost = await DT.weiRequired(targetPriceVal, tokens, {from: proposer})
+    let mintingCost = await DT.weiRequired(tokens, {from: proposer})
     //console.log('mintingCost: ', mintingCost.toNumber())
     // fund proposer with 10000 tokens and make sure they are minted successfully
     await DT.mint(tokens, {from: proposer, value: mintingCost});
-    targetPriceVal = await DT.targetPrice(tokens, {from: staker})
-    //console.log('targetPriceVal: ', targetPriceVal.toNumber())
-    mintingCost = await DT.weiRequired(targetPriceVal, tokens, {from: staker})
+    mintingCost = await DT.weiRequired(tokens, {from: staker})
     //console.log('mintingCost: ', mintingCost.toNumber())
     // fund proposer with 10000 tokens and make sure they are minted successfully
     await DT.mint(tokens, {from: staker, value: mintingCost})
     let proposerBalance = await DT.balanceOf(proposer)
     let stakerBalance = await DT.balanceOf(staker)
-    //console.log(mintedTokens.toNumber())
     totalTokenSupply = await DT.totalSupply()
     totalFreeSupply = await DT.totalFreeSupply()
     assert.equal(2 * tokens, proposerBalance.toNumber() + stakerBalance.toNumber(), 'proposer or staker did not successfully mint tokens')
