@@ -31,6 +31,7 @@ contract('proposeProject', (accounts) => {
   let notAProject = accounts[4]
   let tokens = 10000
   let stakingPeriod = 20000000000     //10/11/2603 @ 11:33am (UTC)
+  let stakingPeriodFail = 10          //January 1st, 1970
   let projectCost = web3.toWei(1, 'ether')
   let proposeProportion = 20
   let totalTokenSupply
@@ -127,10 +128,24 @@ contract('proposeProject', (accounts) => {
     assert.isBelow(weiBal.toNumber(), weiCost.toNumber(), 'project has more wei than it should')
   })
 
+  // staker can unstake tokens
+
+  // non staker can't unstake tokens
+
   it('User can\'t stake tokens they don\'t have', async function() {
     errorThrown = false
     try {
       await TR.stakeTokens(projectAddress, 1, {from: nonStaker})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('Refund proposer cannot be called while still in propose period', async function() {
+    errorThrown = false
+    try {
+      await TR.refundProposer(projectAddress, {from: proposer})
     } catch (e) {
       errorThrown = true
     }
@@ -144,6 +159,7 @@ contract('proposeProject', (accounts) => {
     let weiCost = await PROJ.weiCost()
     //console.log('wei cost', weiCost.toNumber())
     let weiBal = await PROJ.weiBal()
+    projectWeiBal = weiBal;
     let weiNeeded = weiCost - weiBal
     //console.log('wei needed', weiNeeded)
     let requiredTokens = Math.ceil(weiNeeded / await DT.currentPrice())   //need next largest whole token
@@ -160,11 +176,27 @@ contract('proposeProject', (accounts) => {
     let freeTokensAfter = await DT.totalFreeSupply()
     let stakedBalanceAfter = await PROJ.stakedTokenBalances(staker)
     let state = await PROJ.state()
+    let newWeiBal = await PROJ.weiBal()
+    //console.log('wei bal', newWeiBal.toNumber())
     assert.equal(stakedTokensAfter.toNumber(), stakedTokensBefore.toNumber() + requiredTokens + 1, 'did not successfully stake tokens')
     assert.equal(stakerBalanceAfter.toNumber(), stakerBalanceBefore.toNumber() -requiredTokens - 1, 'staker balance does not change correctly')
     assert.equal(freeTokensAfter.toNumber(), freeTokensBefore.toNumber() - requiredTokens - 1, 'free token supply does not change correctly')
     assert.equal(stakedBalanceAfter.toNumber(), stakedBalanceBefore.toNumber() + requiredTokens + 1, 'staked balance did not update in project contract')
     assert.equal(state.toNumber(), 2, 'project should be in open state as it is now fully staked')
+    assert.equal(weiCost.toNumber(), newWeiBal.toNumber(), 'project was not funded exactly')
+  })
+
+  it('Refund proposer works after a project is fully staked', async function() {
+    // let proposer = await PR.getProposerAddress(projectAddress)
+    // console.log('proposer address', proposer)
+    // console.log(proposer)
+    let weiBalBefore = await DT.weiBal();
+    await TR.refundProposer(projectAddress, {from: proposer})
+    let weiBalAfter = await DT.weiBal();
+    let proposerStake = await PR.proposedProjects.call(projectAddress)
+    //console.log(proposerStake)
+    assert.equal(weiBalBefore - weiBalAfter, Math.floor(projectCost/100), 'incorrect propose reward was sent')
+    assert.equal(proposerStake[1].toNumber(), 0, 'proposer stake unsuccessfully reset in PR')
   })
 
   it('User can\'t stake tokens on nonexistant project', async function() {
@@ -177,6 +209,38 @@ contract('proposeProject', (accounts) => {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-// write out what happens in each flow so we know what to test
+  it('Non-proposer can\'t call refund proposer', async function() {
+    errorThrown = false
+    try {
+      await TR.refundProposer(projectAddress, {from: nonProposer})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('Proposer can\'t refund proposer multiple times', async function() {
+    errorThrown = false
+    try {
+      await TR.refundProposer(projectAddress, {from: proposer})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('can\'t propose a project whose staking deadline has passed', async function() {
+    errorThrown = false
+    try {
+      await TR.proposeProject(1, stakingPeriodFail, {from: proposer})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+
+
+// also have to do reputation stake testing
 
 })

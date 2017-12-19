@@ -76,7 +76,6 @@ contract TokenRegistry {
 
 
   function refundProposer(address _projectAddress) public {                                 //called by proposer to get refund once project is active
-
     require(projectRegistry.getProposerAddress(_projectAddress) == msg.sender);
     uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);        //call project to "send back" staked tokens to put in proposer's balances
     distributeToken.transferFromEscrow(msg.sender, proposerVals[1]);
@@ -94,9 +93,9 @@ contract TokenRegistry {
     uint256 currentPrice = distributeToken.currentPrice();
     uint256 weiRemaining = project.weiCost() - project.weiBal();
     uint256 weiVal =  currentPrice * _tokens;
-    Project(_projectAddress).stakeTokens(msg.sender, _tokens, weiVal);
     bool flag = weiVal > weiRemaining;
-    uint256 weiChange = flag ? weiVal - weiRemaining : weiVal;
+    uint256 weiChange = flag ? weiRemaining : weiVal;       //how much ether to send on change
+    Project(_projectAddress).stakeTokens(msg.sender, _tokens, weiChange);
     distributeToken.transferWeiFrom(_projectAddress, weiChange);
     distributeToken.transferToEscrow(msg.sender, _tokens);
     projectRegistry.checkOpen(_projectAddress);

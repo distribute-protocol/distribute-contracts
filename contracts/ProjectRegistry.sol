@@ -54,7 +54,7 @@ contract ProjectRegistry {
     bool validateFlag;
   }
 
-  mapping (address => ProposedState) proposedProjects;
+  mapping (address => ProposedState) public proposedProjects;
   mapping (address => OpenState) openProjects;
   mapping (address => DisputeState) disputedProjects;
 
@@ -124,20 +124,21 @@ contract ProjectRegistry {
                                      tokenRegistryAddress
                                      );
    address _projectAddress = address(newProject);
-   setProposer(_projectAddress, _proposer, _numTokens, _cost);
+   setProposer(_projectAddress, _proposer, _numTokens, _stakingPeriod, _cost);
    LogProjectCreated(_projectAddress, _proposer, _cost, _numTokens);
    return _projectAddress;
   }
 
-  function setProposer(address _projectAddress, address _proposer, uint256 _proposerStake, uint256 _cost) public onlyTR() {
+  function setProposer(address _projectAddress, address _proposer, uint256 _proposerStake, uint256 _stakingPeriod, uint256 _cost) public onlyTR() {
     // Proposer storage proposer = proposers[_projectAddress];
     proposedProjects[_projectAddress].proposer = _proposer;
     proposedProjects[_projectAddress].proposerStake = _proposerStake;
+    proposedProjects[_projectAddress].stakingPeriod = _stakingPeriod;
     proposedProjects[_projectAddress].cost = _cost;
   }
 
   function refundProposer(address _projectAddress) public onlyTR() returns (uint256[2]) {
-    require(now > proposedProjects[_projectAddress].stakingPeriod);
+    require(Project(_projectAddress).state() > 1);
     uint256[2] memory returnValues;
     uint256 proposerStake = proposedProjects[_projectAddress].proposerStake;
     require(proposerStake > 0);
