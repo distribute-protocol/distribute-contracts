@@ -55,7 +55,7 @@ contract ProjectRegistry {
   }
 
   mapping (address => ProposedState) public proposedProjects;
-  mapping (address => OpenState) openProjects;
+  mapping (address => OpenState) public openProjects;
   mapping (address => DisputeState) disputedProjects;
 
   // =====================================================================
