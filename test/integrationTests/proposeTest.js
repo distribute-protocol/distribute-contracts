@@ -151,7 +151,15 @@ contract('proposeProject', (accounts) => {
     assert.isBelow(weiBal.toNumber(), weiCost.toNumber(), 'project has more wei than it should')
   })
 
-  // non staker can't unstake tokens
+  it('Non-staker can\'t unstake tokens', async function() {
+    errorThrown = false
+    try {
+      await TR.unstakeTokens(projectAddress, 1, {from: nonStaker})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
 
   it('User can\'t stake tokens they don\'t have', async function() {
     errorThrown = false
@@ -163,7 +171,7 @@ contract('proposeProject', (accounts) => {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('Refund proposer cannot be called while still in propose period', async function() {
+  it('Refund proposer can\'t be called while still in propose period', async function() {
     errorThrown = false
     try {
       await TR.refundProposer(projectAddress, {from: proposer})
@@ -205,6 +213,16 @@ contract('proposeProject', (accounts) => {
     assert.equal(stakedBalanceAfter.toNumber(), stakedBalanceBefore.toNumber() + requiredTokens + 1, 'staked balance did not update in project contract')
     assert.equal(state.toNumber(), 2, 'project should be in open state as it is now fully staked')
     assert.equal(weiCost.toNumber(), newWeiBal.toNumber(), 'project was not funded exactly')
+  })
+
+  it('A staker can no longer call unstake token once in the open period', async function() {
+    errorThrown = false
+    try {
+      await TR.unstakeTokens(1, {from: staker})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
   })
 
   it('Refund proposer works after a project is fully staked', async function() {
