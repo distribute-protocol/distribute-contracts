@@ -241,19 +241,22 @@ contract ProjectRegistry {
     checkActive(_projectAddress);
   }
 
+  /*function getSubmittedTaskHash(address _staker, address _projectAddress) public view returns (bytes32) {
+    return openProjects[_projectAddress].taskHashSubmissions[_staker];
+  }*/
+
   function openTaskHash(address _staker, address _projectAddress, bytes32 _ipfsHash) internal {
     OpenState storage os = openProjects[_projectAddress];
     if(os.taskHashSubmissions[_staker] == 0) {    //first time submission for this particular address
       os.numTotalSubmissions += 1;
       if (os.first == 0) { os.first = _ipfsHash; }
-      else {                                  //not a first time hash submission
+    } else {                                  //not a first time hash submission
         os.numSubmissions[os.taskHashSubmissions[_staker]] -= 1;
-      }
+    }
     if (os.first != _ipfsHash) { os.conflict = 1; }
     os.numSubmissions[_ipfsHash] += 1;
-    os.taskHashSubmissions[_staker] == _ipfsHash;
+    os.taskHashSubmissions[_staker] = _ipfsHash;
     }
-  }
 
   function disputeTaskHash(address _staker, address _projectAddress, bytes32 _ipfsHash, uint256 stakerWeight) internal {
     DisputeState storage ds = disputedProjects[_projectAddress];

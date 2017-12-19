@@ -38,9 +38,9 @@ module.exports = async function(callback) {
   let data1 = 'some random task list'
   let data2 = 'some other random task list'
 
-  TR = TokenRegistry.at("0x2c2b9c9a4a25e24b174f26114e8926a9f2128fe4")
-  DT = DistributeToken.at("0xb529f14aa8096f943177c09ca294ad66d2e08b1f")
-  PR = ProjectRegistry.at("0x2a504b5e7ec284aca5b6f49716611237239f0b97")
+  TR = TokenRegistry.at("0x928892ad7e2fd6745a5b37732d647904dc3d6d6a")
+  DT = DistributeToken.at("0x53cc798ad1d76c2e46bc19532febae025f95d526")
+  PR = ProjectRegistry.at("0x872d443291bad3ea04bddfed97fdd57cf76a4329")
 
       // mint 10000 tokens for proposer & each staker
   let mintingCost = await DT.weiRequired(tokens, {from: proposer})
