@@ -95,9 +95,10 @@ contract TokenRegistry {
     uint256 weiVal =  currentPrice * _tokens;
     bool flag = weiVal > weiRemaining;
     uint256 weiChange = flag ? weiRemaining : weiVal;       //how much ether to send on change
-    Project(_projectAddress).stakeTokens(msg.sender, _tokens, weiChange);
+    uint256 tokens = flag ? ((weiRemaining/currentPrice) + 1) : _tokens;
+    Project(_projectAddress).stakeTokens(msg.sender, tokens, weiChange);
     distributeToken.transferWeiFrom(_projectAddress, weiChange);
-    distributeToken.transferToEscrow(msg.sender, _tokens);
+    distributeToken.transferToEscrow(msg.sender, tokens);
     projectRegistry.checkOpen(_projectAddress);
   }
 

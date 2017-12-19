@@ -190,10 +190,7 @@ contract('Proposed State', (accounts) => {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('User can stake extra tokens on a proposed project but only the required amount of wei is sent', async function() {
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //NOTE! If a staker overstakes, that is their fault! Those tokens will be locked up and treated as staked tokens.
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  it('User can stake extra tokens on a proposed project but only the required amount of wei and tokens is sent', async function() {
     let weiCost = await PROJ.weiCost()
     //console.log('wei cost', weiCost.toNumber())
     let weiBal = await PROJ.weiBal()
@@ -216,10 +213,10 @@ contract('Proposed State', (accounts) => {
     let state = await PROJ.state()
     let newWeiBal = await PROJ.weiBal()
     //console.log('wei bal', newWeiBal.toNumber())
-    assert.equal(stakedTokensAfter.toNumber(), stakedTokensBefore.toNumber() + requiredTokens + 1, 'did not successfully stake tokens')
-    assert.equal(stakerBalanceAfter.toNumber(), stakerBalanceBefore.toNumber() -requiredTokens - 1, 'staker balance does not change correctly')
-    assert.equal(freeTokensAfter.toNumber(), freeTokensBefore.toNumber() - requiredTokens - 1, 'free token supply does not change correctly')
-    assert.equal(stakedBalanceAfter.toNumber(), stakedBalanceBefore.toNumber() + requiredTokens + 1, 'staked balance did not update in project contract')
+    assert.equal(stakedTokensAfter.toNumber(), stakedTokensBefore.toNumber() + requiredTokens, 'did not successfully stake tokens')
+    assert.equal(stakerBalanceAfter.toNumber(), stakerBalanceBefore.toNumber() - requiredTokens, 'staker balance does not change correctly')
+    assert.equal(freeTokensAfter.toNumber(), freeTokensBefore.toNumber() - requiredTokens, 'free token supply does not change correctly')
+    assert.equal(stakedBalanceAfter.toNumber(), stakedBalanceBefore.toNumber() + requiredTokens, 'staked balance did not update in project contract')
     assert.equal(state.toNumber(), 2, 'project should be in open state as it is now fully staked')
     assert.equal(weiCost.toNumber(), newWeiBal.toNumber(), 'project was not funded exactly')
   })
