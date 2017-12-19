@@ -1,6 +1,14 @@
 // Test functions in proposal state of a project
 // Before, fund a user with tokens and have them propose a project
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//TO DO STILL:
+//
+// test a project that is proposed but fails to be staked (stakers receive stakes back, proposer doesn't)
+// also have to do reputation stake testing
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /*
 let ethPrice = await getEthPriceNow.getEthPriceNow()
 ethPrice = ethPrice[Object.keys(ethPrice)].ETH.USD
@@ -280,7 +288,5 @@ contract('Proposed State', (accounts) => {
   })
 
 
-// test a project that is proposed but fails to be staked (stakers receive stakes back, proposer doesn't)
-// also have to do reputation stake testing
 
 })
