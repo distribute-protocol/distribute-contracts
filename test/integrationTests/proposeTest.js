@@ -128,7 +128,28 @@ contract('proposeProject', (accounts) => {
     assert.isBelow(weiBal.toNumber(), weiCost.toNumber(), 'project has more wei than it should')
   })
 
-  // staker can unstake tokens
+  it('staker can unstake tokens', async function() {
+    let stakedTokensBefore = await PROJ.totalTokensStaked()
+    let stakerBalanceBefore = await DT.balanceOf(staker)
+    let freeTokensBefore = await DT.totalFreeSupply()
+    let stakedBalanceBefore = await PROJ.stakedTokenBalances(staker)
+    //console.log('staker token balance', stakerBalanceBefore.toNumber())
+    await TR.unstakeTokens(projectAddress, 1, {from: staker})
+    let stakedTokensAfter = await PROJ.totalTokensStaked()
+    //console.log('staked tokens', stakedTokens.toNumber())
+    let stakerBalanceAfter = await DT.balanceOf(staker)
+    let freeTokensAfter = await DT.totalFreeSupply()
+    let stakedBalanceAfter = await PROJ.stakedTokenBalances(staker)
+    let state = await PROJ.state()
+    let weiCost = await PROJ.weiCost()
+    let weiBal = await PROJ.weiBal()
+    assert.equal(stakedTokensAfter, stakedTokensBefore - 1, 'did not successfully stake tokens')
+    assert.equal(stakerBalanceAfter, stakerBalanceBefore.toNumber() + 1, 'staker balance does not change correctly')
+    assert.equal(freeTokensAfter, freeTokensBefore.toNumber() + 1, 'free token supply does not change correctly')
+    assert.equal(stakedBalanceAfter, stakedTokensBefore.toNumber() - 1, 'staked balance did not update in project contract')
+    assert.equal(state.toNumber(), 1, 'project should still be in proposed state')
+    assert.isBelow(weiBal.toNumber(), weiCost.toNumber(), 'project has more wei than it should')
+  })
 
   // non staker can't unstake tokens
 
