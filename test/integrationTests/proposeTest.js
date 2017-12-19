@@ -19,7 +19,7 @@ const waitForTxReceipt = require('../utils/waitForTxReceipt')
 //const ethJSABI = require("ethjs-abi")
 web3.eth = Promise.promisifyAll(web3.eth)
 
-contract('proposeProject', (accounts) => {
+contract('Proposed State', (accounts) => {
   let TR
   let PR
   let DT
@@ -34,6 +34,7 @@ contract('proposeProject', (accounts) => {
   let stakingPeriodFail = 10          //January 1st, 1970
   let projectCost = web3.toWei(1, 'ether')
   let proposeProportion = 20
+  let proposeReward = 100
   let totalTokenSupply
   let totalFreeSupply
   let currentPrice
@@ -53,7 +54,7 @@ contract('proposeProject', (accounts) => {
     await DT.mint(tokens, {from: proposer, value: mintingCost});
     mintingCost = await DT.weiRequired(tokens, {from: staker})
     //console.log('mintingCost: ', mintingCost.toNumber())
-    // fund proposer with 10000 tokens and make sure they are minted successfully
+    // fund staker with 10000 tokens and make sure they are minted successfully
     await DT.mint(tokens, {from: staker, value: mintingCost})
     let proposerBalance = await DT.balanceOf(proposer)
     let stakerBalance = await DT.balanceOf(staker)
@@ -234,7 +235,7 @@ contract('proposeProject', (accounts) => {
     let weiBalAfter = await DT.weiBal();
     let proposerStake = await PR.proposedProjects.call(projectAddress)
     //console.log(proposerStake)
-    assert.equal(weiBalBefore - weiBalAfter, Math.floor(projectCost/100), 'incorrect propose reward was sent')
+    assert.equal(weiBalBefore - weiBalAfter, Math.floor(projectCost/proposeReward), 'incorrect propose reward was sent')
     assert.equal(proposerStake[1].toNumber(), 0, 'proposer stake unsuccessfully reset in PR')
   })
 
@@ -279,7 +280,7 @@ contract('proposeProject', (accounts) => {
   })
 
 
-
+// test a project that is proposed but fails to be staked (stakers receive stakes back, proposer doesn't)
 // also have to do reputation stake testing
 
 })

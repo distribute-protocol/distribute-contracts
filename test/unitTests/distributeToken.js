@@ -12,7 +12,6 @@ contract('DistributeToken', function (accounts) {
   let account1 = accounts[1]
   let netTokens = tokens - burnAmount
 
-  let tokenRegistry = '0x0c3f0451c6fd1daae3304829b3dd29e7c26446c2'
   before(async function () {
     // define variables to hold deployed contracts
     DT = await DistributeToken.deployed()
