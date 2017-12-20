@@ -115,7 +115,7 @@ contract ProjectRegistry {
   // PROPOSER FUNCTIONS
   // =====================================================================
 
-  function createProject(uint256 _cost, uint256 _costProportion, uint256 _numTokens, uint256 _stakingPeriod, address _proposer) public returns (address) {
+  function createProject(uint256 _cost, uint256 _costProportion, uint256 _numTokens, uint256 _stakingPeriod, address _proposer) public onlyTR() returns (address) {
 
     Project newProject = new Project(_cost,
                                      _costProportion,
@@ -129,7 +129,7 @@ contract ProjectRegistry {
    return _projectAddress;
   }
 
-  function setProposer(address _projectAddress, address _proposer, uint256 _proposerStake, uint256 _stakingPeriod, uint256 _cost) public onlyTR() {
+  function setProposer(address _projectAddress, address _proposer, uint256 _proposerStake, uint256 _stakingPeriod, uint256 _cost) internal {
     // Proposer storage proposer = proposers[_projectAddress];
     proposedProjects[_projectAddress].proposer = _proposer;
     proposedProjects[_projectAddress].proposerStake = _proposerStake;
