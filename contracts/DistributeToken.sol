@@ -70,7 +70,6 @@ contract DistributeToken is StandardToken {
       }
   }
 
-  // NEED TO TEST VALID OUTCOME
   function burn(uint256 _amountToBurn) public onlyTR() {
     require(_amountToBurn <= totalSupply);
     totalSupply -= _amountToBurn;
@@ -91,17 +90,14 @@ contract DistributeToken is StandardToken {
   // TRANSFER FUNCTIONS
   // =====================================================================
 
-  // NEED TO TEST VALID OUTCOME
   function transferWeiFrom(address _address, uint256 _weiValue) public onlyTR() {
     require(_weiValue <= weiBal);
     weiBal -= _weiValue;
     _address.transfer(_weiValue);
   }
-  // NEED TO TEST VALID OUTCOME
   function fund() public payable {
     weiBal += msg.value;
   }
-  // NEED TO TEST VALID OUTCOME
   function transferToEscrow(address _owner, uint256 _value) public onlyTR() returns (bool) {
     require(balances[_owner] >= _value);
     balances[_owner] -= _value;
@@ -109,7 +105,6 @@ contract DistributeToken is StandardToken {
     balances[msg.sender] += _value;
     return true;
   }
-  // NEED TO TEST VALID OUTCOME
   function transferFromEscrow(address _owner, uint256 _value) public onlyTR() returns (bool) {
     require(balances[msg.sender] >= _value);
     balances[msg.sender] -= _value;
