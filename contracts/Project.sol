@@ -16,6 +16,18 @@ contract Project {
   ReputationRegistry reputationRegistry;
   ProjectRegistry projectRegistry;
   uint256 public state;
+  /* POSSIBLE STATES */
+  /*
+    1: Proposed,
+    2: Open,
+    3: Dispute,
+    4: Active,
+    5: Validating,
+    6: Voting,
+    7: Complete,
+    8: Incomplete,
+    9: Failed
+  */
   uint256 public weiBal;
   uint256 nextDeadline;
   //set by proposer, total cost of project in ETH, to be fulfilled by capital token holders
@@ -47,6 +59,7 @@ contract Project {
 
   mapping (bytes32 => Reward) public taskRewards;
 
+
   // =====================================================================
   // MODIFIERS
   // =====================================================================
@@ -69,6 +82,19 @@ contract Project {
   modifier onlyRR() {
     require(msg.sender == address(reputationRegistry));
     _;
+  }
+
+  // =====================================================================
+  // CONSTRUCTOR
+  // =====================================================================
+  function Project(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _reputationRegistry, address _tokenRegistry) public {       //called by THR
+    tokenRegistry = TokenRegistry(_tokenRegistry);     //the token holder registry calls this function
+    reputationRegistry = ReputationRegistry(_reputationRegistry);
+    projectRegistry = ProjectRegistry(msg.sender);
+    weiCost = _cost;
+    reputationCost = _costProportion * reputationRegistry.totalFreeSupply();
+    state = 1;
+    nextDeadline = _stakingPeriod;
   }
 
   // =====================================================================
@@ -121,20 +147,6 @@ contract Project {
   function setTotalValidateNegative(uint256 _totalValidateNegative) public onlyPR() {
     totalValidateAffirmative = _totalValidateNegative;
   }
-
-  // =====================================================================
-  // CONSTRUCTOR
-  // =====================================================================
-  function Project(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _reputationRegistry, address _tokenRegistry) public {       //called by THR
-    tokenRegistry = TokenRegistry(_tokenRegistry);     //the token holder registry calls this function
-    reputationRegistry = ReputationRegistry(_reputationRegistry);
-    projectRegistry = ProjectRegistry(msg.sender);
-    weiCost = _cost;
-    reputationCost = _costProportion * reputationRegistry.totalFreeSupply();
-    state = 1;
-    nextDeadline = _stakingPeriod;
-  }
-
 
   // =====================================================================
   // STAKE FUNCTIONS
