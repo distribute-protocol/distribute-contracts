@@ -47,7 +47,7 @@ contract ProjectRegistry {
     mapping(bytes32 => uint256) numSubmissionsByWeight;
   }
 
-  mapping (address => bytes32[]) projectTaskList;
+  mapping (address => bytes32[]) public projectTaskList;
 
   struct Validation {
     uint256 validateReward;
@@ -56,7 +56,7 @@ contract ProjectRegistry {
 
   mapping (address => ProposedState) public proposedProjects;
   mapping (address => OpenState) public openProjects;
-  mapping (address => DisputeState) disputedProjects;
+  mapping (address => DisputeState) public disputedProjects;
 
   // =====================================================================
   // CONSTRUCTOR
