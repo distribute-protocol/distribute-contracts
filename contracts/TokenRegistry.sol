@@ -149,7 +149,7 @@ contract TokenRegistry {
 
   // called by project if a project fails
   function burnTokens(uint256 _tokens) public onlyValidProject() {              //check that valid project is calling this function
-    distributeToken.burnTokens(_tokens);
+    distributeToken.burn(_tokens);
   }
   function refundStaker(address _projectAddress) public {
     uint256 refund = Project(_projectAddress).refundStaker(msg.sender);

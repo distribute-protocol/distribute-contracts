@@ -31,9 +31,12 @@ contract ReputationRegistry{
   uint256 public totalFreeSupply;           //total supply of free reputation (not staked, validated, or voted)
 
 // =====================================================================
-// EVENTS
+// MODIFIERS
 // =====================================================================
-
+  modifier onlyValidProject() {
+    require(projectRegistry.votingPollId(msg.sender) > 0);
+    _;
+  }
 // =====================================================================
 // FUNCTIONS
 // =====================================================================
@@ -58,13 +61,14 @@ contract ReputationRegistry{
   // =====================================================================
 
   function stakeReputation(address _projectAddress, uint256 _reputation) public {
-    require(balances[msg.sender] >= _reputation);   //make sure project exists & TH has tokens to stake
+    require(balances[msg.sender] >= _reputation && _reputation > 0);   //make sure project exists & TH has tokens to stake
     balances[msg.sender] -= _reputation;
     totalFreeSupply -= _reputation;
     Project(_projectAddress).stakeReputation(msg.sender, _reputation);
   }
 
   function unstakeReputation(address _projectAddress, uint256 _reputation) public {
+    require(_reputation > 0);
     balances[msg.sender] += _reputation;
     totalFreeSupply += _reputation;
     Project(_projectAddress).unstakeReputation(msg.sender, _reputation);
@@ -117,13 +121,14 @@ contract ReputationRegistry{
   // =====================================================================
 
   // called by project if a project fails
-  function burnReputation(uint256 _reputation) public {
+  function burnReputation(uint256 _reputation) public onlyValidProject() {
     //check that valid project is calling this function
     totalSupply -= _reputation;
   }
 
   function refundStaker(address _projectAddress) public {                                                                       //called by worker who staked or voted
     uint256 _refund = Project(_projectAddress).refundStaker(msg.sender);
+    require(_refund > 0);
     totalFreeSupply += _refund;
     balances[msg.sender] += _refund;
   }

@@ -33,57 +33,16 @@ contract DistributeToken is StandardToken {
      require(address(tokenRegistry) == 0);
      tokenRegistry = TokenRegistry(_tokenRegistry);
    }
- // =====================================================================
- // MODIFIERS
- // =====================================================================
+   // =====================================================================
+   // MODIFIERS
+   // =====================================================================
 
- modifier onlyTR() {
-   require(msg.sender == address(tokenRegistry));
-   _;
- }
-
- // =====================================================================
- // INFO FUNCTIONS
- // =====================================================================
- function currentPrice() public view returns (uint256) {
-   //calculated current burn reward of 1 token at current weiBal and free token supply
-   if (totalFreeSupply == 0) {
-     return baseCost;
-   } else {
-   return weiBal / totalFreeSupply; //truncation - remainder discarded
+   modifier onlyTR() {
+     require(msg.sender == address(tokenRegistry));
+     _;
    }
- }
-
- // =====================================================================
- // TRANSFER FUNCTIONS
- // =====================================================================
-
- function transferWeiFrom(address _address, uint256 _weiValue) public onlyTR() {
-   weiBal -= _weiValue;
-   _address.transfer(_weiValue);
- }
- function transferWeiTo() public payable {
-   weiBal += msg.value;
- }
-
- function transferToEscrow(address _owner, uint256 _value) public onlyTR() returns (bool) {
-   require(balances[_owner] >= _value);
-   balances[_owner] -= _value;
-   totalFreeSupply -= _value;
-   balances[msg.sender] += _value;
-   return true;
- }
-
- function transferFromEscrow(address _owner, uint256 _value) public onlyTR() returns (bool) {
-   require(balances[msg.sender] >= _value);
-   balances[msg.sender] -= _value;
-   totalFreeSupply += _value;
-   balances[_owner] += _value;
-   return true;
- }
-
   // =====================================================================
-  // MINTING FUNCTIONS
+  // TOKEN FUNCTIONS
   // =====================================================================
 
   function mint(uint _tokens) public payable {
@@ -110,8 +69,67 @@ contract DistributeToken is StandardToken {
         msg.sender.transfer(fundsLeft);
       }
   }
+
+  // NEED TO TEST VALID OUTCOME
+  function burn(uint256 _amountToBurn) public onlyTR() {
+    require(_amountToBurn <= totalSupply);
+    totalSupply -= _amountToBurn;
+  }
+
+  function sell(uint256 _amountToBurn) public {      //free tokens only
+      require(_amountToBurn > 0 && (balances[msg.sender]) >= _amountToBurn);
+      //determine how much you can leave with.
+      uint256 reward = _amountToBurn * currentPrice();    //truncation - remainder discarded
+      balances[msg.sender] -= _amountToBurn;
+      totalSupply -= _amountToBurn;
+      totalFreeSupply -= _amountToBurn;
+      weiBal -= reward;
+      LogWithdraw(_amountToBurn, reward);
+      msg.sender.transfer(reward);
+  }
   // =====================================================================
-  // BURN FUNCTIONS
+  // TRANSFER FUNCTIONS
+  // =====================================================================
+
+  // NEED TO TEST VALID OUTCOME
+  function transferWeiFrom(address _address, uint256 _weiValue) public onlyTR() {
+    require(_weiValue <= weiBal);
+    weiBal -= _weiValue;
+    _address.transfer(_weiValue);
+  }
+  // NEED TO TEST VALID OUTCOME
+  function fund() public payable {
+    weiBal += msg.value;
+  }
+  // NEED TO TEST VALID OUTCOME
+  function transferToEscrow(address _owner, uint256 _value) public onlyTR() returns (bool) {
+    require(balances[_owner] >= _value);
+    balances[_owner] -= _value;
+    totalFreeSupply -= _value;
+    balances[msg.sender] += _value;
+    return true;
+  }
+  // NEED TO TEST VALID OUTCOME
+  function transferFromEscrow(address _owner, uint256 _value) public onlyTR() returns (bool) {
+    require(balances[msg.sender] >= _value);
+    balances[msg.sender] -= _value;
+    totalFreeSupply += _value;
+    balances[_owner] += _value;
+    return true;
+  }
+  // =====================================================================
+  // INFO FUNCTIONS
+  // =====================================================================
+  function currentPrice() public view returns (uint256) {
+    //calculated current burn reward of 1 token at current weiBal and free token supply
+    if (totalFreeSupply == 0) {
+      return baseCost;
+    } else {
+    return weiBal / totalFreeSupply; //truncation - remainder discarded
+    }
+  }
+  // =====================================================================
+  // UTILITY FUNCTIONS
   // =====================================================================
 
   function percent(uint256 numerator, uint256 denominator, uint256 precision) internal pure returns (uint256) {
@@ -123,10 +141,12 @@ contract DistributeToken is StandardToken {
   }
 
   function weiRequired(uint256 _tokens) public view returns (uint256) {
+    require(_tokens > 0);
     return ((targetPrice(_tokens) * (totalSupply + _tokens)) - currentPrice() * totalSupply);
   }
 
   function targetPrice(uint _tokens) public view returns (uint256) {
+    require(_tokens > 0);
     if (totalSupply == 0 || weiBal == 0) {
       return baseCost;
     }
@@ -135,23 +155,5 @@ contract DistributeToken is StandardToken {
     return cp * (1000 + percent(_tokens, newSupply, 3)) / 1000;
   }
 
-  function burnTokens(uint256 _amountToBurn) public onlyTR() {
-    totalSupply -= _amountToBurn;
-  }
-
-  function burnAndRefundTokens(uint256 _amountToBurn) public {      //free tokens only
-      require(_amountToBurn > 0 && (balances[msg.sender]) >= _amountToBurn);
-      //determine how much you can leave with.
-      uint256 reward = _amountToBurn * currentPrice();    //truncation - remainder discarded
-      balances[msg.sender] -= _amountToBurn;
-      totalSupply -= _amountToBurn;
-      totalFreeSupply -= _amountToBurn;
-      weiBal -= reward;
-      LogWithdraw(_amountToBurn, reward);
-      msg.sender.transfer(reward);
-  }
-
-  function() public payable {
-    /*weiBal += msg.value;*/
-  }
+  function() public payable {}
 }
