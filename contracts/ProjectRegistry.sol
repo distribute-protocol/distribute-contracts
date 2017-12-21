@@ -272,6 +272,11 @@ contract ProjectRegistry {
     }
   }
 
+  /*function getNumSubmissionsByWeight(address _projectAddress, bytes32 _ipfsHash) public view returns (uint256) {
+    DisputeState storage ds = disputedProjects[_projectAddress];
+    return ds.numSubmissionsByWeight[_ipfsHash];
+  }*/
+
   function submitHashList(address _projectAddress, bytes32[] _hashes) public {
     Project project = Project(_projectAddress);
     require(project.isStaker(msg.sender) == true);
