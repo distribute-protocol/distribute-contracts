@@ -241,10 +241,6 @@ contract ProjectRegistry {
     checkActive(_projectAddress);
   }
 
-  /*function getSubmittedTaskHash(address _staker, address _projectAddress) public view returns (bytes32) {
-    return openProjects[_projectAddress].taskHashSubmissions[_staker];
-  }*/
-
   function openTaskHash(address _staker, address _projectAddress, bytes32 _ipfsHash) internal {
     OpenState storage os = openProjects[_projectAddress];
     if(os.taskHashSubmissions[_staker] == 0) {    //first time submission for this particular address
@@ -271,11 +267,6 @@ contract ProjectRegistry {
       ds.topTaskHash = _ipfsHash;
     }
   }
-
-  /*function getNumSubmissionsByWeight(address _projectAddress, bytes32 _ipfsHash) public view returns (uint256) {
-    DisputeState storage ds = disputedProjects[_projectAddress];
-    return ds.numSubmissionsByWeight[_ipfsHash];
-  }*/
 
   function submitHashList(address _projectAddress, bytes32[] _hashes) public {
     Project project = Project(_projectAddress);
