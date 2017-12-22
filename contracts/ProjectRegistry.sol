@@ -173,19 +173,26 @@ contract ProjectRegistry {
     require(projectState == 2 || projectState == 3);
     if(project.timesUp()) {
       uint256 nextDeadline;
-      if(projectState == 3 && disputedProjects[_projectAddress].topTaskHash == 0) {
-        project.setState(9, 0);
-      } else if(projectState == 2 && openProjects[_projectAddress].conflict != 0) {
-        nextDeadline = now + disputeStatePeriod;
-        project.setState(3, nextDeadline);
+      if(projectState == 2) {
+        if(openProjects[_projectAddress].first == 0 || openProjects[_projectAddress].conflict != 0) {
+          nextDeadline = now + disputeStatePeriod;
+          project.setState(3, nextDeadline);
+        } else if(openProjects[_projectAddress].first != 0 && openProjects[_projectAddress].conflict == 0) {
+          nextDeadline = now + activeStatePeriod;
+          project.setState(4, nextDeadline);
+          return true;
+        }
       } else {
-        nextDeadline = now + activeStatePeriod;
-        project.setState(4, nextDeadline);
+        if(disputedProjects[_projectAddress].topTaskHash != 0) {
+          nextDeadline = now + activeStatePeriod;
+          project.setState(4, nextDeadline);
+          return true;
+        } else {
+          project.setState(9, 0);
+        }
       }
-      return true;
-    } else {
-      return false;
     }
+    return false;
   }
 
   function checkValidate(address _projectAddress) public returns (bool) {
