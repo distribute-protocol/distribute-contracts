@@ -14,7 +14,6 @@ let ethPrice = await getEthPriceNow.getEthPriceNow()
 ethPrice = ethPrice[Object.keys(ethPrice)].ETH.USD
 console.log(ethPrice)
 */
-var assert = require('assert')
 const TokenRegistry = artifacts.require('TokenRegistry')
 const DistributeToken = artifacts.require('DistributeToken')
 const ProjectRegistry = artifacts.require('ProjectRegistry')
