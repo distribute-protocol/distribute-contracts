@@ -173,12 +173,14 @@ contract ProjectRegistry {
     require(projectState == 2 || projectState == 3);
     if(project.timesUp()) {
       uint256 nextDeadline;
-      if(openProjects[_projectAddress].conflict == 0 || projectState == 3) {
-        nextDeadline = now + activeStatePeriod;
-        project.setState(4, nextDeadline);
-      } else {
+      if(projectState == 3 && disputedProjects[_projectAddress].topTaskHash == 0) {
+        project.setState(9, 0);
+      } else if(projectState == 2 && openProjects[_projectAddress].conflict != 0) {
         nextDeadline = now + disputeStatePeriod;
         project.setState(3, nextDeadline);
+      } else {
+        nextDeadline = now + activeStatePeriod;
+        project.setState(4, nextDeadline);
       }
       return true;
     } else {
