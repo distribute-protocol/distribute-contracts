@@ -24,6 +24,7 @@ const getEthPriceNow = require('get-eth-price')
 const assertThrown = require('../utils/assertThrown')
 const lightwallet = require('eth-signer')
 const waitForTxReceipt = require('../utils/waitForTxReceipt')
+const evmIncreaseTime = require('../utils/evmIncreaseTime')
 //const ethJSABI = require("ethjs-abi")
 web3.eth = Promise.promisifyAll(web3.eth)
 
@@ -31,7 +32,7 @@ contract('Proposed State', (accounts) => {
   let TR
   let PR
   let DT
-  let PROJ
+  let PROJ, PROJ2
   let proposer = accounts[0]
   let nonProposer = accounts[1]
   let staker = accounts[2]
@@ -46,7 +47,7 @@ contract('Proposed State', (accounts) => {
   let totalTokenSupply
   let totalFreeSupply
   let currentPrice
-  let projectAddress
+  let projectAddress, projectAddress2
   let tx
 
   before(async function() {
@@ -282,5 +283,16 @@ contract('Proposed State', (accounts) => {
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('proposed project becomes failed if not staked', async function() {
+    tx = await TR.proposeProject(projectCost, stakingPeriod, {from: proposer})
+    let log = tx.logs[0].args
+    projectAddress2 = log.projectAddress.toString()
+    PROJ2 = await Project.at(projectAddress2)
+    await evmIncreaseTime(20000000000)
+    await PR.checkOpen(projectAddress2)
+    let state = await PROJ2.state()
+    assert.equal(state.toNumber(), 9, 'project should\'ve failed')
   })
 })
