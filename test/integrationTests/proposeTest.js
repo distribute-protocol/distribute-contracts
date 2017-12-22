@@ -60,7 +60,7 @@ contract('Proposed State', (accounts) => {
     let mintingCost = await DT.weiRequired(tokens, {from: proposer})
     //console.log('mintingCost: ', mintingCost.toNumber())
     // fund proposer with 10000 tokens and make sure they are minted successfully
-    await DT.mint(tokens, {from: proposer, value: mintingCost});
+    await DT.mint(tokens, {from: proposer, value: mintingCost})
     mintingCost = await DT.weiRequired(tokens, {from: staker})
     //console.log('mintingCost: ', mintingCost.toNumber())
     // fund staker with 10000 tokens and make sure they are minted successfully
@@ -79,7 +79,7 @@ contract('Proposed State', (accounts) => {
     currentPrice = await DT.currentPrice()              //put this before propose project because current price changes slightly (rounding errors)
     //console.log('current price', currentPrice.toNumber())
     tx = await TR.proposeProject(projectCost, stakingPeriod, {from: proposer})
-    let proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion)
+    let proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion) + 1
     //console.log('proposer token cost', proposerTokenCost)
     let proposerBalance = await DT.balanceOf(proposer)
     //console.log('proposer balance', proposerBalance.toNumber())
@@ -92,7 +92,7 @@ contract('Proposed State', (accounts) => {
   it('Token registry emits accurate event on project creation', async function() {
     //THIS TEST MUST BE DIRECTLY BELOW "proposer can propose project"
     //let tx = await TR.proposeProject(projectCost, stakingPeriod, {from: proposer})
-    let proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion)
+    let proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion) + 1
     let log = tx.logs[0].args
     projectAddress = log.projectAddress.toString()
     PROJ = await Project.at(projectAddress)

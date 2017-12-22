@@ -66,14 +66,13 @@ contract TokenRegistry {
     //check proposer has at least 5% of the proposed cost in tokens
     require(now < _stakingPeriod && _cost > 0);
     uint256 proposerTokenCost = _cost / distributeToken.currentPrice();
-    proposerTokenCost = proposerTokenCost / proposeProportion;           //divide by 20 to get 5 percent of tokens
+    proposerTokenCost = (proposerTokenCost / proposeProportion) + 1;           //divide by 20 to get 5 percent of tokens
     require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
     uint256 costProportion = _cost / distributeToken.weiBal();
     distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
     address projectAddress = projectRegistry.createProject(_cost, costProportion, proposerTokenCost, _stakingPeriod, msg.sender);
     LogProjectCreated(projectAddress, _cost, proposerTokenCost);
   }
-
 
   function refundProposer(address _projectAddress) public {                                 //called by proposer to get refund once project is active
     require(projectRegistry.getProposerAddress(_projectAddress) == msg.sender);
