@@ -7,7 +7,6 @@ const assertThrown = require('../utils/AssertThrown')
 
 contract('DistributeToken', function (accounts) {
   let DT
-  let TR
   let spoofedDT
   let tokens = 10000
   let burnAmount = 100
@@ -19,7 +18,6 @@ contract('DistributeToken', function (accounts) {
   before(async function () {
     // define variables to hold deployed contracts
     DT = await DistributeToken.deployed()
-    TR = await TokenRegistry.deployed()
     spoofedDT = await DistributeToken.new(accounts[0])
   })
 

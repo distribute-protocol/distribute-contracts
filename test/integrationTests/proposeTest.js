@@ -283,7 +283,4 @@ contract('Proposed State', (accounts) => {
     }
     assertThrown(errorThrown, 'An error should have been thrown')
   })
-
-
-
 })
