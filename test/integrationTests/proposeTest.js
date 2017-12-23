@@ -20,8 +20,6 @@ const ProjectRegistry = artifacts.require('ProjectRegistry')
 const Project = artifacts.require('Project')
 const Promise = require('bluebird')
 const assertThrown = require('../utils/assertThrown')
-// const lightwallet = require('eth-signer')
-// const waitForTxReceipt = require('../utils/waitForTxReceipt')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
 web3.eth = Promise.promisifyAll(web3.eth)
 

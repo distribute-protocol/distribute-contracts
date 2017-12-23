@@ -91,6 +91,7 @@ contract TokenRegistry {
     require(project.state() == 1);
     uint256 currentPrice = distributeToken.currentPrice();
     uint256 weiRemaining = project.weiCost() - project.weiBal();
+    require(weiRemaining > 0);
     uint256 weiVal =  currentPrice * _tokens;
     bool flag = weiVal > weiRemaining;
     uint256 weiChange = flag ? weiRemaining : weiVal;       //how much ether to send on change

@@ -131,8 +131,9 @@ contract DistributeToken is StandardToken {
      // caution, check safe-to-multiply here
     uint256 _numerator  = numerator * 10 ** (precision+1);
     // with rounding of last digit
-    uint256 _quotient =  ((_numerator / denominator) + 5) / 10;
-    return _quotient;
+    /* uint256 _quotient =
+    return _quotient; */
+    return ((_numerator / denominator) + 5) / 10;
   }
 
   function weiRequired(uint256 _tokens) public view returns (uint256) {
