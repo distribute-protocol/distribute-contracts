@@ -47,7 +47,7 @@ contract Project {
  bool public validateFlag = false;
  uint256 public validateReward;
 
-  mapping (address => Validator) validators;
+  mapping (address => Validator) public validators;
   uint256 public totalValidateAffirmative;
   uint256 public totalValidateNegative;
 
@@ -143,7 +143,8 @@ contract Project {
     state = _state;
     nextDeadline = _nextDeadline;
   }
-  // Shouldn't this be called using the flag
+  // NOTE: Shouldn't this be called using the flag
+  /* NOTE: I feel like the following 4 functions can be streamlined somehow */
   function setValidateReward(bool _validateReward) public onlyPR {
     _validateReward
       ? validateReward = totalValidateAffirmative
@@ -154,6 +155,7 @@ contract Project {
     validateFlag = _flag;
   }
 
+// NOTE: probably just make a flag for this and reduce to 1 function
   function setTotalValidateAffirmative(uint256 _totalValidateAffirmative) public onlyPR {
     totalValidateAffirmative = _totalValidateAffirmative;
   }
@@ -246,10 +248,10 @@ contract Project {
   // =====================================================================
   // VALIDATOR FUNCTIONS
   // =====================================================================
-  /* ####### NEEDS TESTS ####### */
   function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTR onlyInState(5) {
     //check for free tokens done in THR
     //increments validation tokens in Project.sol only
+    // NEEDS A CHECK FOR REMOVING VALIDATION / CHANGING VALIDATION
     require(_tokens > 0);
     if (_validationState == true) {
       validators[_staker] = Validator(1, _tokens);
@@ -263,24 +265,24 @@ contract Project {
 
   /* ####### NEEDS TESTS ####### */
   function setValidateStatus(bool isPassed) public onlyPR {
-    if(!isPassed) {               //project fails
-      tokenRegistry.burnTokens(totalTokensStaked);
-      reputationRegistry.burnReputation(totalReputationStaked);
-      totalTokensStaked = 0;
-      totalReputationStaked = 0;
+    if(!isPassed) {               // project fails
+      burnStake();
       validateReward = totalValidateAffirmative;
-      if (validateReward == 0) {
-        validateFlag = true;
-      }
       totalValidateAffirmative = 0;
-    }
-    else {                                              //project succeeds
+    } else {                     // project succeeds
       validateReward = totalValidateNegative;
-      if (validateReward == 0) {
-        validateFlag = true;
-      }
       totalValidateNegative = 0;
     }
+    if (validateReward == 0) {
+      validateFlag = true;
+    }
+  }
+
+  function burnStake() internal {
+    tokenRegistry.burnTokens(totalTokensStaked);
+    reputationRegistry.burnReputation(totalReputationStaked);
+    totalTokensStaked = 0;
+    totalReputationStaked = 0;
   }
 
   // =====================================================================
@@ -295,7 +297,6 @@ contract Project {
     taskReward.weiReward = _weiVal;
     taskReward.reputationReward = _reputationVal;
   }
-
 
   /* ####### NEEDS TESTS ####### */
   function claimTaskReward(bytes32 _taskHash, address _claimer) public onlyInState(7) returns (uint256) {

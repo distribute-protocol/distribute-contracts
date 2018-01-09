@@ -1,7 +1,7 @@
 const Project = artifacts.require('Project')
 const TokenRegistry = artifacts.require('TokenRegistry')
 const ReputationRegistry = artifacts.require('ReputationRegistry')
-// const ProjectRegistry = artifacts.require('ProjectRegistry')
+const ProjectRegistry = artifacts.require('ProjectRegistry')
 // const DistributeToken = artifacts.require('DistributeToken')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const Promise = require('bluebird')
@@ -28,6 +28,7 @@ contract('Project', function (accounts) {
   before(async function () {
     TR = await TokenRegistry.deployed()
     RR = await ReputationRegistry.deployed()
+    PR = await ProjectRegistry.deployed()
     P = await Project.new(projectCost, proposeProportion, stakingPeriod, RR.address, TR.address, {from: spoofedPRaddress})
     spoofedP = await Project.new(projectCost, proposeProportion, stakingPeriod, RR.address, spoofedTRaddress, {from: spoofedPRaddress})
   })
@@ -116,9 +117,9 @@ contract('Project', function (accounts) {
   })
 
   it('sets TotalValidateNegative', async () => {
-    await spoofedP.setTotalValidateNegative(20, {from: spoofedPRaddress})
+    await spoofedP.setTotalValidateNegative(10, {from: spoofedPRaddress})
     let tVN = await spoofedP.totalValidateNegative.call()
-    assert.equal(tVN, 20, "doesn't update totalValidateNegative correctly")
+    assert.equal(tVN, 10, "doesn't update totalValidateNegative correctly")
   })
 
   it('clears Stake', async () => {
@@ -151,13 +152,27 @@ contract('Project', function (accounts) {
     assert.isNotTrue(val, 'returns timesUp true when should be false')
   })
 
+  it('handles validation correctly', async () => {
+    let nexD = Date.now() + (7 * 25 * 60 * 60)
+    await spoofedP.setState(5, 0, {from: spoofedPRaddress})
+    await spoofedP.validate(staker, tokens, true, {from: spoofedTRaddress})
+    await spoofedP.validate(staker2, tokens, false, {from: spoofedTRaddress})
+    let validator1 = await spoofedP.validators(staker)
+    let validator2 = await spoofedP.validators(staker2)
+    let totalValAffirm = await spoofedP.totalValidateAffirmative.call()
+    let totalValNegative = await spoofedP.totalValidateNegative.call()
+    assert.equal(totalValAffirm.toNumber(), (tokens + 10), "doesn't update affirmative validation correctly")
+    assert.equal(totalValNegative.toNumber(), (tokens + 10), "doesn't update negative validation correctly")
+  })
+
+
   it('sets ValidateReward', async () => {
     await spoofedP.setValidateReward(true, {from: spoofedPRaddress})
     let affirmValidateReward = await spoofedP.validateReward.call()
-    assert.equal(affirmValidateReward, 10, "doesn't set affirmValidateReward correctly")
+    assert.equal(affirmValidateReward, (tokens + 10), "doesn't set affirmValidateReward correctly")
     await spoofedP.setValidateReward(false, {from: spoofedPRaddress})
     let negativeValidateReward = await spoofedP.validateReward.call()
-    assert.equal(negativeValidateReward, 20, "doesn't set negativeValidateReward correctly")
+    assert.equal(negativeValidateReward, (tokens + 10), "doesn't set negativeValidateReward correctly")
   })
 
   it('sets ValidateFlag', async () => {
@@ -168,6 +183,20 @@ contract('Project', function (accounts) {
     let negativeValidate = await spoofedP.validateFlag.call()
     assert.isNotTrue(negativeValidate, "doesn't set negativeValidate correctly")
   })
+
+  // it('sets ValidatorStatus', async () => {
+  //   await PR.startPoll(spoofedP.address, stakingPeriod, stakingPeriod)
+  //   await spoofedP.setValidateStatus(false, {from: spoofedPRaddress})
+  //   let totalTokensStaked = spoofedP.totalTokensStaked.call()
+  //   let totalReputationStaked = spoofedP.totalReputationStaked.call()
+  //   let validateReward = spoofedP.validateReward.call()
+  //   let totalValidateAffirmative = spoofedP.totalValidateAffirmative.call()
+  //   // 0, 0, 10010, 0
+  //   console.log(totalTokensStaked)
+  //   console.log(totalReputationStaked)
+  //   console.log(validateReward)
+  //   console.log(totalValidateAffirmative)
+  // })
 
   it('only allows the TokenRegistry to call stakeTokens', async () => {
     let errorThrown = false
@@ -183,6 +212,36 @@ contract('Project', function (accounts) {
     let errorThrown = false
     try {
       await P.unstakeTokens(staker, tokens)
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('only allows the TokenRegistry to call validate', async () => {
+    let errorThrown = false
+    try {
+      await P.validate(staker, tokens, false)
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('only allows the ReputationRegistry to call stakeReputation', async () => {
+    let errorThrown = false
+    try {
+      await P.stakeReputation(repStaker, 1)
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('only allows the ReputationRegistry to call unstakeReputation', async () => {
+    let errorThrown = false
+    try {
+      await P.unstakeReputation(repStaker, 1)
     } catch (e) {
       errorThrown = true
     }

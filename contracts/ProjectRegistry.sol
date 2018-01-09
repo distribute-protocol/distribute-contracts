@@ -96,7 +96,8 @@ contract ProjectRegistry {
     return proposedProjects[_projectAddress].proposer;
   }
 
-  function startPoll(address _projectAddress, uint256 _commitDuration, uint256 _revealDuration) public {       //can only be called by project in question
+  // NOTE: This likely cannot be public
+  function startPoll(address _projectAddress, uint256 _commitDuration, uint256 _revealDuration) internal {       //can only be called by project in question
     votingPollId[_projectAddress] =  plcrVoting.startPoll(51, _commitDuration, _revealDuration);
   }
 
@@ -104,6 +105,8 @@ contract ProjectRegistry {
     return plcrVoting.pollEnded(votingPollId[_projectAddress]);
   }
 
+  // NOTE: This isPassed function ends up a little bit janky because the setValidateStatus function does a bunch of stuff
+  // NOTE: there is also a redundancy in the handleValidateReward function.
   function isPassed(address _projectAddress) public returns (bool) {
     bool passed = plcrVoting.isPassed(votingPollId[_projectAddress]);
     Project(_projectAddress).setValidateStatus(passed);
@@ -194,22 +197,22 @@ contract ProjectRegistry {
     }
     return false;
   }
-
+// NOTE: I think that the project moves to state 5 here not 4.
   function checkValidate(address _projectAddress) public returns (bool) {
     require(Project(_projectAddress).state() == 4);
     if (Project(_projectAddress).timesUp()) {
       uint256 nextDeadline = now + validateStatePeriod;
-      Project(_projectAddress).setState(4, nextDeadline);
+      Project(_projectAddress).setState(5, nextDeadline);
       return true;
     } else {
       return false;
     }
   }
-
+// NOTE: I think that the project moves to state 6 here not 4.
   function checkVoting(address _projectAddress) public returns (bool) {
     require(Project(_projectAddress).state()== 5);
     if(Project(_projectAddress).timesUp()) {
-      Project(_projectAddress).setState(4, 0);
+      Project(_projectAddress).setState(6, 0);
       startPoll(_projectAddress, voteCommitPeriod, voteRevealPeriod);
       return true;
     } else {
