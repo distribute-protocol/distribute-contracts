@@ -21,6 +21,7 @@ contract('Project', function (accounts) {
   let tokens = 10000
   let staker = accounts[2]
   let staker2 = accounts[5]
+  let repStaker = accounts[6]
   let nonStaker = accounts[3]
   // let totalTokenSupply
   // let totalFreeSupply
@@ -41,23 +42,48 @@ contract('Project', function (accounts) {
     assert.equal(weiBal, web3.toWei(0.5, 'ether'), "doesn't update balance correctly")
   })
 
-  it('returns a bool for an address whether they are a project staker', async () => {
-    let trueVal = await spoofedP.isStaker(staker)
-    let falseVal = await spoofedP.isStaker(nonStaker)
-    assert.isTrue(trueVal, 'returns non-staker as staker')
-    assert.isNotTrue(falseVal, 'returns staker as non-staker')
+  it('stakes reputation', async () => {
+    RR.register({from: repStaker})
+    RR.stakeReputation(spoofedP.address, 1, {from: repStaker})
+    let stakedReputationBalance = await spoofedP.stakedReputationBalances(repStaker)
+    let repRegBal = await RR.balances(repStaker)
+    assert.equal(stakedReputationBalance, 1, 'staked reputation is incorrect')
+    assert.equal(repRegBal, 0, 'reputation balance not updated correctly')
   })
 
-  it('returns the proportional weight on an address staking ', async () => {
-    let val = await spoofedP.calculateWeightOfAddress(staker)
-    assert.equal(val.toNumber(), 100, 'doesn\'t return the correct weight')
+  it('returns a bool for an address whether they are a project staker', async () => {
+    let trueVal = await spoofedP.isStaker(staker)
+    let trueRepVal = await spoofedP.isStaker(repStaker)
+    let falseVal = await spoofedP.isStaker(nonStaker)
+    assert.isTrue(trueVal, 'returns staker as non-staker')
+    assert.isTrue(trueRepVal, 'returns staker as non-staker')
+    assert.isNotTrue(falseVal, 'returns non-staker as staker')
+  })
+
+
+  it('returns the proportional weight of an address staking', async () => {
+    let val = await spoofedP.calculateWeightOfAddress(staker, {from: spoofedPRaddress})
+    assert.equal(val.toNumber(), 50, 'doesn\'t return the correct weight')
     await spoofedP.stakeTokens(staker2, tokens, web3.toWei(0.5, 'ether'), {from: spoofedTRaddress})
-    let val1 = await spoofedP.calculateWeightOfAddress(staker)
-    let val2 = await spoofedP.calculateWeightOfAddress(staker2)
-    assert.equal(val1.toNumber(), 50, 'doesn\'t return the correct weight after more staking1')
-    assert.equal(val2.toNumber(), 50, 'doesn\'t return the correct weight after more staking2')
+    let val1 = await spoofedP.calculateWeightOfAddress(staker, {from: spoofedPRaddress})
+    let val2 = await spoofedP.calculateWeightOfAddress(staker2, {from: spoofedPRaddress})
+    let val3 = await spoofedP.calculateWeightOfAddress(repStaker, {from: spoofedPRaddress})
+    assert.equal(val1.toNumber(), 25, 'doesn\'t return the correct weight after more staking1')
+    assert.equal(val2.toNumber(), 25, 'doesn\'t return the correct weight after more staking2')
+    assert.equal(val3.toNumber(), 50, 'doesn\'t return the correct weight for reputation staking')
     await spoofedP.unstakeTokens(staker2, tokens, {from: spoofedTRaddress})
   })
+
+  // it('returns the proportional weight on an address staking (reputation)', async () => {
+  //   let val = await spoofedP.calculateWeightOfAddress(repStaker)
+  //   assert.equal(val.toNumber(), 100, 'doesn\'t return the correct weight')
+  //   await spoofedP.stakeTokens(staker2, tokens, web3.toWei(0.5, 'ether'), {from: spoofedTRaddress})
+  //   let val1 = await spoofedP.calculateWeightOfAddress(staker)
+  //   let val2 = await spoofedP.calculateWeightOfAddress(staker2)
+  //   assert.equal(val1.toNumber(), 50, 'doesn\'t return the correct weight after more staking1')
+  //   assert.equal(val2.toNumber(), 50, 'doesn\'t return the correct weight after more staking2')
+  //   await spoofedP.unstakeTokens(staker2, tokens, {from: spoofedTRaddress})
+  // })
 
   it('unstakes tokens', async () => {
     await spoofedP.unstakeTokens(staker, tokens, {from: spoofedTRaddress})
@@ -69,8 +95,17 @@ contract('Project', function (accounts) {
     assert.equal(weiBal, 0, "doesn't update balance correctly")
   })
 
+  it('unstakes reputation', async () => {
+    RR.unstakeReputation(spoofedP.address, 1, {from: repStaker})
+    let stakedReputationBalance = await spoofedP.stakedReputationBalances(repStaker)
+    let repRegBal = await RR.balances(repStaker)
+    assert.equal(stakedReputationBalance, 0, 'staked reputation is incorrect')
+    assert.equal(repRegBal, 1, 'reputation balance not updated correctly')
+  })
+
   it('returns the correct bool for a staker who has unstaked', async () => {
     let falseVal = await spoofedP.isStaker(staker)
+    let falseVal2 = await spoofedP.isStaker(repStaker)
     assert.isNotTrue(falseVal, 'returns staker as non-staker')
   })
 
@@ -133,7 +168,7 @@ contract('Project', function (accounts) {
     let negativeValidate = await spoofedP.validateFlag.call()
     assert.isNotTrue(negativeValidate, "doesn't set negativeValidate correctly")
   })
-  
+
   it('only allows the TokenRegistry to call stakeTokens', async () => {
     let errorThrown = false
     try {

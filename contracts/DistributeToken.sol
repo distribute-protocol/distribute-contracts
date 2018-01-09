@@ -117,11 +117,10 @@ contract DistributeToken is StandardToken {
   // =====================================================================
   function currentPrice() public view returns (uint256) {
     //calculated current burn reward of 1 token at current weiBal and free token supply
-    if (totalFreeSupply == 0) {
-      return baseCost;
-    } else {
-    return weiBal / totalFreeSupply; //truncation - remainder discarded
-    }
+    totalFreeSupply == 0
+      ? baseCost
+      // truncation - remainder discarded
+      : weiBal / totalFreeSupply;
   }
   // =====================================================================
   // UTILITY FUNCTIONS

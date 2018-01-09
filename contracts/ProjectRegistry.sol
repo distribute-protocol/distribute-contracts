@@ -106,7 +106,7 @@ contract ProjectRegistry {
 
   function isPassed(address _projectAddress) public returns (bool) {
     bool passed = plcrVoting.isPassed(votingPollId[_projectAddress]);
-    Project(_projectAddress).rewardValidator(passed);
+    Project(_projectAddress).setValidateStatus(passed);
     return passed;
   }
 
