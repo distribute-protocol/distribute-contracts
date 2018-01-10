@@ -47,7 +47,12 @@ contract ProjectRegistry {
     mapping(bytes32 => uint256) numSubmissionsByWeight;
   }
 
-  mapping (address => bytes32[]) public projectTaskList;
+  mapping (address => bytes32[]) public projectTaskList;      //store project task list for each project address
+
+/*
+ function getHashAtIndex(address _projectAddress, uint index) public view returns(bytes32 value) {
+   return projectTaskList[_projectAddress][index];
+ }*/
 
   struct Validation {
     uint256 validateReward;
