@@ -130,8 +130,6 @@ contract('Active State', (accounts) => {
     await PR.submitHashList(projectAddress, hashListForSubmission(data), {from: staker2})
     // let projectTaskList = await PR.projectTaskList.call(projectAddress)
     // console.log('task list from contract', projectTaskList)
-
-
   })
 
   it('can do math', async function() {
