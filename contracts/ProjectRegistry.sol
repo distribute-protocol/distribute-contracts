@@ -168,12 +168,17 @@ contract ProjectRegistry {
     }
   }
 
+  //write this later
+  /*function openHandler(Project project) {
+  }*/
+
   function checkActive(address _projectAddress) public returns (bool) {
     Project project = Project(_projectAddress);
     uint256 projectState = project.state();
     require(projectState == 2 || projectState == 3);
     if(project.timesUp()) {
       uint256 nextDeadline;
+      //MAKE THIS OPEN HANDLER
       if(projectState == 2) {
         if(openProjects[_projectAddress].first == 0 || openProjects[_projectAddress].conflict != 0) {
           nextDeadline = now + disputeStatePeriod;

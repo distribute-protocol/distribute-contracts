@@ -124,15 +124,17 @@ contract('Active State', (accounts) => {
 
     // submit task hash list
     let taskHash = await PR.openProjects.call(projectAddress)
-    console.log('task hash from PR', taskHash[0])
-    console.log('task hash from test', hashTasksForAddition(data))
-    console.log('task list from test', hashListForSubmission(data))
+    // console.log('task hash from PR', taskHash[0])
+    // console.log('task hash from test', hashTasksForAddition(data))
+    // console.log('task list from test', hashListForSubmission(data))
+    assert.equal(taskHash[0], hashTasksForAddition(data), 'incorrect task list stored')
     await PR.submitHashList(projectAddress, hashListForSubmission(data), {from: staker2})
-    // let projectTaskList = await PR.projectTaskList.call(projectAddress)
-    // console.log('task list from contract', projectTaskList)
+    let firstTask = await PR.projectTaskList.call(projectAddress, 0)
+    // console.log('first task from contract', firstTask)
+    assert.equal(firstTask, hashListForSubmission(data)[0], 'incorrect first task hash stored')
   })
 
-  it('can do math', async function() {
+  it('can do math', async function () {
     assert.equal(1, 1, 'math broke')
   })
 

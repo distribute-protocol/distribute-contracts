@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "assert": "^1.4.1",
+    "bluebird": "^3.5.1",
+    "ethereumjs-abi": "^0.6.5",
+    "truffle-hdwallet-provider": "^0.0.3"
+  }
+}
