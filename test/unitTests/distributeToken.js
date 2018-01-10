@@ -15,7 +15,6 @@ contract('DistributeToken', function (accounts) {
   let netTokens = tokens - burnAmount
 
   before(async function () {
-    // define variables to hold deployed contracts
     DT = await DistributeToken.deployed()
     spoofedDT = await DistributeToken.new(accounts[0])
   })
