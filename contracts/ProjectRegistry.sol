@@ -54,14 +54,16 @@ contract ProjectRegistry {
    return projectTaskList[_projectAddress][index];
  }*/
 
-  struct Validation {
+  /* struct Validation {
     uint256 validateReward;
     bool validateFlag;
-  }
+  } */
 
   mapping (address => ProposedState) public proposedProjects;
   mapping (address => OpenState) public openProjects;
   mapping (address => DisputeState) public disputedProjects;
+
+  // NOTE do we need a validated Projects mapping?
 
   // =====================================================================
   // CONSTRUCTOR
@@ -110,15 +112,6 @@ contract ProjectRegistry {
     return plcrVoting.pollEnded(votingPollId[_projectAddress]);
   }
 
-  // NOTE: This isPassed function ends up a little bit janky because the setValidateStatus function does a bunch of stuff
-  // NOTE: there is also a redundancy in the handleValidateReward function.
-  function isPassed(address _projectAddress) public returns (bool) {
-    bool passed = plcrVoting.isPassed(votingPollId[_projectAddress]);
-    Project(_projectAddress).setValidateStatus(passed);
-    return passed;
-  }
-
-
   // =====================================================================
   // PROPOSER FUNCTIONS
   // =====================================================================
@@ -166,11 +159,11 @@ contract ProjectRegistry {
       uint256 nextDeadline = now + openStatePeriod;
       Project(_projectAddress).setState(2, nextDeadline);
       return true;
-    } else if(Project(_projectAddress).timesUp()) {
-      Project(_projectAddress).setState(9, 0);
-      proposedProjects[_projectAddress].proposerStake = 0;
-      return false;
     } else {
+      if(Project(_projectAddress).timesUp()) {
+        Project(_projectAddress).setState(9, 0);
+        proposedProjects[_projectAddress].proposerStake = 0;
+      }
       return false;
     }
   }
@@ -213,7 +206,7 @@ contract ProjectRegistry {
       return false;
     }
   }
-// NOTE: I think that the project moves to state 6 here not 4.
+
   function checkVoting(address _projectAddress) public returns (bool) {
     require(Project(_projectAddress).state()== 5);
     if(Project(_projectAddress).timesUp()) {
@@ -229,14 +222,11 @@ contract ProjectRegistry {
     if(!pollEnded(_projectAddress)) {
       return false;
     } else {
-      bool passed = isPassed(_projectAddress);
-      handleVoteResult(_projectAddress, passed);
-      if (passed) {
-        Project(_projectAddress).setState(7, 0);
-      }
-      else {
-        Project(_projectAddress).setState(9, 0);
-      }
+      bool passed = plcrVoting.isPassed(votingPollId[_projectAddress]);
+      Project(_projectAddress).setValidationState(passed);
+      passed
+        ? Project(_projectAddress).setState(7, 0)
+        : Project(_projectAddress).setState(9, 0);
       return true;
     }
   }
@@ -312,25 +302,6 @@ contract ProjectRegistry {
   // =====================================================================
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
   // =====================================================================
-
-  function handleVoteResult(address _projectAddress, bool passed) internal {
-    Project project = Project(_projectAddress);
-    if(!passed) {               //project fails
-      tokenRegistry.burnTokens(project.totalTokensStaked());
-      reputationRegistry.burnReputation(project.totalReputationStaked());
-      project.clearStake();
-      project.setValidateReward(true);
-      if (project.validateReward() == 0) {
-        project.setValidateFlag(true);
-      }
-      project.setTotalValidateAffirmative(0);
-    }
-    else {                                              //project succeeds
-      project.setValidateReward(false);
-      if (project.validateReward() == 0) {
-        project.setValidateFlag(false);
-      }
-      project.setTotalValidateNegative(0);
-    }
-  }
+/* NOTE: could implement a function to keep track of validated projects
+  using a mapping like proposedProjects and the others */
 }

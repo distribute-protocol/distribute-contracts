@@ -66,7 +66,7 @@ contract('DistributeToken', function (accounts) {
     assert.equal(freeTokenSupply.toNumber(), netTokens + tokens, 'free token supply not updated correctly')
   })
 
-  it('returns the target price for an ammount of tokens', async () => {
+  it('returns the target price for an amount of tokens', async () => {
     let targetPrice = await DT.targetPrice(tokens)
     assert.equal(targetPrice, 200100000000000, 'targetPrice not returned correctly')
   })

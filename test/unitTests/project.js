@@ -110,26 +110,6 @@ contract('Project', function (accounts) {
     assert.isNotTrue(falseVal, 'returns staker as non-staker')
   })
 
-  it('sets TotalValidateAffirmative', async () => {
-    await spoofedP.setTotalValidateAffirmative(10, {from: spoofedPRaddress})
-    let tVA = await spoofedP.totalValidateAffirmative.call()
-    assert.equal(tVA, 10, "doesn't update totalValidateAffirmative correctly")
-  })
-
-  it('sets TotalValidateNegative', async () => {
-    await spoofedP.setTotalValidateNegative(10, {from: spoofedPRaddress})
-    let tVN = await spoofedP.totalValidateNegative.call()
-    assert.equal(tVN, 10, "doesn't update totalValidateNegative correctly")
-  })
-
-  it('clears Stake', async () => {
-    await spoofedP.clearStake({from: spoofedPRaddress})
-    let tokenStakeVal = await spoofedP.totalTokensStaked.call()
-    let tokenRepVal = await spoofedP.totalReputationStaked.call()
-    assert.equal(tokenStakeVal.toNumber(), 0, "doesn't clear tokenStake correctly")
-    assert.equal(tokenRepVal.toNumber(), 0, "doesn't clear reputationStake correctly")
-  })
-
   it('returns if a project is staked or not', async () => {
     let notStaked = await spoofedP.isStaked()
     await spoofedP.stakeTokens(staker, tokens, web3.toWei(1, 'ether'), {from: spoofedTRaddress})
@@ -161,32 +141,13 @@ contract('Project', function (accounts) {
     let validator2 = await spoofedP.validators(staker2)
     let totalValAffirm = await spoofedP.totalValidateAffirmative.call()
     let totalValNegative = await spoofedP.totalValidateNegative.call()
-    assert.equal(totalValAffirm.toNumber(), (tokens + 10), "doesn't update affirmative validation correctly")
-    assert.equal(totalValNegative.toNumber(), (tokens + 10), "doesn't update negative validation correctly")
-  })
-
-
-  it('sets ValidateReward', async () => {
-    await spoofedP.setValidateReward(true, {from: spoofedPRaddress})
-    let affirmValidateReward = await spoofedP.validateReward.call()
-    assert.equal(affirmValidateReward, (tokens + 10), "doesn't set affirmValidateReward correctly")
-    await spoofedP.setValidateReward(false, {from: spoofedPRaddress})
-    let negativeValidateReward = await spoofedP.validateReward.call()
-    assert.equal(negativeValidateReward, (tokens + 10), "doesn't set negativeValidateReward correctly")
-  })
-
-  it('sets ValidateFlag', async () => {
-    await spoofedP.setValidateFlag(true, {from: spoofedPRaddress})
-    let affirmValidate = await spoofedP.validateFlag.call()
-    assert.isTrue(affirmValidate, "doesn't set affirmValidate correctly")
-    await spoofedP.setValidateFlag(false, {from: spoofedPRaddress})
-    let negativeValidate = await spoofedP.validateFlag.call()
-    assert.isNotTrue(negativeValidate, "doesn't set negativeValidate correctly")
+    assert.equal(totalValAffirm.toNumber(), tokens, "doesn't update affirmative validation correctly")
+    assert.equal(totalValNegative.toNumber(), tokens, "doesn't update negative validation correctly")
   })
 
   // it('sets ValidatorStatus', async () => {
   //   await PR.startPoll(spoofedP.address, stakingPeriod, stakingPeriod)
-  //   await spoofedP.setValidateStatus(false, {from: spoofedPRaddress})
+  //   await spoofedP.setValidationState(false, {from: spoofedPRaddress})
   //   let totalTokensStaked = spoofedP.totalTokensStaked.call()
   //   let totalReputationStaked = spoofedP.totalReputationStaked.call()
   //   let validateReward = spoofedP.validateReward.call()

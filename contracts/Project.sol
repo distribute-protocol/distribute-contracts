@@ -44,7 +44,8 @@ contract Project {
     uint256 status;
     uint256 stake;
   }
- bool public validateFlag = false;
+
+ bool public opposingValidator = true;
  uint256 public validateReward;
 
   mapping (address => Validator) public validators;
@@ -126,42 +127,22 @@ contract Project {
     return (now > nextDeadline);
   }
 
-  function clearStake() public onlyPR {
+  /* function clearStake() public onlyPR {
     totalReputationStaked = 0;
     totalTokensStaked = 0;
-  }
+  } */
 
   function isStaked() public view returns (bool) {
     return weiCost <= weiBal && reputationCost <= totalReputationStaked;
   }
 
   // =====================================================================
-  // GETTER/SETTER FUNCTIONS
+  // SETTER FUNCTIONS
   // =====================================================================
 
   function setState(uint256 _state, uint256 _nextDeadline) public onlyPR {
     state = _state;
     nextDeadline = _nextDeadline;
-  }
-  // NOTE: Shouldn't this be called using the flag
-  /* NOTE: I feel like the following 4 functions can be streamlined somehow */
-  function setValidateReward(bool _validateReward) public onlyPR {
-    _validateReward
-      ? validateReward = totalValidateAffirmative
-      : validateReward = totalValidateNegative;
-  }
-
-  function setValidateFlag(bool _flag) public onlyPR {
-    validateFlag = _flag;
-  }
-
-// NOTE: probably just make a flag for this and reduce to 1 function
-  function setTotalValidateAffirmative(uint256 _totalValidateAffirmative) public onlyPR {
-    totalValidateAffirmative = _totalValidateAffirmative;
-  }
-
-  function setTotalValidateNegative(uint256 _totalValidateNegative) public onlyPR {
-    totalValidateNegative = _totalValidateNegative;
   }
 
   // =====================================================================
@@ -226,7 +207,7 @@ contract Project {
       state == 9
         ? denom = totalValidateNegative
         : denom = totalValidateAffirmative;
-      if (validateFlag == false) {
+      if (opposingValidator == true) {
         refund += validateReward * validators[_staker].stake / denom;
       } else {
         tokenRegistry.rewardValidator(_staker, (weiCost * validators[_staker].stake / denom));
@@ -264,7 +245,7 @@ contract Project {
   }
 
   /* ####### NEEDS TESTS ####### */
-  function setValidateStatus(bool isPassed) public onlyPR {
+  function setValidationState(bool isPassed) public onlyPR {
     if(!isPassed) {               // project fails
       burnStake();
       validateReward = totalValidateAffirmative;
@@ -274,7 +255,7 @@ contract Project {
       totalValidateNegative = 0;
     }
     if (validateReward == 0) {
-      validateFlag = true;
+      opposingValidator = false;
     }
   }
 
