@@ -2,6 +2,7 @@
 // Before, fund a user with tokens and have them propose and fully stake 2 projects
 var assert = require('assert')
 const TokenRegistry = artifacts.require('TokenRegistry')
+const ReputationRegistry = artifacts.require('ReputationRegistry')
 const DistributeToken = artifacts.require('DistributeToken')
 const ProjectRegistry = artifacts.require('ProjectRegistry')
 const Project = artifacts.require('Project')
@@ -12,10 +13,7 @@ const keccakHashes = require('../utils/KeccakHashes')
 web3.eth = Promise.promisifyAll(web3.eth)
 
 contract('Active State', (accounts) => {
-  let TR
-  let PR
-  let DT
-  let PROJ
+  let TR, PR, DT, PROJ, RR
   let errorThrown
   // proposer only necessary in the
   let proposer = accounts[0]
@@ -23,7 +21,8 @@ contract('Active State', (accounts) => {
   let staker2 = accounts[3]
   let staker3 = accounts[4]
   let nonStaker = accounts[5]
-  let worker = accounts[6]
+  let worker1 = accounts[6]
+  let worker2 = accounts[7]
 
   let tokens = 10000
   let stakingPeriod = 20000000000     // 10/11/2603 @ 11:33am (UTC)
@@ -40,11 +39,14 @@ contract('Active State', (accounts) => {
   let projectAddress
   let tx
 
-  // each word is a task in this case
-  let data = 'some random task list'
+  let workerBalance1, workerBalance2
+
+  // format of task hash is 'taskdescription;weivalue;reputationvalue,secondtask;secondweival;secondrepval,...'
+  let data = 'install;100000;1,install a supernode;200000;1'
 
   function hashTasksForAddition (data) {
     let hashList = hashListForSubmission(data)
+    hashList.map(arr => arr.slice(2))
     let numArgs = hashList.length
     let args = 'bytes32'.concat(' bytes32'.repeat(numArgs - 1)).split(' ')
     let taskHash = keccakHashes(args, hashList)
@@ -53,12 +55,15 @@ contract('Active State', (accounts) => {
   }
 
   function hashListForSubmission (data) {
-    let tasks = data.split(' ')
+    let tasks = data.split(',')     // split tasks up
     let taskHashArray = []
+    let args = ['string', 'uint', 'uint']
+    // let args = ['bytes32', 'bytes32', 'bytes32']
     for (var i = 0; i < tasks.length; i++) {
-      taskHashArray.push(web3.sha3(tasks[i]))
-      // console.log(taskHashArray)
+      let thisTask = tasks[i].split(';')  // split each task into elements
+      taskHashArray.push('0x' + keccakHashes(args, thisTask))
     }
+    // console.log(taskHashArray)
     return taskHashArray
   }
 
@@ -67,6 +72,7 @@ contract('Active State', (accounts) => {
     TR = await TokenRegistry.deployed()
     DT = await DistributeToken.deployed()
     PR = await ProjectRegistry.deployed()
+    RR = await ReputationRegistry.deployed()
 
     // mint 10000 tokens for proposer & each staker
     let mintingCost = await DT.weiRequired(tokens, {from: proposer})
@@ -132,10 +138,36 @@ contract('Active State', (accounts) => {
     let firstTask = await PR.projectTaskList.call(projectAddress, 0)
     // console.log('first task from contract', firstTask)
     assert.equal(firstTask, hashListForSubmission(data)[0], 'incorrect first task hash stored')
+
+    // register workers and check reputation balances
+    await RR.register({from: worker1})
+    await RR.register({from: worker2})
+    workerBalance1 = await RR.balances.call(worker1)
+    workerBalance2 = await RR.balances.call(worker2)
+    // console.log(workerBalance1.toNumber())
+    // console.log(workerBalance2.toNumber())
+    assert.equal(workerBalance1.toNumber(), 1, 'worker 1 does not have the correct amount of reputation')
+    assert.equal(workerBalance2.toNumber(), 1, 'worker 2 does not have the correct amount of reputation')
+
   })
 
-  it('can do math', async function () {
-    assert.equal(1, 1, 'math broke')
+  it('worker can claim a task', async function () {
+    let repPrice = 1
+    let index = 0
+    await RR.claimTask(projectAddress, index, 'install', 100000, repPrice, {from: worker1})
+    let workerBalance1New = await RR.balances.call(worker1)
+    // console.log(workerBalance1New.toNumber())
+    assert.equal(workerBalance1New, workerBalance1 - repPrice, 'worker 1 reputation balance not decremented appropriately')
+    let taskHash = hashListForSubmission(data)[0]
+    let reward = await PROJ.taskRewards.call(taskHash)
+    assert.equal(reward[0].toNumber(), 100000, 'wei reward stored incorrectly')
+    assert.equal(reward[1].toNumber(), repPrice, 'reputation cost stored incorrectly')
+    assert.equal(reward[2], worker1, 'incorrect worker stored')
+    // console.log(reward)
   })
+
+  // don't let this worker claim another task
+  // don't let other worker claim this task
+  // make another task costing more than 1 reputation point
 
 })

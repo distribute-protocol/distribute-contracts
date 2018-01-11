@@ -304,6 +304,10 @@ contract ProjectRegistry {
     project.claimTask(taskHash, _weiVal, _reputationVal, _claimer);
   }
 
+  /*function checkHash(bytes32 taskHash, string _taskDescription, uint256 _weiVal, uint256 _reputationVal) public view {
+    require(taskHash == keccak256(_taskDescription, _weiVal, _reputationVal));
+  }*/
+
   // =====================================================================
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
   // =====================================================================
