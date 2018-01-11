@@ -168,10 +168,6 @@ contract ProjectRegistry {
     }
   }
 
-  //write this later
-  /*function openHandler(Project project) {
-  }*/
-
   function checkActive(address _projectAddress) public returns (bool) {
     Project project = Project(_projectAddress);
     uint256 projectState = project.state();
@@ -201,7 +197,7 @@ contract ProjectRegistry {
     return false;
   }
 // NOTE: I think that the project moves to state 5 here not 4.
-  function checkValidate(address _projectAddress) public returns (bool) {
+  function checkValidating(address _projectAddress) public returns (bool) {
     require(Project(_projectAddress).state() == 4);
     if (Project(_projectAddress).timesUp()) {
       uint256 nextDeadline = now + validateStatePeriod;

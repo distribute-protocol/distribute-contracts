@@ -20,9 +20,9 @@ contract('Active State', (accounts) => {
   let staker1 = accounts[2]
   let staker2 = accounts[3]
   let staker3 = accounts[4]
-  let nonStaker = accounts[5]
-  let worker1 = accounts[6]
-  let worker2 = accounts[7]
+  let worker1 = accounts[5]
+  let worker2 = accounts[6]
+  let worker3 = accounts[7]
 
   let tokens = 10000
   let stakingPeriod = 20000000000     // 10/11/2603 @ 11:33am (UTC)
@@ -39,10 +39,10 @@ contract('Active State', (accounts) => {
   let projectAddress
   let tx
 
-  let workerBalance1, workerBalance2
+  let workerBalance1, workerBalance2, workerBalance3
 
   // format of task hash is 'taskdescription;weivalue;reputationvalue,secondtask;secondweival;secondrepval,...'
-  let data = 'install;100000;1,install a supernode;200000;1'
+  let data = 'install;100000;1,install a supernode;200000;1,break the internet;100;2,save the world;100;1'
 
   function hashTasksForAddition (data) {
     let hashList = hashListForSubmission(data)
@@ -142,32 +142,161 @@ contract('Active State', (accounts) => {
     // register workers and check reputation balances
     await RR.register({from: worker1})
     await RR.register({from: worker2})
+    await RR.register({from: worker3})
     workerBalance1 = await RR.balances.call(worker1)
     workerBalance2 = await RR.balances.call(worker2)
+    workerBalance3 = await RR.balances.call(worker3)
     // console.log(workerBalance1.toNumber())
     // console.log(workerBalance2.toNumber())
     assert.equal(workerBalance1.toNumber(), 1, 'worker 1 does not have the correct amount of reputation')
     assert.equal(workerBalance2.toNumber(), 1, 'worker 2 does not have the correct amount of reputation')
+    assert.equal(workerBalance3.toNumber(), 1, 'worker 3 does not have the correct amount of reputation')
 
   })
 
-  it('worker can claim a task', async function () {
+  it('worker1 can claim a task', async function () {
     let repPrice = 1
+    let weiReward = 100000
     let index = 0
-    await RR.claimTask(projectAddress, index, 'install', 100000, repPrice, {from: worker1})
+    await RR.claimTask(projectAddress, index, 'install', weiReward, repPrice, {from: worker1})
     let workerBalance1New = await RR.balances.call(worker1)
     // console.log(workerBalance1New.toNumber())
     assert.equal(workerBalance1New, workerBalance1 - repPrice, 'worker 1 reputation balance not decremented appropriately')
-    let taskHash = hashListForSubmission(data)[0]
+    let taskHash = hashListForSubmission(data)[index]
     let reward = await PROJ.taskRewards.call(taskHash)
-    assert.equal(reward[0].toNumber(), 100000, 'wei reward stored incorrectly')
+    assert.equal(reward[0].toNumber(), weiReward, 'wei reward stored incorrectly')
     assert.equal(reward[1].toNumber(), repPrice, 'reputation cost stored incorrectly')
     assert.equal(reward[2], worker1, 'incorrect worker stored')
     // console.log(reward)
   })
 
-  // don't let this worker claim another task
-  // don't let other worker claim this task
-  // make another task costing more than 1 reputation point
+  it('worker1 can\'t claim another task', async function () {
+    errorThrown = false
+    try {
+      let repPrice = 1
+      let weiReward = 2000000
+      let index = 1
+      await RR.claimTask(projectAddress, index, 'install a supernode', weiReward, repPrice, {from: worker1})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('worker2 can\'t claim worker1\'s task', async function () {
+    errorThrown = false
+    try {
+      let repPrice = 1
+      let weiReward = 100000
+      let index = 0
+      await RR.claimTask(projectAddress, index, 'install', weiReward, repPrice, {from: worker2})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('worker2 can\'t claim a task if incorrect reputation price is provided', async function () {
+    errorThrown = false
+    try {
+      let repPrice = 0
+      let weiReward = 2000000
+      let index = 1
+      await RR.claimTask(projectAddress, index, 'install a supernode', weiReward, repPrice, {from: worker2})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('worker2 can\'t claim a task if incorrect wei reward is provided', async function () {
+    errorThrown = false
+    try {
+      let repPrice = 1
+      let weiReward = 20000000
+      let index = 1
+      await RR.claimTask(projectAddress, index, 'install a supernode', weiReward, repPrice, {from: worker2})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('worker2 can\'t claim a task if incorrect task description is provided', async function () {
+    errorThrown = false
+    try {
+      let repPrice = 1
+      let weiReward = 2000000
+      let index = 1
+      await RR.claimTask(projectAddress, index, 'install a supergoobi', weiReward, repPrice, {from: worker2})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('worker2 can\'t claim a task if incorrect task index is provided', async function () {
+    errorThrown = false
+    try {
+      let repPrice = 1
+      let weiReward = 2000000
+      let index = 100
+      await RR.claimTask(projectAddress, index, 'install a supernode', weiReward, repPrice, {from: worker2})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('worker2 can\'t claim a task costing more reputation points than she has', async function () {
+    errorThrown = false
+    try {
+      let repPrice = 2
+      let weiReward = 100
+      let index = 2
+      await RR.claimTask(projectAddress, index, 'break the internet', weiReward, repPrice, {from: worker2})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('worker2 can claim another task', async function () {
+    let repPrice = 1
+    let weiReward = 200000
+    let index = 1
+    await RR.claimTask(projectAddress, index, 'install a supernode', weiReward, repPrice, {from: worker2})
+    let workerBalance2New = await RR.balances.call(worker2)
+    // console.log(workerBalance1New.toNumber())
+    assert.equal(workerBalance2New, workerBalance2 - repPrice, 'worker 1 reputation balance not decremented appropriately')
+    let taskHash = hashListForSubmission(data)[index]
+    let reward = await PROJ.taskRewards.call(taskHash)
+    assert.equal(reward[0].toNumber(), weiReward, 'wei reward stored incorrectly')
+    assert.equal(reward[1].toNumber(), repPrice, 'reputation cost stored incorrectly')
+    assert.equal(reward[2], worker2, 'incorrect worker stored')
+    // console.log(reward)
+  })
+
+  it('active project becomes validating project when active period is up', async function () {
+    let state = await PROJ.state()
+    assert.equal(state.toNumber(), 4, 'project should be in active state')
+    await evmIncreaseTime(7 * 25 * 60 * 60)
+    await PR.checkValidating(projectAddress)
+    state = await PROJ.state()
+    assert.equal(state.toNumber(), 5, 'project should have entered validating state')
+  })
+
+  it('worker3 can\'t claim a task once the active period is up', async function () {
+    errorThrown = false
+    try {
+      let repPrice = 1
+      let weiReward = 100
+      let index = 3
+      await RR.claimTask(projectAddress, index, 'save the world', weiReward, repPrice, {from: worker3})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
 
 })
