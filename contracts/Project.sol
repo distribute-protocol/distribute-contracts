@@ -57,6 +57,9 @@ contract Project {
     address claimer;
   }
 
+  event tokenRefund(address staker, uint256 refund);
+  event reputationRefund(address staker, uint256 refund);
+
   mapping (bytes32 => Reward) public taskRewards;
 
 
@@ -175,7 +178,7 @@ contract Project {
   /* ####### NEEDS TESTS ####### */
   function refundStaker(address _staker) public returns (uint256 _refund) {  //called by THR or WR, allow return of staked, validated, and
     require(msg.sender == address(tokenRegistry) ||  msg.sender == address(reputationRegistry));
-    require(state == 7|| state == 9);
+    require(state == 7 || state == 8);
     if (msg.sender == address(tokenRegistry)) {
       return handleTokenStaker(_staker);
     } else if (msg.sender == address(reputationRegistry)) {
@@ -190,6 +193,7 @@ contract Project {
       stakedTokenBalances[_staker] = 0;
     }
     refund += validatorRewardHandler(_staker);
+    tokenRefund(_staker, refund);
     return refund;
   }
 
@@ -198,7 +202,7 @@ contract Project {
     if(totalValidateNegative != 0 || totalValidateAffirmative != 0) {
       refund += validators[_staker].stake;
       uint256 denom;
-      state == 9
+      state == 8
         ? denom = totalValidateNegative
         : denom = totalValidateAffirmative;
       if (opposingValidator == true) {
@@ -217,6 +221,7 @@ contract Project {
       refund = stakedReputationBalances[_staker];
       stakedReputationBalances[_staker] = 0;
     }
+    reputationRefund(_staker, refund);
     return refund;
   }
 
@@ -238,15 +243,14 @@ contract Project {
     }
   }
 
-  /* ####### NEEDS TESTS ####### */
   function setValidationState(bool isPassed) public onlyPR {
-    if(!isPassed) {               // project fails
+    if(isPassed) {                          // project succeeds
+      validateReward = totalValidateNegative;
+      totalValidateNegative = 0;
+    } else {                                // project fails
       burnStake();
       validateReward = totalValidateAffirmative;
       totalValidateAffirmative = 0;
-    } else {                     // project succeeds
-      validateReward = totalValidateNegative;
-      totalValidateNegative = 0;
     }
     if (validateReward == 0) {
       opposingValidator = false;
@@ -265,7 +269,7 @@ contract Project {
   // =====================================================================
 
   /* ####### NEEDS TESTS ####### */
-  function claimTask(bytes32 _taskHash, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyInState(4) {
+  function claimTask(bytes32 _taskHash, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyInState(4) onlyPR {
     require(taskRewards[_taskHash].claimer == 0);
     Reward storage taskReward = taskRewards[_taskHash];
     taskReward.claimer = _claimer;
@@ -274,7 +278,7 @@ contract Project {
   }
 
   /* ####### NEEDS TESTS ####### */
-  function claimTaskReward(bytes32 _taskHash, address _claimer) public onlyInState(7) returns (uint256) {
+  function claimTaskReward(bytes32 _taskHash, address _claimer) public onlyInState(7) returns onlyRR (uint256) {
     require(taskRewards[_taskHash].claimer == _claimer);
     Reward storage singleTaskReward = taskRewards[_taskHash];
     uint256 weiTemp = singleTaskReward.weiReward;

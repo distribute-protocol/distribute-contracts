@@ -76,14 +76,14 @@ contract('Project', function (accounts) {
   })
 
   // it('returns the proportional weight on an address staking (reputation)', async () => {
-  //   let val = await spoofedP.calculateWeightOfAddress(repStaker)
-  //   assert.equal(val.toNumber(), 100, 'doesn\'t return the correct weight')
-  //   await spoofedP.stakeTokens(staker2, tokens, web3.toWei(0.5, 'ether'), {from: spoofedTRaddress})
-  //   let val1 = await spoofedP.calculateWeightOfAddress(staker)
-  //   let val2 = await spoofedP.calculateWeightOfAddress(staker2)
-  //   assert.equal(val1.toNumber(), 50, 'doesn\'t return the correct weight after more staking1')
-  //   assert.equal(val2.toNumber(), 50, 'doesn\'t return the correct weight after more staking2')
-  //   await spoofedP.unstakeTokens(staker2, tokens, {from: spoofedTRaddress})
+    // let val = await spoofedP.calculateWeightOfAddress(repStaker)
+    // assert.equal(val.toNumber(), 100, 'doesn\'t return the correct weight')
+    // await spoofedP.stakeTokens(staker2, tokens, web3.toWei(0.5, 'ether'), {from: spoofedTRaddress})
+    // let val1 = await spoofedP.calculateWeightOfAddress(staker)
+    // let val2 = await spoofedP.calculateWeightOfAddress(staker2)
+    // assert.equal(val1.toNumber(), 50, 'doesn\'t return the correct weight after more staking1')
+    // assert.equal(val2.toNumber(), 50, 'doesn\'t return the correct weight after more staking2')
+    // await spoofedP.unstakeTokens(staker2, tokens, {from: spoofedTRaddress})
   // })
 
   it('unstakes tokens', async () => {
@@ -119,12 +119,12 @@ contract('Project', function (accounts) {
   })
 
   it('sets project state', async () => {
-    let nexD = Date.now() + (7 * 25 * 60 * 60)
-    await spoofedP.setState(2, nexD, {from: spoofedPRaddress})
+    let nextDate = Date.now() + (7 * 25 * 60 * 60)
+    await spoofedP.setState(2, nextDate, {from: spoofedPRaddress})
     let state = await spoofedP.state.call()
     let nextDeadline = await spoofedP.nextDeadline.call()
     assert.equal(state, 2, "doesn't update state correctly")
-    assert.equal(nextDeadline, nexD, "doesn't update nextDeadline correctly")
+    assert.equal(nextDeadline, nextDate, "doesn't update nextDeadline correctly")
   })
 
   it('returns false if time is not up', async () => {
@@ -133,7 +133,7 @@ contract('Project', function (accounts) {
   })
 
   it('handles validation correctly', async () => {
-    let nexD = Date.now() + (7 * 25 * 60 * 60)
+    // let nexD = Date.now() + (7 * 25 * 60 * 60)
     await spoofedP.setState(5, 0, {from: spoofedPRaddress})
     await spoofedP.validate(staker, tokens, true, {from: spoofedTRaddress})
     await spoofedP.validate(staker2, tokens, false, {from: spoofedTRaddress})
@@ -145,19 +145,64 @@ contract('Project', function (accounts) {
     assert.equal(totalValNegative.toNumber(), tokens, "doesn't update negative validation correctly")
   })
 
-  // it('sets ValidatorStatus', async () => {
-  //   await PR.startPoll(spoofedP.address, stakingPeriod, stakingPeriod)
-  //   await spoofedP.setValidationState(false, {from: spoofedPRaddress})
-  //   let totalTokensStaked = spoofedP.totalTokensStaked.call()
-  //   let totalReputationStaked = spoofedP.totalReputationStaked.call()
-  //   let validateReward = spoofedP.validateReward.call()
-  //   let totalValidateAffirmative = spoofedP.totalValidateAffirmative.call()
-  //   // 0, 0, 10010, 0
-  //   console.log(totalTokensStaked)
-  //   console.log(totalReputationStaked)
-  //   console.log(validateReward)
-  //   console.log(totalValidateAffirmative)
+  it('refunds a token staker when project succeeds', async () => {
+    await spoofedP.setState(7, 0, {from: spoofedPRaddress})
+    await spoofedP.refundStaker(staker, {from: spoofedTRaddress})
+    await spoofedP.tokenRefund(async (error, result) => {
+      if (!error) {
+        assert.equal(result.args.staker, staker, "doesn't log the correct staker succeeds")
+        assert.equal(result.args.refund.toNumber(), (tokens * 2), "doesn't log the correct refund value succeeds")
+      }
+    })
+    // await spoofedP.refundStaker(staker2, {from: spoofedTRaddress})
+    // await spoofedP.tokenRefund(async (error, result) => {
+    //   if (!error) {
+    //     assert.equal(result.args.staker, staker2, "doesn't log the correct staker2 succeeds")
+    //     assert.equal(result.args.refund.toNumber(), tokens, "doesn't log the correct refund value2 succeeds ")
+    //   }
+    // })
+  })
+  // it('refunds a token staker when project fails', async () => {
+  //   let spoofedP2 = await Project.new(projectCost, proposeProportion, stakingPeriod, RR.address, spoofedTRaddress, {from: spoofedPRaddress})
+  //   await spoofedP2.stakeTokens(staker, tokens, web3.toWei(1, 'ether'), {from: spoofedTRaddress})
+  //   await spoofedP2.stakeTokens(staker2, tokens, web3.toWei(1, 'ether'), {from: spoofedTRaddress})
+  //   await spoofedP2.validate(staker, tokens, true, {from: spoofedTRaddress})
+  //   await spoofedP2.validate(staker2, tokens, false, {from: spoofedTRaddress})
+  //   await spoofedP2.setState(8, 0, {from: spoofedPRaddress})
+  //   await spoofedP2.refundStaker(staker, {from: spoofedTRaddress})
+  //   await spoofedP2.tokenRefund(async (error, result) => {
+  //     if (!error) {
+  //       assert.equal(result.args.staker, staker, "doesn't log the correct staker fails")
+  //       assert.equal(result.args.refund.toNumber(), 0, "doesn't log the correct refund value fails")
+  //     }
+  //   })
+  //   await spoofedP2.refundStaker(staker2, {from: spoofedTRaddress})
+  //   await spoofedP2.tokenRefund(async (error, result) => {
+  //     if (!error) {
+  //       assert.equal(result.args.staker, staker2, "doesn't log the correct staker2 fails")
+  //       assert.equal(result.args.refund.toNumber(), tokens, "doesn't log the correct refund value2 fails")
+  //     }
+  //   })
   // })
+
+  // it('refunds a token staker when project succeeds', async () => {
+  //   await spoofedP.setState(7, 0, {from: spoofedPRaddress})
+  //   let refund = await spoofedP.refundStaker(staker, {from: spoofedTRaddress})
+  //   console.log(refund)
+  // })
+
+  // Note this does not check total reputation/tokens staked because those have already been burned
+  // We should likely add a flag so that this can only be called once. As this test uses a "bug"
+  // To be able to be ran
+  it('sets ValidationState when project passes', async () => {
+    await spoofedP.setValidationState(true, {from: spoofedPRaddress})
+    let validateReward = await spoofedP.validateReward.call()
+    let totalValidateNegative = await spoofedP.totalValidateNegative.call()
+    let opposingValidator = await spoofedP.opposingValidator.call()
+    assert.equal(validateReward.toNumber(), tokens, "doesn't set validate reward to incorrect validators")
+    assert.equal(totalValidateNegative.toNumber(), 0, "it clears the totalValidateNegative")
+    assert.isTrue(opposingValidator, "doesn't set opposingValidator correctly")
+  })
 
   it('only allows the TokenRegistry to call stakeTokens', async () => {
     let errorThrown = false
@@ -209,26 +254,6 @@ contract('Project', function (accounts) {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('only allows the projectRegistry to call setTotalValidateAffirmative', async () => {
-    let errorThrown = false
-    try {
-      await P.setTotalValidateAffirmative(10)
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
-
-  it('only allows the projectRegistry to call setTotalValidateNegative', async () => {
-    let errorThrown = false
-    try {
-      await P.setTotalValidateNegative(20)
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
-
   it('only allows the projectRegistry to call clearStake', async () => {
     let errorThrown = false
     try {
@@ -249,25 +274,6 @@ contract('Project', function (accounts) {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('only allows the projectRegistry to call setValidateReward', async () => {
-    let errorThrown = false
-    try {
-      await P.setValidateReward(true)
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
-
-  it('only allows the projectRegistry to call setValidateFlag', async () => {
-    let errorThrown = false
-    try {
-      await P.setValidateFlag(true)
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
 
   // it('returns true if time is up', async () => {
   //   await evmIncreaseTime(300000000000)
@@ -281,8 +287,6 @@ contract('Project', function (accounts) {
 
   /*
   timesUp
-  refundStaker
-  setValidationState
   claimTask
   claimTaskReward
   */
