@@ -278,4 +278,12 @@ contract('Project', function (accounts) {
   // it('only allows Token Registry to stake tokens', async function () {
   //
   // })
+
+  /*
+  timesUp
+  refundStaker
+  setValidationState
+  claimTask
+  claimTaskReward
+  */
 })

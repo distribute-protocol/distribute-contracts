@@ -22,11 +22,10 @@ contract Project {
     2: Open,
     3: Dispute,
     4: Active,
-    5: Validating,
+    5: Validation,
     6: Voting,
     7: Complete,
-    8: Incomplete,
-    9: Failed
+    8: Failed
   */
   uint256 public weiBal;
   uint256 public nextDeadline;
@@ -126,11 +125,6 @@ contract Project {
   function timesUp() public view returns (bool) {
     return (now > nextDeadline);
   }
-
-  /* function clearStake() public onlyPR {
-    totalReputationStaked = 0;
-    totalTokensStaked = 0;
-  } */
 
   function isStaked() public view returns (bool) {
     return weiCost <= weiBal && reputationCost <= totalReputationStaked;

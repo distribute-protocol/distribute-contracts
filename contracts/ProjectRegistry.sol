@@ -103,7 +103,6 @@ contract ProjectRegistry {
     return proposedProjects[_projectAddress].proposer;
   }
 
-  // NOTE: This likely cannot be public
   function startPoll(address _projectAddress, uint256 _commitDuration, uint256 _revealDuration) internal {       //can only be called by project in question
     votingPollId[_projectAddress] =  plcrVoting.startPoll(51, _commitDuration, _revealDuration);
   }
@@ -161,7 +160,7 @@ contract ProjectRegistry {
       return true;
     } else {
       if(Project(_projectAddress).timesUp()) {
-        Project(_projectAddress).setState(9, 0);
+        Project(_projectAddress).setState(8, 0);
         proposedProjects[_projectAddress].proposerStake = 0;
       }
       return false;
@@ -190,14 +189,14 @@ contract ProjectRegistry {
           project.setState(4, nextDeadline);
           return true;
         } else {
-          project.setState(9, 0);
+          project.setState(8, 0);
         }
       }
     }
     return false;
   }
-// NOTE: I think that the project moves to state 5 here not 4.
-  function checkValidating(address _projectAddress) public returns (bool) {
+
+  function checkValidate(address _projectAddress) public returns (bool) {
     require(Project(_projectAddress).state() == 4);
     if (Project(_projectAddress).timesUp()) {
       uint256 nextDeadline = now + validateStatePeriod;
@@ -214,22 +213,18 @@ contract ProjectRegistry {
       Project(_projectAddress).setState(6, 0);
       startPoll(_projectAddress, voteCommitPeriod, voteRevealPeriod);
       return true;
-    } else {
-      return false;
     }
+    return false;
   }
 
   function checkEnd(address _projectAddress) public returns (bool) {     //don't know where this gets called - maybe separate UI thing
-    if(!pollEnded(_projectAddress)) {
-      return false;
-    } else {
-      bool passed = plcrVoting.isPassed(votingPollId[_projectAddress]);
-      Project(_projectAddress).setValidationState(passed);
-      passed
-        ? Project(_projectAddress).setState(7, 0)
-        : Project(_projectAddress).setState(9, 0);
-      return true;
-    }
+    if(!pollEnded(_projectAddress)) { return false; }
+    bool passed = plcrVoting.isPassed(votingPollId[_projectAddress]);
+    Project(_projectAddress).setValidationState(passed);
+    passed
+      ? Project(_projectAddress).setState(7, 0)
+      : Project(_projectAddress).setState(8, 0);
+    return true;
   }
 
   // =====================================================================
@@ -285,7 +280,7 @@ contract ProjectRegistry {
     } else {
       require(keccak256(_hashes) == openProjects[_projectAddress].first);
     }
-      projectTaskList[_projectAddress] = _hashes;
+    projectTaskList[_projectAddress] = _hashes;
   }
 
   // =====================================================================

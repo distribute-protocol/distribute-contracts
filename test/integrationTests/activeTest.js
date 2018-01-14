@@ -281,7 +281,7 @@ contract('Active State', (accounts) => {
     let state = await PROJ.state()
     assert.equal(state.toNumber(), 4, 'project should be in active state')
     await evmIncreaseTime(7 * 25 * 60 * 60)
-    await PR.checkValidating(projectAddress)
+    await PR.checkValidate(projectAddress)
     state = await PROJ.state()
     assert.equal(state.toNumber(), 5, 'project should have entered validating state')
   })
