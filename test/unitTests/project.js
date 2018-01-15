@@ -74,7 +74,7 @@ contract('Project', function (accounts) {
     assert.equal(val3.toNumber(), 50, 'doesn\'t return the correct weight for reputation staking')
     await spoofedP.unstakeTokens(staker2, tokens, {from: spoofedTRaddress})
   })
-
+  // NEED TO FINISH
   // it('returns the proportional weight on an address staking (reputation)', async () => {
     // let val = await spoofedP.calculateWeightOfAddress(repStaker)
     // assert.equal(val.toNumber(), 100, 'doesn\'t return the correct weight')
@@ -133,7 +133,6 @@ contract('Project', function (accounts) {
   })
 
   it('handles validation correctly', async () => {
-    // let nexD = Date.now() + (7 * 25 * 60 * 60)
     await spoofedP.setState(5, 0, {from: spoofedPRaddress})
     await spoofedP.validate(staker, tokens, true, {from: spoofedTRaddress})
     await spoofedP.validate(staker2, tokens, false, {from: spoofedTRaddress})
@@ -154,6 +153,7 @@ contract('Project', function (accounts) {
         assert.equal(result.args.refund.toNumber(), (tokens * 2), "doesn't log the correct refund value succeeds")
       }
     })
+    // NEED TO FINISH
     // await spoofedP.refundStaker(staker2, {from: spoofedTRaddress})
     // await spoofedP.tokenRefund(async (error, result) => {
     //   if (!error) {
@@ -162,34 +162,29 @@ contract('Project', function (accounts) {
     //   }
     // })
   })
-  // it('refunds a token staker when project fails', async () => {
-  //   let spoofedP2 = await Project.new(projectCost, proposeProportion, stakingPeriod, RR.address, spoofedTRaddress, {from: spoofedPRaddress})
-  //   await spoofedP2.stakeTokens(staker, tokens, web3.toWei(1, 'ether'), {from: spoofedTRaddress})
-  //   await spoofedP2.stakeTokens(staker2, tokens, web3.toWei(1, 'ether'), {from: spoofedTRaddress})
-  //   await spoofedP2.validate(staker, tokens, true, {from: spoofedTRaddress})
-  //   await spoofedP2.validate(staker2, tokens, false, {from: spoofedTRaddress})
-  //   await spoofedP2.setState(8, 0, {from: spoofedPRaddress})
-  //   await spoofedP2.refundStaker(staker, {from: spoofedTRaddress})
-  //   await spoofedP2.tokenRefund(async (error, result) => {
-  //     if (!error) {
-  //       assert.equal(result.args.staker, staker, "doesn't log the correct staker fails")
-  //       assert.equal(result.args.refund.toNumber(), 0, "doesn't log the correct refund value fails")
-  //     }
-  //   })
-  //   await spoofedP2.refundStaker(staker2, {from: spoofedTRaddress})
-  //   await spoofedP2.tokenRefund(async (error, result) => {
-  //     if (!error) {
-  //       assert.equal(result.args.staker, staker2, "doesn't log the correct staker2 fails")
-  //       assert.equal(result.args.refund.toNumber(), tokens, "doesn't log the correct refund value2 fails")
-  //     }
-  //   })
-  // })
 
-  // it('refunds a token staker when project succeeds', async () => {
-  //   await spoofedP.setState(7, 0, {from: spoofedPRaddress})
-  //   let refund = await spoofedP.refundStaker(staker, {from: spoofedTRaddress})
-  //   console.log(refund)
-  // })
+  it('refunds a token staker when project fails', async () => {
+    let spoofedP2 = await Project.new(projectCost, proposeProportion, stakingPeriod, RR.address, spoofedTRaddress, {from: spoofedPRaddress})
+    await spoofedP2.stakeTokens(staker, tokens, web3.toWei(1, 'ether'), {from: spoofedTRaddress})
+    await spoofedP2.stakeTokens(staker2, tokens, web3.toWei(1, 'ether'), {from: spoofedTRaddress})
+    // await spoofedP2.validate(staker, tokens, true, {from: spoofedTRaddress})
+    // await spoofedP2.validate(staker2, tokens, false, {from: spoofedTRaddress})
+    // await spoofedP2.setState(8, 0, {from: spoofedPRaddress})
+    // await spoofedP2.refundStaker(staker, {from: spoofedTRaddress})
+    // await spoofedP2.tokenRefund(async (error, result) => {
+    //   if (!error) {
+    //     assert.equal(result.args.staker, staker, "doesn't log the correct staker fails")
+    //     assert.equal(result.args.refund.toNumber(), 0, "doesn't log the correct refund value fails")
+    //   }
+    // })
+    // await spoofedP2.refundStaker(staker2, {from: spoofedTRaddress})
+    // await spoofedP2.tokenRefund(async (error, result) => {
+    //   if (!error) {
+    //     assert.equal(result.args.staker, staker2, "doesn't log the correct staker2 fails")
+    //     assert.equal(result.args.refund.toNumber(), tokens, "doesn't log the correct refund value2 fails")
+    //   }
+    // })
+  })
 
   // Note this does not check total reputation/tokens staked because those have already been burned
   // We should likely add a flag so that this can only be called once. As this test uses a "bug"

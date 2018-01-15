@@ -228,7 +228,7 @@ contract Project {
   // =====================================================================
   // VALIDATOR FUNCTIONS
   // =====================================================================
-  function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTR onlyInState(5) {
+  function validate(address _staker, uint256 _tokens, bool _validationState) public onlyTR() onlyInState(5) {
     //check for free tokens done in THR
     //increments validation tokens in Project.sol only
     // NEEDS A CHECK FOR REMOVING VALIDATION / CHANGING VALIDATION
@@ -243,7 +243,7 @@ contract Project {
     }
   }
 
-  function setValidationState(bool isPassed) public onlyPR {
+  function setValidationState(bool isPassed) public onlyPR() {
     if(isPassed) {                          // project succeeds
       validateReward = totalValidateNegative;
       totalValidateNegative = 0;
@@ -269,7 +269,7 @@ contract Project {
   // =====================================================================
 
   /* ####### NEEDS TESTS ####### */
-  function claimTask(bytes32 _taskHash, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyInState(4) onlyPR {
+  function claimTask(bytes32 _taskHash, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyInState(4) onlyPR() {
     require(taskRewards[_taskHash].claimer == 0);
     Reward storage taskReward = taskRewards[_taskHash];
     taskReward.claimer = _claimer;
@@ -278,16 +278,16 @@ contract Project {
   }
 
   /* ####### NEEDS TESTS ####### */
-  function claimTaskReward(bytes32 _taskHash, address _claimer) public onlyInState(7) returns onlyRR (uint256) {
+  function claimTaskReward(bytes32 _taskHash, address _claimer) public onlyInState(7) onlyRR() returns (uint256) {
     require(taskRewards[_taskHash].claimer == _claimer);
     Reward storage singleTaskReward = taskRewards[_taskHash];
     uint256 weiTemp = singleTaskReward.weiReward;
-    uint256 reputationTemp = singleTaskReward.reputationReward;
+    uint256 reputationReward = singleTaskReward.reputationReward;
     singleTaskReward.claimer = 0;
     singleTaskReward.weiReward = 0;
     singleTaskReward.reputationReward = 0;
     tokenRegistry.transferWeiReward(_claimer, weiTemp);
-    return reputationTemp;
+    return reputationReward;
   }
 
   function() public payable {
