@@ -30,7 +30,7 @@ contract TokenRegistry {
 // EVENTS
 // =====================================================================
 
-  event LogProjectCreated(address indexed projectAddress, uint256 projectCost, uint256 proposerStake);
+  event ProjectCreated(address indexed projectAddress, uint256 projectCost, uint256 proposerStake);
 
 
 // =====================================================================
@@ -71,7 +71,7 @@ contract TokenRegistry {
     uint256 costProportion = _cost / distributeToken.weiBal();
     distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
     address projectAddress = projectRegistry.createProject(_cost, costProportion, proposerTokenCost, _stakingPeriod, msg.sender);
-    LogProjectCreated(projectAddress, _cost, proposerTokenCost);
+    ProjectCreated(projectAddress, _cost, proposerTokenCost);
   }
 
   function refundProposer(address _projectAddress) public {                                 //called by proposer to get refund once project is active

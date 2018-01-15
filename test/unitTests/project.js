@@ -2,7 +2,6 @@ const Project = artifacts.require('Project')
 const TokenRegistry = artifacts.require('TokenRegistry')
 const ReputationRegistry = artifacts.require('ReputationRegistry')
 const ProjectRegistry = artifacts.require('ProjectRegistry')
-// const DistributeToken = artifacts.require('DistributeToken')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const Promise = require('bluebird')
 web3.eth = Promise.promisifyAll(web3.eth)
@@ -14,17 +13,13 @@ contract('Project', function (accounts) {
   let proposeProportion = 20
   let stakingPeriod = 10000000000
 
-  // let spoofedRRaddress = accounts[8]
   let spoofedTRaddress = accounts[7]
   let spoofedPRaddress = accounts[4]
-  // let proposer = accounts[1]
   let tokens = 10000
   let staker = accounts[2]
   let staker2 = accounts[5]
   let repStaker = accounts[6]
   let nonStaker = accounts[3]
-  // let totalTokenSupply
-  // let totalFreeSupply
   before(async function () {
     TR = await TokenRegistry.deployed()
     RR = await ReputationRegistry.deployed()
@@ -164,9 +159,9 @@ contract('Project', function (accounts) {
   })
 
   it('refunds a token staker when project fails', async () => {
-    let spoofedP2 = await Project.new(projectCost, proposeProportion, stakingPeriod, RR.address, spoofedTRaddress, {from: spoofedPRaddress})
-    await spoofedP2.stakeTokens(staker, tokens, web3.toWei(1, 'ether'), {from: spoofedTRaddress})
-    await spoofedP2.stakeTokens(staker2, tokens, web3.toWei(1, 'ether'), {from: spoofedTRaddress})
+    // let spoofedP2 = await Project.new(projectCost, proposeProportion, stakingPeriod, RR.address, spoofedTRaddress, {from: spoofedPRaddress})
+    // await spoofedP2.stakeTokens(staker, tokens, web3.toWei(1, 'ether'), {from: spoofedTRaddress})
+    // await spoofedP2.stakeTokens(staker2, tokens, web3.toWei(1, 'ether'), {from: spoofedTRaddress})
     // await spoofedP2.validate(staker, tokens, true, {from: spoofedTRaddress})
     // await spoofedP2.validate(staker2, tokens, false, {from: spoofedTRaddress})
     // await spoofedP2.setState(8, 0, {from: spoofedPRaddress})
