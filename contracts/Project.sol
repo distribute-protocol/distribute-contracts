@@ -121,7 +121,6 @@ contract Project {
     /* return percent((stakedReputationBalances[_address] + stakedTokenBalances[_address]), (totalTokensStaked + totalReputationStaked), 2); */
   }
 
-  /* ####### NEEDS TESTS FOR WHEN TIMES UP ####### */
   function timesUp() public view returns (bool) {
     return (now > nextDeadline);
   }
