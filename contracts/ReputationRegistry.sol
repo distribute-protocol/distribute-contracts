@@ -54,6 +54,8 @@ contract ReputationRegistry{
   function register() public {
     require(balances[msg.sender] == 0);
     balances[msg.sender] = 1;
+    totalSupply += 1;
+    totalFreeSupply += 1;
   }
 
   // =====================================================================
@@ -81,6 +83,7 @@ contract ReputationRegistry{
   function claimTask(address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _reputationVal) public {
     require(balances[msg.sender] >= _reputationVal);
     balances[msg.sender] -= _reputationVal;
+    totalFreeSupply -= _reputationVal;
     projectRegistry.claimTask(_projectAddress, _index, _taskDescription, _weiVal, _reputationVal, msg.sender);
   }
 
