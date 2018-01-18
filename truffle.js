@@ -19,17 +19,13 @@ module.exports = {
       // gas: 6412500,
       // gasPrice: 20000000000
     },
-    // ropsten: {
-    //   provider: new HDWalletProvider(mnemonic, 'https://ropsten.infura.io'),
-    //   network_id: '3',
-    //   gas: 4700000,
-    //   gasPrice: 20000000000
-    // },
-    // rinkeby: {
-    //   provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/' + infuraApikey),
-    //   network_id: '*',
-    //   gas: 6412500,
-    //   gasPrice: 20000000000
-    // }
+    ropsten: {
+      provider: new HDWalletProvider(mnemonic, 'https://ropsten.infura.io'),
+      network_id: '3'
+    },
+    rinkeby: {
+      provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/' + infuraApikey),
+      network_id: '*'
+    }
   }
 }

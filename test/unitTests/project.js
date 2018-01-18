@@ -124,7 +124,17 @@ contract('Project', function (accounts) {
 
   it('returns false if time is not up', async () => {
     let val = await spoofedP.timesUp()
-    assert.isNotTrue(val, 'returns timesUp true when should be false')
+    assert.isFalse(val, 'returns timesUp true when should be false')
+  })
+
+  it('handles times up correctly when time is up', async () => {
+    await spoofedP.setState(2, Math.floor(Date.now()/1000) - 1, {from: spoofedPRaddress})
+    let nextDeadline = await spoofedP.nextDeadline.call()
+    // console.log(nextDeadline.toNumber())
+    let val = await spoofedP.timesUp()
+    // console.log(val)
+    assert.isBelow(nextDeadline.toNumber(), Date.now(), "doesn't update nextDeadline correctly")
+    assert.isTrue(val, 'returns timesUp false when should be true')
   })
 
   it('handles validation correctly', async () => {
