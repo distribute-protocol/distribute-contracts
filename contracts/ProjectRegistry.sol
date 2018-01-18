@@ -93,7 +93,7 @@ contract ProjectRegistry {
   // EVENTS
   // =====================================================================
 
-  event LogProjectCreated(address projectAddress, address proposerAddress, uint256 projectCost, uint256 proposerStake);
+  event LogProjectCreated(address indexed projectAddress, address proposerAddress, uint256 projectCost, uint256 proposerStake);
 
   // =====================================================================
   // GENERAL FUNCTIONS
