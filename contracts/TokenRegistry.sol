@@ -99,7 +99,7 @@ contract TokenRegistry {
     Project(_projectAddress).stakeTokens(msg.sender, tokens, weiChange);
     distributeToken.transferWeiFrom(_projectAddress, weiChange);
     distributeToken.transferToEscrow(msg.sender, tokens);
-    projectRegistry.checkOpen(_projectAddress);
+    projectRegistry.checkDispute(_projectAddress);
   }
 
   function unstakeTokens(address _projectAddress, uint256 _tokens) public {

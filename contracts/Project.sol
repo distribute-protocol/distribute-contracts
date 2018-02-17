@@ -20,7 +20,6 @@ contract Project {
   /*
     1: Proposed,
     2: Open,
-    3: Dispute,
     4: Active,
     5: Validation,
     6: Voting,
@@ -45,7 +44,7 @@ contract Project {
   }
 
  bool public opposingValidator = true;
- uint256 public validateReward;
+ uint256 validateReward;
 
   mapping (address => Validator) public validators;
   uint256 public totalValidateAffirmative;

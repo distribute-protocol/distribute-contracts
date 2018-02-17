@@ -17,7 +17,7 @@ contract ProjectRegistry {
   address reputationRegistryAddress;
   address tokenRegistryAddress;
 
-  uint256 openStatePeriod = 1 weeks;
+  /* uint256 openStatePeriod = 1 weeks; */
   uint256 disputeStatePeriod = 1 weeks;
   uint256 activeStatePeriod = 1 weeks;
   uint256 validateStatePeriod = 1 weeks;
@@ -32,14 +32,15 @@ contract ProjectRegistry {
     uint256 cost;      //cost of the project in ETH/tokens?
     uint256 stakingPeriod;
   }
-  struct OpenState {
+
+  /* struct OpenState {
     //open
     bytes32 first;
     uint256 conflict;                                 //used to determine if dispute period needs to happen
     uint256 numTotalSubmissions;
     mapping(address => bytes32) taskHashSubmissions;
     mapping(bytes32 => uint256) numSubmissions;
-  }
+  } */
 
   struct DisputeState {
     bytes32 topTaskHash;
@@ -60,7 +61,7 @@ contract ProjectRegistry {
   } */
 
   mapping (address => ProposedState) public proposedProjects;
-  mapping (address => OpenState) public openProjects;
+  /* mapping (address => OpenState) public openProjects; */
   mapping (address => DisputeState) public disputedProjects;
 
   // NOTE do we need a validated Projects mapping?
@@ -152,11 +153,11 @@ contract ProjectRegistry {
   // STATE CHANGE
   // =====================================================================
 
-  function checkOpen(address _projectAddress) public returns (bool) {
+  function checkDispute(address _projectAddress) public returns (bool) {
     require(Project(_projectAddress).state() == 1);    //check that project is in the proposed state
     if(Project(_projectAddress).isStaked()) {
-      uint256 nextDeadline = now + openStatePeriod;
-      Project(_projectAddress).setState(2, nextDeadline);
+      uint256 nextDeadline = now + disputeStatePeriod;
+      Project(_projectAddress).setState(3, nextDeadline);
       return true;
     } else {
       if(Project(_projectAddress).timesUp()) {
@@ -170,10 +171,17 @@ contract ProjectRegistry {
   function checkActive(address _projectAddress) public returns (bool) {
     Project project = Project(_projectAddress);
     uint256 projectState = project.state();
-    require(projectState == 2 || projectState == 3);
+    require(projectState == 3);
     if(project.timesUp()) {
       uint256 nextDeadline;
-      //MAKE THIS OPEN HANDLER
+      if(disputedProjects[_projectAddress].topTaskHash != 0) {
+        nextDeadline = now + activeStatePeriod;
+        project.setState(4, nextDeadline);
+        return true;
+      } else {
+        project.setState(8, 0);
+      }
+      /* //MAKE THIS OPEN HANDLER
       if(projectState == 2) {
         if(openProjects[_projectAddress].first == 0 || openProjects[_projectAddress].conflict != 0) {
           nextDeadline = now + disputeStatePeriod;
@@ -184,14 +192,8 @@ contract ProjectRegistry {
           return true;
         }
       } else {
-        if(disputedProjects[_projectAddress].topTaskHash != 0) {
-          nextDeadline = now + activeStatePeriod;
-          project.setState(4, nextDeadline);
-          return true;
-        } else {
-          project.setState(8, 0);
-        }
-      }
+
+      } */
     }
     return false;
   }
@@ -234,17 +236,18 @@ contract ProjectRegistry {
   function addTaskHash(address _projectAddress, bytes32 _ipfsHash) public  {
     Project project = Project(_projectAddress);
     require(project.isStaker(msg.sender) == true);
-    require(project.state() == 2 || project.state() == 3);
-    if (project.state() == 2) {
+    require(project.state() == 3);
+    require(checkActive(_projectAddress) == false);
+    uint256 stakerWeight = project.calculateWeightOfAddress(msg.sender);
+    disputeTaskHash(msg.sender, _projectAddress, _ipfsHash, stakerWeight);
+    /* if (project.state() == 2) {
       openTaskHash(msg.sender, _projectAddress, _ipfsHash);
     } else {
-      uint256 stakerWeight = project.calculateWeightOfAddress(msg.sender);
-      disputeTaskHash(msg.sender, _projectAddress, _ipfsHash, stakerWeight);
-    }
+    } */
     checkActive(_projectAddress);
   }
 
-  function openTaskHash(address _staker, address _projectAddress, bytes32 _ipfsHash) internal {
+  /* function openTaskHash(address _staker, address _projectAddress, bytes32 _ipfsHash) internal {
     OpenState storage os = openProjects[_projectAddress];
     if(os.taskHashSubmissions[_staker] == 0) {    //first time submission for this particular address
       os.numTotalSubmissions += 1;
@@ -255,7 +258,7 @@ contract ProjectRegistry {
     if (os.first != _ipfsHash) { os.conflict = 1; }
     os.numSubmissions[_ipfsHash] += 1;
     os.taskHashSubmissions[_staker] = _ipfsHash;
-    }
+    } */
 
   function disputeTaskHash(address _staker, address _projectAddress, bytes32 _ipfsHash, uint256 stakerWeight) internal {
     DisputeState storage ds = disputedProjects[_projectAddress];
@@ -275,11 +278,11 @@ contract ProjectRegistry {
     Project project = Project(_projectAddress);
     require(project.isStaker(msg.sender) == true);
     require(project.state() == 4);
-    if (disputedProjects[_projectAddress].topTaskHash != 0) {
-      require(keccak256(_hashes) == disputedProjects[_projectAddress].topTaskHash);
+    require(keccak256(_hashes) == disputedProjects[_projectAddress].topTaskHash);
+    /* if (disputedProjects[_projectAddress].topTaskHash != 0) {
     } else {
       require(keccak256(_hashes) == openProjects[_projectAddress].first);
-    }
+    } */
     projectTaskList[_projectAddress] = _hashes;
   }
 

@@ -2,13 +2,17 @@ const HDWalletProvider = require('truffle-hdwallet-provider')
 const fs = require('fs')
 
 // first read in the secrets.json to get our mnemonic
-let mnemonic
+let secrets, mnemonic
 if (fs.existsSync('secrets.json')) {
-  mnemonic = JSON.parse(fs.readFileSync('secrets.json', 'utf8'))
+  secrets = JSON.parse(fs.readFileSync('secrets.json', 'utf8'))
+  mnemonic = secrets.mnemonic
+  // console.log(mnemonic)
 } else {
+  console.log('no secrets.json found. You can only deploy to the testrpc.')
   mnemonic = ''
 }
-var infuraApikey = '11XiCuI1EjsowYvplZ24'
+
+// var infuraApikey = '11XiCuI1EjsowYvplZ24'
 
 module.exports = {
   networks: {
@@ -24,7 +28,7 @@ module.exports = {
       network_id: '3'
     },
     rinkeby: {
-      provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/' + infuraApikey),
+      provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/'),
       network_id: '*'
     }
   }
