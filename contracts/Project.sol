@@ -19,7 +19,8 @@ contract Project {
   /* POSSIBLE STATES */
   /*
     1: Proposed,
-    2: Open,
+    // 2: Open,
+    3: Dispute,
     4: Active,
     5: Validation,
     6: Voting,
