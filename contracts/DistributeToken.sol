@@ -71,7 +71,7 @@ contract DistributeToken is StandardToken {
   }
 
   function burn(uint256 _amountToBurn) public onlyTR() {
-    require(_amountToBurn <= totalSupply);
+    require(_amountToBurn <= totalSupply && _amountToBurn > 0);
     totalSupply -= _amountToBurn;
   }
 
@@ -133,7 +133,8 @@ contract DistributeToken is StandardToken {
 
   function weiRequired(uint256 _tokens) public view returns (uint256) {
     require(_tokens > 0);
-    return ((targetPrice(_tokens) * (totalSupply + _tokens)) - currentPrice() * totalSupply);
+    //return ((targetPrice(_tokens) * (totalSupply + _tokens)) - currentPrice() * totalSupply);
+    return targetPrice(_tokens) *  _tokens;
   }
 
   function targetPrice(uint _tokens) public view returns (uint256) {

@@ -26,9 +26,14 @@ contract ReputationRegistry{
   PLCRVoting plcrVoting;
 
   mapping (address => uint) public balances; //worker token balances
+  mapping (address => uint) public first;
 
   uint256 public totalSupply;               //total supply of reputation in all states
   uint256 public totalFreeSupply;           //total supply of free reputation (not staked, validated, or voted)
+  uint256 public totalUsers;
+
+  // This represents both the initial starting amount and the maximum level the faucet will provide.
+  uint256 public initialRepVal = 10000;
 
 // =====================================================================
 // MODIFIERS
@@ -52,11 +57,31 @@ contract ReputationRegistry{
   }
 
   function register() public {
-    require(balances[msg.sender] == 0);
-    balances[msg.sender] = 1;
-    totalSupply += 1;
-    totalFreeSupply += 1;
+    require(balances[msg.sender] == 0 && first[msg.sender] == 0);
+    first[msg.sender] = 1;
+    balances[msg.sender] = initialRepVal;
+    totalSupply += initialRepVal;
+    totalFreeSupply += initialRepVal;
+    totalUsers += 1;
   }
+
+  /* function faucet() public {
+    require(balances[msg.sender] == 0 && first[msg.sender] != 0);
+    balances[msg.sender] += 10000;
+    totalSupply += 10000;
+    totalFreeSupply += 10000;
+  } */
+  
+  /* faucet function brings balance to initial value if between 0 and the initialRepVal */
+  function faucet() public {
+    require(balances[msg.sender] < initialRepVal && balances[msg.sender] >= 0 && first[msg.sender] != 0);
+    uint256 addtl = initialRepVal - balances[msg.sender];
+    balances[msg.sender] += addtl;
+    totalSupply += addtl;
+    totalFreeSupply += addtl;
+  }
+
+
 
   // =====================================================================
   // PROPOSED PROJECT - STAKING FUNCTIONALITY
