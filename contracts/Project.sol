@@ -118,8 +118,12 @@ contract Project {
   function calculateWeightOfAddress(address _address) public view onlyPR returns (uint256) {
     uint256 reputationWeight;
     uint256 tokenWeight;
-    reputationWeight = percent(stakedReputationBalances[_address], totalReputationStaked, 2);
-    tokenWeight = percent(stakedTokenBalances[_address], totalTokensStaked, 2);
+    totalReputationStaked != 0
+      ? reputationWeight = percent(stakedReputationBalances[_address], totalReputationStaked, 2)
+      : reputationWeight = 0;
+    totalTokensStaked != 0
+      ? tokenWeight = percent(stakedTokenBalances[_address], totalTokensStaked, 2)
+      : tokenWeight = 0;
     return (reputationWeight + tokenWeight) / 2;
     /* return percent((stakedReputationBalances[_address] + stakedTokenBalances[_address]), (totalTokensStaked + totalReputationStaked), 2); */
   }

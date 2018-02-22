@@ -180,6 +180,7 @@ contract ProjectRegistry {
         return true;
       } else {
         project.setState(8, 0);
+        return false;
       }
       /* //MAKE THIS OPEN HANDLER
       if(projectState == 2) {
@@ -236,15 +237,15 @@ contract ProjectRegistry {
   function addTaskHash(address _projectAddress, bytes32 _ipfsHash) public  {
     Project project = Project(_projectAddress);
     require(project.isStaker(msg.sender) == true);
-    require(project.state() == 3);
-    require(checkActive(_projectAddress) == false);
-    uint256 stakerWeight = project.calculateWeightOfAddress(msg.sender);
-    disputeTaskHash(msg.sender, _projectAddress, _ipfsHash, stakerWeight);
+    checkActive(_projectAddress);
+    if (project.state() == 3) {
+      uint256 stakerWeight = project.calculateWeightOfAddress(msg.sender);
+      disputeTaskHash(msg.sender, _projectAddress, _ipfsHash, stakerWeight);
+    }
     /* if (project.state() == 2) {
       openTaskHash(msg.sender, _projectAddress, _ipfsHash);
     } else {
     } */
-    checkActive(_projectAddress);
   }
 
   /* function openTaskHash(address _staker, address _projectAddress, bytes32 _ipfsHash) internal {
@@ -295,6 +296,7 @@ contract ProjectRegistry {
     bytes32 taskHash = projectTaskList[_projectAddress][_index];
     Project project = Project(_projectAddress);
     require(taskHash == keccak256(_taskDescription, _weiVal, _reputationVal));
+    // require that reputation holder has enough reputation
     project.claimTask(taskHash, _weiVal, _reputationVal, _claimer);
   }
 
