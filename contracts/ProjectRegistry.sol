@@ -32,7 +32,6 @@ contract ProjectRegistry {
     uint256 cost;      //cost of the project in ETH/tokens?
     uint256 stakingPeriod;
   }
-
   /* struct OpenState {
     //open
     bytes32 first;
@@ -290,13 +289,14 @@ contract ProjectRegistry {
   // =====================================================================
   // ACTIVE PROJECT
   // =====================================================================
+  bytes32 public tempHash;
+
   function claimTask(
     address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _reputationVal, address _claimer
-  ) public onlyRR() {
+  ) public onlyRR() returns (bytes32) {
     bytes32 taskHash = projectTaskList[_projectAddress][_index];
     Project project = Project(_projectAddress);
     require(taskHash == keccak256(_taskDescription, _weiVal, _reputationVal));
-    // require that reputation holder has enough reputation
     project.claimTask(taskHash, _weiVal, _reputationVal, _claimer);
   }
 

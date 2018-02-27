@@ -71,7 +71,7 @@ contract ReputationRegistry{
     totalSupply += 10000;
     totalFreeSupply += 10000;
   } */
-  
+
   /* faucet function brings balance to initial value if between 0 and the initialRepVal */
   function faucet() public {
     require(balances[msg.sender] < initialRepVal && balances[msg.sender] >= 0 && first[msg.sender] != 0);
