@@ -105,7 +105,6 @@ contract ProjectRegistry {
   // =====================================================================
   // PROPOSER FUNCTIONS
   // =====================================================================
-
   function createProject(uint256 _cost, uint256 _costProportion, uint256 _proposerStake, uint256 _stakingPeriod, address _proposer) public onlyTR() returns (address) {
 
     Project newProject = new Project(_cost,
