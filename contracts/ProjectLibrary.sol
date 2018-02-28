@@ -137,7 +137,6 @@ library ProjectLibrary {
     Project project = Project(_projectAddress);
     if(isPassed) {                          // project succeeds
       project.setValidationReward(0);
-
     } else {                                // project fails
       burnStake(_tokenRegistry, _reputationRegistry, _projectAddress);
       project.setValidationReward(1);

@@ -27,6 +27,15 @@ contract Project {
     6: Complete,
     7: Failed
   */
+
+  uint256 public topTaskHash;
+
+
+
+  address public proposer;
+  uint256 public proposerStake;
+  uint256 public stakingPeriod;
+  /* uint256 public cost; */
   uint256 public weiBal;
   uint256 public nextDeadline;
   //set by proposer, total cost of project in ETH, to be fulfilled by capital token holders
@@ -108,7 +117,7 @@ contract Project {
   // =====================================================================
   // CONSTRUCTOR
   // =====================================================================
-  function Project(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _reputationRegistry, address _tokenRegistry) public {       //called by THR
+  function Project(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _proposer, uint256 _proposerStake, address _reputationRegistry, address _tokenRegistry) public {       //called by THR
     reputationRegistry = ReputationRegistry(_reputationRegistry);
     tokenRegistry = TokenRegistry(_tokenRegistry);
     projectRegistry = ProjectRegistry(msg.sender);
@@ -116,7 +125,10 @@ contract Project {
     reputationCost = _costProportion * reputationRegistry.totalFreeSupply();
     state = 1;
     nextDeadline = _stakingPeriod;
+    proposer = _proposer;
+    proposerStake = _proposerStake;
   }
+
 
   // =====================================================================
   // SETTER FUNCTIONS
@@ -125,6 +137,10 @@ contract Project {
   function setState(uint256 _state, uint256 _nextDeadline) public onlyPR {
     state = _state;
     nextDeadline = _nextDeadline;
+  }
+
+  function clearProposerStake() public onlyPR {
+    proposerStake = 0;
   }
 
   function clearTokenStake(address _staker) public onlyTR {

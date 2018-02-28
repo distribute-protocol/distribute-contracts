@@ -52,8 +52,6 @@ contract ProjectRegistry {
     bool validateFlag;
   } */
 
-  // WHY?
-  mapping (address => ProposedState) public proposedProjects;
   mapping (address => DisputeState) public disputedProjects;
 
   // NOTE do we need a validated Projects mapping?
@@ -93,7 +91,7 @@ contract ProjectRegistry {
   // =====================================================================
 
   function getProposerAddress(address _projectAddress) public view returns (address) {
-    return proposedProjects[_projectAddress].proposer;
+    return Project(_projectAddress).proposer();
   }
 
   function startPoll(address _projectAddress, uint256 _commitDuration, uint256 _revealDuration) internal {       //can only be called by project in question
@@ -108,38 +106,30 @@ contract ProjectRegistry {
   // PROPOSER FUNCTIONS
   // =====================================================================
 
-  function createProject(uint256 _cost, uint256 _costProportion, uint256 _numTokens, uint256 _stakingPeriod, address _proposer) public onlyTR() returns (address) {
+  function createProject(uint256 _cost, uint256 _costProportion, uint256 _proposerStake, uint256 _stakingPeriod, address _proposer) public onlyTR() returns (address) {
 
     Project newProject = new Project(_cost,
                                      _costProportion,
                                      _stakingPeriod,
+                                     _proposer,
+                                     _proposerStake,
                                      reputationRegistryAddress,
                                      tokenRegistryAddress
                                      );
    address _projectAddress = address(newProject);
-   setProposer(_projectAddress, _proposer, _numTokens, _stakingPeriod, _cost);
-   LogProjectCreated(_projectAddress, _proposer, _cost, _numTokens);
+   LogProjectCreated(_projectAddress, _proposer, _cost, _proposerStake);
    return _projectAddress;
-  }
-
-  // NOT SURE WHY WE NEED THIS MAPPING
-  function setProposer(address _projectAddress, address _proposer, uint256 _proposerStake, uint256 _stakingPeriod, uint256 _cost) internal {
-    // Proposer storage proposer = proposers[_projectAddress];
-    proposedProjects[_projectAddress].proposer = _proposer;
-    proposedProjects[_projectAddress].proposerStake = _proposerStake;
-    proposedProjects[_projectAddress].stakingPeriod = _stakingPeriod;
-    proposedProjects[_projectAddress].cost = _cost;
   }
 
   // Maybe makes this easier but we should look at removing
   function refundProposer(address _projectAddress) public onlyTR() returns (uint256[2]) {
-    require(Project(_projectAddress).state() > 1);
+    Project project =  Project(_projectAddress);
+    require(project.state() > 1);
     uint256[2] memory returnValues;
-    uint256 proposerStake = proposedProjects[_projectAddress].proposerStake;
-    require(proposerStake > 0);
-    returnValues[0] = proposedProjects[_projectAddress].cost;
-    returnValues[1] = proposerStake;
-    proposedProjects[_projectAddress].proposerStake = 0;
+    require(project.proposerStake() > 0);
+    returnValues[0] = project.weiCost();
+    returnValues[1] = project.proposerStake();
+    project.clearProposerStake();
     return returnValues;
   }
 
@@ -157,7 +147,7 @@ contract ProjectRegistry {
     } else {
       if(ProjectLibrary.timesUp(_projectAddress)) {
         project.setState(7, 0);
-        proposedProjects[_projectAddress].proposerStake = 0;
+        project.clearProposerStake();
       }
       return false;
     }
