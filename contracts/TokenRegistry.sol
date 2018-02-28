@@ -8,6 +8,7 @@ pragma solidity ^0.4.8;
 
 //import files
 import "./Project.sol";
+import "./ProjectLibrary.sol";
 import "./DistributeToken.sol";
 import "./library/PLCRVoting.sol";
 
@@ -39,6 +40,14 @@ contract TokenRegistry {
 
   modifier onlyValidProject() {
     require(projectRegistry.votingPollId(msg.sender) > 0);
+    _;
+  }
+  modifier onlyPR() {
+    require(msg.sender == address(projectRegistry));
+    _;
+  }
+  modifier onlyRR() {
+    require(msg.sender == address(projectRegistry));
     _;
   }
 
@@ -96,10 +105,10 @@ contract TokenRegistry {
     bool flag = weiVal > weiRemaining;
     uint256 weiChange = flag ? weiRemaining : weiVal;       //how much ether to send on change
     uint256 tokens = flag ? ((weiRemaining/currentPrice) + 1) : _tokens;
-    Project(_projectAddress).stakeTokens(msg.sender, tokens, weiChange);
+    project.stakeTokens(msg.sender, tokens, weiChange);
     distributeToken.transferWeiFrom(_projectAddress, weiChange);
     distributeToken.transferToEscrow(msg.sender, tokens);
-    projectRegistry.checkDispute(_projectAddress);
+    projectRegistry.checkStaked(_projectAddress);
   }
 
   function unstakeTokens(address _projectAddress, uint256 _tokens) public {
@@ -116,7 +125,7 @@ contract TokenRegistry {
     // require(projectRegistry.projectStates(_projectAddress) == 5);
     require(distributeToken.balanceOf(msg.sender) >= _tokens);
     distributeToken.transferToEscrow(msg.sender, _tokens);
-    Project(_projectAddress).validate(msg.sender, _tokens, _validationState);
+    ProjectLibrary.validate(_projectAddress, msg.sender, _tokens, _validationState);
   }
 
   function voteCommit(address _projectAddress, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
@@ -148,24 +157,26 @@ contract TokenRegistry {
   // =====================================================================
 
   // called by project if a project fails
-  function burnTokens(uint256 _tokens) public onlyValidProject() {              //check that valid project is calling this function
+  function burnTokens(uint256 _tokens) public onlyPR() {              //check that valid project is calling this function
     distributeToken.burn(_tokens);
   }
   function refundStaker(address _projectAddress) public {
-    uint256 refund = Project(_projectAddress).refundStaker(msg.sender);
+    uint256 refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender);
     distributeToken.transferFromEscrow(msg.sender, refund);
     //rescue locked tokens that weren't revealed
     uint256 pollId = projectRegistry.votingPollId(_projectAddress);
     plcrVoting.rescueTokens(msg.sender, pollId);
   }
 
-  function rewardValidator(address _validator, uint256 _reward) public onlyValidProject() {
-    require(Project(msg.sender).state() == 7 || Project(msg.sender).state() == 9);
+  // make this only TR
+  function rewardValidator(address _projectAddress, address _validator, uint256 _reward) public {
+    require(msg.sender == address(this));
+    require(Project(_projectAddress).state() == 6 || Project(_projectAddress).state() == 7);
     require(projectRegistry.votingPollId(msg.sender) != 0);
     distributeToken.transferWeiFrom(_validator, _reward);
   }
 
-  function transferWeiReward(address _destination, uint256 _weiVal) public onlyValidProject() {
+  function transferWeiReward(address _destination, uint256 _weiVal) public onlyRR() {
     distributeToken.transferWeiFrom(_destination, _weiVal);
   }
 
