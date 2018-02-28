@@ -6,12 +6,14 @@
 pragma solidity ^0.4.8;
 
 import "./Project.sol";
+import "./DistributeToken.sol";
 import "./TokenRegistry.sol";
 import "./ReputationRegistry.sol";
 import "./ProjectLibrary.sol";
 import "./library/PLCRVoting.sol";
 
 contract ProjectRegistry {
+  DistributeToken distributeToken;
   TokenRegistry tokenRegistry;
   ReputationRegistry reputationRegistry;
   PLCRVoting plcrVoting;
@@ -50,10 +52,11 @@ contract ProjectRegistry {
   // =====================================================================
   // CONSTRUCTOR
   // =====================================================================
-  function ProjectRegistry(address _tokenRegistry, address _reputationRegistry, address _plcrVoting) public {       //contract is created
+  function ProjectRegistry(address _distributeToken, address _tokenRegistry, address _reputationRegistry, address _plcrVoting) public {       //contract is created
     require(address(tokenRegistry) == 0 && address(reputationRegistry) == 0);
     tokenRegistry = TokenRegistry(_tokenRegistry);
     reputationRegistry = ReputationRegistry(_reputationRegistry);
+    distributeToken = DistributeToken(_distributeToken);
     plcrVoting = PLCRVoting(_plcrVoting);
     reputationRegistryAddress = _reputationRegistry;
     tokenRegistryAddress = _tokenRegistry;
@@ -234,17 +237,12 @@ contract ProjectRegistry {
   // ACTIVE PROJECT
   // =====================================================================
 
-  function claimTask(
-    address _projectAddress, uint256 _index, string _taskDescription, address _claimer, uint percentage
+  function claimTask(address _projectAddress, uint256 _index, string _taskDescription, address _claimer, uint _weighting, uint _weiVal, uint _reputationVal) public onlyRR() returns (bytes32) {
     // 100% => percentage = 100
-  ) public onlyRR() returns (bytes32) {
-    Project project = Project(_projectAddress);
     bytes32 taskHash = projectTaskList[_projectAddress][_index];
-    require(taskHash == keccak256(_taskDescription, percentage));
+    require(taskHash == keccak256(_taskDescription, _weighting));
     // weiVal is wei reward of the task as indicated by its percentage
-    uint weiVal = percentage * project.weiCost() / 100;
-    uint reputationVal = (project.weiCost() * percentage * reputationRegistry.totalFreeSupply()) / (distributeToken.weiBal() * 100);
-    ProjectLibrary.claimTask(_projectAddress, taskHash, weiVal, reputationVal, _claimer);
+    ProjectLibrary.claimTask(_projectAddress, taskHash, _weiVal, _reputationVal, _claimer);
   }
 
   /*function checkHash(bytes32 taskHash, string _taskDescription, uint256 _weiVal, uint256 _reputationVal) public view {

@@ -10,6 +10,7 @@ pragma solidity ^0.4.10;
 import "./Project.sol";
 import "./ProjectLibrary.sol";
 import "./ProjectRegistry.sol";
+import "./DistributeToken.sol";
 import "./library/PLCRVoting.sol";
 
 /*
@@ -22,7 +23,7 @@ contract ReputationRegistry{
 // =====================================================================
 // STATE VARIABLES
 // =====================================================================
-
+  DistributeToken distributeToken;
   ProjectRegistry projectRegistry;
   PLCRVoting plcrVoting;
   address tokenRegistryAddress;
@@ -53,8 +54,9 @@ modifier onlyPR() {
   // CONSTRUCTOR
   // =====================================================================
 
-  function init(address _projectRegistry, address _plcrVoting, address _tokenRegistry) public {
+  function init(address _distributeToken, address _tokenRegistry, address _projectRegistry, address _plcrVoting) public {
       require(address(projectRegistry) == 0 && address(plcrVoting) == 0);
+      distributeToken = DistributeToken(_distributeToken);
       projectRegistry = ProjectRegistry(_projectRegistry);
       plcrVoting = PLCRVoting(_plcrVoting);
       tokenRegistryAddress = _tokenRegistry;
@@ -108,11 +110,14 @@ modifier onlyPR() {
   // ACTIVE PERIOD FUNCTIONALITY
   // =====================================================================
 
-  function claimTask(address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _reputationVal) public {
-    require(balances[msg.sender] >= _reputationVal);
-    balances[msg.sender] -= _reputationVal;
-    totalFreeSupply -= _reputationVal;
-    projectRegistry.claimTask(_projectAddress, _index, _taskDescription, _weiVal, _reputationVal, msg.sender);
+  function claimTask(address _projectAddress, uint256 _index, string _taskDescription, uint _weighting) public {
+    Project project = Project(_projectAddress);
+    uint reputationVal = (project.weiCost() * _weighting * totalFreeSupply) / (distributeToken.weiBal() * 100);
+    require(balances[msg.sender] >= reputationVal);
+    uint weiVal = _weighting * project.weiCost() / 100;
+    balances[msg.sender] -= reputationVal;
+    totalFreeSupply -= reputationVal;
+    projectRegistry.claimTask(_projectAddress, _index, _taskDescription, msg.sender, _weighting, weiVal, reputationVal);
   }
 
   // =====================================================================
