@@ -5,6 +5,7 @@ import "./TokenRegistry.sol";
 
 contract DistributeToken is StandardToken {
   TokenRegistry tokenRegistry;
+  ReputationRegistry reputationRegistry;
   /*address trAddress;*/
 
   string public constant symbol = "DST";
@@ -29,9 +30,11 @@ contract DistributeToken is StandardToken {
    // =====================================================================
    // CONSTRUCTOR
    // =====================================================================
-   function DistributeToken(address _tokenRegistry) public {
-     require(address(tokenRegistry) == 0);
+   function DistributeToken(address _tokenRegistry, address _reputationRegistry) public {
+     require(address(tokenRegistry) == 0 && address(reputationRegistry));
      tokenRegistry = TokenRegistry(_tokenRegistry);
+     reputationRegistry = ReputationRegistry(_reputationRegistry);
+
    }
    // =====================================================================
    // MODIFIERS
@@ -40,6 +43,10 @@ contract DistributeToken is StandardToken {
    modifier onlyTR() {
      require(msg.sender == address(tokenRegistry));
      _;
+   }
+  modifier onlyTRorRR() {
+    require(msg.sender == address(tokenRegistry) && msg.sender == address(reputationRegistry));
+    _;
    }
   // =====================================================================
   // TOKEN FUNCTIONS
@@ -90,7 +97,7 @@ contract DistributeToken is StandardToken {
   // TRANSFER FUNCTIONS
   // =====================================================================
 
-  function transferWeiFrom(address _address, uint256 _weiValue) public onlyTR() {
+  function transferWeiFrom(address _address, uint256 _weiValue) public onlyTRorRR() {
     require(_weiValue <= weiBal);
     weiBal -= _weiValue;
     _address.transfer(_weiValue);

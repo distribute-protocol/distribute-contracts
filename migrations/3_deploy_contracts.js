@@ -16,7 +16,7 @@ module.exports = function (deployer) {
   }).then(function () {
     return deployer.deploy(ReputationRegistry)
   }).then(function () {
-    return deployer.deploy(DistributeToken, TokenRegistry.address)
+    return deployer.deploy(DistributeToken, TokenRegistry.address, ReputationRegistry.address)
   }).then(function () {
     return deployer.deploy(PLCRVoting, TokenRegistry.address, ReputationRegistry.address)
   }).then(function () {
