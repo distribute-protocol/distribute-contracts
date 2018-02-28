@@ -8,6 +8,7 @@ pragma solidity ^0.4.10;
 
 //import files
 import "./Project.sol";
+import "./ProjectLibrary.sol";
 import "./ProjectRegistry.sol";
 import "./library/PLCRVoting.sol";
 
@@ -23,6 +24,7 @@ contract ReputationRegistry{
 // =====================================================================
 
   ProjectRegistry projectRegistry;
+  ProjectLibrary projectLibrary;
   PLCRVoting plcrVoting;
 
   mapping (address => uint) public balances; //worker token balances
@@ -38,8 +40,8 @@ contract ReputationRegistry{
 // =====================================================================
 // MODIFIERS
 // =====================================================================
-  modifier onlyValidProject() {
-    require(projectRegistry.votingPollId(msg.sender) > 0);
+  modifier onlyPL() {
+    require(msg.sender == address(projectLibrary));
     _;
   }
 // =====================================================================
@@ -50,9 +52,10 @@ contract ReputationRegistry{
   // CONSTRUCTOR
   // =====================================================================
 
-  function init(address _projectRegistry, address _plcrVoting) public {
-      require(address(projectRegistry) == 0 && address(plcrVoting) == 0);
+  function init(address _projectLibrary, address _projectRegistry, address _plcrVoting) public {
+      require(address(projectRegistry) == 0 && address(projectLibrary) == 0 && address(plcrVoting) == 0);
       projectRegistry = ProjectRegistry(_projectRegistry);
+      projectLibrary = ProjectLibrary(_projectLibrary);
       plcrVoting = PLCRVoting(_plcrVoting);
   }
 
@@ -149,20 +152,20 @@ contract ReputationRegistry{
   // =====================================================================
 
   // called by project if a project fails
-  function burnReputation(uint256 _reputation) public onlyValidProject() {
+  function burnReputation(uint256 _reputation) public onlyPL() {
     //check that valid project is calling this function
     totalSupply -= _reputation;
   }
 
   function refundStaker(address _projectAddress) public {                                                                       //called by worker who staked or voted
-    uint256 _refund = Project(_projectAddress).refundStaker(msg.sender);
+    uint256 _refund = projectLibrary.refundStaker(_projectAddress, msg.sender);
     require(_refund > 0);
     totalFreeSupply += _refund;
     balances[msg.sender] += _refund;
   }
 
   function rewardTask(address _projectAddress, bytes32 _taskHash) public {                                   //called by worker who completed a task
-    uint256 reward = Project(_projectAddress).claimTaskReward(_taskHash, msg.sender);
+    uint256 reward = projectLibrary.claimTaskReward(_projectAddress, _taskHash, msg.sender);
     totalFreeSupply += reward;
     balances[msg.sender] += reward;
   }
