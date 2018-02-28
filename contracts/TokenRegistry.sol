@@ -163,6 +163,7 @@ contract TokenRegistry {
   function refundStaker(address _projectAddress) public {
     uint256 refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender);
     distributeToken.transferFromEscrow(msg.sender, refund);
+    distributeToken.rewardTokens(msg.sender, (refund * 50 / 100));
     //rescue locked tokens that weren't revealed
     uint256 pollId = projectRegistry.votingPollId(_projectAddress);
     plcrVoting.rescueTokens(msg.sender, pollId);
