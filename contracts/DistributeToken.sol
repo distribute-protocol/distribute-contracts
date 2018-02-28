@@ -113,8 +113,8 @@ contract DistributeToken is StandardToken {
     return true;
   }
   function rewardTokens(address _rewardee, uint256 _tokens) public onlyTR {
-    require(balances[msg.sender] + _tokens > balances[msg.sender]);
-    balances[msg.sender] += _tokens;
+    require(balances[_rewardee] + _tokens > balances[_rewardee]);
+    balances[_rewardee] += _tokens;
   }
   // =====================================================================
   // INFO FUNCTIONS
