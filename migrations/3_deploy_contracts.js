@@ -16,7 +16,7 @@ module.exports = function (deployer) {
   }).then(function () {
     return deployer.deploy(ReputationRegistry)
   }).then(function () {
-    return deployer.deploy(DistributeToken, TokenRegistry.address)
+    return deployer.deploy(DistributeToken, TokenRegistry.address, ReputationRegistry.address)
   }).then(function () {
     return deployer.deploy(PLCRVoting, TokenRegistry.address, ReputationRegistry.address)
   }).then(function () {
@@ -28,6 +28,6 @@ module.exports = function (deployer) {
   }).then(function () {
     return ReputationRegistry.deployed()
   }).then(function (instance) {
-    return instance.init(ProjectRegistry.address, PLCRVoting.address, TokenRegistry.address)
+    return instance.init(DistributeToken.address, TokenRegistry.address, ProjectRegistry.address, PLCRVoting.address)
   })
 }

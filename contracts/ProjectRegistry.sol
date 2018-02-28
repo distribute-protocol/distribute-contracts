@@ -79,6 +79,10 @@ contract ProjectRegistry {
     require(msg.sender == address(reputationRegistry));
     _;
   }
+  modifier onlyTRorRR() {
+    require(msg.sender == address(tokenRegistry) || msg.sender == address(reputationRegistry));
+    _;
+  }
 
   // =====================================================================
   // EVENTS
@@ -89,10 +93,6 @@ contract ProjectRegistry {
   // =====================================================================
   // GENERAL FUNCTIONS
   // =====================================================================
-
-  function getProposerAddress(address _projectAddress) public view returns (address) {
-    return Project(_projectAddress).proposer();
-  }
 
   function startPoll(address _projectAddress, uint256 _commitDuration, uint256 _revealDuration) internal {       //can only be called by project in question
     votingPollId[_projectAddress] =  plcrVoting.startPoll(51, _commitDuration, _revealDuration);
@@ -105,12 +105,13 @@ contract ProjectRegistry {
   // =====================================================================
   // PROPOSER FUNCTIONS
   // =====================================================================
-  function createProject(uint256 _cost, uint256 _costProportion, uint256 _proposerStake, uint256 _stakingPeriod, address _proposer) public onlyTR() returns (address) {
+  function createProject(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _proposer, uint256 _proposerType, uint256 _proposerStake) public onlyTRorRR() returns (address) {
 
     Project newProject = new Project(_cost,
                                      _costProportion,
                                      _stakingPeriod,
                                      _proposer,
+                                     _proposerType,
                                      _proposerStake,
                                      reputationRegistryAddress,
                                      tokenRegistryAddress
@@ -121,7 +122,7 @@ contract ProjectRegistry {
   }
 
   // Maybe makes this easier but we should look at removing
-  function refundProposer(address _projectAddress) public onlyTR() returns (uint256[2]) {
+  function refundProposer(address _projectAddress) public onlyTRorRR() returns (uint256[2]) {
     Project project =  Project(_projectAddress);
     require(project.state() > 1);
     uint256[2] memory returnValues;

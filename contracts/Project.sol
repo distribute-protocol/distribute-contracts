@@ -33,6 +33,7 @@ contract Project {
 
 
   address public proposer;
+  uint256 public proposerType;
   uint256 public proposerStake;
   uint256 public stakingPeriod;
   /* uint256 public cost; */
@@ -117,7 +118,7 @@ contract Project {
   // =====================================================================
   // CONSTRUCTOR
   // =====================================================================
-  function Project(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _proposer, uint256 _proposerStake, address _reputationRegistry, address _tokenRegistry) public {       //called by THR
+  function Project(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _proposer, uint256 _proposerType, uint256 _proposerStake, address _reputationRegistry, address _tokenRegistry) public {       //called by THR
     reputationRegistry = ReputationRegistry(_reputationRegistry);
     tokenRegistry = TokenRegistry(_tokenRegistry);
     projectRegistry = ProjectRegistry(msg.sender);
@@ -126,6 +127,7 @@ contract Project {
     state = 1;
     nextDeadline = _stakingPeriod;
     proposer = _proposer;
+    proposerType = _proposerType;
     proposerStake = _proposerStake;
   }
 
