@@ -194,8 +194,8 @@ modifier onlyPR() {
   function refundStaker(address _projectAddress) public {                                                                       //called by worker who staked or voted
     uint256 _refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender);
     require(_refund > 0);
-    totalFreeSupply += _refund;
-    balances[msg.sender] += _refund;
+    totalFreeSupply += _refund * 3 / 2;
+    balances[msg.sender] += _refund * 3 / 2;
   }
 
   function rewardTask(address _projectAddress, bytes32 _taskHash) public {                                   //called by worker who completed a task

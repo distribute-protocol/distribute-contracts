@@ -119,6 +119,10 @@ contract DistributeToken is StandardToken {
     balances[_owner] += _value;
     return true;
   }
+  function rewardTokens(address _rewardee, uint256 _tokens) public onlyTR {
+    require(balances[_rewardee] + _tokens > balances[_rewardee]);
+    balances[_rewardee] += _tokens;
+  }
   // =====================================================================
   // INFO FUNCTIONS
   // =====================================================================
