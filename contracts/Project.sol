@@ -77,11 +77,6 @@ contract Project {
     _;
   }
 
-  modifier onlyPL() {
-    require(msg.sender == address(projectLibrary));
-    _;
-  }
-
   modifier onlyPR() {
     require(msg.sender == address(projectRegistry));
     _;
@@ -179,7 +174,7 @@ contract Project {
     totalReputationStaked = 0;
   }
 
-  function setTaskReward(bytes32 _taskHash, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyPL {
+  function setTaskReward(bytes32 _taskHash, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyPR {
     Reward storage taskReward = taskRewards[_taskHash];
     taskReward.weiReward = _weiVal;
     taskReward.reputationReward = _reputationVal;
