@@ -91,14 +91,18 @@ contract Project {
   }
 
   function isTR(address _sender) public view returns (bool) {
-    _sender == address(tokenRegistry)
-      ? true
-      : false;
+    if (_sender == address(tokenRegistry)) {
+      return true;
+    } else {
+      return false;
+    }
   }
   function isRR(address _sender) public view returns (bool) {
-    _sender == address(reputationRegistry)
-      ? true
-      : false;
+    if (_sender == address(reputationRegistry)) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   // =====================================================================

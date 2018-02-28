@@ -28,9 +28,6 @@ module.exports = function (deployer) {
   }).then(function () {
     return ReputationRegistry.deployed()
   }).then(function (instance) {
-    return instance.init(ProjectRegistry.address, PLCRVoting.address)
+    return instance.init(ProjectRegistry.address, PLCRVoting.address, TokenRegistry.address)
   })
-  // deployer.link(ProjectLibrary, TokenRegistry)
-  // deployer.link(ProjectLibrary, ReputationRegistry)
-  // deployer.link(ProjectLibrary, ProjectRegistry)
 }

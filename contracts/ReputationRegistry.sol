@@ -53,10 +53,11 @@ modifier onlyPR() {
   // CONSTRUCTOR
   // =====================================================================
 
-  function init(address _projectRegistry, address _plcrVoting) public {
+  function init(address _projectRegistry, address _plcrVoting, address _tokenRegistry) public {
       require(address(projectRegistry) == 0 && address(plcrVoting) == 0);
       projectRegistry = ProjectRegistry(_projectRegistry);
       plcrVoting = PLCRVoting(_plcrVoting);
+      tokenRegistryAddress = _tokenRegistry
   }
 
   function register() public {
