@@ -15,7 +15,6 @@ contract ProjectRegistry {
   TokenRegistry tokenRegistry;
   ReputationRegistry reputationRegistry;
   PLCRVoting plcrVoting;
-  address projectLibraryAddress;
   address reputationRegistryAddress;
   address tokenRegistryAddress;
 
@@ -62,14 +61,13 @@ contract ProjectRegistry {
   // =====================================================================
   // CONSTRUCTOR
   // =====================================================================
-  function ProjectRegistry(address _tokenRegistry, address _reputationRegistry, address _plcrVoting, address _projectLibrary) public {       //contract is created
+  function ProjectRegistry(address _tokenRegistry, address _reputationRegistry, address _plcrVoting) public {       //contract is created
     require(address(tokenRegistry) == 0 && address(reputationRegistry) == 0);
     tokenRegistry = TokenRegistry(_tokenRegistry);
     reputationRegistry = ReputationRegistry(_reputationRegistry);
     plcrVoting = PLCRVoting(_plcrVoting);
     reputationRegistryAddress = _reputationRegistry;
     tokenRegistryAddress = _tokenRegistry;
-    projectLibraryAddress = _projectLibrary;
   }
   // =====================================================================
   // MODIFIERS
@@ -116,8 +114,7 @@ contract ProjectRegistry {
                                      _costProportion,
                                      _stakingPeriod,
                                      reputationRegistryAddress,
-                                     tokenRegistryAddress,
-                                     projectLibraryAddress
+                                     tokenRegistryAddress
                                      );
    address _projectAddress = address(newProject);
    setProposer(_projectAddress, _proposer, _numTokens, _stakingPeriod, _cost);

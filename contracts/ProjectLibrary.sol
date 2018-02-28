@@ -89,7 +89,7 @@ library ProjectLibrary {
     if(project.totalValidateNegative() != 0 || project.totalValidateAffirmative() != 0) {
       //####################################
       /* refund += project.validators(_staker).stake; */
-      var (status, stake) = project.validators(_staker);
+      var (,stake) = project.validators(_staker);
       refund += stake;
       uint256 denom;
       project.state() == 7
@@ -166,12 +166,7 @@ library ProjectLibrary {
     //###############################################
     var (,claimer) = project.taskRewards(_taskHash);
     require(claimer == 0);
-    /* Reward storage taskReward = project.taskRewards(_taskHash);
-    taskReward.claimer = _claimer;
-    taskReward.weiReward = _weiVal;
-    taskReward.reputationReward = _reputationVal; */
-
-    project.setTaskReward(_taskHash, Reward(_weiVal, _reputationVal, _claimer));
+    project.setTaskReward(_taskHash, _weiVal, _reputationVal, _claimer);
   }
 
   /* ####### NEEDS TESTS ####### */
@@ -179,13 +174,7 @@ library ProjectLibrary {
     Project project = Project(_projectAddress);
     var (weiReward, reputationReward, claimer) = project.taskRewards(_taskHash);
     require(claimer == _claimer);
-
-    /* uint256 weiTemp = singleTaskReward.weiReward;
-    uint256 reputationReward = singleTaskReward.reputationReward;
-    singleTaskReward.claimer = -1;
-    singleTaskReward.weiReward = 0;
-    singleTaskReward.reputationReward = 0; */
-    project.setTaskReward(_taskHash, Reward(0, 0, 0));
+    project.setTaskReward(_taskHash, 0, 0, 0);
     TokenRegistry(_tokenRegistry).transferWeiReward(_claimer, weiReward);
     return reputationReward;
   }

@@ -9,12 +9,12 @@ const ProjectLibrary = artifacts.require('ProjectLibrary')
 */
 
 module.exports = function (deployer) {
+  deployer.deploy(ProjectLibrary)
+  deployer.link(ProjectLibrary, [TokenRegistry, ReputationRegistry, ProjectRegistry])
   deployer.then(function () {
     return deployer.deploy(TokenRegistry)
   }).then(function () {
     return deployer.deploy(ReputationRegistry)
-  }).then(function () {
-    return deployer.deploy(ProjectLibrary)
   }).then(function () {
     return deployer.deploy(DistributeToken, TokenRegistry.address)
   }).then(function () {
@@ -22,16 +22,15 @@ module.exports = function (deployer) {
   }).then(function () {
     return deployer.deploy(ProjectRegistry, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address, ProjectLibrary.address)
   }).then(function () {
-    return ProjectLibrary.deployed()
-  }).then(function (instance) {
-    return instance.init(ProjectRegistry.address, ReputationRegistry.address, TokenRegistry.address)
-  }).then(function () {
     return TokenRegistry.deployed()
   }).then(function (instance) {
-    return instance.init(DistributeToken.address, ReputationRegistry.address, ProjectLibrary.address, ProjectRegistry.address, PLCRVoting.address)
+    return instance.init(DistributeToken.address, ReputationRegistry.address, ProjectRegistry.address, PLCRVoting.address)
   }).then(function () {
     return ReputationRegistry.deployed()
   }).then(function (instance) {
-    return instance.init(ProjectLibrary.address, ProjectRegistry.address, PLCRVoting.address)
+    return instance.init(ProjectRegistry.address, PLCRVoting.address)
   })
+  // deployer.link(ProjectLibrary, TokenRegistry)
+  // deployer.link(ProjectLibrary, ReputationRegistry)
+  // deployer.link(ProjectLibrary, ProjectRegistry)
 }

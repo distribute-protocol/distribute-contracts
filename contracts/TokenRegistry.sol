@@ -22,7 +22,6 @@ contract TokenRegistry {
   ProjectRegistry projectRegistry;
   DistributeToken distributeToken;
   PLCRVoting plcrVoting;
-  address projectLibraryAddress;
 
   uint256 proposeProportion = 20;                           // tokensupply/proposeProportion is the number of tokens the proposer must stake
   uint256 rewardProportion = 100;
@@ -43,10 +42,6 @@ contract TokenRegistry {
     require(projectRegistry.votingPollId(msg.sender) > 0);
     _;
   }
-  modifier onlyPL() {
-    require(msg.sender == projectLibraryAddress);
-    _;
-  }
   modifier onlyPR() {
     require(msg.sender == address(projectRegistry));
     _;
@@ -63,13 +58,12 @@ contract TokenRegistry {
   // =====================================================================
   // QUASI-CONSTRUCTOR
   // =====================================================================
-  function init(address _distributeToken, address _reputationRegistry, address _projectLibrary, address _projectRegistry, address _plcrVoting) public {       //contract is created
+  function init(address _distributeToken, address _reputationRegistry, address _projectRegistry, address _plcrVoting) public {       //contract is created
     require(address(distributeToken) == 0 && address(reputationRegistry) == 0 && address(projectRegistry) == 0 && address(plcrVoting) == 0);
     distributeToken = DistributeToken(_distributeToken);
     reputationRegistry = ReputationRegistry(_reputationRegistry);
     projectRegistry = ProjectRegistry(_projectRegistry);
     plcrVoting = PLCRVoting(_plcrVoting);
-    projectLibraryAddress = _projectLibrary;
   }
 
   // =====================================================================

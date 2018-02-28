@@ -25,7 +25,6 @@ contract ReputationRegistry{
 
   ProjectRegistry projectRegistry;
   PLCRVoting plcrVoting;
-  address projectLibraryAddress;
   address tokenRegistryAddress;
 
   mapping (address => uint) public balances; //worker token balances
@@ -54,11 +53,10 @@ modifier onlyPR() {
   // CONSTRUCTOR
   // =====================================================================
 
-  function init(address _projectLibrary, address _projectRegistry, address _plcrVoting) public {
+  function init(address _projectRegistry, address _plcrVoting) public {
       require(address(projectRegistry) == 0 && address(plcrVoting) == 0);
       projectRegistry = ProjectRegistry(_projectRegistry);
       plcrVoting = PLCRVoting(_plcrVoting);
-      projectLibraryAddress = _projectLibrary;
   }
 
   function register() public {

@@ -16,7 +16,6 @@ contract Project {
   TokenRegistry tokenRegistry;
   ReputationRegistry reputationRegistry;
   ProjectRegistry projectRegistry;
-  address projectLibraryAddress;
   uint256 public state;
   /* POSSIBLE STATES */
   /*
@@ -45,6 +44,7 @@ contract Project {
     uint256 stake;
   }
 
+
  bool public opposingValidator = true;
  uint256 public validateReward;
 
@@ -52,8 +52,13 @@ contract Project {
   uint256 public totalValidateAffirmative;
   uint256 public totalValidateNegative;
 
+  struct Reward {
+    uint256 weiReward;
+    uint256 reputationReward;
+    address claimer;
+  }
 
-  mapping (bytes32 => ProjectLibrary.Reward) public taskRewards;
+  mapping (bytes32 => Reward) public taskRewards;
 
 
   // =====================================================================
@@ -85,12 +90,12 @@ contract Project {
     _;
   }
 
-  function isTR(address _sender) public returns (bool) {
+  function isTR(address _sender) public view returns (bool) {
     _sender == address(tokenRegistry)
       ? true
       : false;
   }
-  function isRR(address _sender) public returns (bool) {
+  function isRR(address _sender) public view returns (bool) {
     _sender == address(reputationRegistry)
       ? true
       : false;
@@ -99,10 +104,9 @@ contract Project {
   // =====================================================================
   // CONSTRUCTOR
   // =====================================================================
-  function Project(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _reputationRegistry, address _tokenRegistry, address _projectLibrary) public {       //called by THR
+  function Project(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _reputationRegistry, address _tokenRegistry) public {       //called by THR
     reputationRegistry = ReputationRegistry(_reputationRegistry);
     tokenRegistry = TokenRegistry(_tokenRegistry);
-    projectLibraryAddress = _projectLibrary;
     projectRegistry = ProjectRegistry(msg.sender);
     weiCost = _cost;
     reputationCost = _costProportion * reputationRegistry.totalFreeSupply();
@@ -158,8 +162,12 @@ contract Project {
     totalReputationStaked = 0;
   }
 
-  function setTaskReward(bytes32 _taskHash, ProjectLibrary.Reward _reward) public onlyPRorRR {
-    taskRewards[_taskHash] = _reward;
+  function setTaskReward(bytes32 _taskHash, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyPRorRR {
+    Reward storage taskReward = taskRewards[_taskHash];
+    taskReward.weiReward = _weiVal;
+    taskReward.reputationReward = _reputationVal;
+    taskReward.claimer = _claimer;
+    /* taskRewards[_taskHash] = _reward; */
   }
 
   // =====================================================================
