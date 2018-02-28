@@ -238,13 +238,12 @@ contract ProjectRegistry {
     address _projectAddress, uint256 _index, string _taskDescription, address _claimer, uint percentage
     // 100% => percentage = 100
   ) public onlyRR() returns (bytes32) {
+    Project project = Project(_projectAddress);
     bytes32 taskHash = projectTaskList[_projectAddress][_index];
     require(taskHash == keccak256(_taskDescription, percentage));
     // weiVal is wei reward of the task as indicated by its percentage
-    uint weiVal = (percentage * Project(_projectAddress).weiCost()) / 100;
-
-    uint reputationVal = reputationRegistry.getAverageFreeReputation();
-
+    uint weiVal = percentage * project.weiCost() / 100;
+    uint reputationVal = (project.weiCost() * percentage * reputationRegistry.totalReputation()) / (distributeToken.weiBal() * 100);
     ProjectLibrary.claimTask(_projectAddress, taskHash, weiVal, reputationVal, _claimer);
   }
 

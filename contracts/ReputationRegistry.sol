@@ -69,11 +69,11 @@ modifier onlyPR() {
     totalUsers += 1;
   }
 
-  function getAverageFreeReputation() public returns (uint) {
+  /* function getAverageFreeReputation() public returns (uint) {
     totalUsers == 0
       ? return 0
       : return totalFreeSupply / totalUsers;
-  }
+  } */
 
   // faucet function brings balance to initial value if between 0 and the initialRepVal
   function faucet() public {
