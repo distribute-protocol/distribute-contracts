@@ -10,6 +10,7 @@ pragma solidity ^0.4.10;
 import "./Project.sol";
 import "./ProjectLibrary.sol";
 import "./ProjectRegistry.sol";
+import "./DistributeToken.sol";
 import "./library/PLCRVoting.sol";
 
 /*
@@ -24,6 +25,7 @@ contract ReputationRegistry{
 // =====================================================================
 
   ProjectRegistry projectRegistry;
+  DistributeToken distributeToken;
   PLCRVoting plcrVoting;
   address tokenRegistryAddress;
 
@@ -34,8 +36,16 @@ contract ReputationRegistry{
   uint256 public totalFreeSupply;           //total supply of free reputation (not staked, validated, or voted)
   uint256 public totalUsers;
 
+  uint256 proposeProportion = 20;                           // tokensupply/proposeProportion is the number of tokens the proposer must stake
+  uint256 rewardProportion = 100;
   // This represents both the initial starting amount and the maximum level the faucet will provide.
   uint256 public initialRepVal = 10000;
+
+// =====================================================================
+// EVENTS
+// =====================================================================
+
+  event ProjectCreated(address indexed projectAddress, uint256 projectCost, uint256 proposerStake);
 
 // =====================================================================
 // MODIFIERS
@@ -53,10 +63,11 @@ modifier onlyPR() {
   // CONSTRUCTOR
   // =====================================================================
 
-  function init(address _projectRegistry, address _plcrVoting, address _tokenRegistry) public {
+  function init(address _distributeToken, address _tokenRegistry, address _projectRegistry, address _plcrVoting) public {
       require(address(projectRegistry) == 0 && address(plcrVoting) == 0);
       projectRegistry = ProjectRegistry(_projectRegistry);
       plcrVoting = PLCRVoting(_plcrVoting);
+      distributeToken= DistributeToken(_distributeToken);
       tokenRegistryAddress = _tokenRegistry;
   }
 
@@ -85,7 +96,26 @@ modifier onlyPR() {
     totalFreeSupply += addtl;
   }
 
+  function proposeProject(uint256 _cost, uint256 _stakingPeriod) public {    //_cost of project in ether
+    //calculate cost of project in tokens currently (_cost in wei)
+    //check proposer has at least 5% of the proposed cost in tokens
+    require(now < _stakingPeriod && _cost > 0);
+    uint256 costProportion = _cost / distributeToken.weiBal();
+    uint256 proposerReputationCost = (costProportion / proposeProportion) * totalSupply;
+    require(balances[msg.sender] >= proposerReputationCost);
+    balances[msg.sender] -= proposerReputationCost;
+    address projectAddress = projectRegistry.createProject(_cost, costProportion, _stakingPeriod, msg.sender, 2, proposerReputationCost);
+    ProjectCreated(projectAddress, _cost, proposerReputationCost);
+  }
 
+  function refundProposer(address _projectAddress) public {
+    Project project = Project(_projectAddress);                            //called by proposer to get refund once project is active
+    require(project.proposer() == msg.sender);
+    require(project.proposerType() == 2);
+    uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);        //call project to "send back" staked tokens to put in proposer's balances
+    balances[msg.sender] += proposerVals[1];
+    distributeToken.transferWeiFrom(msg.sender, proposerVals[0] / 100);
+  }
 
   // =====================================================================
   // PROPOSED PROJECT - STAKING FUNCTIONALITY

@@ -74,17 +74,18 @@ contract TokenRegistry {
     //calculate cost of project in tokens currently (_cost in wei)
     //check proposer has at least 5% of the proposed cost in tokens
     require(now < _stakingPeriod && _cost > 0);
-    uint256 proposerTokenCost = _cost / distributeToken.currentPrice();
-    proposerTokenCost = (proposerTokenCost / proposeProportion) + 1;           //divide by 20 to get 5 percent of tokens
-    require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
     uint256 costProportion = _cost / distributeToken.weiBal();
+    uint256 proposerTokenCost = (costProportion / proposeProportion) * distributeToken.totalSupply();           //divide by 20 to get 5 percent of tokens
+    require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
     distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
-    address projectAddress = projectRegistry.createProject(_cost, costProportion, proposerTokenCost, _stakingPeriod, msg.sender);
+    address projectAddress = projectRegistry.createProject(_cost, costProportion, _stakingPeriod, msg.sender, 1, proposerTokenCost);
     ProjectCreated(projectAddress, _cost, proposerTokenCost);
   }
 
   function refundProposer(address _projectAddress) public {                                 //called by proposer to get refund once project is active
-    require(projectRegistry.getProposerAddress(_projectAddress) == msg.sender);
+    Project project = Project(_projectAddress);                            //called by proposer to get refund once project is active
+    require(project.proposer() == msg.sender);
+    require(project.proposerType() == 1);
     uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);        //call project to "send back" staked tokens to put in proposer's balances
     distributeToken.transferFromEscrow(msg.sender, proposerVals[1]);
     distributeToken.transferWeiFrom(msg.sender, proposerVals[0] / 100);
