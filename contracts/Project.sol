@@ -16,6 +16,8 @@ contract Project {
   TokenRegistry tokenRegistry;
   ReputationRegistry reputationRegistry;
   ProjectRegistry projectRegistry;
+  ProjectLibrary projectLibrary;
+
   uint256 public state;
   /* POSSIBLE STATES */
   /*
@@ -27,10 +29,6 @@ contract Project {
     6: Complete,
     7: Failed
   */
-
-  uint256 public topTaskHash;
-
-
 
   address public proposer;
   uint256 public proposerType;
@@ -95,11 +93,6 @@ contract Project {
     _;
   }
 
-  modifier onlyPRorRR() {
-    require(msg.sender == address(projectRegistry) || msg.sender == address(reputationRegistry));
-    _;
-  }
-
   function isTR(address _sender) public view returns (bool) {
     if (_sender == address(tokenRegistry)) {
       return true;
@@ -130,7 +123,6 @@ contract Project {
     proposerType = _proposerType;
     proposerStake = _proposerStake;
   }
-
 
   // =====================================================================
   // SETTER FUNCTIONS
@@ -184,7 +176,7 @@ contract Project {
     totalReputationStaked = 0;
   }
 
-  function setTaskReward(bytes32 _taskHash, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyPRorRR {
+  function setTaskReward(bytes32 _taskHash, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyPR {
     Reward storage taskReward = taskRewards[_taskHash];
     taskReward.weiReward = _weiVal;
     taskReward.reputationReward = _reputationVal;

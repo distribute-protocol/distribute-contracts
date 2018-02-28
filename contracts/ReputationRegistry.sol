@@ -23,14 +23,14 @@ contract ReputationRegistry{
 // =====================================================================
 // STATE VARIABLES
 // =====================================================================
-
+  DistributeToken distributeToken;
   ProjectRegistry projectRegistry;
   DistributeToken distributeToken;
   PLCRVoting plcrVoting;
   address tokenRegistryAddress;
 
   mapping (address => uint) public balances; //worker token balances
-  mapping (address => uint) public first;
+  mapping (address => bool) public first;
 
   uint256 public totalSupply;               //total supply of reputation in all states
   uint256 public totalFreeSupply;           //total supply of free reputation (not staked, validated, or voted)
@@ -65,6 +65,7 @@ modifier onlyPR() {
 
   function init(address _distributeToken, address _tokenRegistry, address _projectRegistry, address _plcrVoting) public {
       require(address(projectRegistry) == 0 && address(plcrVoting) == 0);
+      distributeToken = DistributeToken(_distributeToken);
       projectRegistry = ProjectRegistry(_projectRegistry);
       plcrVoting = PLCRVoting(_plcrVoting);
       distributeToken= DistributeToken(_distributeToken);
@@ -72,24 +73,23 @@ modifier onlyPR() {
   }
 
   function register() public {
-    require(balances[msg.sender] == 0 && first[msg.sender] == 0);
-    first[msg.sender] = 1;
+    require(balances[msg.sender] == 0 && first[msg.sender] == false);
+    first[msg.sender] = true;
     balances[msg.sender] = initialRepVal;
     totalSupply += initialRepVal;
     totalFreeSupply += initialRepVal;
     totalUsers += 1;
   }
 
-  /* function faucet() public {
-    require(balances[msg.sender] == 0 && first[msg.sender] != 0);
-    balances[msg.sender] += 10000;
-    totalSupply += 10000;
-    totalFreeSupply += 10000;
+  /* function getAverageFreeReputation() public returns (uint) {
+    totalUsers == 0
+      ? return 0
+      : return totalFreeSupply / totalUsers;
   } */
 
-  /* faucet function brings balance to initial value if between 0 and the initialRepVal */
+  // faucet function brings balance to initial value if between 0 and the initialRepVal
   function faucet() public {
-    require(balances[msg.sender] < initialRepVal && balances[msg.sender] >= 0 && first[msg.sender] != 0);
+    require(balances[msg.sender] < initialRepVal && balances[msg.sender] >= 0 && first[msg.sender] == true);
     uint256 addtl = initialRepVal - balances[msg.sender];
     balances[msg.sender] += addtl;
     totalSupply += addtl;
@@ -139,11 +139,14 @@ modifier onlyPR() {
   // ACTIVE PERIOD FUNCTIONALITY
   // =====================================================================
 
-  function claimTask(address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _reputationVal) public {
-    require(balances[msg.sender] >= _reputationVal);
-    balances[msg.sender] -= _reputationVal;
-    totalFreeSupply -= _reputationVal;
-    projectRegistry.claimTask(_projectAddress, _index, _taskDescription, _weiVal, _reputationVal, msg.sender);
+  function claimTask(address _projectAddress, uint256 _index, string _taskDescription, uint _weighting) public {
+    Project project = Project(_projectAddress);
+    uint reputationVal = (project.weiCost() * _weighting * totalFreeSupply) / (distributeToken.weiBal() * 100);
+    require(balances[msg.sender] >= reputationVal);
+    uint weiVal = _weighting * project.weiCost() / 100;
+    balances[msg.sender] -= reputationVal;
+    totalFreeSupply -= reputationVal;
+    projectRegistry.claimTask(_projectAddress, _index, _taskDescription, msg.sender, _weighting, weiVal, reputationVal);
   }
 
   // =====================================================================
