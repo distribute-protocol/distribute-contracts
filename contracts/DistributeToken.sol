@@ -31,7 +31,7 @@ contract DistributeToken is StandardToken {
    // CONSTRUCTOR
    // =====================================================================
    function DistributeToken(address _tokenRegistry, address _reputationRegistry) public {
-     require(address(tokenRegistry) == 0 && address(reputationRegistry));
+     require(address(tokenRegistry) == 0 && address(reputationRegistry) == 0);
      tokenRegistry = TokenRegistry(_tokenRegistry);
      reputationRegistry = ReputationRegistry(_reputationRegistry);
 
@@ -45,7 +45,7 @@ contract DistributeToken is StandardToken {
      _;
    }
   modifier onlyTRorRR() {
-    require(msg.sender == address(tokenRegistry) && msg.sender == address(reputationRegistry));
+    require(msg.sender == address(tokenRegistry) || msg.sender == address(reputationRegistry));
     _;
    }
   // =====================================================================
