@@ -6,11 +6,14 @@
 pragma solidity ^0.4.8;
 
 import "./Project.sol";
+import "./DistributeToken.sol";
 import "./TokenRegistry.sol";
 import "./ReputationRegistry.sol";
+import "./ProjectLibrary.sol";
 import "./library/PLCRVoting.sol";
 
 contract ProjectRegistry {
+  DistributeToken distributeToken;
   TokenRegistry tokenRegistry;
   ReputationRegistry reputationRegistry;
   PLCRVoting plcrVoting;
@@ -18,30 +21,23 @@ contract ProjectRegistry {
   address tokenRegistryAddress;
 
   /* uint256 openStatePeriod = 1 weeks; */
-  uint256 disputeStatePeriod = 1 weeks;
+  uint256 stakedStatePeriod = 1 weeks;
   uint256 activeStatePeriod = 1 weeks;
   uint256 validateStatePeriod = 1 weeks;
   uint256 voteCommitPeriod = 1 weeks;
   uint256 voteRevealPeriod = 1 weeks;
 
-  mapping(address => uint256) public votingPollId;                    //projectId to project address
+  // will need to be changed to make a poll for each task
+  mapping(address => uint256) public votingPollId;
 
   struct ProposedState {
     address proposer;         //who is the proposer
     uint256 proposerStake;    //how much did they stake in tokens
-    uint256 cost;      //cost of the project in ETH/tokens?
+    uint256 cost;             //cost of the project in ETH/tokens?
     uint256 stakingPeriod;
   }
-  /* struct OpenState {
-    //open
-    bytes32 first;
-    uint256 conflict;                                 //used to determine if dispute period needs to happen
-    uint256 numTotalSubmissions;
-    mapping(address => bytes32) taskHashSubmissions;
-    mapping(bytes32 => uint256) numSubmissions;
-  } */
 
-  struct DisputeState {
+  struct StakedState {
     bytes32 topTaskHash;
     mapping(address => bytes32) taskHashSubmissions;
     mapping(bytes32 => uint256) numSubmissionsByWeight;
@@ -49,29 +45,18 @@ contract ProjectRegistry {
 
   mapping (address => bytes32[]) public projectTaskList;      //store project task list for each project address
 
-/*
- function getHashAtIndex(address _projectAddress, uint index) public view returns(bytes32 value) {
-   return projectTaskList[_projectAddress][index];
- }*/
-
-  /* struct Validation {
-    uint256 validateReward;
-    bool validateFlag;
-  } */
-
-  mapping (address => ProposedState) public proposedProjects;
-  /* mapping (address => OpenState) public openProjects; */
-  mapping (address => DisputeState) public disputedProjects;
+  mapping (address => StakedState) public stakedProjects;
 
   // NOTE do we need a validated Projects mapping?
 
   // =====================================================================
   // CONSTRUCTOR
   // =====================================================================
-  function ProjectRegistry(address _tokenRegistry, address _reputationRegistry, address _plcrVoting) public {       //contract is created
+  function ProjectRegistry(address _distributeToken, address _tokenRegistry, address _reputationRegistry, address _plcrVoting) public {       //contract is created
     require(address(tokenRegistry) == 0 && address(reputationRegistry) == 0);
     tokenRegistry = TokenRegistry(_tokenRegistry);
     reputationRegistry = ReputationRegistry(_reputationRegistry);
+    distributeToken = DistributeToken(_distributeToken);
     plcrVoting = PLCRVoting(_plcrVoting);
     reputationRegistryAddress = _reputationRegistry;
     tokenRegistryAddress = _tokenRegistry;
@@ -88,6 +73,10 @@ contract ProjectRegistry {
     require(msg.sender == address(reputationRegistry));
     _;
   }
+  modifier onlyTRorRR() {
+    require(msg.sender == address(tokenRegistry) || msg.sender == address(reputationRegistry));
+    _;
+  }
 
   // =====================================================================
   // EVENTS
@@ -98,10 +87,6 @@ contract ProjectRegistry {
   // =====================================================================
   // GENERAL FUNCTIONS
   // =====================================================================
-
-  function getProposerAddress(address _projectAddress) public view returns (address) {
-    return proposedProjects[_projectAddress].proposer;
-  }
 
   function startPoll(address _projectAddress, uint256 _commitDuration, uint256 _revealDuration) internal {       //can only be called by project in question
     votingPollId[_projectAddress] =  plcrVoting.startPoll(51, _commitDuration, _revealDuration);
@@ -114,37 +99,31 @@ contract ProjectRegistry {
   // =====================================================================
   // PROPOSER FUNCTIONS
   // =====================================================================
-
-  function createProject(uint256 _cost, uint256 _costProportion, uint256 _numTokens, uint256 _stakingPeriod, address _proposer) public onlyTR() returns (address) {
+  function createProject(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _proposer, uint256 _proposerType, uint256 _proposerStake) public onlyTRorRR() returns (address) {
 
     Project newProject = new Project(_cost,
                                      _costProportion,
                                      _stakingPeriod,
+                                     _proposer,
+                                     _proposerType,
+                                     _proposerStake,
                                      reputationRegistryAddress,
                                      tokenRegistryAddress
                                      );
    address _projectAddress = address(newProject);
-   setProposer(_projectAddress, _proposer, _numTokens, _stakingPeriod, _cost);
-   LogProjectCreated(_projectAddress, _proposer, _cost, _numTokens);
+   LogProjectCreated(_projectAddress, _proposer, _cost, _proposerStake);
    return _projectAddress;
   }
 
-  function setProposer(address _projectAddress, address _proposer, uint256 _proposerStake, uint256 _stakingPeriod, uint256 _cost) internal {
-    // Proposer storage proposer = proposers[_projectAddress];
-    proposedProjects[_projectAddress].proposer = _proposer;
-    proposedProjects[_projectAddress].proposerStake = _proposerStake;
-    proposedProjects[_projectAddress].stakingPeriod = _stakingPeriod;
-    proposedProjects[_projectAddress].cost = _cost;
-  }
-
-  function refundProposer(address _projectAddress) public onlyTR() returns (uint256[2]) {
-    require(Project(_projectAddress).state() > 1);
+  // Maybe makes this easier but we should look at removing
+  function refundProposer(address _projectAddress) public onlyTRorRR() returns (uint256[2]) {
+    Project project =  Project(_projectAddress);
+    require(project.state() > 1);
     uint256[2] memory returnValues;
-    uint256 proposerStake = proposedProjects[_projectAddress].proposerStake;
-    require(proposerStake > 0);
-    returnValues[0] = proposedProjects[_projectAddress].cost;
-    returnValues[1] = proposerStake;
-    proposedProjects[_projectAddress].proposerStake = 0;
+    require(project.proposerStake() > 0);
+    returnValues[0] = project.weiCost();
+    returnValues[1] = project.proposerStake();
+    project.clearProposerStake();
     return returnValues;
   }
 
@@ -152,16 +131,17 @@ contract ProjectRegistry {
   // STATE CHANGE
   // =====================================================================
 
-  function checkDispute(address _projectAddress) public returns (bool) {
-    require(Project(_projectAddress).state() == 1);    //check that project is in the proposed state
-    if(Project(_projectAddress).isStaked()) {
-      uint256 nextDeadline = now + disputeStatePeriod;
-      Project(_projectAddress).setState(3, nextDeadline);
+  function checkStaked(address _projectAddress) public returns (bool) {
+    Project project = Project(_projectAddress);
+    require(project.state() == 1);    //check that project is in the proposed state
+    if(ProjectLibrary.isStaked(_projectAddress)) {
+      uint256 nextDeadline = now + stakedStatePeriod;
+      project.setState(2, nextDeadline);
       return true;
     } else {
-      if(Project(_projectAddress).timesUp()) {
-        Project(_projectAddress).setState(8, 0);
-        proposedProjects[_projectAddress].proposerStake = 0;
+      if(ProjectLibrary.timesUp(_projectAddress)) {
+        project.setState(7, 0);
+        project.clearProposerStake();
       }
       return false;
     }
@@ -169,40 +149,27 @@ contract ProjectRegistry {
 
   function checkActive(address _projectAddress) public returns (bool) {
     Project project = Project(_projectAddress);
-    uint256 projectState = project.state();
-    require(projectState == 3);
-    if(project.timesUp()) {
+    require(project.state() == 2);
+    if(ProjectLibrary.timesUp(_projectAddress)) {
       uint256 nextDeadline;
-      if(disputedProjects[_projectAddress].topTaskHash != 0) {
+      if(stakedProjects[_projectAddress].topTaskHash != 0) {
         nextDeadline = now + activeStatePeriod;
-        project.setState(4, nextDeadline);
+        project.setState(3, nextDeadline);
         return true;
       } else {
-        project.setState(8, 0);
+        project.setState(7, 0);
         return false;
       }
-      /* //MAKE THIS OPEN HANDLER
-      if(projectState == 2) {
-        if(openProjects[_projectAddress].first == 0 || openProjects[_projectAddress].conflict != 0) {
-          nextDeadline = now + disputeStatePeriod;
-          project.setState(3, nextDeadline);
-        } else if(openProjects[_projectAddress].first != 0 && openProjects[_projectAddress].conflict == 0) {
-          nextDeadline = now + activeStatePeriod;
-          project.setState(4, nextDeadline);
-          return true;
-        }
-      } else {
-
-      } */
     }
     return false;
   }
 
   function checkValidate(address _projectAddress) public returns (bool) {
-    require(Project(_projectAddress).state() == 4);
-    if (Project(_projectAddress).timesUp()) {
+    Project project = Project(_projectAddress);
+    require(project.state() == 3);
+    if (ProjectLibrary.timesUp(_projectAddress)) {
       uint256 nextDeadline = now + validateStatePeriod;
-      Project(_projectAddress).setState(5, nextDeadline);
+      project.setState(5, nextDeadline);
       return true;
     } else {
       return false;
@@ -210,9 +177,10 @@ contract ProjectRegistry {
   }
 
   function checkVoting(address _projectAddress) public returns (bool) {
-    require(Project(_projectAddress).state()== 5);
-    if(Project(_projectAddress).timesUp()) {
-      Project(_projectAddress).setState(6, 0);
+    Project project = Project(_projectAddress);
+    require(project.state() == 4);
+    if(ProjectLibrary.timesUp(_projectAddress)) {
+      project.setState(5, 0);
       startPoll(_projectAddress, voteCommitPeriod, voteRevealPeriod);
       return true;
     }
@@ -220,84 +188,62 @@ contract ProjectRegistry {
   }
 
   function checkEnd(address _projectAddress) public returns (bool) {     //don't know where this gets called - maybe separate UI thing
+    Project project = Project(_projectAddress);
     if(!pollEnded(_projectAddress)) { return false; }
     bool passed = plcrVoting.isPassed(votingPollId[_projectAddress]);
-    Project(_projectAddress).setValidationState(passed);
+    ProjectLibrary.setValidationState(tokenRegistryAddress, reputationRegistryAddress, _projectAddress, passed);
     passed
-      ? Project(_projectAddress).setState(7, 0)
-      : Project(_projectAddress).setState(8, 0);
+      ? project.setState(6, 0)
+      : project.setState(7, 0);
     return true;
   }
 
   // =====================================================================
-  // OPEN/DISPUTE PROJECT FUNCTIONS
+  // STAKED PROJECT FUNCTIONS
   // =====================================================================
 
-  function addTaskHash(address _projectAddress, bytes32 _ipfsHash) public  {
+  function addTaskHash(address _projectAddress, bytes32 _taskHash) public  {      // format of has should be 'description', 'percentage', check via js that percentages add up to 100 prior to calling contract
     Project project = Project(_projectAddress);
-    require(project.isStaker(msg.sender) == true);
+    require(ProjectLibrary.isStaker(_projectAddress, msg.sender) == true);
     checkActive(_projectAddress);
     if (project.state() == 3) {
-      uint256 stakerWeight = project.calculateWeightOfAddress(msg.sender);
-      disputeTaskHash(msg.sender, _projectAddress, _ipfsHash, stakerWeight);
+      uint256 stakerWeight = ProjectLibrary.calculateWeightOfAddress(_projectAddress, msg.sender);
+      stakedTaskHash(msg.sender, _projectAddress, _taskHash, stakerWeight);
     }
-    /* if (project.state() == 2) {
-      openTaskHash(msg.sender, _projectAddress, _ipfsHash);
-    } else {
-    } */
   }
 
-  /* function openTaskHash(address _staker, address _projectAddress, bytes32 _ipfsHash) internal {
-    OpenState storage os = openProjects[_projectAddress];
-    if(os.taskHashSubmissions[_staker] == 0) {    //first time submission for this particular address
-      os.numTotalSubmissions += 1;
-      if (os.first == 0) { os.first = _ipfsHash; }
-    } else {                                  //not a first time hash submission
-        os.numSubmissions[os.taskHashSubmissions[_staker]] -= 1;
+  function stakedTaskHash(address _staker, address _projectAddress, bytes32 _taskHash, uint256 stakerWeight) internal {
+    StakedState storage ss = stakedProjects[_projectAddress];
+    if(ss.taskHashSubmissions[_staker] !=  0) {   //first time submission for this particular address
+      bytes32 submittedTaskHash = ss.taskHashSubmissions[_staker];
+      ss.numSubmissionsByWeight[submittedTaskHash] -= stakerWeight;
     }
-    if (os.first != _ipfsHash) { os.conflict = 1; }
-    os.numSubmissions[_ipfsHash] += 1;
-    os.taskHashSubmissions[_staker] = _ipfsHash;
-    } */
-
-  function disputeTaskHash(address _staker, address _projectAddress, bytes32 _ipfsHash, uint256 stakerWeight) internal {
-    DisputeState storage ds = disputedProjects[_projectAddress];
-    if(ds.taskHashSubmissions[_staker] !=  0) {   //first time submission for this particular address
-      bytes32 submittedTaskHash = ds.taskHashSubmissions[_staker];
-      ds.numSubmissionsByWeight[submittedTaskHash] -= stakerWeight;
-    }
-    ds.numSubmissionsByWeight[_ipfsHash] += stakerWeight;
-    ds.taskHashSubmissions[_staker] = _ipfsHash;
-    if(ds.numSubmissionsByWeight[_ipfsHash]
-      > ds.numSubmissionsByWeight[ds.topTaskHash]) {
-      ds.topTaskHash = _ipfsHash;
+    ss.numSubmissionsByWeight[_taskHash] += stakerWeight;
+    ss.taskHashSubmissions[_staker] = _taskHash;
+    if(ss.numSubmissionsByWeight[_taskHash]
+      > ss.numSubmissionsByWeight[ss.topTaskHash]) {
+      ss.topTaskHash = _taskHash;
     }
   }
 
   function submitHashList(address _projectAddress, bytes32[] _hashes) public {
     Project project = Project(_projectAddress);
-    require(project.isStaker(msg.sender) == true);
-    require(project.state() == 4);
-    require(keccak256(_hashes) == disputedProjects[_projectAddress].topTaskHash);
-    /* if (disputedProjects[_projectAddress].topTaskHash != 0) {
-    } else {
-      require(keccak256(_hashes) == openProjects[_projectAddress].first);
-    } */
+    require(ProjectLibrary.isStaker(_projectAddress, msg.sender) == true);
+    require(project.state() == 2);
+    require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
     projectTaskList[_projectAddress] = _hashes;
   }
 
   // =====================================================================
   // ACTIVE PROJECT
   // =====================================================================
-  bytes32 public tempHash;
 
-  function claimTask(
-    address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _reputationVal, address _claimer
-  ) public onlyRR() returns (bytes32) {
+  function claimTask(address _projectAddress, uint256 _index, string _taskDescription, address _claimer, uint _weighting, uint _weiVal, uint _reputationVal) public onlyRR() returns (bytes32) {
+    // 100% => percentage = 100
     bytes32 taskHash = projectTaskList[_projectAddress][_index];
-    Project project = Project(_projectAddress);
-    require(taskHash == keccak256(_taskDescription, _weiVal, _reputationVal));
-    project.claimTask(taskHash, _weiVal, _reputationVal, _claimer);
+    require(taskHash == keccak256(_taskDescription, _weighting));
+    // weiVal is wei reward of the task as indicated by its percentage
+    ProjectLibrary.claimTask(_projectAddress, taskHash, _weiVal, _reputationVal, _claimer);
   }
 
   /*function checkHash(bytes32 taskHash, string _taskDescription, uint256 _weiVal, uint256 _reputationVal) public view {
