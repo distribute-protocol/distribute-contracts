@@ -19,22 +19,23 @@ contract ProjectRegistry {
   address tokenRegistryAddress;
 
   /* uint256 openStatePeriod = 1 weeks; */
-  uint256 disputeStatePeriod = 1 weeks;
+  uint256 stakedStatePeriod = 1 weeks;
   uint256 activeStatePeriod = 1 weeks;
   uint256 validateStatePeriod = 1 weeks;
   uint256 voteCommitPeriod = 1 weeks;
   uint256 voteRevealPeriod = 1 weeks;
 
-  mapping(address => uint256) public votingPollId;                    //projectId to project address
+  // will need to be changed to make a poll for each task
+  mapping(address => uint256) public votingPollId;
 
   struct ProposedState {
     address proposer;         //who is the proposer
     uint256 proposerStake;    //how much did they stake in tokens
-    uint256 cost;      //cost of the project in ETH/tokens?
+    uint256 cost;             //cost of the project in ETH/tokens?
     uint256 stakingPeriod;
   }
 
-  struct DisputeState {
+  struct StakedState {
     bytes32 topTaskHash;
     mapping(address => bytes32) taskHashSubmissions;
     mapping(bytes32 => uint256) numSubmissionsByWeight;
@@ -42,17 +43,7 @@ contract ProjectRegistry {
 
   mapping (address => bytes32[]) public projectTaskList;      //store project task list for each project address
 
-/*
- function getHashAtIndex(address _projectAddress, uint index) public view returns(bytes32 value) {
-   return projectTaskList[_projectAddress][index];
- }*/
-
-  /* struct Validation {
-    uint256 validateReward;
-    bool validateFlag;
-  } */
-
-  mapping (address => DisputeState) public disputedProjects;
+  mapping (address => StakedState) public stakedProjects;
 
   // NOTE do we need a validated Projects mapping?
 
@@ -140,7 +131,7 @@ contract ProjectRegistry {
     Project project = Project(_projectAddress);
     require(project.state() == 1);    //check that project is in the proposed state
     if(ProjectLibrary.isStaked(_projectAddress)) {
-      uint256 nextDeadline = now + disputeStatePeriod;
+      uint256 nextDeadline = now + stakedStatePeriod;
       project.setState(2, nextDeadline);
       return true;
     } else {
@@ -157,7 +148,7 @@ contract ProjectRegistry {
     require(project.state() == 2);
     if(ProjectLibrary.timesUp(_projectAddress)) {
       uint256 nextDeadline;
-      if(disputedProjects[_projectAddress].topTaskHash != 0) {
+      if(stakedProjects[_projectAddress].topTaskHash != 0) {
         nextDeadline = now + activeStatePeriod;
         project.setState(3, nextDeadline);
         return true;
@@ -165,19 +156,6 @@ contract ProjectRegistry {
         project.setState(7, 0);
         return false;
       }
-      /* //MAKE THIS OPEN HANDLER
-      if(projectState == 2) {
-        if(openProjects[_projectAddress].first == 0 || openProjects[_projectAddress].conflict != 0) {
-          nextDeadline = now + disputeStatePeriod;
-          project.setState(3, nextDeadline);
-        } else if(openProjects[_projectAddress].first != 0 && openProjects[_projectAddress].conflict == 0) {
-          nextDeadline = now + activeStatePeriod;
-          project.setState(4, nextDeadline);
-          return true;
-        }
-      } else {
-
-      } */
     }
     return false;
   }
@@ -217,30 +195,30 @@ contract ProjectRegistry {
   }
 
   // =====================================================================
-  // OPEN/DISPUTE PROJECT FUNCTIONS
+  // STAKED PROJECT FUNCTIONS
   // =====================================================================
 
-  function addTaskHash(address _projectAddress, bytes32 _ipfsHash) public  {
+  function addTaskHash(address _projectAddress, bytes32 _taskHash) public  {      // format of has should be 'description', 'percentage', check via js that percentages add up to 100 prior to calling contract
     Project project = Project(_projectAddress);
     require(ProjectLibrary.isStaker(_projectAddress, msg.sender) == true);
     checkActive(_projectAddress);
     if (project.state() == 3) {
       uint256 stakerWeight = ProjectLibrary.calculateWeightOfAddress(_projectAddress, msg.sender);
-      disputeTaskHash(msg.sender, _projectAddress, _ipfsHash, stakerWeight);
+      stakedTaskHash(msg.sender, _projectAddress, _taskHash, stakerWeight);
     }
   }
 
-  function disputeTaskHash(address _staker, address _projectAddress, bytes32 _ipfsHash, uint256 stakerWeight) internal {
-    DisputeState storage ds = disputedProjects[_projectAddress];
-    if(ds.taskHashSubmissions[_staker] !=  0) {   //first time submission for this particular address
-      bytes32 submittedTaskHash = ds.taskHashSubmissions[_staker];
-      ds.numSubmissionsByWeight[submittedTaskHash] -= stakerWeight;
+  function stakedTaskHash(address _staker, address _projectAddress, bytes32 _taskHash, uint256 stakerWeight) internal {
+    StakedState storage ss = stakedProjects[_projectAddress];
+    if(ss.taskHashSubmissions[_staker] !=  0) {   //first time submission for this particular address
+      bytes32 submittedTaskHash = ss.taskHashSubmissions[_staker];
+      ss.numSubmissionsByWeight[submittedTaskHash] -= stakerWeight;
     }
-    ds.numSubmissionsByWeight[_ipfsHash] += stakerWeight;
-    ds.taskHashSubmissions[_staker] = _ipfsHash;
-    if(ds.numSubmissionsByWeight[_ipfsHash]
-      > ds.numSubmissionsByWeight[ds.topTaskHash]) {
-      ds.topTaskHash = _ipfsHash;
+    ss.numSubmissionsByWeight[_taskHash] += stakerWeight;
+    ss.taskHashSubmissions[_staker] = _taskHash;
+    if(ss.numSubmissionsByWeight[_taskHash]
+      > ss.numSubmissionsByWeight[ss.topTaskHash]) {
+      ss.topTaskHash = _taskHash;
     }
   }
 
@@ -248,21 +226,26 @@ contract ProjectRegistry {
     Project project = Project(_projectAddress);
     require(ProjectLibrary.isStaker(_projectAddress, msg.sender) == true);
     require(project.state() == 2);
-    require(keccak256(_hashes) == disputedProjects[_projectAddress].topTaskHash);
+    require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
     projectTaskList[_projectAddress] = _hashes;
   }
 
   // =====================================================================
   // ACTIVE PROJECT
   // =====================================================================
-  bytes32 public tempHash;
 
   function claimTask(
-    address _projectAddress, uint256 _index, string _taskDescription, uint256 _weiVal, uint256 _reputationVal, address _claimer
+    address _projectAddress, uint256 _index, string _taskDescription, address _claimer, uint percentage
+    // 100% => percentage = 100
   ) public onlyRR() returns (bytes32) {
     bytes32 taskHash = projectTaskList[_projectAddress][_index];
-    require(taskHash == keccak256(_taskDescription, _weiVal, _reputationVal));
-    ProjectLibrary.claimTask(_projectAddress, taskHash, _weiVal, _reputationVal, _claimer);
+    require(taskHash == keccak256(_taskDescription, percentage));
+    // weiVal is wei reward of the task as indicated by its percentage
+    uint weiVal = (percentage * Project(_projectAddress).weiCost()) / 100;
+
+    uint reputationVal = reputationRegistry.getAverageFreeReputation();
+
+    ProjectLibrary.claimTask(_projectAddress, taskHash, weiVal, reputationVal, _claimer);
   }
 
   /*function checkHash(bytes32 taskHash, string _taskDescription, uint256 _weiVal, uint256 _reputationVal) public view {

@@ -28,7 +28,7 @@ contract ReputationRegistry{
   address tokenRegistryAddress;
 
   mapping (address => uint) public balances; //worker token balances
-  mapping (address => uint) public first;
+  mapping (address => bool) public first;
 
   uint256 public totalSupply;               //total supply of reputation in all states
   uint256 public totalFreeSupply;           //total supply of free reputation (not staked, validated, or voted)
@@ -61,24 +61,23 @@ modifier onlyPR() {
   }
 
   function register() public {
-    require(balances[msg.sender] == 0 && first[msg.sender] == 0);
-    first[msg.sender] = 1;
+    require(balances[msg.sender] == 0 && first[msg.sender] == false);
+    first[msg.sender] = true;
     balances[msg.sender] = initialRepVal;
     totalSupply += initialRepVal;
     totalFreeSupply += initialRepVal;
     totalUsers += 1;
   }
 
-  /* function faucet() public {
-    require(balances[msg.sender] == 0 && first[msg.sender] != 0);
-    balances[msg.sender] += 10000;
-    totalSupply += 10000;
-    totalFreeSupply += 10000;
-  } */
+  function getAverageFreeReputation() public returns (uint) {
+    totalUsers == 0
+      ? return 0
+      : return totalFreeSupply / totalUsers;
+  }
 
-  /* faucet function brings balance to initial value if between 0 and the initialRepVal */
+  // faucet function brings balance to initial value if between 0 and the initialRepVal
   function faucet() public {
-    require(balances[msg.sender] < initialRepVal && balances[msg.sender] >= 0 && first[msg.sender] != 0);
+    require(balances[msg.sender] < initialRepVal && balances[msg.sender] >= 0 && first[msg.sender] == true);
     uint256 addtl = initialRepVal - balances[msg.sender];
     balances[msg.sender] += addtl;
     totalSupply += addtl;

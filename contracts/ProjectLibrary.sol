@@ -93,11 +93,9 @@ library ProjectLibrary {
       project.state() == 7
         ? denom = project.totalValidateNegative()
         : denom = project.totalValidateAffirmative();
-      if (project.opposingValidator() == true) {
-        refund += project.validateReward() * stake / denom;
-      } else {
-        TokenRegistry(_tokenRegistry).rewardValidator(_projectAddress, _staker, (project.weiCost() * stake / denom));
-      }
+      project.opposingValidator() == true)
+        ? refund += project.validateReward() * stake / denom;
+        : TokenRegistry(_tokenRegistry).rewardValidator(_projectAddress, _staker, (project.weiCost() * stake / denom));
       project.clearValidatorStake(_staker);
     }
     return refund;
