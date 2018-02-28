@@ -14,8 +14,8 @@ import "./library/PLCRVoting.sol";
 contract ProjectRegistry {
   TokenRegistry tokenRegistry;
   ReputationRegistry reputationRegistry;
-  ProjectLibrary projectLibrary;
   PLCRVoting plcrVoting;
+  address projectLibraryAddress;
   address reputationRegistryAddress;
   address tokenRegistryAddress;
 
@@ -63,13 +63,13 @@ contract ProjectRegistry {
   // CONSTRUCTOR
   // =====================================================================
   function ProjectRegistry(address _tokenRegistry, address _reputationRegistry, address _plcrVoting, address _projectLibrary) public {       //contract is created
-    require(address(tokenRegistry) == 0 && address(reputationRegistry) == 0 && address(projectLibrary) == 0;
+    require(address(tokenRegistry) == 0 && address(reputationRegistry) == 0);
     tokenRegistry = TokenRegistry(_tokenRegistry);
     reputationRegistry = ReputationRegistry(_reputationRegistry);
-    projectLibrary = ProjectLibrary(_projectLibrary);
     plcrVoting = PLCRVoting(_plcrVoting);
     reputationRegistryAddress = _reputationRegistry;
     tokenRegistryAddress = _tokenRegistry;
+    projectLibraryAddress = _projectLibrary;
   }
   // =====================================================================
   // MODIFIERS
@@ -117,7 +117,7 @@ contract ProjectRegistry {
                                      _stakingPeriod,
                                      reputationRegistryAddress,
                                      tokenRegistryAddress,
-                                     projectLibrary
+                                     projectLibraryAddress
                                      );
    address _projectAddress = address(newProject);
    setProposer(_projectAddress, _proposer, _numTokens, _stakingPeriod, _cost);
@@ -153,12 +153,12 @@ contract ProjectRegistry {
   function checkStaked(address _projectAddress) public returns (bool) {
     Project project = Project(_projectAddress);
     require(project.state() == 1);    //check that project is in the proposed state
-    if(projectLibrary.isStaked(_projectAddress)) {
+    if(ProjectLibrary.isStaked(_projectAddress)) {
       uint256 nextDeadline = now + disputeStatePeriod;
       project.setState(2, nextDeadline);
       return true;
     } else {
-      if(projectLibrary.timesUp(_projectAddress)) {
+      if(ProjectLibrary.timesUp(_projectAddress)) {
         project.setState(7, 0);
         proposedProjects[_projectAddress].proposerStake = 0;
       }
@@ -169,7 +169,7 @@ contract ProjectRegistry {
   function checkActive(address _projectAddress) public returns (bool) {
     Project project = Project(_projectAddress);
     require(project.state() == 2);
-    if(projectLibrary.timesUp(_projectAddress)) {
+    if(ProjectLibrary.timesUp(_projectAddress)) {
       uint256 nextDeadline;
       if(disputedProjects[_projectAddress].topTaskHash != 0) {
         nextDeadline = now + activeStatePeriod;
@@ -199,7 +199,7 @@ contract ProjectRegistry {
   function checkValidate(address _projectAddress) public returns (bool) {
     Project project = Project(_projectAddress);
     require(project.state() == 3);
-    if (projectLibrary.timesUp(_projectAddress)) {
+    if (ProjectLibrary.timesUp(_projectAddress)) {
       uint256 nextDeadline = now + validateStatePeriod;
       project.setState(5, nextDeadline);
       return true;
@@ -211,7 +211,7 @@ contract ProjectRegistry {
   function checkVoting(address _projectAddress) public returns (bool) {
     Project project = Project(_projectAddress);
     require(project.state() == 4);
-    if(projectLibrary.timesUp(_projectAddress)) {
+    if(ProjectLibrary.timesUp(_projectAddress)) {
       project.setState(5, 0);
       startPoll(_projectAddress, voteCommitPeriod, voteRevealPeriod);
       return true;
@@ -223,7 +223,7 @@ contract ProjectRegistry {
     Project project = Project(_projectAddress);
     if(!pollEnded(_projectAddress)) { return false; }
     bool passed = plcrVoting.isPassed(votingPollId[_projectAddress]);
-    projectLibrary.setValidationState(_projectAddress, passed);
+    ProjectLibrary.setValidationState(tokenRegistryAddress, reputationRegistryAddress, _projectAddress, passed);
     passed
       ? project.setState(6, 0)
       : project.setState(7, 0);
@@ -236,10 +236,10 @@ contract ProjectRegistry {
 
   function addTaskHash(address _projectAddress, bytes32 _ipfsHash) public  {
     Project project = Project(_projectAddress);
-    require(projectLibrary.isStaker(_projectAddress, msg.sender) == true);
+    require(ProjectLibrary.isStaker(_projectAddress, msg.sender) == true);
     checkActive(_projectAddress);
     if (project.state() == 3) {
-      uint256 stakerWeight = projectLibrary.calculateWeightOfAddress(_projectAddress, msg.sender);
+      uint256 stakerWeight = ProjectLibrary.calculateWeightOfAddress(_projectAddress, msg.sender);
       disputeTaskHash(msg.sender, _projectAddress, _ipfsHash, stakerWeight);
     }
   }
@@ -260,7 +260,7 @@ contract ProjectRegistry {
 
   function submitHashList(address _projectAddress, bytes32[] _hashes) public {
     Project project = Project(_projectAddress);
-    require(projectLibrary.isStaker(_projectAddress, msg.sender) == true);
+    require(ProjectLibrary.isStaker(_projectAddress, msg.sender) == true);
     require(project.state() == 2);
     require(keccak256(_hashes) == disputedProjects[_projectAddress].topTaskHash);
     projectTaskList[_projectAddress] = _hashes;
@@ -276,7 +276,7 @@ contract ProjectRegistry {
   ) public onlyRR() returns (bytes32) {
     bytes32 taskHash = projectTaskList[_projectAddress][_index];
     require(taskHash == keccak256(_taskDescription, _weiVal, _reputationVal));
-    projectLibrary.claimTask(_projectAddress, taskHash, _weiVal, _reputationVal, _claimer);
+    ProjectLibrary.claimTask(_projectAddress, taskHash, _weiVal, _reputationVal, _claimer);
   }
 
   /*function checkHash(bytes32 taskHash, string _taskDescription, uint256 _weiVal, uint256 _reputationVal) public view {

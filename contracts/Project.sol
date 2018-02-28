@@ -16,7 +16,7 @@ contract Project {
   TokenRegistry tokenRegistry;
   ReputationRegistry reputationRegistry;
   ProjectRegistry projectRegistry;
-  ProjectLibrary projectLibrary;
+  address projectLibraryAddress;
   uint256 public state;
   /* POSSIBLE STATES */
   /*
@@ -46,19 +46,14 @@ contract Project {
   }
 
  bool public opposingValidator = true;
- uint256 validateReward;
+ uint256 public validateReward;
 
   mapping (address => Validator) public validators;
   uint256 public totalValidateAffirmative;
   uint256 public totalValidateNegative;
 
-  struct Reward {
-    uint256 weiReward;
-    uint256 reputationReward;
-    address claimer;
-  }
 
-  mapping (bytes32 => Reward) public taskRewards;
+  mapping (bytes32 => ProjectLibrary.Reward) public taskRewards;
 
 
   // =====================================================================
@@ -85,9 +80,20 @@ contract Project {
     _;
   }
 
-  modifier onlyPL() {
-    require(msg.sender == address(projectLibrary));
+  modifier onlyPRorRR() {
+    require(msg.sender == address(projectRegistry) || msg.sender == address(reputationRegistry));
     _;
+  }
+
+  function isTR(address _sender) public returns (bool) {
+    _sender == address(tokenRegistry)
+      ? true
+      : false;
+  }
+  function isRR(address _sender) public returns (bool) {
+    _sender == address(reputationRegistry)
+      ? true
+      : false;
   }
 
   // =====================================================================
@@ -96,7 +102,7 @@ contract Project {
   function Project(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _reputationRegistry, address _tokenRegistry, address _projectLibrary) public {       //called by THR
     reputationRegistry = ReputationRegistry(_reputationRegistry);
     tokenRegistry = TokenRegistry(_tokenRegistry);
-    projectLibrary = ProjectLibrary(_projectLibrary);
+    projectLibraryAddress = _projectLibrary;
     projectRegistry = ProjectRegistry(msg.sender);
     weiCost = _cost;
     reputationCost = _costProportion * reputationRegistry.totalFreeSupply();
@@ -113,28 +119,28 @@ contract Project {
     nextDeadline = _nextDeadline;
   }
 
-  function clearTokenStake(address _staker) public onlyPL {
+  function clearTokenStake(address _staker) public onlyTR {
     stakedTokenBalances[_staker] = 0;
   }
 
-  function clearValidatorStake(address _staker) public onlyPL {
+  function clearValidatorStake(address _staker) public onlyTR {
     validators[_staker].stake = 0;
   }
 
-  function clearReputationStake(address _staker) public onlyPL {
+  function clearReputationStake(address _staker) public onlyRR {
     stakedReputationBalances[_staker] = 0;
   }
 
-  function setValidator(address _staker, uint256 _validationVal, uint256 _tokens) public onlyPL {
+  function setValidator(address _staker, uint256 _validationVal, uint256 _tokens) public onlyTR {
     validators[_staker] = Validator(_validationVal, _tokens);
   }
 
-  function addValidationTokens(uint256 _validationVal, uint256 _tokens) public onlyPL {
+  function addValidationTokens(uint256 _validationVal, uint256 _tokens) public onlyTR {
     _validationVal == 1
       ? totalValidateAffirmative += _tokens
       : totalValidateNegative += _tokens;
   }
-  function setValidationReward(uint256 _validationVal) public onlyPL {
+  function setValidationReward(uint256 _validationVal) public onlyPR {
     if (_validationVal == 0) {
       validateReward = totalValidateNegative;
       totalValidateNegative = 0;
@@ -143,16 +149,16 @@ contract Project {
       totalValidateAffirmative = 0;
     }
   }
-  function setOpposingValidator() public onlyPL {
+  function setOpposingValidator() public onlyPR {
     opposingValidator = false;
   }
 
-  function clearStake() public onlyPL {
+  function clearStake() public onlyPR {
     totalTokensStaked = 0;
     totalReputationStaked = 0;
   }
 
-  function setTaskReward(bytes32 _taskHash, Reward _reward) public onlyPL {
+  function setTaskReward(bytes32 _taskHash, ProjectLibrary.Reward _reward) public onlyPRorRR {
     taskRewards[_taskHash] = _reward;
   }
 
