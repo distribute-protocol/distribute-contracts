@@ -57,7 +57,7 @@ modifier onlyPR() {
       require(address(projectRegistry) == 0 && address(plcrVoting) == 0);
       projectRegistry = ProjectRegistry(_projectRegistry);
       plcrVoting = PLCRVoting(_plcrVoting);
-      tokenRegistryAddress = _tokenRegistry
+      tokenRegistryAddress = _tokenRegistry;
   }
 
   function register() public {

@@ -87,8 +87,6 @@ library ProjectLibrary {
     uint256 refund;
     Project project = Project(_projectAddress);
     if(project.totalValidateNegative() != 0 || project.totalValidateAffirmative() != 0) {
-      //####################################
-      /* refund += project.validators(_staker).stake; */
       var (,stake) = project.validators(_staker);
       refund += stake;
       uint256 denom;
