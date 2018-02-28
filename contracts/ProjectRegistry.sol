@@ -243,7 +243,7 @@ contract ProjectRegistry {
     require(taskHash == keccak256(_taskDescription, percentage));
     // weiVal is wei reward of the task as indicated by its percentage
     uint weiVal = percentage * project.weiCost() / 100;
-    uint reputationVal = (project.weiCost() * percentage * reputationRegistry.totalReputation()) / (distributeToken.weiBal() * 100);
+    uint reputationVal = (project.weiCost() * percentage * reputationRegistry.totalFreeSupply()) / (distributeToken.weiBal() * 100);
     ProjectLibrary.claimTask(_projectAddress, taskHash, weiVal, reputationVal, _claimer);
   }
 
