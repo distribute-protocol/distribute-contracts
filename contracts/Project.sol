@@ -30,6 +30,14 @@ contract Project {
     7: Failed
   */
 
+  uint256 public stakedStatePeriod = 1 weeks;
+  // turnoverTime is half of activeStatePeriod
+  uint256 public turnoverTime = 1 weeks;
+  uint256 public activeStatePeriod = 2 weeks;
+  uint256 public validateStatePeriod = 1 weeks;
+  uint256 public voteCommitPeriod = 1 weeks;
+  uint256 public voteRevealPeriod = 1 weeks;
+
   address public proposer;
   uint256 public proposerType;
   uint256 public proposerStake;
@@ -37,7 +45,6 @@ contract Project {
   /* uint256 public cost; */
   uint256 public weiBal;
   uint256 public nextDeadline;
-  uint256 public turnoverTime;
   //set by proposer, total cost of project in ETH, to be fulfilled by capital token holders
   uint256 public weiCost;
   //total amount of staked worker tokens needed, TBD
@@ -64,6 +71,7 @@ contract Project {
   struct Reward {
     uint256 weiReward;
     uint256 reputationReward;
+    uint256 claimTime;
     bool complete;
     address claimer;
   }
@@ -182,9 +190,9 @@ contract Project {
     Reward storage taskReward = taskRewards[_taskHash];
     taskReward.weiReward = _weiVal;
     taskReward.reputationReward = _reputationVal;
+    taskReward.claimTime = now;
     taskReward.complete = false;
     taskReward.claimer = _claimer;
-    /* taskRewards[_taskHash] = _reward; */
   }
 
   function markTaskComplete(bytes32 _taskHash) public onlyPR onlyInState(3){

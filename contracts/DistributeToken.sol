@@ -2,6 +2,7 @@ pragma solidity ^0.4.8;
 
 import "./library/StandardToken.sol";
 import "./TokenRegistry.sol";
+import "./ReputationRegistry.sol";
 
 contract DistributeToken is StandardToken {
   TokenRegistry tokenRegistry;
@@ -102,9 +103,12 @@ contract DistributeToken is StandardToken {
     weiBal -= _weiValue;
     _address.transfer(_weiValue);
   }
+
+  // THIS IS A DANGEROUS FUNCTION - ONLY TO BE USED FOR EASE OF TESTING
   function fund() public payable {
     weiBal += msg.value;
   }
+
   function transferToEscrow(address _owner, uint256 _value) public onlyTR() returns (bool) {
     require(balances[_owner] >= _value);
     balances[_owner] -= _value;
