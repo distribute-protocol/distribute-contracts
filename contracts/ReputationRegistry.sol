@@ -25,7 +25,6 @@ contract ReputationRegistry{
 // =====================================================================
   DistributeToken distributeToken;
   ProjectRegistry projectRegistry;
-  DistributeToken distributeToken;
   PLCRVoting plcrVoting;
   address tokenRegistryAddress;
 
