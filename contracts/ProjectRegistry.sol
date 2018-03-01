@@ -155,29 +155,38 @@ contract ProjectRegistry {
     if (ProjectLibrary.timesUp(_projectAddress)) {
       uint256 nextDeadline = now + project.validateStatePeriod();
       project.setState(4, nextDeadline);
+      for(uint i = 0; i < project.tasks().length; i++) {
+        Task task = Task(project.tasks(i);
+        if (task.complete() == false) {
+          task.setTaskReward(0, 0, task.claimer());
+        }
+      }
       return true;
     } else {
       return false;
     }
   }
 
-/*
-check voting:
-- iterate through project's tasks & check if they need to be voted on
-- start polls for those that need it, others can be opened to rewards (task, validators)
-*/
-
-/*
   function checkVoting(address _projectAddress) public returns (bool) {
     Project project = Project(_projectAddress);
     require(project.state() == 4);
-    if(ProjectLibrary.timesUp(_projectAddress)) {
-      project.setState(5, 0);
-      startPoll(_projectAddress, project.voteCommitPeriod(), project.voteRevealPeriod());
-      return true;
+    if (ProjectLibrary.timesUp(_projectAddress)) {
+      uint256 nextDeadline = now + project.voteCommitPeriod();
+      project.setState(5, nextDeadline);
+      for(uint i = 0; i < project.tasks().length; i++) {
+        Task task = Task(project.tasks(i);
+        if (task.complete()) {
+          if (task.opposingValidator()) {
+
+          } else {
+            task.markTaskClaimable();
+          }
+        }
+      }
     }
-    return false;
   }
+
+/*
 
   function checkEnd(address _projectAddress) public returns (bool) {     //don't know where this gets called - maybe separate UI thing
     Project project = Project(_projectAddress);

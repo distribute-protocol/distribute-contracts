@@ -110,20 +110,6 @@ library ProjectLibrary {
     }
   }
 
-  function setValidationState(uint256 _index, address _tokenRegistry, address _reputationRegistry, address _projectAddress, bool isPassed) public {
-    Project project = Project(_projectAddress);
-    Task task = Task(project.tasks(_index));
-    if(isPassed) {                          // project succeeds
-      task.setValidationReward(0);
-    } else {                                // project fails
-      burnStake(_tokenRegistry, _reputationRegistry, _projectAddress);
-      task.setValidationReward(1);
-    }
-    if (task.validateReward() == 0) {
-      task.setOpposingValidator();
-    }
-  }
-
   function validatorRewardHandler(address _tokenRegistry, address _projectAddress, address _staker, uint256 _index) public returns (uint256 _refund) {
     uint256 refund;
     Project project = Project(_projectAddress);
@@ -166,9 +152,11 @@ library ProjectLibrary {
   function claimTaskReward(address _tokenRegistry, uint256 _index, address _projectAddress, address _claimer) public onlyInState(_projectAddress, 6) returns (uint256) {
     Project project = Project(_projectAddress);
     Task task = Task(project.tasks(_index));
-    require(task.claimer() == _claimer);
+    require(task.claimer() == _claimer && task.claimableByWorker());
+    uint256 weiReward = task.weiReward();
+    uint256 reputationReward = task.reputationReward();
     task.setTaskReward(0, 0, _claimer);
-    TokenRegistry(_tokenRegistry).transferWeiReward(_claimer, task.weiReward());
-    return task.reputationReward();
+    TokenRegistry(_tokenRegistry).transferWeiReward(_claimer, weiReward);
+    return reputationReward;
   }
 }

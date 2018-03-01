@@ -122,7 +122,7 @@ contract TokenRegistry {
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
   // =====================================================================
 
-  function validate(address _projectAddress, uint256 _index, uint256 _tokens, bool _validationState) public {
+  function validateTask(address _projectAddress, uint256 _index, uint256 _tokens, bool _validationState) public {
     require(distributeToken.balanceOf(msg.sender) >= _tokens);
     distributeToken.transferToEscrow(msg.sender, _tokens);
     ProjectLibrary.validate(_projectAddress, msg.sender, _index, _tokens, _validationState);
@@ -170,11 +170,20 @@ contract TokenRegistry {
   }
 
   // make this only TR
-  function rewardValidator(address _projectAddress, address _validator, uint256 _reward) public {
-    require(msg.sender == address(this));
-    require(Project(_projectAddress).state() == 6 || Project(_projectAddress).state() == 7);
-    require(projectRegistry.votingPollId(msg.sender) != 0);
-    distributeToken.transferWeiFrom(_validator, _reward);
+  function rewardValidator(address _projectAddress, uint256 _index) public {
+    Project project = Project(_projectAddress);
+    Task task = Task(project.tasks(_index));
+    require(task.claimable());
+    var (status, reward) = task.validators(msg.sender)
+    if (task.totalValidateNegative() == 0) {
+      require(status == 1);
+    } else if (task.totalValidateAffirmative() == 0) {
+      require(status == 0);
+    } else {
+      revert();
+    }
+    distributeToken.transferFromEscrow(msg.sender, reward);
+    distributeToken.rewardTokens(msg.sender, reward / 100);
   }
 
   function transferWeiReward(address _destination, uint256 _weiVal) public onlyRR() {

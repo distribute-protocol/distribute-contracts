@@ -13,6 +13,7 @@ contract Task {
   ProjectRegistry projectRegistry;
   TokenRegistry tokenRegistry;
   bytes32 public taskHash;
+  bool public claimable;
 
   uint256 public weiReward;
   uint256 public reputationReward;
@@ -83,21 +84,15 @@ contract Task {
     _validationVal == 1
       ? totalValidateAffirmative += _tokens
       : totalValidateNegative += _tokens;
-  }
-
-  // handles reward calculations  
-  function setValidationReward(uint256 _validationVal) public onlyPR {
-    if (_validationVal == 0) {
-      validateReward = totalValidateNegative;
-      totalValidateNegative = 0;
-    } else if (_validationVal == 1) {
-      validateReward = totalValidateAffirmative;
-      totalValidateAffirmative = 0;
+    if (!opposingValidator && (totalValidateAffirmative != 0 && totalValidateNegative != 0)) {
+      opposingValidator = true;
     }
   }
 
-  function setOpposingValidator() public onlyPR {
-    opposingValidator = false;
+  function markTaskClaimable() public onlyPR {
+    claimable = true;
+    if (totalValidateAffirmative > totalValidateNegative) {
+      claimableByWorker = true;
+    }
   }
-
 }
