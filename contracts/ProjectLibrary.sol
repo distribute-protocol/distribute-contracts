@@ -4,6 +4,7 @@ import "./Project.sol";
 import "./TokenRegistry.sol";
 import "./ReputationRegistry.sol";
 import "./ProjectRegistry.sol";
+import "./DistributeToken.sol";
 
 library ProjectLibrary {
 
@@ -157,16 +158,13 @@ library ProjectLibrary {
   // TASK FUNCTIONS
   // =====================================================================
 
-  /* ####### NEEDS TESTS ####### */
   function claimTask(address _projectAddress, bytes32 _taskHash, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyInState(_projectAddress, 3) {
     Project project = Project(_projectAddress);
-    //###############################################
-    var (,claimer) = project.taskRewards(_taskHash);
-    require(claimer == 0);
+    var (,claimTime, complete, claimer) = project.taskRewards(_taskHash);
+    require(claimer == 0 || now > (claimTime + project.turnoverTime()) && !complete);
     project.setTaskReward(_taskHash, _weiVal, _reputationVal, _claimer);
   }
 
-  /* ####### NEEDS TESTS ####### */
   function claimTaskReward(address _tokenRegistry, address _projectAddress, bytes32 _taskHash, address _claimer) public onlyInState(_projectAddress, 6) returns (uint256) {
     Project project = Project(_projectAddress);
     var (weiReward, reputationReward,) = project.taskRewards(_taskHash);

@@ -20,13 +20,6 @@ contract ProjectRegistry {
   address reputationRegistryAddress;
   address tokenRegistryAddress;
 
-  /* uint256 openStatePeriod = 1 weeks; */
-  uint256 stakedStatePeriod = 1 weeks;
-  uint256 activeStatePeriod = 1 weeks;
-  uint256 validateStatePeriod = 1 weeks;
-  uint256 voteCommitPeriod = 1 weeks;
-  uint256 voteRevealPeriod = 1 weeks;
-
   // will need to be changed to make a poll for each task
   mapping(address => uint256) public votingPollId;
 
@@ -128,7 +121,7 @@ contract ProjectRegistry {
     Project project = Project(_projectAddress);
     require(project.state() == 1);    //check that project is in the proposed state
     if(ProjectLibrary.isStaked(_projectAddress)) {
-      uint256 nextDeadline = now + stakedStatePeriod;
+      uint256 nextDeadline = now + project.stakedStatePeriod();
       project.setState(2, nextDeadline);
       return true;
     } else {
@@ -146,7 +139,7 @@ contract ProjectRegistry {
     if(ProjectLibrary.timesUp(_projectAddress)) {
       uint256 nextDeadline;
       if(stakedProjects[_projectAddress].topTaskHash != 0) {
-        nextDeadline = now + activeStatePeriod;
+        nextDeadline = now + project.activeStatePeriod();
         project.setState(3, nextDeadline);
         return true;
       } else {
@@ -161,7 +154,7 @@ contract ProjectRegistry {
     Project project = Project(_projectAddress);
     require(project.state() == 3);
     if (ProjectLibrary.timesUp(_projectAddress)) {
-      uint256 nextDeadline = now + validateStatePeriod;
+      uint256 nextDeadline = now + project.validateStatePeriod();
       project.setState(4, nextDeadline);
       return true;
     } else {
@@ -174,7 +167,7 @@ contract ProjectRegistry {
     require(project.state() == 4);
     if(ProjectLibrary.timesUp(_projectAddress)) {
       project.setState(5, 0);
-      startPoll(_projectAddress, voteCommitPeriod, voteRevealPeriod);
+      startPoll(_projectAddress, project.voteCommitPeriod(), project.voteRevealPeriod());
       return true;
     }
     return false;
