@@ -169,7 +169,7 @@ contract ProjectRegistry {
     require(project.state() == 3);
     if (ProjectLibrary.timesUp(_projectAddress)) {
       uint256 nextDeadline = now + validateStatePeriod;
-      project.setState(5, nextDeadline);
+      project.setState(4, nextDeadline);
       return true;
     } else {
       return false;
