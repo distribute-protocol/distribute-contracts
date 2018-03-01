@@ -122,11 +122,10 @@ contract TokenRegistry {
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
   // =====================================================================
 
-  function validate(address _projectAddress, uint256 _tokens, bool _validationState) public {
-    // require(projectRegistry.projectStates(_projectAddress) == 5);
+  function validate(address _projectAddress, uint256 _index, uint256 _tokens, bool _validationState) public {
     require(distributeToken.balanceOf(msg.sender) >= _tokens);
     distributeToken.transferToEscrow(msg.sender, _tokens);
-    ProjectLibrary.validate(_projectAddress, msg.sender, _tokens, _validationState);
+    ProjectLibrary.validate(_projectAddress, msg.sender, _index, _tokens, _validationState);
   }
 
   function voteCommit(address _projectAddress, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain

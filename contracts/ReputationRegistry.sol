@@ -149,7 +149,7 @@ modifier onlyPR() {
   }
 
   // =====================================================================
-  // VALIDATE/VOTING FUNCTIONALITY
+  // VOTING FUNCTIONALITY
   // =====================================================================
 
   function voteCommit(address _projectAddress, uint256 _reputation, bytes32 _secretHash, uint256 _prevPollID) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
@@ -197,8 +197,8 @@ modifier onlyPR() {
     balances[msg.sender] += _refund * 3 / 2;
   }
 
-  function rewardTask(address _projectAddress, bytes32 _taskHash) public {                                   //called by worker who completed a task
-    uint256 reward = ProjectLibrary.claimTaskReward(tokenRegistryAddress, _projectAddress, _taskHash, msg.sender);
+  function rewardTask(address _projectAddress, uint8 _index) public {                                   //called by worker who completed a task
+    uint256 reward = ProjectLibrary.claimTaskReward(tokenRegistryAddress, _index, _projectAddress, msg.sender);
     totalFreeSupply += reward;
     balances[msg.sender] += reward;
   }

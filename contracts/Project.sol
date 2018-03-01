@@ -11,6 +11,7 @@ import "./ReputationRegistry.sol";
 import "./ProjectRegistry.sol";
 import "./DistributeToken.sol";
 import "./ProjectLibrary.sol";
+import "./Task.sol";
 
 contract Project {
   TokenRegistry tokenRegistry;
@@ -42,12 +43,9 @@ contract Project {
   uint256 public proposerType;
   uint256 public proposerStake;
   uint256 public stakingPeriod;
-  /* uint256 public cost; */
   uint256 public weiBal;
   uint256 public nextDeadline;
-  //set by proposer, total cost of project in ETH, to be fulfilled by capital token holders
   uint256 public weiCost;
-  //total amount of staked worker tokens needed, TBD
   uint256 public reputationCost;
 
   uint256 public totalTokensStaked;           //amount of capital tokens currently staked
@@ -55,29 +53,7 @@ contract Project {
   mapping (address => uint) public stakedTokenBalances;
   mapping (address => uint) public stakedReputationBalances;
 
-  struct Validator {
-    uint256 status;
-    uint256 stake;
-  }
-
-
- bool public opposingValidator = true;
- uint256 public validateReward;
-
-  mapping (address => Validator) public validators;
-  uint256 public totalValidateAffirmative;
-  uint256 public totalValidateNegative;
-
-  struct Reward {
-    uint256 weiReward;
-    uint256 reputationReward;
-    uint256 claimTime;
-    bool complete;
-    address claimer;
-  }
-
-  mapping (bytes32 => Reward) public taskRewards;
-
+  address[] public tasks;
 
   // =====================================================================
   // MODIFIERS
@@ -151,34 +127,8 @@ contract Project {
     stakedTokenBalances[_staker] = 0;
   }
 
-  function clearValidatorStake(address _staker) public onlyTR {
-    validators[_staker].stake = 0;
-  }
-
   function clearReputationStake(address _staker) public onlyRR {
     stakedReputationBalances[_staker] = 0;
-  }
-
-  function setValidator(address _staker, uint256 _validationVal, uint256 _tokens) public onlyTR {
-    validators[_staker] = Validator(_validationVal, _tokens);
-  }
-
-  function addValidationTokens(uint256 _validationVal, uint256 _tokens) public onlyTR {
-    _validationVal == 1
-      ? totalValidateAffirmative += _tokens
-      : totalValidateNegative += _tokens;
-  }
-  function setValidationReward(uint256 _validationVal) public onlyPR {
-    if (_validationVal == 0) {
-      validateReward = totalValidateNegative;
-      totalValidateNegative = 0;
-    } else if (_validationVal == 1) {
-      validateReward = totalValidateAffirmative;
-      totalValidateAffirmative = 0;
-    }
-  }
-  function setOpposingValidator() public onlyPR {
-    opposingValidator = false;
   }
 
   function clearStake() public onlyPR {
@@ -186,18 +136,8 @@ contract Project {
     totalReputationStaked = 0;
   }
 
-  function setTaskReward(bytes32 _taskHash, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyPR {
-    Reward storage taskReward = taskRewards[_taskHash];
-    taskReward.weiReward = _weiVal;
-    taskReward.reputationReward = _reputationVal;
-    taskReward.claimTime = now;
-    taskReward.complete = false;
-    taskReward.claimer = _claimer;
-  }
-
-  function markTaskComplete(bytes32 _taskHash) public onlyPR onlyInState(3){
-    Reward storage taskReward = taskRewards[_taskHash];
-    taskReward.complete = true;
+  function setTaskAddress(address _taskAddress, uint _index) public onlyPR {
+    tasks[_index] = _taskAddress;
   }
 
   // =====================================================================

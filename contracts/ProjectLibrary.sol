@@ -4,6 +4,7 @@ import "./Project.sol";
 import "./TokenRegistry.sol";
 import "./ReputationRegistry.sol";
 import "./ProjectRegistry.sol";
+import "./Task.sol";
 
 library ProjectLibrary {
 
@@ -59,47 +60,27 @@ library ProjectLibrary {
     return project.weiCost() <= project.weiBal() && project.reputationCost() <= project.totalReputationStaked();
   }
 
-  /* ####### NEEDS TESTS ####### */
-  function refundStaker(address _projectAddress, address _staker) public returns (uint256 _refund) {  //called by THR or WR, allow return of staked, validated, and
+// happens at the end!
+  function refundStaker(address _projectAddress, address _staker) public returns (uint256 _refund) {
     Project project = Project(_projectAddress);
-    /* require(msg.sender == address(tokenRegistry) ||  msg.sender == address(reputationRegistry)); */
     require(project.state() == 6);
     if (project.isTR(msg.sender)) {
-      return handleTokenStaker(msg.sender, _projectAddress, _staker);
+      return handleTokenStaker(_projectAddress, _staker);
     } else if (project.isRR(msg.sender)) {
       return handleReputationStaker(_projectAddress, _staker);
     }
   }
 
-  function handleTokenStaker(address _tokenRegistry, address _projectAddress, address _staker) internal returns (uint256 _refund) {
-    uint256 refund;     //tokens
+  // this happens at the end when all tasks are completed!
+  function handleTokenStaker(address _projectAddress, address _staker) internal returns (uint256 _refund) {
+    uint256 refund;
+    // account for proportion of successful tasks
     Project project = Project(_projectAddress);
     if(project.totalTokensStaked() != 0) {
       refund = project.stakedTokenBalances(_staker);
       project.clearTokenStake(_staker);
     }
-    refund += validatorRewardHandler(_tokenRegistry, _projectAddress, _staker);
     tokenRefund(_staker, refund);
-    return refund;
-  }
-
-  function validatorRewardHandler(address _tokenRegistry, address _projectAddress, address _staker) internal returns (uint256 _refund) {
-    uint256 refund;
-    Project project = Project(_projectAddress);
-    if(project.totalValidateNegative() != 0 || project.totalValidateAffirmative() != 0) {
-      var (,stake) = project.validators(_staker);
-      refund += stake;
-      uint256 denom;
-      project.state() == 7
-        ? denom = project.totalValidateNegative()
-        : denom = project.totalValidateAffirmative();
-        if (project.opposingValidator() == true) {
-          refund += project.validateReward() * stake / denom;
-        } else {
-          TokenRegistry(_tokenRegistry).rewardValidator(_projectAddress, _staker, (project.weiCost() * stake / denom));
-        }
-      project.clearValidatorStake(_staker);
-    }
     return refund;
   }
 
@@ -117,33 +98,51 @@ library ProjectLibrary {
   // =====================================================================
   // VALIDATOR FUNCTIONS
   // =====================================================================
-  function validate(address _projectAddress, address _staker, uint256 _tokens, bool _validationState) public onlyInState(_projectAddress, 4) {
-    //check for free tokens done in THR
-    //increments validation tokens in Project.sol only
-    // NEEDS A CHECK FOR REMOVING VALIDATION / CHANGING VALIDATION
+  function validate(address _projectAddress, address _staker, uint256 _index, uint256 _tokens, bool _validationState) public onlyInState(_projectAddress, 4) {
     Project project = Project(_projectAddress);
+    Task task = Task(project.tasks(_index));
     require(_tokens > 0);
     if (_validationState == true) {
-      project.setValidator(_staker, 1, _tokens);
-      project.addValidationTokens(1, _tokens);
+      task.setValidator(_staker, 1, _tokens);
     }
     else if (_validationState == false){
-      project.setValidator(_staker, 0, _tokens);
-      project.addValidationTokens(0, _tokens);
+      task.setValidator(_staker, 0, _tokens);
     }
   }
 
-  function setValidationState(address _tokenRegistry, address _reputationRegistry, address _projectAddress, bool isPassed) public {
+  function setValidationState(uint256 _index, address _tokenRegistry, address _reputationRegistry, address _projectAddress, bool isPassed) public {
     Project project = Project(_projectAddress);
+    Task task = Task(project.tasks(_index));
     if(isPassed) {                          // project succeeds
-      project.setValidationReward(0);
+      task.setValidationReward(0);
     } else {                                // project fails
       burnStake(_tokenRegistry, _reputationRegistry, _projectAddress);
-      project.setValidationReward(1);
+      task.setValidationReward(1);
     }
-    if (project.validateReward() == 0) {
-      project.setOpposingValidator();
+    if (task.validateReward() == 0) {
+      task.setOpposingValidator();
     }
+  }
+
+  function validatorRewardHandler(address _tokenRegistry, address _projectAddress, address _staker, uint256 _index) public returns (uint256 _refund) {
+    uint256 refund;
+    Project project = Project(_projectAddress);
+    Task task = Task(project.tasks(_index));
+    if(task.totalValidateNegative() != 0 || task.totalValidateAffirmative() != 0) {
+      var (,stake) = task.validators(_staker);
+      refund += stake;
+      uint256 denom;
+      project.state() == 7
+        ? denom = task.totalValidateNegative()
+        : denom = task.totalValidateAffirmative();
+        if (task.opposingValidator() == true) {
+          refund += task.validateReward() * stake / denom;
+        } else {
+          TokenRegistry(_tokenRegistry).rewardValidator(_projectAddress, _staker, (project.weiCost() * stake / denom));
+        }
+      task.clearValidatorStake(_staker);
+    }
+    return refund;
   }
 
   function burnStake(address _tokenRegistry, address _reputationRegistry, address _projectAddress) internal {
@@ -157,20 +156,19 @@ library ProjectLibrary {
   // TASK FUNCTIONS
   // =====================================================================
 
-  function claimTask(address _projectAddress, bytes32 _taskHash, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyInState(_projectAddress, 3) {
+  function claimTask(address _projectAddress, uint256 _index, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyInState(_projectAddress, 3) {
     Project project = Project(_projectAddress);
-    var (,claimTime, complete, claimer) = project.taskRewards(_taskHash);
-    require(claimer == 0 || now > (claimTime + project.turnoverTime()) && !complete);
-    project.setTaskReward(_taskHash, _weiVal, _reputationVal, _claimer);
+    Task task = Task(project.tasks(_index));
+    require(task.claimer() == 0 || now > (task.claimTime() + project.turnoverTime()) && !task.complete());
+    task.setTaskReward(_weiVal, _reputationVal, _claimer);
   }
 
-  function claimTaskReward(address _tokenRegistry, address _projectAddress, bytes32 _taskHash, address _claimer) public onlyInState(_projectAddress, 6) returns (uint256) {
+  function claimTaskReward(address _tokenRegistry, uint256 _index, address _projectAddress, address _claimer) public onlyInState(_projectAddress, 6) returns (uint256) {
     Project project = Project(_projectAddress);
-    var (weiReward, reputationReward,) = project.taskRewards(_taskHash);
-    var (,claimer) = project.taskRewards(_taskHash);
-    require(claimer == _claimer);
-    project.setTaskReward(_taskHash, 0, 0, _claimer);
-    TokenRegistry(_tokenRegistry).transferWeiReward(_claimer, weiReward);
-    return reputationReward;
+    Task task = Task(project.tasks(_index));
+    require(task.claimer() == _claimer);
+    task.setTaskReward(0, 0, _claimer);
+    TokenRegistry(_tokenRegistry).transferWeiReward(_claimer, task.weiReward());
+    return task.reputationReward();
   }
 }
