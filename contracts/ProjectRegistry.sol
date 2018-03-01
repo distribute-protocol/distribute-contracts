@@ -30,13 +30,6 @@ contract ProjectRegistry {
   // will need to be changed to make a poll for each task
   mapping(address => uint256) public votingPollId;
 
-  struct ProposedState {
-    address proposer;         //who is the proposer
-    uint256 proposerStake;    //how much did they stake in tokens
-    uint256 cost;             //cost of the project in ETH/tokens?
-    uint256 stakingPeriod;
-  }
-
   struct StakedState {
     bytes32 topTaskHash;
     mapping(address => bytes32) taskHashSubmissions;
@@ -246,6 +239,12 @@ contract ProjectRegistry {
     ProjectLibrary.claimTask(_projectAddress, taskHash, _weiVal, _reputationVal, _claimer);
   }
 
+  function submitTaskComplete(address _projectAddress, bytes32 _taskHash) public {
+    Project project = Project(_projectAddress);
+    var (,claimer) = project.taskRewards(_taskHash);
+    require(claimer == msg.sender);
+    project.markTaskComplete(_taskHash);
+  }
   /*function checkHash(bytes32 taskHash, string _taskDescription, uint256 _weiVal, uint256 _reputationVal) public view {
     require(taskHash == keccak256(_taskDescription, _weiVal, _reputationVal));
   }*/
