@@ -4,7 +4,6 @@ import "./Project.sol";
 import "./TokenRegistry.sol";
 import "./ReputationRegistry.sol";
 import "./ProjectRegistry.sol";
-import "./DistributeToken.sol";
 
 library ProjectLibrary {
 
