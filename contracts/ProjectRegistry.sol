@@ -11,6 +11,7 @@ import "./TokenRegistry.sol";
 import "./ReputationRegistry.sol";
 import "./ProjectLibrary.sol";
 import "./library/PLCRVoting.sol";
+import "./Task.sol";
 
 contract ProjectRegistry {
   DistributeToken distributeToken;
@@ -28,8 +29,6 @@ contract ProjectRegistry {
     mapping(address => bytes32) taskHashSubmissions;
     mapping(bytes32 => uint256) numSubmissionsByWeight;
   }
-
-  mapping (address => bytes32[]) public projectTaskList;      //store project task list for each project address
 
   mapping (address => StakedState) public stakedProjects;
 
@@ -217,7 +216,10 @@ contract ProjectRegistry {
     require(ProjectLibrary.isStaker(_projectAddress, msg.sender) == true);
     require(project.state() == 2);
     require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
-    projectTaskList[_projectAddress] = _hashes;
+    for (uint256 i = 0; i < _hashes.length; i++) {
+      Task newTask = new Task(_hashes[i]);
+      project.setTaskAddress(address(newTask), i);
+    }
   }
 
   // =====================================================================
@@ -226,17 +228,19 @@ contract ProjectRegistry {
 
   function claimTask(address _projectAddress, uint256 _index, string _taskDescription, address _claimer, uint _weighting, uint _weiVal, uint _reputationVal) public onlyRR() returns (bytes32) {
     // 100% => percentage = 100
-    bytes32 taskHash = projectTaskList[_projectAddress][_index];
-    require(taskHash == keccak256(_taskDescription, _weighting));
+    Project project = Project(_projectAddress);
+    Task task = Task(project.tasks(_index));
+    require(task.taskHash() == keccak256(_taskDescription, _weighting));
     // weiVal is wei reward of the task as indicated by its percentage
-    ProjectLibrary.claimTask(_projectAddress, taskHash, _weiVal, _reputationVal, _claimer);
+    ProjectLibrary.claimTask(_projectAddress, _index, _weiVal, _reputationVal, _claimer);
   }
 
-  function submitTaskComplete(address _projectAddress, bytes32 _taskHash) public {
+  function submitTaskComplete(address _projectAddress, uint256 _index) public {
     Project project = Project(_projectAddress);
-    var (,claimer) = project.taskRewards(_taskHash);
-    require(claimer == msg.sender);
-    project.markTaskComplete(_taskHash);
+    Task task = Task(project.tasks(_index));
+    require(task.claimer() == msg.sender);
+    require(project.state() == 3);
+    task.markTaskComplete();
   }
   /*function checkHash(bytes32 taskHash, string _taskDescription, uint256 _weiVal, uint256 _reputationVal) public view {
     require(taskHash == keccak256(_taskDescription, _weiVal, _reputationVal));

@@ -123,7 +123,6 @@ contract TokenRegistry {
   // =====================================================================
 
   function validate(address _projectAddress, uint256 _tokens, bool _validationState) public {
-    // require(projectRegistry.projectStates(_projectAddress) == 5);
     require(distributeToken.balanceOf(msg.sender) >= _tokens);
     distributeToken.transferToEscrow(msg.sender, _tokens);
     ProjectLibrary.validate(_projectAddress, msg.sender, _tokens, _validationState);

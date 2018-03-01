@@ -4,6 +4,7 @@ import "./Project.sol";
 import "./TokenRegistry.sol";
 import "./ReputationRegistry.sol";
 import "./ProjectRegistry.sol";
+import "./Task.sol";
 
 library ProjectLibrary {
 
@@ -157,20 +158,19 @@ library ProjectLibrary {
   // TASK FUNCTIONS
   // =====================================================================
 
-  function claimTask(address _projectAddress, bytes32 _taskHash, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyInState(_projectAddress, 3) {
+  function claimTask(address _projectAddress, uint256 _index, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyInState(_projectAddress, 3) {
     Project project = Project(_projectAddress);
-    var (,claimTime, complete, claimer) = project.taskRewards(_taskHash);
-    require(claimer == 0 || now > (claimTime + project.turnoverTime()) && !complete);
-    project.setTaskReward(_taskHash, _weiVal, _reputationVal, _claimer);
+    Task task = Task(project.tasks(_index));
+    require(task.claimer() == 0 || now > (task.claimTime() + project.turnoverTime()) && !task.complete());
+    task.setTaskReward(_weiVal, _reputationVal, _claimer);
   }
 
-  function claimTaskReward(address _tokenRegistry, address _projectAddress, bytes32 _taskHash, address _claimer) public onlyInState(_projectAddress, 6) returns (uint256) {
+  function claimTaskReward(address _tokenRegistry, uint256 _index, address _projectAddress, address _claimer) public onlyInState(_projectAddress, 6) returns (uint256) {
     Project project = Project(_projectAddress);
-    var (weiReward, reputationReward,) = project.taskRewards(_taskHash);
-    var (,claimer) = project.taskRewards(_taskHash);
-    require(claimer == _claimer);
-    project.setTaskReward(_taskHash, 0, 0, _claimer);
-    TokenRegistry(_tokenRegistry).transferWeiReward(_claimer, weiReward);
-    return reputationReward;
+    Task task = Task(project.tasks(_index));
+    require(task.claimer() == _claimer);
+    task.setTaskReward(0, 0, _claimer);
+    TokenRegistry(_tokenRegistry).transferWeiReward(_claimer, task.weiReward());
+    return task.reputationReward();
   }
 }
