@@ -169,9 +169,10 @@ library ProjectLibrary {
   /* ####### NEEDS TESTS ####### */
   function claimTaskReward(address _tokenRegistry, address _projectAddress, bytes32 _taskHash, address _claimer) public onlyInState(_projectAddress, 6) returns (uint256) {
     Project project = Project(_projectAddress);
-    var (weiReward, reputationReward, claimer) = project.taskRewards(_taskHash);
+    var (weiReward, reputationReward,) = project.taskRewards(_taskHash);
+    var (,claimer) = project.taskRewards(_taskHash);
     require(claimer == _claimer);
-    project.setTaskReward(_taskHash, 0, 0, 0);
+    project.setTaskReward(_taskHash, 0, 0, _claimer);
     TokenRegistry(_tokenRegistry).transferWeiReward(_claimer, weiReward);
     return reputationReward;
   }

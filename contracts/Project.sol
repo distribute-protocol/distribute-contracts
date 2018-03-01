@@ -37,6 +37,7 @@ contract Project {
   /* uint256 public cost; */
   uint256 public weiBal;
   uint256 public nextDeadline;
+  uint256 public turnoverTime;
   //set by proposer, total cost of project in ETH, to be fulfilled by capital token holders
   uint256 public weiCost;
   //total amount of staked worker tokens needed, TBD
@@ -63,6 +64,7 @@ contract Project {
   struct Reward {
     uint256 weiReward;
     uint256 reputationReward;
+    bool complete;
     address claimer;
   }
 
@@ -180,8 +182,14 @@ contract Project {
     Reward storage taskReward = taskRewards[_taskHash];
     taskReward.weiReward = _weiVal;
     taskReward.reputationReward = _reputationVal;
+    taskReward.complete = false;
     taskReward.claimer = _claimer;
     /* taskRewards[_taskHash] = _reward; */
+  }
+
+  function markTaskComplete(bytes32 _taskHash) public onlyPR onlyInState(3){
+    Reward storage taskReward = taskRewards[_taskHash];
+    taskReward.complete = true;
   }
 
   // =====================================================================
