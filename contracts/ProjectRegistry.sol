@@ -161,6 +161,13 @@ contract ProjectRegistry {
     }
   }
 
+/*
+check voting:
+- iterate through project's tasks & check if they need to be voted on
+- start polls for those that need it, others can be opened to rewards (task, validators)
+*/
+
+/*
   function checkVoting(address _projectAddress) public returns (bool) {
     Project project = Project(_projectAddress);
     require(project.state() == 4);
@@ -181,7 +188,7 @@ contract ProjectRegistry {
       ? project.setState(6, 0)
       : project.setState(7, 0);
     return true;
-  }
+  } */
 
   // =====================================================================
   // STAKED PROJECT FUNCTIONS
@@ -217,7 +224,7 @@ contract ProjectRegistry {
     require(project.state() == 2);
     require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
     for (uint256 i = 0; i < _hashes.length; i++) {
-      Task newTask = new Task(_hashes[i]);
+      Task newTask = new Task(_hashes[i], tokenRegistry);
       project.setTaskAddress(address(newTask), i);
     }
   }

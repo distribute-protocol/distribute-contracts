@@ -122,10 +122,10 @@ contract TokenRegistry {
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
   // =====================================================================
 
-  function validate(address _projectAddress, uint256 _tokens, bool _validationState) public {
+  function validate(address _projectAddress, uint256 _index, uint256 _tokens, bool _validationState) public {
     require(distributeToken.balanceOf(msg.sender) >= _tokens);
     distributeToken.transferToEscrow(msg.sender, _tokens);
-    ProjectLibrary.validate(_projectAddress, msg.sender, _tokens, _validationState);
+    ProjectLibrary.validate(_projectAddress, msg.sender, _index, _tokens, _validationState);
   }
 
   function voteCommit(address _projectAddress, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
@@ -160,8 +160,8 @@ contract TokenRegistry {
   function burnTokens(uint256 _tokens) public onlyPR() {              //check that valid project is calling this function
     distributeToken.burn(_tokens);
   }
-  function refundStaker(address _projectAddress) public {
-    uint256 refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender);
+  function refundStaker(address _projectAddress, uint256 _index) public {
+    uint256 refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender, _index);
     distributeToken.transferFromEscrow(msg.sender, refund);
     distributeToken.rewardTokens(msg.sender, (refund * 50 / 100));
     //rescue locked tokens that weren't revealed
