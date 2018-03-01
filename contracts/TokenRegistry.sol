@@ -160,8 +160,8 @@ contract TokenRegistry {
   function burnTokens(uint256 _tokens) public onlyPR() {              //check that valid project is calling this function
     distributeToken.burn(_tokens);
   }
-  function refundStaker(address _projectAddress, uint256 _index) public {
-    uint256 refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender, _index);
+  function refundStaker(address _projectAddress) public {
+    uint256 refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender);
     distributeToken.transferFromEscrow(msg.sender, refund);
     distributeToken.rewardTokens(msg.sender, (refund * 50 / 100));
     //rescue locked tokens that weren't revealed
