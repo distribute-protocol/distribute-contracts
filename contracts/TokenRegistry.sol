@@ -11,7 +11,6 @@ import "./Project.sol";
 import "./ProjectLibrary.sol";
 import "./DistributeToken.sol";
 import "./library/PLCRVoting.sol";
-import "./ReputationRegistry.sol";
 import "./Task.sol";
 
 contract TokenRegistry {
@@ -19,7 +18,6 @@ contract TokenRegistry {
 // =====================================================================
 // STATE VARIABLES
 // =====================================================================
-  ReputationRegistry reputationRegistry;
   ProjectRegistry projectRegistry;
   DistributeToken distributeToken;
   PLCRVoting plcrVoting;
@@ -43,10 +41,6 @@ contract TokenRegistry {
     require(msg.sender == address(projectRegistry));
     _;
   }
-  modifier onlyRR() {
-    require(msg.sender == address(reputationRegistry));
-    _;
-  }
 
 // =====================================================================
 // FUNCTIONS
@@ -55,10 +49,9 @@ contract TokenRegistry {
   // =====================================================================
   // QUASI-CONSTRUCTOR
   // =====================================================================
-  function init(address _distributeToken, address _reputationRegistry, address _projectRegistry, address _plcrVoting) public {       //contract is created
-    require(address(distributeToken) == 0 && address(reputationRegistry) == 0 && address(projectRegistry) == 0 && address(plcrVoting) == 0);
+  function init(address _distributeToken, address _projectRegistry, address _plcrVoting) public {       //contract is created
+    require(address(distributeToken) == 0 && address(projectRegistry) == 0 && address(plcrVoting) == 0);
     distributeToken = DistributeToken(_distributeToken);
-    reputationRegistry = ReputationRegistry(_reputationRegistry);
     projectRegistry = ProjectRegistry(_projectRegistry);
     plcrVoting = PLCRVoting(_plcrVoting);
   }
