@@ -63,7 +63,7 @@ library ProjectLibrary {
 // happens at the end!
   function refundStaker(address _projectAddress, address _staker) public returns (uint256) {
     Project project = Project(_projectAddress);
-    require(project.state() == 6);
+    require(project.state() == 6 || (project.state() == 8));
     if (project.isTR(msg.sender)) {
       return handleTokenStaker(_projectAddress, _staker);
     } else if (project.isRR(msg.sender)) {
