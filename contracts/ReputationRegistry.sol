@@ -15,8 +15,7 @@ import "./library/PLCRVoting.sol";
 import "./Task.sol";
 
 /*
-  keeps track of worker token balances of all
-  states (free, staked, voted
+  keeps track of reputation balances
 */
 
 contract ReputationRegistry{

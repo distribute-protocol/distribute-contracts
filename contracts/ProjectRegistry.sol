@@ -6,7 +6,6 @@
 pragma solidity ^0.4.8;
 
 import "./Project.sol";
-import "./DistributeToken.sol";
 import "./TokenRegistry.sol";
 import "./ReputationRegistry.sol";
 import "./ProjectLibrary.sol";
@@ -14,11 +13,9 @@ import "./library/PLCRVoting.sol";
 import "./Task.sol";
 
 contract ProjectRegistry {
-  DistributeToken distributeToken;
   TokenRegistry tokenRegistry;
   ReputationRegistry reputationRegistry;
   PLCRVoting plcrVoting;
-  address reputationRegistryAddress;
 
   uint256 public stakedStatePeriod = 1 weeks;
   uint256 public activeStatePeriod = 2 weeks;
@@ -39,11 +36,10 @@ contract ProjectRegistry {
   // =====================================================================
   // CONSTRUCTOR
   // =====================================================================
-  function ProjectRegistry(address _distributeToken, address _tokenRegistry, address _reputationRegistry, address _plcrVoting) public {       //contract is created
+  function ProjectRegistry(address _tokenRegistry, address _reputationRegistry, address _plcrVoting) public {       //contract is created
     require(address(tokenRegistry) == 0 && address(reputationRegistry) == 0);
     tokenRegistry = TokenRegistry(_tokenRegistry);
     reputationRegistry = ReputationRegistry(_reputationRegistry);
-    distributeToken = DistributeToken(_distributeToken);
     plcrVoting = PLCRVoting(_plcrVoting);
   }
   // =====================================================================
