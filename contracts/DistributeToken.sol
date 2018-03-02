@@ -14,7 +14,6 @@ contract DistributeToken is StandardToken {
   uint8 public constant decimals = 18;
 
   uint256 public totalSupply = 0;               //total supply of capital tokens in all staking states
-  uint256 public totalFreeSupply = 0;           //total supply of free capital tokens (not staked, validated, or voted)
 
   uint256 public weiBal;
 
@@ -65,7 +64,6 @@ contract DistributeToken is StandardToken {
       require(msg.value >= weiRequiredVal);
 
       totalSupply += _tokens;
-      totalFreeSupply += _tokens;
       balances[msg.sender] += _tokens;
 
       weiBal += weiRequiredVal;
@@ -78,20 +76,19 @@ contract DistributeToken is StandardToken {
       }
   }
 
-  function burn(uint256 _amountToBurn) public onlyTR() {
-    require(_amountToBurn <= totalSupply && _amountToBurn > 0);
-    totalSupply -= _amountToBurn;
+  function burn(uint256 _value) public onlyTR() {
+    require(_value <= totalSupply && _value > 0);
+    totalSupply -= _value;
   }
 
-  function sell(uint256 _amountToBurn) public {      //free tokens only
-      require(_amountToBurn > 0 && (balances[msg.sender]) >= _amountToBurn);
+  function sell(uint256 _value) public {      //free tokens only
+      require(_value > 0 && (balances[msg.sender]) >= _value);
       //determine how much you can leave with.
-      uint256 reward = _amountToBurn * currentPrice();    //truncation - remainder discarded
-      balances[msg.sender] -= _amountToBurn;
-      totalSupply -= _amountToBurn;
-      totalFreeSupply -= _amountToBurn;
+      uint256 reward = _value * currentPrice();    //truncation - remainder discarded
+      balances[msg.sender] -= _value;
+      totalSupply -= _value;
       weiBal -= reward;
-      LogWithdraw(_amountToBurn, reward);
+      LogWithdraw(_value, reward);
       msg.sender.transfer(reward);
   }
   // =====================================================================
@@ -109,34 +106,36 @@ contract DistributeToken is StandardToken {
     weiBal += msg.value;
   }
 
-  function transferToEscrow(address _owner, uint256 _value) public onlyTR() returns (bool) {
+  function transferToEscrow(address _owner, uint256 _value) public onlyTR returns (bool) {
     require(balances[_owner] >= _value);
     balances[_owner] -= _value;
-    totalFreeSupply -= _value;
     balances[msg.sender] += _value;
     return true;
   }
-  function transferFromEscrow(address _owner, uint256 _value) public onlyTR() returns (bool) {
+
+  function transferFromEscrow(address _owner, uint256 _value) public onlyTR returns (bool) {
     require(balances[msg.sender] >= _value);
     balances[msg.sender] -= _value;
-    totalFreeSupply += _value;
     balances[_owner] += _value;
     return true;
   }
+
   function rewardTokens(address _rewardee, uint256 _tokens) public onlyTR {
     require(balances[_rewardee] + _tokens > balances[_rewardee]);
     balances[_rewardee] += _tokens;
     totalSupply += _tokens;
-    totalFreeSupply += _tokens;
   }
+
   // =====================================================================
   // INFO FUNCTIONS
   // =====================================================================
+  
   function currentPrice() public view returns (uint256) {
     //calculated current burn reward of 1 token at current weiBal and free token supply
-    if (totalFreeSupply == 0 || weiBal == 0) { return baseCost; }
-    return weiBal / totalFreeSupply;
+    if (weiBal == 0) { return baseCost; }
+    return weiBal / totalSupply;
   }
+
   // =====================================================================
   // UTILITY FUNCTIONS
   // =====================================================================

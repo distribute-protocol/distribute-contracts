@@ -32,7 +32,6 @@ contract ReputationRegistry{
   mapping (address => bool) public first;   //indicates if address has registerd
 
   uint256 public totalSupply;               //total supply of reputation in all states
-  uint256 public totalFreeSupply;           //total supply of free reputation (not staked, validated, or voted)
   uint256 public totalUsers;
 
   uint256 proposeProportion = 20;           // tokensupply/proposeProportion is the number of tokens the proposer must stake
@@ -74,7 +73,6 @@ modifier onlyPR() {
     first[msg.sender] = true;
     balances[msg.sender] = initialRepVal;
     totalSupply += initialRepVal;
-    totalFreeSupply += initialRepVal;
     totalUsers += 1;
   }
 
@@ -84,7 +82,6 @@ modifier onlyPR() {
     uint256 addtl = initialRepVal - balances[msg.sender];
     balances[msg.sender] += addtl;
     totalSupply += addtl;
-    totalFreeSupply += addtl;
   }
 
   function proposeProject(uint256 _cost, uint256 _stakingPeriod) public {    //_cost of project in ether
@@ -115,14 +112,12 @@ modifier onlyPR() {
   function stakeReputation(address _projectAddress, uint256 _reputation) public {
     require(balances[msg.sender] >= _reputation && _reputation > 0);                    //make sure project exists & TH has tokens to stake
     balances[msg.sender] -= _reputation;
-    totalFreeSupply -= _reputation;
     Project(_projectAddress).stakeReputation(msg.sender, _reputation);
   }
 
   function unstakeReputation(address _projectAddress, uint256 _reputation) public {
     require(_reputation > 0);
     balances[msg.sender] += _reputation;
-    totalFreeSupply += _reputation;
     Project(_projectAddress).unstakeReputation(msg.sender, _reputation);
   }
 
@@ -132,11 +127,10 @@ modifier onlyPR() {
 
   function claimTask(address _projectAddress, uint256 _index, string _taskDescription, uint _weighting) public {
     Project project = Project(_projectAddress);
-    uint reputationVal = (project.weiCost() * _weighting * totalFreeSupply) / (distributeToken.weiBal() * 100);
+    uint reputationVal = (project.weiCost() * _weighting * totalSupply) / (distributeToken.weiBal() * 100);
     require(balances[msg.sender] >= reputationVal);
     uint weiVal = _weighting * project.weiCost() / 100;
     balances[msg.sender] -= reputationVal;
-    totalFreeSupply -= reputationVal;
     projectRegistry.claimTask(_projectAddress, _index, _taskDescription, msg.sender, _weighting, weiVal, reputationVal);
   }
 
@@ -156,7 +150,6 @@ modifier onlyPR() {
     if (availableTokens < _reputation) {
       require(balances[msg.sender] >= _reputation - availableTokens && pollId != 0);
       balances[msg.sender] -= _reputation;
-      totalFreeSupply -= _reputation;
       plcrVoting.requestVotingRights(msg.sender, _reputation - availableTokens);
     }
     plcrVoting.commitVote(msg.sender, pollId, _secretHash, _reputation, _prevPollID);
@@ -171,7 +164,6 @@ modifier onlyPR() {
   function refundVotingReputation(uint256 _reputation) public {
     plcrVoting.withdrawVotingRights(msg.sender, _reputation);
     balances[msg.sender] += _reputation;
-    totalFreeSupply += _reputation;
   }
 
   // =====================================================================
@@ -187,13 +179,11 @@ modifier onlyPR() {
   function refundStaker(address _projectAddress) public {                                                                       //called by worker who staked or voted
     uint256 _refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender);
     require(_refund > 0);
-    totalFreeSupply += _refund * 3 / 2;
     balances[msg.sender] += _refund * 3 / 2;
   }
 
   function rewardTask(address _projectAddress, uint8 _index) public {                                   //called by worker who completed a task
     uint256 reward = ProjectLibrary.claimTaskReward(_index, _projectAddress, msg.sender);
-    totalFreeSupply += reward;
     balances[msg.sender] += reward;
   }
 }
