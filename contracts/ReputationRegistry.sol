@@ -27,16 +27,15 @@ contract ReputationRegistry{
   DistributeToken distributeToken;
   ProjectRegistry projectRegistry;
   PLCRVoting plcrVoting;
-  address tokenRegistryAddress;
 
-  mapping (address => uint) public balances; //worker token balances
-  mapping (address => bool) public first;
+  mapping (address => uint) public balances;
+  mapping (address => bool) public first;   //indicates if address has registerd
 
   uint256 public totalSupply;               //total supply of reputation in all states
   uint256 public totalFreeSupply;           //total supply of free reputation (not staked, validated, or voted)
   uint256 public totalUsers;
 
-  uint256 proposeProportion = 20;                           // tokensupply/proposeProportion is the number of tokens the proposer must stake
+  uint256 proposeProportion = 20;           // tokensupply/proposeProportion is the number of tokens the proposer must stake
   uint256 rewardProportion = 100;
   // This represents both the initial starting amount and the maximum level the faucet will provide.
   uint256 public initialRepVal = 10000;
@@ -63,13 +62,11 @@ modifier onlyPR() {
   // CONSTRUCTOR
   // =====================================================================
 
-  function init(address _distributeToken, address _tokenRegistry, address _projectRegistry, address _plcrVoting) public {
-      require(address(projectRegistry) == 0 && address(plcrVoting) == 0);
-      distributeToken = DistributeToken(_distributeToken);
-      projectRegistry = ProjectRegistry(_projectRegistry);
-      plcrVoting = PLCRVoting(_plcrVoting);
-      distributeToken= DistributeToken(_distributeToken);
-      tokenRegistryAddress = _tokenRegistry;
+  function init(address _distributeToken, address _projectRegistry, address _plcrVoting) public {
+    require(address(distributeToken) == 0 && address(projectRegistry) == 0 && address(plcrVoting) == 0);
+    projectRegistry = ProjectRegistry(_projectRegistry);
+    plcrVoting = PLCRVoting(_plcrVoting);
+    distributeToken= DistributeToken(_distributeToken);
   }
 
   function register() public {
@@ -80,12 +77,6 @@ modifier onlyPR() {
     totalFreeSupply += initialRepVal;
     totalUsers += 1;
   }
-
-  /* function getAverageFreeReputation() public returns (uint) {
-    totalUsers == 0
-      ? return 0
-      : return totalFreeSupply / totalUsers;
-  } */
 
   // faucet function brings balance to initial value if between 0 and the initialRepVal
   function faucet() public {
@@ -109,10 +100,10 @@ modifier onlyPR() {
   }
 
   function refundProposer(address _projectAddress) public {
-    Project project = Project(_projectAddress);                            //called by proposer to get refund once project is active
+    Project project = Project(_projectAddress);                                         //called by proposer to get refund once project is active
     require(project.proposer() == msg.sender);
     require(project.proposerType() == 2);
-    uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);        //call project to "send back" staked tokens to put in proposer's balances
+    uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);   //call project to "send back" staked tokens to put in proposer's balances
     balances[msg.sender] += proposerVals[1];
     distributeToken.transferWeiFrom(msg.sender, proposerVals[0] / 100);
   }
@@ -122,7 +113,7 @@ modifier onlyPR() {
   // =====================================================================
 
   function stakeReputation(address _projectAddress, uint256 _reputation) public {
-    require(balances[msg.sender] >= _reputation && _reputation > 0);   //make sure project exists & TH has tokens to stake
+    require(balances[msg.sender] >= _reputation && _reputation > 0);                    //make sure project exists & TH has tokens to stake
     balances[msg.sender] -= _reputation;
     totalFreeSupply -= _reputation;
     Project(_projectAddress).stakeReputation(msg.sender, _reputation);
@@ -201,7 +192,7 @@ modifier onlyPR() {
   }
 
   function rewardTask(address _projectAddress, uint8 _index) public {                                   //called by worker who completed a task
-    uint256 reward = ProjectLibrary.claimTaskReward(tokenRegistryAddress, _index, _projectAddress, msg.sender);
+    uint256 reward = ProjectLibrary.claimTaskReward(_index, _projectAddress, msg.sender);
     totalFreeSupply += reward;
     balances[msg.sender] += reward;
   }

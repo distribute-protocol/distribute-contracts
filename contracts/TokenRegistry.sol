@@ -186,10 +186,6 @@ contract TokenRegistry {
     task.clearValidatorStake(msg.sender);
   }
 
-  function transferWeiReward(address _destination, uint256 _weiVal) public onlyRR() {
-    distributeToken.transferWeiFrom(_destination, _weiVal);
-  }
-
   function() public payable {
 
   }

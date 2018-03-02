@@ -18,6 +18,7 @@ contract Project {
   ProjectRegistry projectRegistry;
 
   uint256 public state;
+
   /* POSSIBLE STATES */
   /*
     1: Proposed,
@@ -28,6 +29,7 @@ contract Project {
     6: Complete,
     7: Failed
   */
+
   uint256 public turnoverTime = 1 weeks;
 
   address public proposer;
@@ -40,8 +42,8 @@ contract Project {
   uint256 public reputationCost;
   uint256 public passThreshold;
 
-  uint256 public totalTokensStaked;           //amount of capital tokens currently staked
-  uint256 public totalReputationStaked;            //amount of worker tokens currently staked
+  uint256 public totalTokensStaked;                           //amount of capital tokens currently staked
+  uint256 public totalReputationStaked;                       //amount of worker tokens currently staked
   mapping (address => uint) public stakedTokenBalances;
   mapping (address => uint) public stakedReputationBalances;
 
@@ -89,6 +91,7 @@ contract Project {
   // =====================================================================
   // CONSTRUCTOR
   // =====================================================================
+
   function Project(
     uint256 _cost,
     uint256 _costProportion,
@@ -109,6 +112,14 @@ contract Project {
     proposer = _proposer;
     proposerType = _proposerType;
     proposerStake = _proposerStake;
+  }
+
+  // =====================================================================
+  // GETTER FUNCTIONS
+  // =====================================================================
+
+  function getTaskCount() public view returns (uint256) {
+    return tasks.length;
   }
 
   // =====================================================================
@@ -141,9 +152,14 @@ contract Project {
     tasks[_index] = _taskAddress;
   }
 
+  function setPassThreshold(uint256 _passThreshold) public onlyPR() {
+    passThreshold = _passThreshold;
+  }
+
   // =====================================================================
   // STAKE FUNCTIONS
   // =====================================================================
+
   function stakeTokens(address _staker, uint256 _tokens, uint256 _weiValue) public onlyTR onlyInState(1) {
     stakedTokenBalances[_staker] += _tokens;
     totalTokensStaked += _tokens;
@@ -173,13 +189,15 @@ contract Project {
     totalReputationStaked -= _reputation;
   }
 
-  function getTaskCount() public view returns (uint256) {
-    return tasks.length;
+  function transferWeiReward(address _rewardee, uint _reward) public onlyRR {
+    require(_reward <= weiBal);
+    weiBal -= _reward;
+    _rewardee.transfer(_reward);
   }
 
-  function setPassThreshold(uint256 _passThreshold) public onlyPR() {
-    passThreshold = _passThreshold;
-  }
+  // =====================================================================
+  // REWARD FUNCTIONS
+  // =====================================================================
 
   function() public payable {
 

@@ -94,6 +94,27 @@ library ProjectLibrary {
     reputationRefund(_projectAddress, _staker, refund);
     return refund;
   }
+  // =====================================================================
+  // TASK FUNCTIONS
+  // =====================================================================
+
+  function claimTask(address _projectAddress, uint256 _index, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyInState(_projectAddress, 3) {
+    Project project = Project(_projectAddress);
+    Task task = Task(project.tasks(_index));
+    require(task.claimer() == 0 || now > (task.claimTime() + project.turnoverTime()) && !task.complete());
+    task.setTaskReward(_weiVal, _reputationVal, _claimer);
+  }
+
+  function claimTaskReward(uint256 _index, address _projectAddress, address _claimer) public onlyInState(_projectAddress, 6) returns (uint256) {
+    Project project = Project(_projectAddress);
+    Task task = Task(project.tasks(_index));
+    require(task.claimer() == _claimer && task.claimableByRep());
+    uint256 weiReward = task.weiReward();
+    uint256 reputationReward = task.reputationReward();
+    task.setTaskReward(0, 0, _claimer);
+    project.transferWeiReward(_claimer, weiReward);
+    return reputationReward;
+  }
 
   // =====================================================================
   // VALIDATOR FUNCTIONS
@@ -128,27 +149,5 @@ library ProjectLibrary {
     TokenRegistry(_tokenRegistry).burnTokens(project.totalTokensStaked());
     ReputationRegistry(_reputationRegistry).burnReputation(project.totalReputationStaked());
     project.clearStake();
-  }
-
-  // =====================================================================
-  // TASK FUNCTIONS
-  // =====================================================================
-
-  function claimTask(address _projectAddress, uint256 _index, uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyInState(_projectAddress, 3) {
-    Project project = Project(_projectAddress);
-    Task task = Task(project.tasks(_index));
-    require(task.claimer() == 0 || now > (task.claimTime() + project.turnoverTime()) && !task.complete());
-    task.setTaskReward(_weiVal, _reputationVal, _claimer);
-  }
-
-  function claimTaskReward(address _tokenRegistry, uint256 _index, address _projectAddress, address _claimer) public onlyInState(_projectAddress, 6) returns (uint256) {
-    Project project = Project(_projectAddress);
-    Task task = Task(project.tasks(_index));
-    require(task.claimer() == _claimer && task.claimableByRep());
-    uint256 weiReward = task.weiReward();
-    uint256 reputationReward = task.reputationReward();
-    task.setTaskReward(0, 0, _claimer);
-    TokenRegistry(_tokenRegistry).transferWeiReward(_claimer, weiReward);
-    return reputationReward;
   }
 }

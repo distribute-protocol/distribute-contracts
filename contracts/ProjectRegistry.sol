@@ -96,9 +96,9 @@ contract ProjectRegistry {
                                      address(reputationRegistry),
                                      address(tokenRegistry)
                                      );
-   address _projectAddress = address(newProject);
-   LogProjectCreated(_projectAddress, _proposer, _cost, _proposerStake);
-   return _projectAddress;
+   address projectAddress = address(newProject);
+   LogProjectCreated(projectAddress, _proposer, _cost, _proposerStake);
+   return projectAddress;
   }
 
   // Maybe makes this easier but we should look at removing
