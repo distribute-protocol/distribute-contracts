@@ -170,7 +170,10 @@ contract Project {
       stakedReputationBalances[_staker] >= _reputation); //make sure _staker has the tokens staked to unstake
     stakedReputationBalances[_staker] -= _reputation;
     totalReputationStaked -= _reputation;
+  }
 
+  function getTaskCount() public view returns (uint256) {
+    return tasks.length;
   }
 
   function() public payable {

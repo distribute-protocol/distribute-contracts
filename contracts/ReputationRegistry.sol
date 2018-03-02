@@ -12,6 +12,7 @@ import "./ProjectLibrary.sol";
 import "./ProjectRegistry.sol";
 import "./DistributeToken.sol";
 import "./library/PLCRVoting.sol";
+import "./Task.sol";
 
 /*
   keeps track of worker token balances of all
@@ -152,9 +153,10 @@ modifier onlyPR() {
   // VOTING FUNCTIONALITY
   // =====================================================================
 
-  function voteCommit(address _projectAddress, uint256 _reputation, bytes32 _secretHash, uint256 _prevPollID) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+  function voteCommit(address _projectAddress, uint256 _index, uint256 _reputation, bytes32 _secretHash, uint256 _prevPollID) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
     require(balances[msg.sender] > 1);      //worker can't vote with only 1 token
-    uint256 pollId = projectRegistry.votingPollId(_projectAddress);
+    Project project = Project(_projectAddress);
+    uint256 pollId = Task(project.tasks(_index)).pollId();
     /*uint256 nonce = projectRegistry.projectNonce();*/
     //calculate available tokens for voting
     uint256 availableTokens = plcrVoting.voteReputationBalance(msg.sender) - plcrVoting.getLockedTokens(msg.sender);
@@ -169,8 +171,9 @@ modifier onlyPR() {
     plcrVoting.commitVote(msg.sender, pollId, _secretHash, _reputation, _prevPollID);
   }
 
-  function voteReveal(address _projectAddress, uint256 _voteOption, uint _salt) public {
-    uint256 pollId = projectRegistry.votingPollId(_projectAddress);
+  function voteReveal(address _projectAddress, uint256 _index, uint256 _voteOption, uint _salt) public {
+    Project project = Project(_projectAddress);
+    uint256 pollId = Task(project.tasks(_index)).pollId();
     plcrVoting.revealVote(pollId, _voteOption, _salt);
   }
 

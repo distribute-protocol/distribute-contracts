@@ -61,7 +61,7 @@ library ProjectLibrary {
   }
 
 // happens at the end!
-  function refundStaker(address _projectAddress, address _staker) public returns (uint256 _refund) {
+  function refundStaker(address _projectAddress, address _staker) public returns (uint256) {
     Project project = Project(_projectAddress);
     require(project.state() == 6);
     if (project.isTR(msg.sender)) {
@@ -72,7 +72,7 @@ library ProjectLibrary {
   }
 
   // this happens at the end when all tasks are completed!
-  function handleTokenStaker(address _projectAddress, address _staker) internal returns (uint256 _refund) {
+  function handleTokenStaker(address _projectAddress, address _staker) internal returns (uint256) {
     uint256 refund;
     // account for proportion of successful tasks
     Project project = Project(_projectAddress);
@@ -110,28 +110,19 @@ library ProjectLibrary {
     }
   }
 
-  function validatorRewardHandler(address _tokenRegistry, address _projectAddress, address _staker, uint256 _index) public returns (uint256 _refund) {
-    uint256 refund;
+  function calculatePassThreshold(address _projectAddress) internal view returns (uint){
     Project project = Project(_projectAddress);
-    Task task = Task(project.tasks(_index));
-    if(task.totalValidateNegative() != 0 || task.totalValidateAffirmative() != 0) {
-      var (,stake) = task.validators(_staker);
-      refund += stake;
-      uint256 denom;
-      project.state() == 7
-        ? denom = task.totalValidateNegative()
-        : denom = task.totalValidateAffirmative();
-        if (task.opposingValidator() == true) {
-          refund += task.validateReward() * stake / denom;
-        } else {
-          TokenRegistry(_tokenRegistry).rewardValidator(_projectAddress, _staker, (project.weiCost() * stake / denom));
-        }
-      task.clearValidatorStake(_staker);
+    uint totalWeighting;
+    for (uint i = 0; i < project.getTaskCount(); i++) {
+      Task task = Task(project.tasks(i));
+      if (task.claimableByRep()) {
+        totalWeighting += task.weighting();
+      }
     }
-    return refund;
+    return totalWeighting;
   }
 
-  function burnStake(address _tokenRegistry, address _reputationRegistry, address _projectAddress) internal {
+  function burnStake(address _tokenRegistry, address _reputationRegistry, address _projectAddress) public {
     Project project = Project(_projectAddress);
     TokenRegistry(_tokenRegistry).burnTokens(project.totalTokensStaked());
     ReputationRegistry(_reputationRegistry).burnReputation(project.totalReputationStaked());
@@ -152,7 +143,7 @@ library ProjectLibrary {
   function claimTaskReward(address _tokenRegistry, uint256 _index, address _projectAddress, address _claimer) public onlyInState(_projectAddress, 6) returns (uint256) {
     Project project = Project(_projectAddress);
     Task task = Task(project.tasks(_index));
-    require(task.claimer() == _claimer && task.claimableByWorker());
+    require(task.claimer() == _claimer && task.claimableByRep());
     uint256 weiReward = task.weiReward();
     uint256 reputationReward = task.reputationReward();
     task.setTaskReward(0, 0, _claimer);
