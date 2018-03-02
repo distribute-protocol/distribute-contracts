@@ -20,6 +20,12 @@ contract ProjectRegistry {
   PLCRVoting plcrVoting;
   address reputationRegistryAddress;
 
+  uint256 public stakedStatePeriod = 1 weeks;
+  uint256 public activeStatePeriod = 2 weeks;
+  uint256 public validateStatePeriod = 1 weeks;
+  uint256 public voteCommitPeriod = 1 weeks;
+  uint256 public voteRevealPeriod = 1 weeks;
+
   struct StakedState {
     bytes32 topTaskHash;
     mapping(address => bytes32) taskHashSubmissions;
@@ -115,7 +121,7 @@ contract ProjectRegistry {
     Project project = Project(_projectAddress);
     require(project.state() == 1);    //check that project is in the proposed state
     if(ProjectLibrary.isStaked(_projectAddress)) {
-      uint256 nextDeadline = now + project.stakedStatePeriod();
+      uint256 nextDeadline = now + stakedStatePeriod;
       project.setState(2, nextDeadline);
       return true;
     } else {
@@ -133,7 +139,7 @@ contract ProjectRegistry {
     if(ProjectLibrary.timesUp(_projectAddress)) {
       uint256 nextDeadline;
       if(stakedProjects[_projectAddress].topTaskHash != 0) {
-        nextDeadline = now + project.activeStatePeriod();
+        nextDeadline = now + activeStatePeriod;
         project.setState(3, nextDeadline);
         return true;
       } else {
@@ -148,7 +154,7 @@ contract ProjectRegistry {
     Project project = Project(_projectAddress);
     require(project.state() == 3);
     if (ProjectLibrary.timesUp(_projectAddress)) {
-      uint256 nextDeadline = now + project.validateStatePeriod();
+      uint256 nextDeadline = now + validateStatePeriod;
       project.setState(4, nextDeadline);
       for(uint i = 0; i < project.getTaskCount(); i++) {
         Task task = Task(project.tasks(i));
@@ -168,7 +174,7 @@ contract ProjectRegistry {
         Task task = Task(project.tasks(i));
         if (task.complete()) {
           if (task.opposingValidator()) {   // there is an opposing validator, poll required
-            startPoll(_projectAddress, i, project.voteCommitPeriod(), project.voteRevealPeriod()); // function handles storage of voting pollId
+            startPoll(_projectAddress, i, voteCommitPeriod, voteRevealPeriod); // function handles storage of voting pollId
           } else {
             task.markTaskClaimable(true);
           }

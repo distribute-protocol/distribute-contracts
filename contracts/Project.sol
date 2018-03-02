@@ -28,13 +28,7 @@ contract Project {
     6: Complete,
     7: Failed
   */
-  uint256 public stakedStatePeriod = 1 weeks;
-  // turnoverTime is half of activeStatePeriod
   uint256 public turnoverTime = 1 weeks;
-  uint256 public activeStatePeriod = 2 weeks;
-  uint256 public validateStatePeriod = 1 weeks;
-  uint256 public voteCommitPeriod = 1 weeks;
-  uint256 public voteRevealPeriod = 1 weeks;
 
   address public proposer;
   uint256 public proposerType;
@@ -183,9 +177,9 @@ contract Project {
     return tasks.length;
   }
 
-  /* function setPassThreshold(uint256 _passThreshold) public onlyPR() {
+  function setPassThreshold(uint256 _passThreshold) public onlyPR() {
     passThreshold = _passThreshold;
-  } */
+  }
 
   function() public payable {
 

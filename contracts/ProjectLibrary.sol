@@ -119,7 +119,7 @@ library ProjectLibrary {
         totalWeighting += task.weighting();
       }
     }
-    /* project.setPassThreshold(totalWeighting); */
+    project.setPassThreshold(totalWeighting);
     return totalWeighting;
   }
 
