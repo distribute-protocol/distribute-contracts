@@ -11,7 +11,8 @@ import "./Project.sol";
 import "./ProjectLibrary.sol";
 import "./DistributeToken.sol";
 import "./library/PLCRVoting.sol";
-
+import "./ReputationRegistry.sol";
+import "./Task.sol";
 
 contract TokenRegistry {
 
@@ -38,16 +39,12 @@ contract TokenRegistry {
 // MODIFIERS
 // =====================================================================
 
-  modifier onlyValidProject() {
-    require(projectRegistry.votingPollId(msg.sender) > 0);
-    _;
-  }
   modifier onlyPR() {
     require(msg.sender == address(projectRegistry));
     _;
   }
   modifier onlyRR() {
-    require(msg.sender == address(projectRegistry));
+    require(msg.sender == address(reputationRegistry));
     _;
   }
 
@@ -122,14 +119,14 @@ contract TokenRegistry {
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
   // =====================================================================
 
-  function validate(address _projectAddress, uint256 _index, uint256 _tokens, bool _validationState) public {
+  function validateTask(address _projectAddress, uint256 _index, uint256 _tokens, bool _validationState) public {
     require(distributeToken.balanceOf(msg.sender) >= _tokens);
     distributeToken.transferToEscrow(msg.sender, _tokens);
     ProjectLibrary.validate(_projectAddress, msg.sender, _index, _tokens, _validationState);
   }
 
-  function voteCommit(address _projectAddress, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
-    uint256 pollId = projectRegistry.votingPollId(_projectAddress);
+  function voteCommit(address _projectAddress, uint256 _index, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+    uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
     require(pollId != 0);
     //calculate available tokens for voting
     uint256 availableTokens = plcrVoting.voteTokenBalance(msg.sender) - plcrVoting.getLockedTokens(msg.sender);
@@ -143,8 +140,8 @@ contract TokenRegistry {
     plcrVoting.commitVote(msg.sender, pollId, _secretHash, _tokens, _prevPollID);
   }
 
-  function voteReveal(address _projectAddress, uint256 _voteOption, uint _salt) public {
-    plcrVoting.revealVote(projectRegistry.votingPollId(_projectAddress), _voteOption, _salt);
+  function voteReveal(address _projectAddress, uint256 _index, uint256 _voteOption, uint _salt) public {
+    plcrVoting.revealVote(Task(Project(_projectAddress).tasks(_index)).pollId(), _voteOption, _salt);
   }
 
   function refundVotingTokens(uint256 _tokens) public {
@@ -160,21 +157,33 @@ contract TokenRegistry {
   function burnTokens(uint256 _tokens) public onlyPR() {              //check that valid project is calling this function
     distributeToken.burn(_tokens);
   }
-  function refundStaker(address _projectAddress) public {
+
+  function refundStaker(address _projectAddress, uint _index) public {
     uint256 refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender);
     distributeToken.transferFromEscrow(msg.sender, refund);
     distributeToken.rewardTokens(msg.sender, (refund * 50 / 100));
     //rescue locked tokens that weren't revealed
-    uint256 pollId = projectRegistry.votingPollId(_projectAddress);
+    Project project = Project(_projectAddress);
+    uint256 pollId = Task(project.tasks(_index)).pollId();
     plcrVoting.rescueTokens(msg.sender, pollId);
   }
 
   // make this only TR
-  function rewardValidator(address _projectAddress, address _validator, uint256 _reward) public {
-    require(msg.sender == address(this));
-    require(Project(_projectAddress).state() == 6 || Project(_projectAddress).state() == 7);
-    require(projectRegistry.votingPollId(msg.sender) != 0);
-    distributeToken.transferWeiFrom(_validator, _reward);
+  function rewardValidator(address _projectAddress, uint256 _index) public {
+    Project project = Project(_projectAddress);
+    Task task = Task(project.tasks(_index));
+    require(task.claimable());
+    var (status, reward) = task.validators(msg.sender);
+    if (task.totalValidateNegative() == 0) {
+      require(status == 1);
+    } else if (task.totalValidateAffirmative() == 0) {
+      require(status == 0);
+    } else {
+      revert();
+    }
+    distributeToken.transferFromEscrow(msg.sender, reward);
+    distributeToken.rewardTokens(msg.sender, reward / 100);
+    task.clearValidatorStake(msg.sender);
   }
 
   function transferWeiReward(address _destination, uint256 _weiVal) public onlyRR() {

@@ -13,14 +13,16 @@ contract Task {
   ProjectRegistry projectRegistry;
   TokenRegistry tokenRegistry;
   bytes32 public taskHash;
+  bool public claimable;
+  bool public claimableByRep;
+  uint256 public pollId;
+  uint256 public weighting;
 
   uint256 public weiReward;
   uint256 public reputationReward;
   uint256 public claimTime;
   bool public complete;
   address public claimer;
-
- // validation state VARIABLES
 
   struct Validator {
     uint256 status;
@@ -62,6 +64,10 @@ contract Task {
   // FUNCTIONS
   // =====================================================================
 
+  function setWeighting(uint256 _weighting) public onlyPR {
+    weighting = _weighting;
+  }
+
   function setTaskReward(uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyPR {
     weiReward = _weiVal;
     reputationReward = _reputationVal;
@@ -83,21 +89,30 @@ contract Task {
     _validationVal == 1
       ? totalValidateAffirmative += _tokens
       : totalValidateNegative += _tokens;
-  }
-
-  // handles reward calculations  
-  function setValidationReward(uint256 _validationVal) public onlyPR {
-    if (_validationVal == 0) {
-      validateReward = totalValidateNegative;
-      totalValidateNegative = 0;
-    } else if (_validationVal == 1) {
-      validateReward = totalValidateAffirmative;
-      totalValidateAffirmative = 0;
+    if (!opposingValidator && (totalValidateAffirmative != 0 && totalValidateNegative != 0)) {
+      opposingValidator = true;
     }
   }
 
-  function setOpposingValidator() public onlyPR {
-    opposingValidator = false;
+  function markTaskClaimable(bool passed) public onlyPR {             // passed only matters in voting
+    if (totalValidateAffirmative == 0 || totalValidateNegative == 0) {
+      claimable = true;
+      if (totalValidateAffirmative > totalValidateNegative) {
+        claimableByRep = true;
+      }
+    } else {
+      claimable = true;
+      if (passed) {
+        claimableByRep = true;
+        totalValidateNegative = 0;
+      } else {
+        totalValidateAffirmative = 0;
+      }
+    }
   }
 
+  function setPollId(uint256 _pollId) public onlyPR {
+    require(pollId == 0);
+    pollId = _pollId;
+  }
 }

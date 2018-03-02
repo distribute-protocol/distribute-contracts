@@ -19,10 +19,12 @@ contract ProjectRegistry {
   ReputationRegistry reputationRegistry;
   PLCRVoting plcrVoting;
   address reputationRegistryAddress;
-  address tokenRegistryAddress;
 
-  // will need to be changed to make a poll for each task
-  mapping(address => uint256) public votingPollId;
+  uint256 public stakedStatePeriod = 1 weeks;
+  uint256 public activeStatePeriod = 2 weeks;
+  uint256 public validateStatePeriod = 1 weeks;
+  uint256 public voteCommitPeriod = 1 weeks;
+  uint256 public voteRevealPeriod = 1 weeks;
 
   struct StakedState {
     bytes32 topTaskHash;
@@ -43,8 +45,6 @@ contract ProjectRegistry {
     reputationRegistry = ReputationRegistry(_reputationRegistry);
     distributeToken = DistributeToken(_distributeToken);
     plcrVoting = PLCRVoting(_plcrVoting);
-    reputationRegistryAddress = _reputationRegistry;
-    tokenRegistryAddress = _tokenRegistry;
   }
   // =====================================================================
   // MODIFIERS
@@ -73,12 +73,13 @@ contract ProjectRegistry {
   // GENERAL FUNCTIONS
   // =====================================================================
 
-  function startPoll(address _projectAddress, uint256 _commitDuration, uint256 _revealDuration) internal {       //can only be called by project in question
-    votingPollId[_projectAddress] =  plcrVoting.startPoll(51, _commitDuration, _revealDuration);
+  function startPoll(address _projectAddress, uint256 _index,  uint256 _commitDuration, uint256 _revealDuration) internal {
+    uint pollId = plcrVoting.startPoll(51, _commitDuration, _revealDuration);
+    Task(Project(_projectAddress).tasks(_index)).setPollId(pollId);
   }
 
-  function pollEnded(address _projectAddress) public view returns (bool) {
-    return plcrVoting.pollEnded(votingPollId[_projectAddress]);
+  function pollEnded(address _projectAddress, uint256 _index) public view returns (bool) {
+    return plcrVoting.pollEnded(Task((Project(_projectAddress).tasks(_index))).pollId());
   }
 
   // =====================================================================
@@ -92,8 +93,8 @@ contract ProjectRegistry {
                                      _proposer,
                                      _proposerType,
                                      _proposerStake,
-                                     reputationRegistryAddress,
-                                     tokenRegistryAddress
+                                     address(reputationRegistry),
+                                     address(tokenRegistry)
                                      );
    address _projectAddress = address(newProject);
    LogProjectCreated(_projectAddress, _proposer, _cost, _proposerStake);
@@ -120,7 +121,7 @@ contract ProjectRegistry {
     Project project = Project(_projectAddress);
     require(project.state() == 1);    //check that project is in the proposed state
     if(ProjectLibrary.isStaked(_projectAddress)) {
-      uint256 nextDeadline = now + project.stakedStatePeriod();
+      uint256 nextDeadline = now + stakedStatePeriod;
       project.setState(2, nextDeadline);
       return true;
     } else {
@@ -138,7 +139,7 @@ contract ProjectRegistry {
     if(ProjectLibrary.timesUp(_projectAddress)) {
       uint256 nextDeadline;
       if(stakedProjects[_projectAddress].topTaskHash != 0) {
-        nextDeadline = now + project.activeStatePeriod();
+        nextDeadline = now + activeStatePeriod;
         project.setState(3, nextDeadline);
         return true;
       } else {
@@ -149,46 +150,63 @@ contract ProjectRegistry {
     return false;
   }
 
-  function checkValidate(address _projectAddress) public returns (bool) {
+  function checkValidate(address _projectAddress) public {
     Project project = Project(_projectAddress);
     require(project.state() == 3);
     if (ProjectLibrary.timesUp(_projectAddress)) {
-      uint256 nextDeadline = now + project.validateStatePeriod();
+      uint256 nextDeadline = now + validateStatePeriod;
       project.setState(4, nextDeadline);
-      return true;
-    } else {
-      return false;
+      for(uint i = 0; i < project.getTaskCount(); i++) {
+        Task task = Task(project.tasks(i));
+        if (task.complete() == false) {
+          task.setTaskReward(0, 0, task.claimer());
+        }
+      }
     }
   }
 
-/*
-check voting:
-- iterate through project's tasks & check if they need to be voted on
-- start polls for those that need it, others can be opened to rewards (task, validators)
-*/
-
-/*
-  function checkVoting(address _projectAddress) public returns (bool) {
+  function checkVoting(address _projectAddress) public {
     Project project = Project(_projectAddress);
     require(project.state() == 4);
-    if(ProjectLibrary.timesUp(_projectAddress)) {
+    if (ProjectLibrary.timesUp(_projectAddress)) {
       project.setState(5, 0);
-      startPoll(_projectAddress, project.voteCommitPeriod(), project.voteRevealPeriod());
-      return true;
+      for(uint i = 0; i < project.getTaskCount(); i++) {
+        Task task = Task(project.tasks(i));
+        if (task.complete()) {
+          if (task.opposingValidator()) {   // there is an opposing validator, poll required
+            startPoll(_projectAddress, i, voteCommitPeriod, voteRevealPeriod); // function handles storage of voting pollId
+          } else {
+            task.markTaskClaimable(true);
+          }
+        }
+      }
     }
-    return false;
   }
 
-  function checkEnd(address _projectAddress) public returns (bool) {     //don't know where this gets called - maybe separate UI thing
+  function checkEnd(address _projectAddress) public {
     Project project = Project(_projectAddress);
-    if(!pollEnded(_projectAddress)) { return false; }
-    bool passed = plcrVoting.isPassed(votingPollId[_projectAddress]);
-    ProjectLibrary.setValidationState(tokenRegistryAddress, reputationRegistryAddress, _projectAddress, passed);
-    passed
-      ? project.setState(6, 0)
-      : project.setState(7, 0);
-    return true;
-  } */
+    require(project.state() == 5);
+    for (uint i = 0; i < project.getTaskCount(); i++) {
+      Task task = Task(project.tasks(i));
+      if (task.complete() && task.opposingValidator()) {      // check tasks with polls only
+        if (pollEnded(_projectAddress, i)) {
+          bool passed = plcrVoting.isPassed(Task(Project(_projectAddress).tasks(i)).pollId());
+          if (passed) {
+            task.markTaskClaimable(true);
+          } else {
+            task.markTaskClaimable(false);
+          }
+        }
+      }
+    }
+    uint passThreshold = ProjectLibrary.calculatePassThreshold(_projectAddress);
+    if (passThreshold > 70) {
+      project.setState(6,0);
+    } else {
+      project.setState(7,0);
+      ProjectLibrary.burnStake(tokenRegistry, reputationRegistry, _projectAddress);
+    }
+  }
 
   // =====================================================================
   // STAKED PROJECT FUNCTIONS
@@ -238,6 +256,7 @@ check voting:
     Project project = Project(_projectAddress);
     Task task = Task(project.tasks(_index));
     require(task.taskHash() == keccak256(_taskDescription, _weighting));
+    task.setWeighting(_weighting);
     // weiVal is wei reward of the task as indicated by its percentage
     ProjectLibrary.claimTask(_projectAddress, _index, _weiVal, _reputationVal, _claimer);
   }
@@ -249,9 +268,6 @@ check voting:
     require(project.state() == 3);
     task.markTaskComplete();
   }
-  /*function checkHash(bytes32 taskHash, string _taskDescription, uint256 _weiVal, uint256 _reputationVal) public view {
-    require(taskHash == keccak256(_taskDescription, _weiVal, _reputationVal));
-  }*/
 
   // =====================================================================
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY

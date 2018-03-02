@@ -9,7 +9,6 @@ pragma solidity ^0.4.10;
 import "./TokenRegistry.sol";
 import "./ReputationRegistry.sol";
 import "./ProjectRegistry.sol";
-import "./DistributeToken.sol";
 import "./ProjectLibrary.sol";
 import "./Task.sol";
 
@@ -17,7 +16,6 @@ contract Project {
   TokenRegistry tokenRegistry;
   ReputationRegistry reputationRegistry;
   ProjectRegistry projectRegistry;
-  ProjectLibrary projectLibrary;
 
   uint256 public state;
   /* POSSIBLE STATES */
@@ -30,14 +28,7 @@ contract Project {
     6: Complete,
     7: Failed
   */
-
-  uint256 public stakedStatePeriod = 1 weeks;
-  // turnoverTime is half of activeStatePeriod
   uint256 public turnoverTime = 1 weeks;
-  uint256 public activeStatePeriod = 2 weeks;
-  uint256 public validateStatePeriod = 1 weeks;
-  uint256 public voteCommitPeriod = 1 weeks;
-  uint256 public voteRevealPeriod = 1 weeks;
 
   address public proposer;
   uint256 public proposerType;
@@ -47,6 +38,7 @@ contract Project {
   uint256 public nextDeadline;
   uint256 public weiCost;
   uint256 public reputationCost;
+  uint256 public passThreshold;
 
   uint256 public totalTokensStaked;           //amount of capital tokens currently staked
   uint256 public totalReputationStaked;            //amount of worker tokens currently staked
@@ -97,7 +89,16 @@ contract Project {
   // =====================================================================
   // CONSTRUCTOR
   // =====================================================================
-  function Project(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _proposer, uint256 _proposerType, uint256 _proposerStake, address _reputationRegistry, address _tokenRegistry) public {       //called by THR
+  function Project(
+    uint256 _cost,
+    uint256 _costProportion,
+    uint256 _stakingPeriod,
+    address _proposer,
+    uint256 _proposerType,
+    uint256 _proposerStake,
+    address _reputationRegistry,
+    address _tokenRegistry
+  ) public {       //called by THR
     reputationRegistry = ReputationRegistry(_reputationRegistry);
     tokenRegistry = TokenRegistry(_tokenRegistry);
     projectRegistry = ProjectRegistry(msg.sender);
@@ -170,7 +171,14 @@ contract Project {
       stakedReputationBalances[_staker] >= _reputation); //make sure _staker has the tokens staked to unstake
     stakedReputationBalances[_staker] -= _reputation;
     totalReputationStaked -= _reputation;
+  }
 
+  function getTaskCount() public view returns (uint256) {
+    return tasks.length;
+  }
+
+  function setPassThreshold(uint256 _passThreshold) public onlyPR() {
+    passThreshold = _passThreshold;
   }
 
   function() public payable {
