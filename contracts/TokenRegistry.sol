@@ -85,7 +85,7 @@ contract TokenRegistry {
     require(project.proposerType() == 1);
     uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);        //call project to "send back" staked tokens to put in proposer's balances
     distributeToken.transferFromEscrow(msg.sender, proposerVals[1]);
-    distributeToken.transferWeiFrom(msg.sender, proposerVals[0] / 100);
+    distributeToken.transferWeiTo(msg.sender, proposerVals[0] / 100);
   }
 
   // =====================================================================
@@ -104,14 +104,14 @@ contract TokenRegistry {
     uint256 weiChange = flag ? weiRemaining : weiVal;       //how much ether to send on change
     uint256 tokens = flag ? ((weiRemaining/currentPrice) + 1) : _tokens;
     project.stakeTokens(msg.sender, tokens, weiChange);
-    distributeToken.transferWeiFrom(_projectAddress, weiChange);
+    distributeToken.transferWeiTo(_projectAddress, weiChange);
     distributeToken.transferToEscrow(msg.sender, tokens);
     projectRegistry.checkStaked(_projectAddress);
   }
 
   function unstakeTokens(address _projectAddress, uint256 _tokens) public {
     uint256 weiVal = Project(_projectAddress).unstakeTokens(msg.sender, _tokens);
-    distributeToken.transferWeiFrom(msg.sender, weiVal);
+    distributeToken.transferWeiTo(msg.sender, weiVal);
     distributeToken.transferFromEscrow(msg.sender, _tokens);
   }
 
@@ -161,10 +161,8 @@ contract TokenRegistry {
   function refundStaker(address _projectAddress, uint _index) public {
     uint256 refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender);
     distributeToken.transferFromEscrow(msg.sender, refund);
-    distributeToken.rewardTokens(msg.sender, (refund * 50 / 100));
     //rescue locked tokens that weren't revealed
-    Project project = Project(_projectAddress);
-    uint256 pollId = Task(project.tasks(_index)).pollId();
+    uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
     plcrVoting.rescueTokens(msg.sender, pollId);
   }
 
@@ -181,9 +179,9 @@ contract TokenRegistry {
     } else {
       revert();
     }
-    distributeToken.transferFromEscrow(msg.sender, reward);
-    distributeToken.rewardTokens(msg.sender, reward / 100);
     task.clearValidatorStake(msg.sender);
+    distributeToken.transferFromEscrow(msg.sender, reward);
+    distributeToken.transferWeiTo(msg.sender, reward * distributeToken.currentPrice() / 100);
   }
 
   function() public payable {

@@ -102,7 +102,7 @@ modifier onlyPR() {
     require(project.proposerType() == 2);
     uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);   //call project to "send back" staked tokens to put in proposer's balances
     balances[msg.sender] += proposerVals[1];
-    distributeToken.transferWeiFrom(msg.sender, proposerVals[0] / 100);
+    distributeToken.transferWeiTo(msg.sender, proposerVals[0] / 100);
   }
 
   // =====================================================================

@@ -95,7 +95,7 @@ contract DistributeToken is StandardToken {
   // TRANSFER FUNCTIONS
   // =====================================================================
 
-  function transferWeiFrom(address _address, uint256 _weiValue) public onlyTRorRR() {
+  function transferWeiTo(address _address, uint256 _weiValue) public onlyTRorRR() {
     require(_weiValue <= weiBal);
     weiBal -= _weiValue;
     _address.transfer(_weiValue);
