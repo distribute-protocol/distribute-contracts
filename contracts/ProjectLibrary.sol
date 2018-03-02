@@ -110,7 +110,7 @@ library ProjectLibrary {
     }
   }
 
-  function calculatePassThreshold(address _projectAddress) internal view returns (uint){
+  function calculatePassThreshold(address _projectAddress) internal returns (uint){
     Project project = Project(_projectAddress);
     uint totalWeighting;
     for (uint i = 0; i < project.getTaskCount(); i++) {
