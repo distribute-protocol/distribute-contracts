@@ -19,7 +19,6 @@ contract ProjectRegistry {
   ReputationRegistry reputationRegistry;
   PLCRVoting plcrVoting;
   address reputationRegistryAddress;
-  address tokenRegistryAddress;
 
   struct StakedState {
     bytes32 topTaskHash;
@@ -40,8 +39,6 @@ contract ProjectRegistry {
     reputationRegistry = ReputationRegistry(_reputationRegistry);
     distributeToken = DistributeToken(_distributeToken);
     plcrVoting = PLCRVoting(_plcrVoting);
-    reputationRegistryAddress = _reputationRegistry;
-    tokenRegistryAddress = _tokenRegistry;
   }
   // =====================================================================
   // MODIFIERS
@@ -90,8 +87,8 @@ contract ProjectRegistry {
                                      _proposer,
                                      _proposerType,
                                      _proposerStake,
-                                     reputationRegistryAddress,
-                                     tokenRegistryAddress
+                                     address(reputationRegistry),
+                                     address(tokenRegistry)
                                      );
    address _projectAddress = address(newProject);
    LogProjectCreated(_projectAddress, _proposer, _cost, _proposerStake);
@@ -205,19 +202,6 @@ contract ProjectRegistry {
     }
   }
 
-/*
-
-  function checkEnd(address _projectAddress) public returns (bool) {     //don't know where this gets called - maybe separate UI thing
-    Project project = Project(_projectAddress);
-    if(!pollEnded(_projectAddress)) { return false; }
-    bool passed = plcrVoting.isPassed(votingPollId[_projectAddress]);
-    ProjectLibrary.setValidationState(tokenRegistryAddress, reputationRegistryAddress, _projectAddress, passed);
-    passed
-      ? project.setState(6, 0)
-      : project.setState(7, 0);
-    return true;
-  } */
-
   // =====================================================================
   // STAKED PROJECT FUNCTIONS
   // =====================================================================
@@ -278,9 +262,6 @@ contract ProjectRegistry {
     require(project.state() == 3);
     task.markTaskComplete();
   }
-  /*function checkHash(bytes32 taskHash, string _taskDescription, uint256 _weiVal, uint256 _reputationVal) public view {
-    require(taskHash == keccak256(_taskDescription, _weiVal, _reputationVal));
-  }*/
 
   // =====================================================================
   // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
