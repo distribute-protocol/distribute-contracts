@@ -6,15 +6,13 @@
 pragma solidity ^0.4.8;
 
 import "./Project.sol";
-import "./TokenRegistry.sol";
-import "./ReputationRegistry.sol";
 import "./ProjectLibrary.sol";
 import "./library/PLCRVoting.sol";
 import "./Task.sol";
 
 contract ProjectRegistry {
-  TokenRegistry tokenRegistry;
-  ReputationRegistry reputationRegistry;
+  address tokenRegistryAddress;
+  address reputationRegistryAddress;
   PLCRVoting plcrVoting;
 
   uint256 public stakedStatePeriod = 1 weeks;
@@ -37,25 +35,25 @@ contract ProjectRegistry {
   // CONSTRUCTOR
   // =====================================================================
   function ProjectRegistry(address _tokenRegistry, address _reputationRegistry, address _plcrVoting) public {       //contract is created
-    require(address(tokenRegistry) == 0 && address(reputationRegistry) == 0);
-    tokenRegistry = TokenRegistry(_tokenRegistry);
-    reputationRegistry = ReputationRegistry(_reputationRegistry);
+    require(tokenRegistryAddress == 0 && reputationRegistryAddress == 0);
+    tokenRegistryAddress = _tokenRegistry;
+    reputationRegistryAddress = _reputationRegistry;
     plcrVoting = PLCRVoting(_plcrVoting);
   }
   // =====================================================================
   // MODIFIERS
   // =====================================================================
   modifier onlyTR() {
-    require(msg.sender == address(tokenRegistry));
+    require(msg.sender == tokenRegistryAddress);
     _;
   }
 
   modifier onlyRR() {
-    require(msg.sender == address(reputationRegistry));
+    require(msg.sender == reputationRegistryAddress);
     _;
   }
   modifier onlyTRorRR() {
-    require(msg.sender == address(tokenRegistry) || msg.sender == address(reputationRegistry));
+    require(msg.sender == tokenRegistryAddress || msg.sender == reputationRegistryAddress);
     _;
   }
 
@@ -89,8 +87,8 @@ contract ProjectRegistry {
                                      _proposer,
                                      _proposerType,
                                      _proposerStake,
-                                     address(reputationRegistry),
-                                     address(tokenRegistry)
+                                     reputationRegistryAddress,
+                                     tokenRegistryAddress
                                      );
    address projectAddress = address(newProject);
    LogProjectCreated(projectAddress, _proposer, _cost, _proposerStake);
@@ -122,7 +120,7 @@ contract ProjectRegistry {
       return true;
     } else {
       if(ProjectLibrary.timesUp(_projectAddress)) {
-        project.setState(7, 0);
+        project.setState(8, 0);
         project.clearProposerStake();
       }
       return false;
@@ -170,7 +168,7 @@ contract ProjectRegistry {
         Task task = Task(project.tasks(i));
         if (task.complete()) {
           if (task.opposingValidator()) {   // there is an opposing validator, poll required
-            startPoll(_projectAddress, i, voteCommitPeriod, voteRevealPeriod); // function handles storage of voting pollId
+            task.setPollId(plcrVoting.startPoll(51, voteCommitPeriod, voteRevealPeriod)); // function handles storage of voting pollId
           } else {
             task.markTaskClaimable(true);
           }
@@ -185,8 +183,8 @@ contract ProjectRegistry {
     for (uint i = 0; i < project.getTaskCount(); i++) {
       Task task = Task(project.tasks(i));
       if (task.complete() && task.opposingValidator()) {      // check tasks with polls only
-        if (pollEnded(_projectAddress, i)) {
-          bool passed = plcrVoting.isPassed(Task(Project(_projectAddress).tasks(i)).pollId());
+        if (plcrVoting.pollEnded(task.pollId())) {
+          bool passed = plcrVoting.isPassed(task.pollId());
           if (passed) {
             task.markTaskClaimable(true);
           } else {
@@ -200,7 +198,7 @@ contract ProjectRegistry {
       project.setState(6,0);
     } else {
       project.setState(7,0);
-      ProjectLibrary.burnStake(tokenRegistry, reputationRegistry, _projectAddress);
+      ProjectLibrary.burnStake(tokenRegistryAddress, reputationRegistryAddress, _projectAddress);
     }
   }
 
@@ -238,7 +236,7 @@ contract ProjectRegistry {
     require(project.state() == 2);
     require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
     for (uint256 i = 0; i < _hashes.length; i++) {
-      Task newTask = new Task(_hashes[i], tokenRegistry);
+      Task newTask = new Task(_hashes[i], tokenRegistryAddress);
       project.setTaskAddress(address(newTask), i);
     }
   }

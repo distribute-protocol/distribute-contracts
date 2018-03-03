@@ -27,7 +27,8 @@ contract Project {
     4: Validation,
     5: Voting,
     6: Complete,
-    7: Failed
+    7: Failed,
+    8: Expired
   */
 
   uint256 public turnoverTime = 1 weeks;
@@ -40,7 +41,7 @@ contract Project {
   uint256 public nextDeadline;
   uint256 public weiCost;
   uint256 public reputationCost;
-  uint256 public passThreshold;
+  uint256 public passThreshold = 100;
 
   uint256 public totalTokensStaked;                           //amount of capital tokens currently staked
   uint256 public totalReputationStaked;                       //amount of worker tokens currently staked
