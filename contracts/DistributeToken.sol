@@ -120,16 +120,10 @@ contract DistributeToken is StandardToken {
     return true;
   }
 
-  function rewardTokens(address _rewardee, uint256 _tokens) public onlyTR {
-    require(balances[_rewardee] + _tokens > balances[_rewardee]);
-    balances[_rewardee] += _tokens;
-    totalSupply += _tokens;
-  }
-
   // =====================================================================
   // INFO FUNCTIONS
   // =====================================================================
-  
+
   function currentPrice() public view returns (uint256) {
     //calculated current burn reward of 1 token at current weiBal and free token supply
     if (weiBal == 0) { return baseCost; }
@@ -149,7 +143,6 @@ contract DistributeToken is StandardToken {
 
   function weiRequired(uint256 _tokens) public view returns (uint256) {
     require(_tokens > 0);
-    //return ((targetPrice(_tokens) * (totalSupply + _tokens)) - currentPrice() * totalSupply);
     return targetPrice(_tokens) *  _tokens;
   }
 

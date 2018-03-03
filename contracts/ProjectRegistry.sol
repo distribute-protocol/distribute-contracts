@@ -31,8 +31,6 @@ contract ProjectRegistry {
 
   mapping (address => StakedState) public stakedProjects;
 
-  // NOTE do we need a validated Projects mapping?
-
   // =====================================================================
   // CONSTRUCTOR
   // =====================================================================
@@ -81,6 +79,7 @@ contract ProjectRegistry {
   // =====================================================================
   // PROPOSER FUNCTIONS
   // =====================================================================
+
   function createProject(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _proposer, uint256 _proposerType, uint256 _proposerStake) public onlyTRorRR() returns (address) {
 
     Project newProject = new Project(_cost,
@@ -97,7 +96,6 @@ contract ProjectRegistry {
    return projectAddress;
   }
 
-  // Maybe makes this easier but we should look at removing
   function refundProposer(address _projectAddress) public onlyTRorRR() returns (uint256[2]) {
     Project project =  Project(_projectAddress);
     require(project.state() > 1);
@@ -122,7 +120,7 @@ contract ProjectRegistry {
       return true;
     } else {
       if(ProjectLibrary.timesUp(_projectAddress)) {
-        project.setState(7, 0);
+        project.setState(8, 0);
         project.clearProposerStake();
       }
       return false;
@@ -187,19 +185,17 @@ contract ProjectRegistry {
       if (task.complete() && task.opposingValidator()) {      // check tasks with polls only
         if (pollEnded(_projectAddress, i)) {
           bool passed = plcrVoting.isPassed(Task(Project(_projectAddress).tasks(i)).pollId());
-          if (passed) {
-            task.markTaskClaimable(true);
-          } else {
-            task.markTaskClaimable(false);
-          }
+          passed
+            ? task.markTaskClaimable(true)
+            : task.markTaskClaimable(false);
         }
       }
     }
     uint passThreshold = ProjectLibrary.calculatePassThreshold(_projectAddress);
     if (passThreshold > 70) {
-      project.setState(6,0);
+      project.setState(6, 0);
     } else {
-      project.setState(7,0);
+      project.setState(7, 0);
       ProjectLibrary.burnStake(tokenRegistry, reputationRegistry, _projectAddress);
     }
   }
@@ -212,7 +208,7 @@ contract ProjectRegistry {
     Project project = Project(_projectAddress);
     require(ProjectLibrary.isStaker(_projectAddress, msg.sender) == true);
     checkActive(_projectAddress);
-    if (project.state() == 3) {
+    if (project.state() == 2) {
       uint256 stakerWeight = ProjectLibrary.calculateWeightOfAddress(_projectAddress, msg.sender);
       stakedTaskHash(msg.sender, _projectAddress, _taskHash, stakerWeight);
     }
@@ -220,7 +216,7 @@ contract ProjectRegistry {
 
   function stakedTaskHash(address _staker, address _projectAddress, bytes32 _taskHash, uint256 stakerWeight) internal {
     StakedState storage ss = stakedProjects[_projectAddress];
-    if(ss.taskHashSubmissions[_staker] !=  0) {   //first time submission for this particular address
+    if(ss.taskHashSubmissions[_staker] !=  0) {   //Not first time submission for this particular address
       bytes32 submittedTaskHash = ss.taskHashSubmissions[_staker];
       ss.numSubmissionsByWeight[submittedTaskHash] -= stakerWeight;
     }
@@ -235,7 +231,8 @@ contract ProjectRegistry {
   function submitHashList(address _projectAddress, bytes32[] _hashes) public {
     Project project = Project(_projectAddress);
     require(ProjectLibrary.isStaker(_projectAddress, msg.sender) == true);
-    require(project.state() == 2);
+    checkActive(_projectAddress);
+    require(project.state() == 3);
     require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
     for (uint256 i = 0; i < _hashes.length; i++) {
       Task newTask = new Task(_hashes[i], tokenRegistry);
@@ -248,13 +245,12 @@ contract ProjectRegistry {
   // =====================================================================
 
   function claimTask(address _projectAddress, uint256 _index, string _taskDescription, address _claimer, uint _weighting, uint _weiVal, uint _reputationVal) public onlyRR() returns (bytes32) {
-    // 100% => percentage = 100
     Project project = Project(_projectAddress);
     Task task = Task(project.tasks(_index));
     require(task.taskHash() == keccak256(_taskDescription, _weighting));
+    require(task.claimer() == 0 || now > (task.claimTime() + project.turnoverTime()) && !task.complete());
     task.setWeighting(_weighting);
-    // weiVal is wei reward of the task as indicated by its percentage
-    ProjectLibrary.claimTask(_projectAddress, _index, _weiVal, _reputationVal, _claimer);
+    task.setTaskReward(_weiVal, _reputationVal, _claimer);
   }
 
   function submitTaskComplete(address _projectAddress, uint256 _index) public {
@@ -264,10 +260,4 @@ contract ProjectRegistry {
     require(project.state() == 3);
     task.markTaskComplete();
   }
-
-  // =====================================================================
-  // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
-  // =====================================================================
-/* NOTE: could implement a function to keep track of validated projects
-  using a mapping like proposedProjects and the others */
 }
