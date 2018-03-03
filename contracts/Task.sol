@@ -36,9 +36,9 @@ contract Task {
   uint256 public totalValidateAffirmative;
   uint256 public totalValidateNegative;
 
-  // =====================================================================
-  // MODIFIERS
-  // =====================================================================
+// =====================================================================
+// MODIFIERS
+// =====================================================================
 
   modifier onlyPR() {
     require(msg.sender == address(projectRegistry));
@@ -50,9 +50,9 @@ contract Task {
     _;
   }
 
-  // =====================================================================
-  // CONSTRUCTOR
-  // =====================================================================
+// =====================================================================
+// CONSTRUCTOR
+// =====================================================================
 
   function Task(bytes32 _hash, address _tokenRegistry) public {
     projectRegistry = ProjectRegistry(msg.sender);
@@ -60,9 +60,9 @@ contract Task {
     taskHash = _hash;
   }
 
-  // =====================================================================
-  // FUNCTIONS
-  // =====================================================================
+// =====================================================================
+// FUNCTIONS
+// =====================================================================
 
   function setWeighting(uint256 _weighting) public onlyPR {
     weighting = _weighting;
@@ -80,10 +80,6 @@ contract Task {
     complete = true;
   }
 
-  function clearValidatorStake(address _staker) public onlyTR {
-    validators[_staker].stake = 0;
-  }
-
   function setValidator(address _staker, uint256 _validationVal, uint256 _tokens) public onlyTR {
     validators[_staker] = Validator(_validationVal, _tokens);
     _validationVal == 1
@@ -92,6 +88,11 @@ contract Task {
     if (!opposingValidator && (totalValidateAffirmative != 0 && totalValidateNegative != 0)) {
       opposingValidator = true;
     }
+  }
+
+  function setPollId(uint256 _pollId) public onlyPR {
+    require(pollId == 0);
+    pollId = _pollId;
   }
 
   function markTaskClaimable(bool passed) public onlyPR {             // passed only matters in voting
@@ -111,8 +112,7 @@ contract Task {
     }
   }
 
-  function setPollId(uint256 _pollId) public onlyPR {
-    require(pollId == 0);
-    pollId = _pollId;
+  function clearValidatorStake(address _staker) public onlyTR {
+    validators[_staker].stake = 0;
   }
 }
