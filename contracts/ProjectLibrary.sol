@@ -59,14 +59,6 @@ library ProjectLibrary {
   // TASK FUNCTIONS
   // =====================================================================
 
-  function claimTask(address _projectAddress, uint256 _index, uint256 _weiVal, uint256 _reputationVal, address _claimer) public {
-    Project project = Project(_projectAddress);
-    require(project.state() == 3);
-    Task task = Task(project.tasks(_index));
-    require(task.claimer() == 0 || now > (task.claimTime() + project.turnoverTime()) && !task.complete());
-    task.setTaskReward(_weiVal, _reputationVal, _claimer);
-  }
-
   function claimTaskReward(uint256 _index, address _projectAddress, address _claimer) public returns (uint256) {
     Project project = Project(_projectAddress);
     require(project.state() == 6);
