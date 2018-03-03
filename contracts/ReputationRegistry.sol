@@ -112,6 +112,7 @@ modifier onlyPR() {
     require(balances[msg.sender] >= _reputation && _reputation > 0);                    //make sure project exists & TH has tokens to stake
     balances[msg.sender] -= _reputation;
     Project(_projectAddress).stakeReputation(msg.sender, _reputation);
+    projectRegistry.checkStaked(_projectAddress);
   }
 
   function unstakeReputation(address _projectAddress, uint256 _reputation) public {

@@ -6,16 +6,15 @@
 
 pragma solidity ^0.4.10;
 
-import "./TokenRegistry.sol";
-import "./ReputationRegistry.sol";
 import "./ProjectRegistry.sol";
+import "./ReputationRegistry.sol";
 import "./ProjectLibrary.sol";
 import "./Task.sol";
 
 contract Project {
-  TokenRegistry tokenRegistry;
-  ReputationRegistry reputationRegistry;
-  ProjectRegistry projectRegistry;
+  address tokenRegistryAddress;
+  address reputationRegistryAddress;
+  address projectRegistryAddress;
 
   uint256 public state;
 
@@ -54,39 +53,30 @@ contract Project {
   // MODIFIERS
   // =====================================================================
 
-  modifier onlyInState(uint256 _state) {
-    require(state == _state);
-    _;
-  }
-
   modifier onlyPR() {
-    require(msg.sender == address(projectRegistry));
+    require(msg.sender == projectRegistryAddress);
     _;
   }
 
   modifier onlyTR() {
-    require(msg.sender == address(tokenRegistry));
+    require(msg.sender == tokenRegistryAddress);
     _;
   }
 
   modifier onlyRR() {
-    require(msg.sender == address(reputationRegistry));
+    require(msg.sender == reputationRegistryAddress);
     _;
   }
 
   function isTR(address _sender) public view returns (bool) {
-    if (_sender == address(tokenRegistry)) {
-      return true;
-    } else {
-      return false;
-    }
+    return _sender == tokenRegistryAddress
+      ? true
+      : false;
   }
   function isRR(address _sender) public view returns (bool) {
-    if (_sender == address(reputationRegistry)) {
-      return true;
-    } else {
-      return false;
-    }
+    return _sender == reputationRegistryAddress
+      ? true
+      : false;
   }
 
   // =====================================================================
@@ -103,11 +93,11 @@ contract Project {
     address _reputationRegistry,
     address _tokenRegistry
   ) public {       //called by THR
-    reputationRegistry = ReputationRegistry(_reputationRegistry);
-    tokenRegistry = TokenRegistry(_tokenRegistry);
-    projectRegistry = ProjectRegistry(msg.sender);
+    reputationRegistryAddress = _reputationRegistry;
+    tokenRegistryAddress = _tokenRegistry;
+    projectRegistryAddress = msg.sender;
     weiCost = _cost;
-    reputationCost = _costProportion * reputationRegistry.totalSupply();
+    reputationCost = _costProportion * ReputationRegistry(_reputationRegistry).totalSupply();
     state = 1;
     nextDeadline = _stakingPeriod;
     proposer = _proposer;
@@ -161,13 +151,15 @@ contract Project {
   // STAKE FUNCTIONS
   // =====================================================================
 
-  function stakeTokens(address _staker, uint256 _tokens, uint256 _weiValue) public onlyTR onlyInState(1) {
+  function stakeTokens(address _staker, uint256 _tokens, uint256 _weiValue) public onlyTR {
+    require(state == 1);
     stakedTokenBalances[_staker] += _tokens;
     totalTokensStaked += _tokens;
     weiBal += _weiValue;
   }
 
-  function unstakeTokens(address _staker, uint256 _tokens) public onlyTR onlyInState(1) returns (uint256) {
+  function unstakeTokens(address _staker, uint256 _tokens) public onlyTR returns (uint256) {
+    require(state == 1);
     require(stakedTokenBalances[_staker] - _tokens < stakedTokenBalances[_staker] &&   //check overflow
          stakedTokenBalances[_staker] >= _tokens);   //make sure _staker has the tokens staked to unstake */
     uint256 weiVal = (_tokens / totalTokensStaked) * weiBal;
@@ -177,18 +169,24 @@ contract Project {
     return weiVal;
   }
 
-  function stakeReputation(address _staker, uint256 _reputation) public onlyRR onlyInState(1) {
+  function stakeReputation(address _staker, uint256 _reputation) public onlyRR {
+    require(state == 1);
     require(stakedReputationBalances[_staker] + _reputation > stakedReputationBalances[_staker]);
     stakedReputationBalances[_staker] += _reputation;
     totalReputationStaked += _reputation;
   }
 
-  function unstakeReputation(address _staker, uint256 _reputation) public onlyRR onlyInState(1) {
+  function unstakeReputation(address _staker, uint256 _reputation) public onlyRR {
+    require(state == 1);
     require(stakedReputationBalances[_staker] - _reputation < stakedReputationBalances[_staker] &&  //check overflow /
       stakedReputationBalances[_staker] >= _reputation); //make sure _staker has the tokens staked to unstake
     stakedReputationBalances[_staker] -= _reputation;
     totalReputationStaked -= _reputation;
   }
+
+  // =====================================================================
+  // REWARD FUNCTIONS
+  // =====================================================================
 
   function transferWeiReward(address _rewardee, uint _reward) public onlyRR {
     require(_reward <= weiBal);
@@ -196,9 +194,6 @@ contract Project {
     _rewardee.transfer(_reward);
   }
 
-  // =====================================================================
-  // REWARD FUNCTIONS
-  // =====================================================================
 
   function() public payable {
 
