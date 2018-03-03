@@ -88,7 +88,6 @@ contract TokenRegistry {
   function stakeTokens(address _projectAddress, uint256 _tokens) public {
     require(distributeToken.balanceOf(msg.sender) >= _tokens);
     Project project = Project(_projectAddress);
-    require(project.state() == 1);
     uint256 currentPrice = distributeToken.currentPrice();
     uint256 weiRemaining = project.weiCost() - project.weiBal();
     require(weiRemaining > 0);
@@ -99,7 +98,6 @@ contract TokenRegistry {
     project.stakeTokens(msg.sender, tokens, weiChange);
     distributeToken.transferWeiTo(_projectAddress, weiChange);
     distributeToken.transferToEscrow(msg.sender, tokens);
-    projectRegistry.checkStaked(_projectAddress);
   }
 
   function unstakeTokens(address _projectAddress, uint256 _tokens) public {
@@ -109,7 +107,7 @@ contract TokenRegistry {
   }
 
   // =====================================================================
-  // COMPLETED PROJECT - VALIDATION & VOTING FUNCTIONALITY
+  // VALIDATION FUNCTIONALITY
   // =====================================================================
 
   function validateTask(address _projectAddress, uint256 _index, uint256 _tokens, bool _validationState) public {
@@ -117,6 +115,27 @@ contract TokenRegistry {
     distributeToken.transferToEscrow(msg.sender, _tokens);
     ProjectLibrary.validate(_projectAddress, msg.sender, _index, _tokens, _validationState);
   }
+
+  function rewardValidator(address _projectAddress, uint256 _index) public {
+    Project project = Project(_projectAddress);
+    Task task = Task(project.tasks(_index));
+    require(task.claimable());
+    var (status, reward) = task.validators(msg.sender);
+    if (task.totalValidateNegative() == 0) {
+      require(status == 1);
+    } else if (task.totalValidateAffirmative() == 0) {
+      require(status == 0);
+    } else {
+      revert();
+    }
+    task.clearValidatorStake(msg.sender);
+    distributeToken.transferFromEscrow(msg.sender, reward);
+    distributeToken.transferWeiTo(msg.sender, reward * distributeToken.currentPrice() / 100);
+  }
+
+  // =====================================================================
+  // VOTING FUNCTIONALITY
+  // =====================================================================
 
   function voteCommit(address _projectAddress, uint256 _index, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
     uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
@@ -157,24 +176,6 @@ contract TokenRegistry {
     //rescue locked tokens that weren't revealed
     uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
     plcrVoting.rescueTokens(msg.sender, pollId);
-  }
-
-  // make this only TR
-  function rewardValidator(address _projectAddress, uint256 _index) public {
-    Project project = Project(_projectAddress);
-    Task task = Task(project.tasks(_index));
-    require(task.claimable());
-    var (status, reward) = task.validators(msg.sender);
-    if (task.totalValidateNegative() == 0) {
-      require(status == 1);
-    } else if (task.totalValidateAffirmative() == 0) {
-      require(status == 0);
-    } else {
-      revert();
-    }
-    task.clearValidatorStake(msg.sender);
-    distributeToken.transferFromEscrow(msg.sender, reward);
-    distributeToken.transferWeiTo(msg.sender, reward * distributeToken.currentPrice() / 100);
   }
 
   function() public payable {

@@ -170,6 +170,7 @@ contract Project {
     stakedTokenBalances[_staker] += _tokens;
     totalTokensStaked += _tokens;
     weiBal += _weiValue;
+    projectRegistry.checkStaked(address(this));
   }
 
   function unstakeTokens(address _staker, uint256 _tokens) public onlyTR onlyInState(1) returns (uint256) {
@@ -186,6 +187,7 @@ contract Project {
     require(stakedReputationBalances[_staker] + _reputation > stakedReputationBalances[_staker]);
     stakedReputationBalances[_staker] += _reputation;
     totalReputationStaked += _reputation;
+    projectRegistry.checkStaked(address(this));
   }
 
   function unstakeReputation(address _staker, uint256 _reputation) public onlyRR onlyInState(1) {
@@ -195,15 +197,15 @@ contract Project {
     totalReputationStaked -= _reputation;
   }
 
+  // =====================================================================
+  // REWARD FUNCTIONS
+  // =====================================================================
+
   function transferWeiReward(address _rewardee, uint _reward) public onlyRR {
     require(_reward <= weiBal);
     weiBal -= _reward;
     _rewardee.transfer(_reward);
   }
-
-  // =====================================================================
-  // REWARD FUNCTIONS
-  // =====================================================================
 
   function() public payable {
 

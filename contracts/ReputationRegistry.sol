@@ -83,6 +83,10 @@ modifier onlyPR() {
     totalSupply += addtl;
   }
 
+  function averageBalance() public view {
+    return totalSupply / totalUsers;
+  }
+
   function proposeProject(uint256 _cost, uint256 _stakingPeriod) public {    //_cost of project in ether
     //calculate cost of project in tokens currently (_cost in wei)
     //check proposer has at least 5% of the proposed cost in tokens
@@ -109,11 +113,10 @@ modifier onlyPR() {
   // =====================================================================
 
   function stakeReputation(address _projectAddress, uint256 _reputation) public {
-    require(balances[msg.sender] >= _reputation && _reputation > 0);                    //make sure project exists & TH has tokens to stake
+    require(balances[msg.sender] >= _reputation && _reputation > 0);                    //make sure project exists & RH has tokens to stake
     balances[msg.sender] -= _reputation;
     Project(_projectAddress).stakeReputation(msg.sender, _reputation);
   }
-
   function unstakeReputation(address _projectAddress, uint256 _reputation) public {
     require(_reputation > 0);
     balances[msg.sender] += _reputation;
@@ -126,7 +129,7 @@ modifier onlyPR() {
 
   function claimTask(address _projectAddress, uint256 _index, string _taskDescription, uint _weighting) public {
     Project project = Project(_projectAddress);
-    uint reputationVal = (project.weiCost() * _weighting * totalSupply) / (distributeToken.weiBal() * 100);
+    uint reputationVal = project.reputationCost() * _weighting / 100;
     require(balances[msg.sender] >= reputationVal);
     uint weiVal = _weighting * project.weiCost() / 100;
     balances[msg.sender] -= reputationVal;
@@ -141,7 +144,6 @@ modifier onlyPR() {
     require(balances[msg.sender] > 1);      //worker can't vote with only 1 token
     Project project = Project(_projectAddress);
     uint256 pollId = Task(project.tasks(_index)).pollId();
-    /*uint256 nonce = projectRegistry.projectNonce();*/
     //calculate available tokens for voting
     uint256 availableTokens = plcrVoting.voteReputationBalance(msg.sender) - plcrVoting.getLockedTokens(msg.sender);
     //make sure msg.sender has tokens available in PLCR contract
