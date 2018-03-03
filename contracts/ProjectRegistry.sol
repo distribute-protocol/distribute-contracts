@@ -29,8 +29,6 @@ contract ProjectRegistry {
 
   mapping (address => StakedState) public stakedProjects;
 
-  // NOTE do we need a validated Projects mapping?
-
   // =====================================================================
   // CONSTRUCTOR
   // =====================================================================
@@ -84,7 +82,6 @@ contract ProjectRegistry {
    return projectAddress;
   }
 
-  // Maybe makes this easier but we should look at removing
   function refundProposer(address _projectAddress) public onlyTRorRR() returns (uint256[2]) {
     Project project =  Project(_projectAddress);
     require(project.state() > 1);
