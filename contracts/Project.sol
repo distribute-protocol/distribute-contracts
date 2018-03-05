@@ -144,8 +144,8 @@ contract Project {
       totalReputationStaked = 0;
     }
 
-    function setTaskLength(uint _length) public onlyPR {
-      tasks.length = _length;
+    function setTaskLength(uint _tasksLength) public onlyPR {
+      tasks.length = _tasksLength;
     }
 
     function setTaskAddress(address _taskAddress, uint _index) public onlyPR {
