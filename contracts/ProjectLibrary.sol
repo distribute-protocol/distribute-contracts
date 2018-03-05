@@ -30,7 +30,7 @@ library ProjectLibrary {
 
     function isStaked(address _projectAddress) public view returns (bool) {
       Project project = Project(_projectAddress);
-      return project.weiCost() <= project.weiBal() && project.reputationCost() <= project.totalReputationStaked();
+      return project.weiBal() >= project.weiCost() && project.totalReputationStaked() >= project.reputationCost()  ;
     }
 
     function timesUp(address _projectAddress) public view returns (bool) {

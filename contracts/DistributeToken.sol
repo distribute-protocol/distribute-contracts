@@ -105,7 +105,7 @@ contract DistributeToken is StandardToken {
     }
 
     function sell(uint256 _value) public {
-        require(_value > 0 && (balances[msg.sender]) >= _value);
+        require(_value > 0 && (_value <= balances[msg.sender]));
         uint256 reward = _value * currentPrice();    //truncation - remainder discarded
         balances[msg.sender] -= _value;
         totalSupply -= _value;
