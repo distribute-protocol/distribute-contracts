@@ -6,12 +6,10 @@
 pragma solidity ^0.4.8;
 
 import "./Project.sol";
-import "./ProjectRegistry.sol";
-import "./TokenRegistry.sol";
 
 contract Task {
-  ProjectRegistry projectRegistry;
-  TokenRegistry tokenRegistry;
+  address projectRegistryAddress;
+  address tokenRegistryAddress;
   bytes32 public taskHash;
   bool public claimable;
   bool public claimableByRep;
@@ -41,12 +39,12 @@ contract Task {
 // =====================================================================
 
   modifier onlyPR() {
-    require(msg.sender == address(projectRegistry));
+    require(msg.sender == projectRegistryAddress);
     _;
   }
 
   modifier onlyTR() {
-    require(msg.sender == address(tokenRegistry));
+    require(msg.sender == tokenRegistryAddress);
     _;
   }
 
@@ -55,8 +53,8 @@ contract Task {
 // =====================================================================
 
   function Task(bytes32 _hash, address _tokenRegistry) public {
-    projectRegistry = ProjectRegistry(msg.sender);
-    tokenRegistry = TokenRegistry(_tokenRegistry);
+    projectRegistryAddress = msg.sender;
+    tokenRegistryAddress = _tokenRegistry;
     taskHash = _hash;
   }
 
