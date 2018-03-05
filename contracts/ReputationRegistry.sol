@@ -137,7 +137,7 @@ contract ReputationRegistry{
   // TASK
   // =====================================================================
 
-    function claimTask(address _projectAddress, uint256 _index, string _taskDescription, uint _weighting) public {
+    function claimTask(address _projectAddress, uint256 _index, bytes32 _taskDescription, uint _weighting) public {
       Project project = Project(_projectAddress);
       uint reputationVal = project.reputationCost() * _weighting / 100;
       require(balances[msg.sender] >= reputationVal);
