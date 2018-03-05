@@ -87,14 +87,18 @@ contract TokenRegistry {
     function stakeTokens(address _projectAddress, uint256 _tokens) public {
       require(distributeToken.balanceOf(msg.sender) >= _tokens);
       Project project = Project(_projectAddress);
-      require(project.state() == 1);
+      // require(project.state() == 1);   ------> this now happens in project.stakeTokens()
       uint256 currentPrice = distributeToken.currentPrice();
       uint256 weiRemaining = project.weiCost() - project.weiBal();
       require(weiRemaining > 0);
       uint256 weiVal =  currentPrice * _tokens;
       bool flag = weiVal > weiRemaining;
-      uint256 weiChange = flag ? weiRemaining : weiVal;       //how much ether to send on change
-      uint256 tokens = flag ? ((weiRemaining/currentPrice) + 1) : _tokens;
+      uint256 weiChange = flag
+        ? weiRemaining
+        : weiVal;       //how much ether to send on change
+      uint256 tokens = flag
+        ? ((weiRemaining/currentPrice) + 1)
+        : _tokens;
       project.stakeTokens(msg.sender, tokens, weiChange);
       distributeToken.transferWeiTo(_projectAddress, weiChange);
       distributeToken.transferToEscrow(msg.sender, tokens);

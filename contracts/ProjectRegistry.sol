@@ -75,7 +75,7 @@ contract ProjectRegistry {
 
     function checkStaked(address _projectAddress) public returns (bool) {
       Project project = Project(_projectAddress);
-      require(project.state() == 1);    //check that project is in the proposed state
+      require(project.state() == 1);
       if(ProjectLibrary.isStaked(_projectAddress)) {
         uint256 nextDeadline = now + stakedStatePeriod;
         project.setState(2, nextDeadline);
@@ -87,6 +87,7 @@ contract ProjectRegistry {
         }
         return false;
       }
+      return false;
     }
 
     function checkActive(address _projectAddress) public returns (bool) {
