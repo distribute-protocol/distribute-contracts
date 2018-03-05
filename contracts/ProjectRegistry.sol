@@ -236,17 +236,12 @@ contract ProjectRegistry {
       }
     }
 
-    bytes32 public TD;
-    uint public W;
-
     function claimTask(address _projectAddress, uint256 _index, bytes32 _taskDescription, address _claimer, uint _weighting, uint _weiVal, uint _reputationVal) public onlyRR() {
       Project project = Project(_projectAddress);
       require(project.state() == 3);
       Task task = Task(project.tasks(_index));
       task.setWeighting(_weighting);
-      TD = _taskDescription;
-      W = _weighting;
-      // require(task.taskHash() == keccak256(_taskDescription, _weighting));
+      require(keccak256(_taskDescription, _weighting) == task.taskHash());
       require(task.claimer() == 0 || now > (task.claimTime() + project.turnoverTime()) && !task.complete());
       task.setTaskReward(_weiVal, _reputationVal, _claimer);
     }
