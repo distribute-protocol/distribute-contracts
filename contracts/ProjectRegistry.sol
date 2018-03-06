@@ -34,6 +34,7 @@ contract ProjectRegistry {
 // =====================================================================
 
   event LogProjectCreated(address indexed projectAddress, address proposerAddress, uint256 projectCost, uint256 proposerStake);
+  /* event HashTest(bytes32 indexed description, uint weighting, bytes32 indexed hashResult, bytes32 indexed taskHash); */
 
 // =====================================================================
 // MODIFIERS
@@ -240,10 +241,11 @@ contract ProjectRegistry {
       Project project = Project(_projectAddress);
       require(project.state() == 3);
       Task task = Task(project.tasks(_index));
-      task.setWeighting(_weighting);
       require(keccak256(_taskDescription, _weighting) == task.taskHash());
-      require(task.claimer() == 0 || now > (task.claimTime() + project.turnoverTime()) && !task.complete());
+      require(task.claimer() == 0 || (now > (task.claimTime() + project.turnoverTime()) && !task.complete()));
+      task.setWeighting(_weighting);
       task.setTaskReward(_weiVal, _reputationVal, _claimer);
+      /* HashTest(_taskDescription, _weighting, keccak256(_taskDescription, _weighting), task.taskHash()); */
     }
 
     function submitTaskComplete(address _projectAddress, uint256 _index) public {
