@@ -59,11 +59,11 @@ library ProjectLibrary {
   // =====================================================================
   // STATE CHANGE
   // =====================================================================
-    function checkStaked(address _projectAddress, uint _stakedStatePeriod) public returns (bool) {
+    function checkStaked(address _projectAddress) public returns (bool) {
       Project project = Project(_projectAddress);
       require(project.state() == 1);
       if(isStaked(_projectAddress)) {
-        uint256 nextDeadline = now + _stakedStatePeriod;
+        uint256 nextDeadline = now + project.stakedStatePeriod();
         project.setState(2, nextDeadline);
         return true;
       } else {
@@ -75,13 +75,13 @@ library ProjectLibrary {
       }
       return false;
     }
-    function checkActive(address _projectAddress, uint _activeStatePeriod, bytes32 _taskHash) public returns (bool) {
+    function checkActive(address _projectAddress, bytes32 _taskHash) public returns (bool) {
       Project project = Project(_projectAddress);
       require(project.state() == 2);
       if(timesUp(_projectAddress)) {
         uint256 nextDeadline;
         if(_taskHash != 0) {
-          nextDeadline = now + _activeStatePeriod;
+          nextDeadline = now + project.activeStatePeriod();
           project.setState(3, nextDeadline);
           return true;
         } else {
@@ -92,12 +92,12 @@ library ProjectLibrary {
       return false;
     }
 
-    function checkValidate(address _projectAddress, address _tokenRegistryAddress, address _distributeTokenAddress, uint _validateStatePeriod) public {
+    function checkValidate(address _projectAddress, address _tokenRegistryAddress, address _distributeTokenAddress) public {
       Project project = Project(_projectAddress);
       TokenRegistry tr = TokenRegistry(_tokenRegistryAddress);
       require(project.state() == 3);
       if (timesUp(_projectAddress)) {
-        uint256 nextDeadline = now + _validateStatePeriod;
+        uint256 nextDeadline = now + project.validateStatePeriod();
         project.setState(4, nextDeadline);
         for(uint i = 0; i < project.getTaskCount(); i++) {
           Task task = Task(project.tasks(i));
@@ -111,7 +111,7 @@ library ProjectLibrary {
       }
     }
 
-    function checkVoting(address _projectAddress, address _tokenRegistryAddress, address _distributeTokenAddress, address _plcrVoting, uint _voteCommitPeriod, uint _voteRevealPeriod) public {
+    function checkVoting(address _projectAddress, address _tokenRegistryAddress, address _distributeTokenAddress, address _plcrVoting) public {
       Project project = Project(_projectAddress);
       TokenRegistry tr = TokenRegistry(_tokenRegistryAddress);
       PLCRVoting plcr = PLCRVoting(_plcrVoting);
@@ -122,7 +122,7 @@ library ProjectLibrary {
           Task task = Task(project.tasks(i));
           if (task.complete()) {
             if (task.opposingValidator()) {   // there is an opposing validator, poll required
-              task.setPollId(plcr.startPoll(51, _voteCommitPeriod, _voteRevealPeriod)); // function handles storage of voting pollId
+              task.setPollId(plcr.startPoll(51, project.voteCommitPeriod(), project.voteRevealPeriod())); // function handles storage of voting pollId
             } else {
               bool repClaim = task.markTaskClaimable(true);
               if (!repClaim) {

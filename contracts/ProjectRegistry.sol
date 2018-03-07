@@ -17,12 +17,6 @@ contract ProjectRegistry {
   address reputationRegistryAddress;
   address distributeTokenAddress;
 
-  uint256 public stakedStatePeriod = 1 weeks;
-  uint256 public activeStatePeriod = 2 weeks;
-  uint256 public validateStatePeriod = 1 weeks;
-  uint256 public voteCommitPeriod = 1 weeks;
-  uint256 public voteRevealPeriod = 1 weeks;
-
   struct StakedState {
     bytes32 topTaskHash;
     mapping(address => bytes32) taskHashSubmissions;
@@ -77,19 +71,19 @@ contract ProjectRegistry {
 
 
     function checkStaked(address _projectAddress) public returns (bool) {
-      return ProjectLibrary.checkStaked(_projectAddress, stakedStatePeriod);
+      return ProjectLibrary.checkStaked(_projectAddress);
     }
 
     function checkActive(address _projectAddress) public returns (bool) {
-      return ProjectLibrary.checkActive(_projectAddress, activeStatePeriod, stakedProjects[_projectAddress].topTaskHash);
+      return ProjectLibrary.checkActive(_projectAddress, stakedProjects[_projectAddress].topTaskHash);
     }
 
     function checkValidate(address _projectAddress) public {
-      ProjectLibrary.checkValidate(_projectAddress, tokenRegistryAddress, distributeTokenAddress, validateStatePeriod);
+      ProjectLibrary.checkValidate(_projectAddress, tokenRegistryAddress, distributeTokenAddress);
     }
 
     function checkVoting(address _projectAddress) public {
-      ProjectLibrary.checkVoting(_projectAddress, tokenRegistryAddress, distributeTokenAddress, address(plcrVoting), voteCommitPeriod, voteRevealPeriod);
+      ProjectLibrary.checkVoting(_projectAddress, tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
     }
 
     function checkEnd(address _projectAddress) public {

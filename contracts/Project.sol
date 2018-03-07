@@ -29,7 +29,12 @@ contract Project {
     8: Expired
   */
 
+  uint256 public stakedStatePeriod = 1 weeks;
+  uint256 public activeStatePeriod = 2 weeks;
   uint256 public turnoverTime = 1 weeks;
+  uint256 public validateStatePeriod = 1 weeks;
+  uint256 public voteCommitPeriod = 1 weeks;
+  uint256 public voteRevealPeriod = 1 weeks;
 
   address public proposer;
   uint256 public proposerType;
