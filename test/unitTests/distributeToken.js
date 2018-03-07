@@ -10,13 +10,12 @@ contract('DistributeToken', function (accounts) {
   let tokens = 10000
   let burnAmount = 100
   let totalSupply
-  let totalFreeSupply
   let account1 = accounts[1]
   let netTokens = tokens - burnAmount
 
   before(async function () {
     DT = await DistributeToken.deployed()
-    spoofedDT = await DistributeToken.new(accounts[0])
+    spoofedDT = await DistributeToken.new(accounts[0], accounts[3])
   })
 
   it('returns baseCost as the current price when no tokens are available', async () => {
@@ -34,8 +33,6 @@ contract('DistributeToken', function (accounts) {
     await DT.mint(tokens, {from: account1, value: weiRequired})
     totalSupply = await DT.totalSupply.call()
     assert.equal(totalSupply.toNumber(), tokens, 'total token supply not updated correctly')
-    totalFreeSupply = await DT.totalFreeSupply.call()
-    assert.equal(totalFreeSupply.toNumber(), tokens, 'free token supply not updated correctly')
     let balance = await DT.balanceOf(account1)
     assert.equal(balance.toNumber(), tokens, 'balances mapping not updated correctly')
     let weiBal = await DT.weiBal.call()
@@ -44,13 +41,13 @@ contract('DistributeToken', function (accounts) {
 
   it('returns the correct wei required when tokens are available', async () => {
     let weiRequired = await DT.weiRequired(tokens)
-    assert.equal(weiRequired, 2000000000000000000, 'weiRequired not returned correctly')
+    assert.equal(weiRequired, 1500000000000000000, 'weiRequired not returned correctly')
   })
 
   it('returns the current price when tokens are available', async () => {
     await DT.mint(tokens, {from: accounts[3], value: web3.toWei(5, 'ether')})
     let currentPrice = await DT.currentPrice()
-    assert.equal(currentPrice, 150000000000000, 'currentPrice not returned correctly')
+    assert.equal(currentPrice, 125000000000000, 'currentPrice not returned correctly')
   })
 
   it('sells tokens', async () => {
@@ -61,13 +58,11 @@ contract('DistributeToken', function (accounts) {
     assert.equal(balance2.toNumber(), netTokens, 'balances mapping not updated correctly')
     let totalSupply = await DT.totalSupply.call()
     assert.equal(totalSupply.toNumber(), netTokens + tokens, 'total token supply not updated correctly')
-    let freeTokenSupply = await DT.totalFreeSupply.call()
-    assert.equal(freeTokenSupply.toNumber(), netTokens + tokens, 'free token supply not updated correctly')
   })
 
   it('returns the target price for an amount of tokens', async () => {
     let targetPrice = await DT.targetPrice(tokens)
-    assert.equal(targetPrice, 200100000000000, 'targetPrice not returned correctly')
+    assert.equal(targetPrice, 166750000000000, 'targetPrice not returned correctly')
   })
 
   it('allows tokenRegistry to call burn', async () => {
@@ -88,9 +83,9 @@ contract('DistributeToken', function (accounts) {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('allows tokenRegistry to call transferWeiFrom', async () => {
+  it('allows tokenRegistry to call transferWeiTo', async () => {
     let weiRequired = await spoofedDT.weiRequired(tokens)
-    await spoofedDT.transferWeiFrom(account1, weiRequired)
+    await spoofedDT.transferWeiTo(account1, weiRequired)
     let weiBal = await spoofedDT.weiBal()
     assert.equal(weiBal, 0, "doesn't transfer wei correctly")
   })
@@ -106,14 +101,12 @@ contract('DistributeToken', function (accounts) {
   })
 
   it('allows tokenRegistry to call transferToEscrow', async () => {
-    spoofedDT = await DistributeToken.new(accounts[0])
+    spoofedDT = await DistributeToken.new(accounts[0], accounts[3])
     let weiRequired = await spoofedDT.weiRequired(tokens)
     await spoofedDT.mint(tokens, {from: account1, value: weiRequired})
     await spoofedDT.transferToEscrow(account1, tokens)
     let totalSupply = await spoofedDT.totalSupply.call()
-    let totalFreeSupply = await spoofedDT.totalFreeSupply.call()
     let balance = await spoofedDT.balanceOf(account1)
-    assert.equal(totalFreeSupply, 0, "doesn't transfer tokens to escrow correctly")
     assert.equal(totalSupply, tokens, "doesn't maintain supply correctly")
     assert.equal(balance, 0, "doesn't update balance correctly")
   })
@@ -131,9 +124,7 @@ contract('DistributeToken', function (accounts) {
   it('allows tokenRegistry to call transferFromEscrow', async () => {
     await spoofedDT.transferFromEscrow(account1, tokens)
     let totalSupply = await spoofedDT.totalSupply.call()
-    let totalFreeSupply = await spoofedDT.totalFreeSupply.call()
     let balance = await spoofedDT.balanceOf(account1)
-    assert.equal(totalFreeSupply, tokens, "doesn't transfer tokens to escrow correctly")
     assert.equal(totalSupply, tokens, "doesn't maintain supply correctly")
     assert.equal(balance, tokens, "doesn't update balance correctly")
   })
