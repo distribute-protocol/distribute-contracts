@@ -8,7 +8,6 @@ pragma solidity ^0.4.10;
 
 import "./ProjectRegistry.sol";
 import "./ReputationRegistry.sol";
-import "./ProjectLibrary.sol";
 import "./Task.sol";
 
 contract Project {
