@@ -204,5 +204,9 @@ contract Project {
       _rewardee.transfer(_reward);
     }
 
+    function returnWei(address _distributeToken, uint value) public onlyPR {
+      _distributeToken.transfer(value);
+    }
+
   function() public payable {}
 }

@@ -2,9 +2,9 @@ pragma solidity ^0.4.8;
 
 import "./Project.sol";
 import "./TokenRegistry.sol";
-import "./ReputationRegistry.sol";
 import "./ProjectRegistry.sol";
 import "./Task.sol";
+import "./library/PLCRVoting.sol";
 
 library ProjectLibrary {
 
@@ -55,6 +55,113 @@ library ProjectLibrary {
         ? tokenWeight = percent(project.stakedTokenBalances(_address), project.totalTokensStaked(), 2)
         : tokenWeight = 0;
       return (reputationWeight + tokenWeight) / 2;
+    }
+  // =====================================================================
+  // STATE CHANGE
+  // =====================================================================
+    function checkStaked(address _projectAddress, uint _stakedStatePeriod) public returns (bool) {
+      Project project = Project(_projectAddress);
+      require(project.state() == 1);
+      if(isStaked(_projectAddress)) {
+        uint256 nextDeadline = now + _stakedStatePeriod;
+        project.setState(2, nextDeadline);
+        return true;
+      } else {
+        if(timesUp(_projectAddress)) {
+          project.setState(8, 0);
+          project.clearProposerStake();
+        }
+        return false;
+      }
+      return false;
+    }
+    function checkActive(address _projectAddress, uint _activeStatePeriod, bytes32 _taskHash) public returns (bool) {
+      Project project = Project(_projectAddress);
+      require(project.state() == 2);
+      if(timesUp(_projectAddress)) {
+        uint256 nextDeadline;
+        if(_taskHash != 0) {
+          nextDeadline = now + _activeStatePeriod;
+          project.setState(3, nextDeadline);
+          return true;
+        } else {
+          project.setState(7, 0);
+          return false;
+        }
+      }
+      return false;
+    }
+
+    function checkValidate(address _projectAddress, address _tokenRegistryAddress, address _distributeTokenAddress, uint _validateStatePeriod) public {
+      Project project = Project(_projectAddress);
+      TokenRegistry tr = TokenRegistry(_tokenRegistryAddress);
+      require(project.state() == 3);
+      if (timesUp(_projectAddress)) {
+        uint256 nextDeadline = now + _validateStatePeriod;
+        project.setState(4, nextDeadline);
+        for(uint i = 0; i < project.getTaskCount(); i++) {
+          Task task = Task(project.tasks(i));
+          if (task.complete() == false) {
+            uint reward = task.weiReward();
+            tr.revertWei(reward);
+            project.returnWei(_distributeTokenAddress, reward);
+            task.setTaskReward(0, 0, task.claimer());
+          }
+        }
+      }
+    }
+
+    function checkVoting(address _projectAddress, address _tokenRegistryAddress, address _distributeTokenAddress, address _plcrVoting, uint _voteCommitPeriod, uint _voteRevealPeriod) public {
+      Project project = Project(_projectAddress);
+      TokenRegistry tr = TokenRegistry(_tokenRegistryAddress);
+      PLCRVoting plcr = PLCRVoting(_plcrVoting);
+      require(project.state() == 4);
+      if (timesUp(_projectAddress)) {
+        project.setState(5, 0);
+        for(uint i = 0; i < project.getTaskCount(); i++) {
+          Task task = Task(project.tasks(i));
+          if (task.complete()) {
+            if (task.opposingValidator()) {   // there is an opposing validator, poll required
+              task.setPollId(plcr.startPoll(51, _voteCommitPeriod, _voteRevealPeriod)); // function handles storage of voting pollId
+            } else {
+              bool repClaim = task.markTaskClaimable(true);
+              if (!repClaim) {
+                uint reward = task.weiReward();
+                tr.revertWei(reward);
+                project.returnWei(_distributeTokenAddress, reward);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    function checkEnd(address _projectAddress, address _tokenRegistryAddress, address _distributeTokenAddress, address _plcrVoting) public {
+      Project project = Project(_projectAddress);
+      TokenRegistry tr = TokenRegistry(_tokenRegistryAddress);
+      PLCRVoting plcr = PLCRVoting(_plcrVoting);
+      require(project.state() == 5);
+      for (uint i = 0; i < project.getTaskCount(); i++) {
+        Task task = Task(project.tasks(i));
+        if (task.complete() && task.opposingValidator()) {      // check tasks with polls only
+          if (plcr.pollEnded(task.pollId())) {
+            if (plcr.isPassed(task.pollId())) {
+              task.markTaskClaimable(true);
+            } else {
+              task.markTaskClaimable(false);
+              uint reward = task.weiReward();
+              tr.revertWei(reward);
+              project.returnWei(_distributeTokenAddress, reward);
+            }
+          }
+        }
+      }
+      calculatePassAmount(_projectAddress);
+      if (project.passAmount() >= project.passThreshold()) {
+        project.setState(6, 0);
+      } else {
+        project.setState(7, 0);
+      }
     }
 
   // =====================================================================
@@ -141,14 +248,4 @@ library ProjectLibrary {
       return refund;
     }
 
-  // =====================================================================
-  // FAILED
-  // =====================================================================
-
-    function burnStake(address _tokenRegistry, address _reputationRegistry, address _projectAddress) public {
-      Project project = Project(_projectAddress);
-      TokenRegistry(_tokenRegistry).burnTokens(project.totalTokensStaked());
-      ReputationRegistry(_reputationRegistry).burnReputation(project.totalReputationStaked());
-      project.clearStake();
-    }
 }

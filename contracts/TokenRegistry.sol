@@ -182,6 +182,9 @@ contract TokenRegistry {
   // FAILED
   // =====================================================================
 
+    function revertWei(uint256 _value) public onlyPR() {
+      distributeToken.returnWei(_value);
+    }
     function burnTokens(uint256 _tokens) public onlyPR() {
       distributeToken.burn(_tokens);
     }

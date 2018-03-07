@@ -93,7 +93,7 @@ contract Task {
     pollId = _pollId;
   }
 
-  function markTaskClaimable(bool passed) public onlyPR {             // passed only matters in voting
+  function markTaskClaimable(bool passed) public onlyPR returns(bool) {             // passed only matters in voting
     if (totalValidateAffirmative == 0 || totalValidateNegative == 0) {
       claimable = true;
       if (totalValidateAffirmative > totalValidateNegative) {
@@ -108,6 +108,7 @@ contract Task {
         totalValidateAffirmative = 0;
       }
     }
+    return claimableByRep;
   }
 
   function clearValidatorStake(address _staker) public onlyTR {

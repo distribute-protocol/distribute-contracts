@@ -125,8 +125,9 @@ contract DistributeToken is StandardToken {
     }
 
     // THIS IS A DANGEROUS FUNCTION - ONLY TO BE USED FOR EASE OF TESTING
-    function fund() public payable {
-      weiBal += msg.value;
+
+    function returnWei(uint value) public onlyTR {
+      weiBal += value;
     }
 
     function transferToEscrow(address _owner, uint256 _value) public onlyTR returns (bool) {

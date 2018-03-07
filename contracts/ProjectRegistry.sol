@@ -15,6 +15,7 @@ contract ProjectRegistry {
 
   address tokenRegistryAddress;
   address reputationRegistryAddress;
+  address distributeTokenAddress;
 
   uint256 public stakedStatePeriod = 1 weeks;
   uint256 public activeStatePeriod = 2 weeks;
@@ -58,8 +59,9 @@ contract ProjectRegistry {
 // CONSTRUCTOR
 // =====================================================================
 
-  function ProjectRegistry(address _tokenRegistry, address _reputationRegistry, address _plcrVoting) public {       //contract is created
-    require(tokenRegistryAddress == 0 && reputationRegistryAddress == 0);
+  function ProjectRegistry(address _distributeToken, address _tokenRegistry, address _reputationRegistry, address _plcrVoting) public {       //contract is created
+    require(tokenRegistryAddress == 0 && reputationRegistryAddress == 0 && distributeTokenAddress == 0);
+    distributeTokenAddress = _distributeToken;
     tokenRegistryAddress = _tokenRegistry;
     reputationRegistryAddress = _reputationRegistry;
     plcrVoting = PLCRVoting(_plcrVoting);
@@ -75,91 +77,28 @@ contract ProjectRegistry {
 
 
     function checkStaked(address _projectAddress) public returns (bool) {
-      Project project = Project(_projectAddress);
-      require(project.state() == 1);
-      if(ProjectLibrary.isStaked(_projectAddress)) {
-        uint256 nextDeadline = now + stakedStatePeriod;
-        project.setState(2, nextDeadline);
-        return true;
-      } else {
-        if(ProjectLibrary.timesUp(_projectAddress)) {
-          project.setState(8, 0);
-          project.clearProposerStake();
-        }
-        return false;
-      }
-      return false;
+      return ProjectLibrary.checkStaked(_projectAddress, stakedStatePeriod);
     }
 
     function checkActive(address _projectAddress) public returns (bool) {
-      Project project = Project(_projectAddress);
-      require(project.state() == 2);
-      if(ProjectLibrary.timesUp(_projectAddress)) {
-        uint256 nextDeadline;
-        if(stakedProjects[_projectAddress].topTaskHash != 0) {
-          nextDeadline = now + activeStatePeriod;
-          project.setState(3, nextDeadline);
-          return true;
-        } else {
-          project.setState(7, 0);
-          return false;
-        }
-      }
-      return false;
+      return ProjectLibrary.checkActive(_projectAddress, activeStatePeriod, stakedProjects[_projectAddress].topTaskHash);
     }
 
     function checkValidate(address _projectAddress) public {
-      Project project = Project(_projectAddress);
-      require(project.state() == 3);
-      if (ProjectLibrary.timesUp(_projectAddress)) {
-        uint256 nextDeadline = now + validateStatePeriod;
-        project.setState(4, nextDeadline);
-        for(uint i = 0; i < project.getTaskCount(); i++) {
-          Task task = Task(project.tasks(i));
-          if (task.complete() == false) {
-            task.setTaskReward(0, 0, task.claimer());
-          }
-        }
-      }
+      ProjectLibrary.checkValidate(_projectAddress, tokenRegistryAddress, distributeTokenAddress, validateStatePeriod);
     }
 
     function checkVoting(address _projectAddress) public {
-      Project project = Project(_projectAddress);
-      require(project.state() == 4);
-      if (ProjectLibrary.timesUp(_projectAddress)) {
-        project.setState(5, 0);
-        for(uint i = 0; i < project.getTaskCount(); i++) {
-          Task task = Task(project.tasks(i));
-          if (task.complete()) {
-            if (task.opposingValidator()) {   // there is an opposing validator, poll required
-              task.setPollId(plcrVoting.startPoll(51, voteCommitPeriod, voteRevealPeriod)); // function handles storage of voting pollId
-            } else {
-              task.markTaskClaimable(true);
-            }
-          }
-        }
-      }
+      ProjectLibrary.checkVoting(_projectAddress, tokenRegistryAddress, distributeTokenAddress, address(plcrVoting), voteCommitPeriod, voteRevealPeriod);
     }
 
     function checkEnd(address _projectAddress) public {
+      ProjectLibrary.checkEnd(_projectAddress, tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
       Project project = Project(_projectAddress);
-      require(project.state() == 5);
-      for (uint i = 0; i < project.getTaskCount(); i++) {
-        Task task = Task(project.tasks(i));
-        if (task.complete() && task.opposingValidator()) {      // check tasks with polls only
-          if (plcrVoting.pollEnded(task.pollId())) {
-            plcrVoting.isPassed(task.pollId())
-              ? task.markTaskClaimable(true)
-              : task.markTaskClaimable(false);
-          }
-        }
-      }
-      ProjectLibrary.calculatePassAmount(_projectAddress);
-      if (project.passAmount() >= project.passThreshold()) {
-        project.setState(6, 0);
-      } else {
-        project.setState(7, 0);
-        ProjectLibrary.burnStake(tokenRegistryAddress, reputationRegistryAddress, _projectAddress);
+      if (project.state() == 7) {
+        TokenRegistry(tokenRegistryAddress).burnTokens(project.totalTokensStaked());
+        ReputationRegistry(reputationRegistryAddress).burnReputation(project.totalReputationStaked());
+        project.clearStake();
       }
     }
 
