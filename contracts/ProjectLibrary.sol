@@ -212,7 +212,7 @@ library ProjectLibrary {
     }
 
   // =====================================================================
-  // COMPLETE
+  // STAKER
   // =====================================================================
 
     function refundStaker(address _projectAddress, address _staker) public returns (uint256) {
