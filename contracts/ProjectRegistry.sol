@@ -251,6 +251,7 @@ contract ProjectRegistry {
     function submitTaskComplete(address _projectAddress, uint256 _index) public {
       Project project = Project(_projectAddress);
       Task task = Task(project.tasks(_index));
+      require(task.complete() == false);
       require(task.claimer() == msg.sender);
       require(project.state() == 3);
       task.markTaskComplete();
