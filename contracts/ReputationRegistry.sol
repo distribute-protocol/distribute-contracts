@@ -97,7 +97,7 @@ contract ReputationRegistry{
   // PROPOSE
   // =====================================================================
 
-    function proposeProject(uint256 _cost, uint256 _stakingPeriod) public {    //_cost of project in ether
+    function proposeProject(uint256 _cost, uint256 _stakingPeriod, string _ipfsHash) public {    //_cost of project in ether
       //calculate cost of project in tokens currently (_cost in wei)
       //check proposer has at least 5% of the proposed cost in tokens
       require(now < _stakingPeriod && _cost > 0);
@@ -105,7 +105,7 @@ contract ReputationRegistry{
       uint256 proposerReputationCost = (costProportion / proposeProportion) * totalSupply;
       require(balances[msg.sender] >= proposerReputationCost);
       balances[msg.sender] -= proposerReputationCost;
-      address projectAddress = projectRegistry.createProject(_cost, costProportion, _stakingPeriod, msg.sender, 2, proposerReputationCost);
+      address projectAddress = projectRegistry.createProject(_cost, costProportion, _stakingPeriod, msg.sender, 2, proposerReputationCost, _ipfsHash);
       ProjectCreated(projectAddress, _cost, proposerReputationCost);
     }
 

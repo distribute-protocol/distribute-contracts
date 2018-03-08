@@ -100,7 +100,7 @@ contract ProjectRegistry {
   // PROPOSER
   // =====================================================================
 
-    function createProject(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _proposer, uint256 _proposerType, uint256 _proposerStake) public onlyTRorRR() returns (address) {
+    function createProject(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _proposer, uint256 _proposerType, uint256 _proposerStake, string _ipfsHash) public onlyTRorRR() returns (address) {
 
       Project newProject = new Project(_cost,
                                        _costProportion,
@@ -108,6 +108,7 @@ contract ProjectRegistry {
                                        _proposer,
                                        _proposerType,
                                        _proposerStake,
+                                       _ipfsHash,
                                        reputationRegistryAddress,
                                        tokenRegistryAddress
                                        );

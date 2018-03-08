@@ -59,7 +59,7 @@ contract TokenRegistry {
   // PROPOSE
   // =====================================================================
 
-    function proposeProject(uint256 _cost, uint256 _stakingPeriod) public {    //_cost of project in ether
+    function proposeProject(uint256 _cost, uint256 _stakingPeriod, string _ipfsHash) public {    //_cost of project in ether
       //calculate cost of project in tokens currently (_cost in wei)
       //check proposer has at least 5% of the proposed cost in tokens
       require(now < _stakingPeriod && _cost > 0);
@@ -67,7 +67,7 @@ contract TokenRegistry {
       uint256 proposerTokenCost = (costProportion / proposeProportion) * distributeToken.totalSupply();           //divide by 20 to get 5 percent of tokens
       require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
       distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
-      address projectAddress = projectRegistry.createProject(_cost, costProportion, _stakingPeriod, msg.sender, 1, proposerTokenCost);
+      address projectAddress = projectRegistry.createProject(_cost, costProportion, _stakingPeriod, msg.sender, 1, proposerTokenCost, _ipfsHash);
       ProjectCreated(projectAddress, _cost, proposerTokenCost);
     }
 

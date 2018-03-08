@@ -44,6 +44,7 @@ contract Project {
   uint256 public nextDeadline;
   uint256 public weiCost;
   uint256 public reputationCost;
+  string public ipfsHash;
   uint256 public passAmount;
   uint256 public passThreshold = 100;
 
@@ -95,6 +96,7 @@ contract Project {
     address _proposer,
     uint256 _proposerType,
     uint256 _proposerStake,
+    string _ipfsHash,
     address _reputationRegistry,
     address _tokenRegistry
   ) public {       //called by THR
@@ -108,6 +110,7 @@ contract Project {
     proposer = _proposer;
     proposerType = _proposerType;
     proposerStake = _proposerStake;
+    ipfsHash = _ipfsHash;
   }
 
 // =====================================================================
