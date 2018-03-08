@@ -20,6 +20,11 @@ contract('Project', function (accounts) {
   let staker2 = accounts[5]
   let repStaker = accounts[6]
   let nonStaker = accounts[3]
+
+  let proposer
+  let proposerType
+  let proposerStake
+  
   before(async function () {
     TR = await TokenRegistry.deployed()
     RR = await ReputationRegistry.deployed()
