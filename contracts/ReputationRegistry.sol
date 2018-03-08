@@ -24,6 +24,7 @@ contract ReputationRegistry{
 
   mapping (address => uint) public balances;
   mapping (address => bool) public first;   //indicates if address has registerd
+  mapping (address => uint) public lastAccess;
 
   uint256 public totalSupply;               //total supply of reputation in all states
   uint256 public totalUsers;
@@ -85,9 +86,10 @@ contract ReputationRegistry{
 
     // faucet function brings balance to initial value if between 0 and the initialRepVal
     function faucet() public {
-      require(balances[msg.sender] < initialRepVal && balances[msg.sender] >= 0 && first[msg.sender] == true);
+      require(balances[msg.sender] < initialRepVal && balances[msg.sender] >= 0 && first[msg.sender] == true && now > lastAccess[msg.sender]);
       uint256 addtl = initialRepVal - balances[msg.sender];
       balances[msg.sender] += addtl;
+      lastAccess[msg.sender] = now + 2 weeks;
       totalSupply += addtl;
     }
 
