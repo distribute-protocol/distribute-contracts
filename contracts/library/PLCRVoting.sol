@@ -3,9 +3,7 @@ pragma solidity ^0.4.8;
 //import files
 import "./DLL.sol";
 import "./AttributeStore.sol";
-
-import "../TokenRegistry.sol";
-import "../ReputationRegistry.sol";
+import "../ProjectRegistry.sol";
 
 /**
 @title Partial-Lock-Commit-Reveal Voting scheme with ERC20 tokens
@@ -63,13 +61,15 @@ contract PLCRVoting {
 
     address tokenRegistry;
     address reputationRegistry;
+    address projectRegistry;
 
     /**
     @dev Initializes voteQuorum, commitDuration, revealDuration, and pollNonce in addition to token contract and trusted mapping
     */
-    function PLCRVoting(address _tokenRegistry, address _reputationRegistry) public {
-        tokenRegistry = TokenRegistry(_tokenRegistry);
-        reputationRegistry = ReputationRegistry(_reputationRegistry);
+    function PLCRVoting(address _tokenRegistry, address _reputationRegistry, address _projectRegistry) public {
+        tokenRegistry = _tokenRegistry;
+        reputationRegistry = _reputationRegistry;
+        projectRegistry = _projectRegistry;
         pollNonce = INITIAL_POLL_NONCE;
     }
 
@@ -233,7 +233,7 @@ contract PLCRVoting {
     @param _revealDuration Length of desired reveal period in seconds
     */
     function startPoll(uint _voteQuorum, uint _commitDuration, uint _revealDuration) public returns (uint pollID) {
-        require(msg.sender == tokenRegistry);
+        require(msg.sender == projectRegistry);
         pollNonce = pollNonce + 1;
         pollMap[pollNonce] = Poll({
             voteQuorum: _voteQuorum,

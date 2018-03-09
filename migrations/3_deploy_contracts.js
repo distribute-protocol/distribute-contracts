@@ -16,11 +16,15 @@ module.exports = function (deployer) {
   }).then(function () {
     return deployer.deploy(ReputationRegistry)
   }).then(function () {
+    return deployer.deploy(ProjectRegistry)
+  }).then(function () {
     return deployer.deploy(DistributeToken, TokenRegistry.address, ReputationRegistry.address)
   }).then(function () {
-    return deployer.deploy(PLCRVoting, TokenRegistry.address, ReputationRegistry.address)
+    return deployer.deploy(PLCRVoting, TokenRegistry.address, ReputationRegistry.address, ProjectRegistry.address)
   }).then(function () {
-    return deployer.deploy(ProjectRegistry, DistributeToken.address, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address)
+    return ProjectRegistry.deployed()
+  }).then(function (instance) {
+    return instance.init(DistributeToken.address, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address)
   }).then(function () {
     return TokenRegistry.deployed()
   }).then(function (instance) {
