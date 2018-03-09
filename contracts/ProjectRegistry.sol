@@ -9,6 +9,7 @@ import "./Project.sol";
 import "./ProjectLibrary.sol";
 import "./library/PLCRVoting.sol";
 import "./Task.sol";
+import "./ReputationRegistry.sol";
 
 contract ProjectRegistry {
   PLCRVoting plcrVoting;
@@ -53,7 +54,7 @@ contract ProjectRegistry {
 // CONSTRUCTOR
 // =====================================================================
 
-  function ProjectRegistry(address _distributeToken, address _tokenRegistry, address _reputationRegistry, address _plcrVoting) public {       //contract is created
+  function init(address _distributeToken, address _tokenRegistry, address _reputationRegistry, address _plcrVoting) public {       //contract is created
     require(tokenRegistryAddress == 0 && reputationRegistryAddress == 0 && distributeTokenAddress == 0);
     distributeTokenAddress = _distributeToken;
     tokenRegistryAddress = _tokenRegistry;
