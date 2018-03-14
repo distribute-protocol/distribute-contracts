@@ -99,7 +99,7 @@ contract Project {
     string _ipfsHash,
     address _reputationRegistry,
     address _tokenRegistry
-  ) public {       //called by THR
+  ) public {
     reputationRegistryAddress = _reputationRegistry;
     tokenRegistryAddress = _tokenRegistry;
     projectRegistryAddress = msg.sender;
@@ -160,7 +160,7 @@ contract Project {
       tasks[_index] = _taskAddress;
     }
 
-    function setPassAmount(uint256 _passAmount) public onlyPR() {
+    function setPassAmount(uint256 _passAmount) public onlyPR {
       passAmount = _passAmount;
     }
 
@@ -195,7 +195,7 @@ contract Project {
 
     function unstakeReputation(address _staker, uint256 _reputation) public onlyRR {
       require(state == 1);
-      require(stakedReputationBalances[_staker] - _reputation < stakedReputationBalances[_staker] &&  //check overflow /
+      require(stakedReputationBalances[_staker] - _reputation < stakedReputationBalances[_staker] &&  //check overflow
         stakedReputationBalances[_staker] >= _reputation); //make sure _staker has the tokens staked to unstake
       stakedReputationBalances[_staker] -= _reputation;
       totalReputationStaked -= _reputation;

@@ -198,7 +198,7 @@ contract ReputationRegistry{
   // FAILED
   // =====================================================================
 
-    function burnReputation(uint256 _reputation) public onlyPR() {
+    function burnReputation(uint256 _reputation) public onlyPR {
       totalSupply -= _reputation;
     }
 }

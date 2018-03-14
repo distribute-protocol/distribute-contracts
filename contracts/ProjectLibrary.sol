@@ -230,18 +230,18 @@ library ProjectLibrary {
       // account for proportion of successful tasks
       Project project = Project(_projectAddress);
       if(project.totalTokensStaked() != 0) {
-        refund = project.stakedTokenBalances(_staker) * project.passThreshold() / 100;
+        refund = project.stakedTokenBalances(_staker) * project.passAmount() / 100;
         project.clearTokenStake(_staker);
       }
       tokenRefund(_staker, refund);
       return refund;
     }
 
-    function handleReputationStaker(address _projectAddress, address _staker) internal returns (uint256 _refund) {
+    function handleReputationStaker(address _projectAddress, address _staker) internal returns (uint256) {
       uint256 refund;
       Project project = Project(_projectAddress);
       if(project.totalReputationStaked() != 0) {
-        refund = project.stakedReputationBalances(_staker) * project.passThreshold() / 100;
+        refund = project.stakedReputationBalances(_staker) * project.passAmount() / 100;
         project.clearReputationStake(_staker);
       }
       reputationRefund(_projectAddress, _staker, refund);

@@ -14,38 +14,39 @@ contract DistributeToken is StandardToken {
 
   uint256 public weiBal;
 
-  // .0001 ether --> 3 cents
+  // .0001 ether
   uint256 baseCost = 100000000000000;
 
- // =====================================================================
- // EVENTS
- // =====================================================================
+// =====================================================================
+// EVENTS
+// =====================================================================
 
-   event LogMint(uint256 amountMinted, uint256 totalCost);
-   event LogWithdraw(uint256 amountWithdrawn, uint256 reward);
+  event LogMint(uint256 amountMinted, uint256 totalCost);
+  event LogWithdraw(uint256 amountWithdrawn, uint256 reward);
 
- // =====================================================================
- // CONSTRUCTOR
- // =====================================================================
+// =====================================================================
+// CONSTRUCTOR
+// =====================================================================
 
-   function DistributeToken(address _tokenRegistry, address _reputationRegistry) public {
-     require(tokenRegistryAddress == 0 && reputationRegistryAddress == 0);
-     tokenRegistryAddress = _tokenRegistry;
-     reputationRegistryAddress = _reputationRegistry;
+  function DistributeToken(address _tokenRegistry, address _reputationRegistry) public {
+    require(tokenRegistryAddress == 0 && reputationRegistryAddress == 0);
+    tokenRegistryAddress = _tokenRegistry;
+    reputationRegistryAddress = _reputationRegistry;
+  }
 
-   }
- // =====================================================================
- // MODIFIERS
- // =====================================================================
+// =====================================================================
+// MODIFIERS
+// =====================================================================
 
-   modifier onlyTR() {
-     require(msg.sender == tokenRegistryAddress);
-     _;
-   }
+  modifier onlyTR() {
+    require(msg.sender == tokenRegistryAddress);
+    _;
+  }
+
   modifier onlyTRorRR() {
     require(msg.sender == tokenRegistryAddress || msg.sender == reputationRegistryAddress);
     _;
-   }
+  }
 
 // =====================================================================
 // FUNCTIONS
@@ -99,7 +100,7 @@ contract DistributeToken is StandardToken {
         }
     }
 
-    function burn(uint256 _value) public onlyTR() {
+    function burn(uint256 _value) public onlyTR {
       require(_value <= totalSupply && _value > 0);
       totalSupply -= _value;
     }
@@ -118,7 +119,7 @@ contract DistributeToken is StandardToken {
   // TRANSFER
   // =====================================================================
 
-    function transferWeiTo(address _address, uint256 _weiValue) public onlyTRorRR() {
+    function transferWeiTo(address _address, uint256 _weiValue) public onlyTRorRR {
       require(_weiValue <= weiBal);
       weiBal -= _weiValue;
       _address.transfer(_weiValue);

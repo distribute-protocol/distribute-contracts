@@ -30,7 +30,6 @@ contract ProjectRegistry {
 // =====================================================================
 
   event LogProjectCreated(address indexed projectAddress, address proposerAddress, uint256 projectCost, uint256 proposerStake);
-  /* event HashTest(bytes32 indexed description, uint weighting, bytes32 indexed hashResult, bytes32 indexed taskHash); */
 
 // =====================================================================
 // MODIFIERS
@@ -101,8 +100,9 @@ contract ProjectRegistry {
   // PROPOSER
   // =====================================================================
 
-    function createProject(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod, address _proposer, uint256 _proposerType, uint256 _proposerStake, string _ipfsHash) public onlyTRorRR() returns (address) {
-
+    function createProject(uint256 _cost, uint256 _costProportion, uint256 _stakingPeriod,
+                           address _proposer, uint256 _proposerType, uint256 _proposerStake,
+                           string _ipfsHash) public onlyTRorRR returns (address) {
       Project newProject = new Project(_cost,
                                        _costProportion,
                                        _stakingPeriod,
@@ -118,7 +118,7 @@ contract ProjectRegistry {
      return projectAddress;
     }
 
-    function refundProposer(address _projectAddress) public onlyTRorRR() returns (uint256[2]) {
+    function refundProposer(address _projectAddress) public onlyTRorRR returns (uint256[2]) {
       Project project =  Project(_projectAddress);
       require(project.state() > 1);
       uint256[2] memory returnValues;
@@ -161,6 +161,7 @@ contract ProjectRegistry {
   // ACTIVE
   // =====================================================================
 
+  // Doesn't Change State Here Could Possibly move to ProjectLibrary
     function submitHashList(address _projectAddress, bytes32[] _hashes) public {
       Project project = Project(_projectAddress);
       require(ProjectLibrary.isStaker(_projectAddress, msg.sender) == true);
@@ -172,7 +173,9 @@ contract ProjectRegistry {
       }
     }
 
-    function claimTask(address _projectAddress, uint256 _index, bytes32 _taskDescription, address _claimer, uint _weighting, uint _weiVal, uint _reputationVal) public onlyRR() {
+  // Doesn't Change State Here Could Possibly move to ProjectLibrary
+    function claimTask(address _projectAddress, uint256 _index, bytes32 _taskDescription,
+      address _claimer, uint _weighting, uint _weiVal, uint _reputationVal) public onlyRR {
       Project project = Project(_projectAddress);
       require(project.state() == 3);
       Task task = Task(project.tasks(_index));
@@ -180,9 +183,9 @@ contract ProjectRegistry {
       require(task.claimer() == 0 || (now > (task.claimTime() + project.turnoverTime()) && !task.complete()));
       task.setWeighting(_weighting);
       task.setTaskReward(_weiVal, _reputationVal, _claimer);
-      /* HashTest(_taskDescription, _weighting, keccak256(_taskDescription, _weighting), task.taskHash()); */
     }
 
+  // Doesn't Change State Here Could Possibly move to ProjectLibrary
     function submitTaskComplete(address _projectAddress, uint256 _index) public {
       Project project = Project(_projectAddress);
       Task task = Task(project.tasks(_index));
