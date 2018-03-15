@@ -9,8 +9,12 @@ pragma solidity ^0.4.10;
 import "./ProjectRegistry.sol";
 import "./ReputationRegistry.sol";
 import "./Task.sol";
+import "./library/SafeMath.sol";
 
 contract Project {
+
+  using SafeMath for uint256;
+
   address tokenRegistryAddress;
   address reputationRegistryAddress;
   address projectRegistryAddress;
@@ -177,7 +181,7 @@ contract Project {
 
     function unstakeTokens(address _staker, uint256 _tokens) public onlyTR returns (uint256) {
       require(state == 1);
-      require(stakedTokenBalances[_staker] - _tokens < stakedTokenBalances[_staker] &&   //check overflow
+      require(stakedTokenBalances[_staker].sub(_tokens) < stakedTokenBalances[_staker] &&   //check overflow
            stakedTokenBalances[_staker] >= _tokens);   //make sure _staker has the tokens staked to unstake */
       uint256 weiVal = (_tokens / totalTokensStaked) * weiBal;
       stakedTokenBalances[_staker] -= _tokens;
@@ -195,7 +199,7 @@ contract Project {
 
     function unstakeReputation(address _staker, uint256 _reputation) public onlyRR {
       require(state == 1);
-      require(stakedReputationBalances[_staker] - _reputation < stakedReputationBalances[_staker] &&  //check overflow
+      require(stakedReputationBalances[_staker].sub(_reputation) < stakedReputationBalances[_staker] &&  //check overflow
         stakedReputationBalances[_staker] >= _reputation); //make sure _staker has the tokens staked to unstake
       stakedReputationBalances[_staker] -= _reputation;
       totalReputationStaked -= _reputation;

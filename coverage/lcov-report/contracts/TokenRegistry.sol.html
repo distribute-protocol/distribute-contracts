@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/TokenRegistry.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> TokenRegistry.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">9.52% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>4/42</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">2.63% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>1/38</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">6.67% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>1/15</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">6.06% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>4/66</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// ===================================================================== //
+// This contract serves as the interface through which users propose projects,
+// stake tokens, come to consensus around tasks, validate projects, vote on projects,
+// refund their stakes, and claim their rewards.
+// ===================================================================== //
+&nbsp;
+pragma solidity ^0.4.8;
+&nbsp;
+import "./ProjectRegistry.sol";
+import "./DistributeToken.sol";
+import "./library/PLCRVoting.sol";
+import "./Project.sol";
+import "./ProjectLibrary.sol";
+import "./Task.sol";
+&nbsp;
+contract TokenRegistry {
+&nbsp;
+// =====================================================================
+// STATE VARIABLES
+// =====================================================================
+  ProjectRegistry projectRegistry;
+  DistributeToken distributeToken;
+  PLCRVoting plcrVoting;
+&nbsp;
+  uint256 proposeProportion = 20;                           // tokensupply/proposeProportion is the number of tokens the proposer must stake
+  uint256 rewardProportion = 100;
+&nbsp;
+// =====================================================================
+// EVENTS
+// =====================================================================
+&nbsp;
+  event ProjectCreated(address indexed projectAddress, uint256 projectCost, uint256 proposerStake);
+&nbsp;
+// =====================================================================
+// MODIFIERS
+// =====================================================================
+&nbsp;
+<span class="fstat-no" title="function not covered" >  modifier onlyPR() </span>{
+<span class="cstat-no" title="statement not covered" >    require(msg.sender == address(projectRegistry))</span>;
+    _;
+  }
+&nbsp;
+// =====================================================================
+// FUNCTIONS
+// =====================================================================
+&nbsp;
+  // =====================================================================
+  // QUASI-CONSTRUCTOR
+  // =====================================================================
+&nbsp;
+    function init(address _distributeToken, address _projectRegistry, address _plcrVoting) public {       //contract is created
+      <span class="missing-if-branch" title="else path not taken" >E</span>require(address(distributeToken) == 0 &amp;&amp; address(projectRegistry) == 0 &amp;&amp; address(plcrVoting) == 0);
+      distributeToken = DistributeToken(_distributeToken);
+      projectRegistry = ProjectRegistry(_projectRegistry);
+      plcrVoting = PLCRVoting(_plcrVoting);
+    }
+&nbsp;
+  // =====================================================================
+  // PROPOSE
+  // =====================================================================
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function proposeProject(uint256 _cost, uint256 _stakingPeriod, string _ipfsHash) publi</span>c {    //_cost of project in ether
+      //calculate cost of project in tokens currently (_cost in wei)
+      //check proposer has at least 5% of the proposed cost in tokens
+<span class="cstat-no" title="statement not covered" >      require(now &lt; _stakingPeriod &amp;&amp; _cost &gt; 0)</span>;
+<span class="cstat-no" title="statement not covered" >      uint256 costProportion = _cost / distributeToken.weiBal()</span>;
+<span class="cstat-no" title="statement not covered" >      uint256 proposerTokenCost = (costProportion / proposeProportion) * distributeToken.totalSupply()</span>;           //divide by 20 to get 5 percent of tokens
+<span class="cstat-no" title="statement not covered" >      require(distributeToken.balanceOf(msg.sender) &gt;= proposerTokenCost)</span>;
+      distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
+<span class="cstat-no" title="statement not covered" >      address projectAddress = projectRegistry.createProject(_cost, costProportion, _stakingPeriod, msg.sender, 1, proposerTokenCost, _ipfsHash)</span>;
+<span class="cstat-no" title="statement not covered" >      ProjectCreated(projectAddress, _cost, proposerTokenCost)</span>;
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function refundProposer(address _projectAddress) publi</span>c {                                 //called by proposer to get refund once project is active
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;                            //called by proposer to get refund once project is active
+<span class="cstat-no" title="statement not covered" >      require(project.proposer() == msg.sender)</span>;
+<span class="cstat-no" title="statement not covered" >      require(project.proposerType() == 1)</span>;
+<span class="cstat-no" title="statement not covered" >      uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress)</span>;        //call project to "send back" staked tokens to put in proposer's balances
+      distributeToken.transferFromEscrow(msg.sender, proposerVals[1]);
+      distributeToken.transferWeiTo(msg.sender, proposerVals[0] / 100);
+    }
+&nbsp;
+  // =====================================================================
+  // STAKE
+  // =====================================================================
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function stakeTokens(address _projectAddress, uint256 _tokens) publi</span>c {
+<span class="cstat-no" title="statement not covered" >      require(distributeToken.balanceOf(msg.sender) &gt;= _tokens)</span>;
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+      // require(project.state() == 1);   ------&gt; this now happens in project.stakeTokens()
+<span class="cstat-no" title="statement not covered" >      uint256 currentPrice = distributeToken.currentPrice()</span>;
+<span class="cstat-no" title="statement not covered" >      uint256 weiRemaining = project.weiCost() - project.weiBal()</span>;
+<span class="cstat-no" title="statement not covered" >      require(weiRemaining &gt; 0)</span>;
+<span class="cstat-no" title="statement not covered" >      uint256 weiVal =  currentPrice * _tokens</span>;
+<span class="cstat-no" title="statement not covered" >      bool flag = weiVal &gt; weiRemaining</span>;
+<span class="cstat-no" title="statement not covered" >      uint256 weiChange = flag</span>
+        ? weiRemaining
+        : weiVal;       //how much ether to send on change
+<span class="cstat-no" title="statement not covered" >      uint256 tokens = flag</span>
+        ? ((weiRemaining/currentPrice) + 1)
+        : _tokens;
+      project.stakeTokens(msg.sender, tokens, weiChange);
+      distributeToken.transferWeiTo(_projectAddress, weiChange);
+      distributeToken.transferToEscrow(msg.sender, tokens);
+      projectRegistry.checkStaked(_projectAddress);
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function unstakeTokens(address _projectAddress, uint256 _tokens) publi</span>c {
+<span class="cstat-no" title="statement not covered" >      uint256 weiVal = Project(_projectAddress).unstakeTokens(msg.sender, _tokens)</span>;
+      distributeToken.transferWeiTo(msg.sender, weiVal);
+      distributeToken.transferFromEscrow(msg.sender, _tokens);
+    }
+&nbsp;
+  // =====================================================================
+  // VALIDATION
+  // =====================================================================
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function validateTask(address _projectAddress, uint256 _index, uint256 _tokens, bool _validationState) publi</span>c {
+<span class="cstat-no" title="statement not covered" >      require(distributeToken.balanceOf(msg.sender) &gt;= _tokens)</span>;
+      distributeToken.transferToEscrow(msg.sender, _tokens);
+      ProjectLibrary.validate(_projectAddress, msg.sender, _index, _tokens, _validationState);
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function rewardValidator(address _projectAddress, uint256 _index) publi</span>c {
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      Task task = Task(project.tasks(_index))</span>;
+<span class="cstat-no" title="statement not covered" >      require(task.claimable())</span>;
+<span class="cstat-no" title="statement not covered" >      var (status, reward) = task.validators(msg.sender);</span>
+<span class="cstat-no" title="statement not covered" >      if (task.totalValidateNegative() == 0) {</span>
+<span class="cstat-no" title="statement not covered" >        require(status == 1)</span>;
+      } else <span class="cstat-no" title="statement not covered" >if (task.totalValidateAffirmative() == 0) {</span>
+<span class="cstat-no" title="statement not covered" >        require(status == 0)</span>;
+      } else {
+<span class="cstat-no" title="statement not covered" >        revert()</span>;
+      }
+      task.clearValidatorStake(msg.sender);
+      distributeToken.transferFromEscrow(msg.sender, reward);
+      distributeToken.transferWeiTo(msg.sender, reward * distributeToken.currentPrice() / 100);
+    }
+&nbsp;
+  // =====================================================================
+  // VOTING
+  // =====================================================================
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function voteCommit(address _projectAddress, uint256 _index, uint256 _tokens, bytes32 _secretHash, uint256 _prevPollID) publi</span>c {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+<span class="cstat-no" title="statement not covered" >      uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId()</span>;
+<span class="cstat-no" title="statement not covered" >      require(pollId != 0)</span>;
+      //calculate available tokens for voting
+<span class="cstat-no" title="statement not covered" >      uint256 availableTokens = plcrVoting.voteTokenBalance(msg.sender) - plcrVoting.getLockedTokens(msg.sender)</span>;
+      //make sure msg.sender has tokens available in PLCR contract
+      //if not, request voting rights for token holder
+<span class="cstat-no" title="statement not covered" >      if (availableTokens &lt; _tokens) {</span>
+<span class="cstat-no" title="statement not covered" >        require(distributeToken.balanceOf(msg.sender) &gt;= _tokens - availableTokens)</span>;
+        distributeToken.transferToEscrow(msg.sender, _tokens - availableTokens);
+        plcrVoting.requestVotingRights(msg.sender, _tokens - availableTokens);
+      }
+      plcrVoting.commitVote(msg.sender, pollId, _secretHash, _tokens, _prevPollID);
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function voteReveal(address _projectAddress, uint256 _index, uint256 _voteOption, uint _salt) publi</span>c {
+      plcrVoting.revealVote(Task(Project(_projectAddress).tasks(_index)).pollId(), _voteOption, _salt);
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function refundVotingTokens(uint256 _tokens) publi</span>c {
+      plcrVoting.withdrawVotingRights(msg.sender, _tokens);
+      distributeToken.transferFromEscrow(msg.sender, _tokens);
+    }
+&nbsp;
+  // =====================================================================
+  // COMPLETE
+  // =====================================================================
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function refundStaker(address _projectAddress, uint _index) publi</span>c {
+<span class="cstat-no" title="statement not covered" >      uint256 refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender)</span>;
+      distributeToken.transferFromEscrow(msg.sender, refund);
+      //rescue locked tokens that weren't revealed
+<span class="cstat-no" title="statement not covered" >      uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId()</span>;
+      plcrVoting.rescueTokens(msg.sender, pollId);
+    }
+&nbsp;
+  // =====================================================================
+  // FAILED
+  // =====================================================================
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function revertWei(uint256 _value) public onlyP</span>R {
+      distributeToken.returnWei(_value);
+    }
+<span class="fstat-no" title="function not covered" >    function burnTokens(uint256 _tokens) public onlyP</span>R {
+      distributeToken.burn(_tokens);
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >  function() public payable </span>{}
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Mar 16 2018 01:51:47 GMT+0530 (IST)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

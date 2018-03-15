@@ -1,8 +1,12 @@
 pragma solidity ^0.4.8;
 
 import "./library/StandardToken.sol";
+import "./library/SafeMath.sol";
 
 contract DistributeToken is StandardToken {
+
+  using SafeMath for uint256;
+
   address tokenRegistryAddress;
   address reputationRegistryAddress;
 
@@ -100,19 +104,19 @@ contract DistributeToken is StandardToken {
         }
     }
 
-    function burn(uint256 _value) public onlyTR {
-      require(_value <= totalSupply && _value > 0);
-      totalSupply -= _value;
+    function burn(uint256 _numTokens) public onlyTR {
+      require(_numTokens <= totalSupply && _numTokens > 0);
+      totalSupply -= _numTokens;
     }
 
-    function sell(uint256 _value) public {
-        require(_value > 0 && (_value <= balances[msg.sender]));
-        uint256 reward = _value * currentPrice();    //truncation - remainder discarded
-        balances[msg.sender] -= _value;
-        totalSupply -= _value;
-        weiBal -= reward;
-        LogWithdraw(_value, reward);
-        msg.sender.transfer(reward);
+    function sell(uint256 _numTokens) public {
+        require(_numTokens > 0 && (_numTokens <= balances[msg.sender]));
+        uint256 weiVal = _numTokens * currentPrice();    //truncation - remainder discarded
+        balances[msg.sender] -= _numTokens;
+        totalSupply = totalSupply.sub(_numTokens);
+        weiBal -= weiVal;
+        LogWithdraw(_numTokens, weiVal);
+        msg.sender.transfer(weiVal);
     }
 
   // =====================================================================

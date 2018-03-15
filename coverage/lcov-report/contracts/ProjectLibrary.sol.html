@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/ProjectLibrary.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">contracts/</a> ProjectLibrary.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>0/96</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/68</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/16</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>0/126</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">pragma solidity ^0.4.8;
+&nbsp;
+import "./Project.sol";
+import "./TokenRegistry.sol";
+import "./ProjectRegistry.sol";
+import "./Task.sol";
+import "./library/PLCRVoting.sol";
+&nbsp;
+library ProjectLibrary {
+&nbsp;
+// =====================================================================
+// EVENTS
+// =====================================================================
+&nbsp;
+  event tokenRefund(address staker, uint256 refund);
+  event reputationRefund(address projectAddress, address staker, uint256 refund);
+&nbsp;
+// =====================================================================
+// FUNCTIONS
+// =====================================================================
+&nbsp;
+  // =====================================================================
+  // UTILITY
+  // =====================================================================
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function isStaker(address _projectAddress, address _staker) public view returns(bool</span>) {
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      return project.stakedTokenBalances(_staker) &gt; 0 || project.stakedReputationBalances(_staker) &gt; 0;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function isStaked(address _projectAddress) public view returns (bool</span>) {
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      return project.weiBal() &gt;= project.weiCost() &amp;&amp; project.totalReputationStaked() &gt;= project.reputationCost();</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function timesUp(address _projectAddress) public view returns (bool</span>) {
+<span class="cstat-no" title="statement not covered" >      return (now &gt; Project(_projectAddress).nextDeadline());</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function percent(uint256 numerator, uint256 denominator, uint256 precision) internal pure returns (uint256</span>) {
+       // caution, check safe-to-multiply here
+<span class="cstat-no" title="statement not covered" >      uint256 _numerator  = numerator * 10 ** (precision+1)</span>;
+      // with rounding of last digit
+<span class="cstat-no" title="statement not covered" >      return ((_numerator / denominator) + 5) / 10;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function calculateWeightOfAddress(address _projectAddress, address _address) public view returns (uint256</span>) {
+      uint256 reputationWeight;
+      uint256 tokenWeight;
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      project.totalReputationStaked() != 0</span>
+        ? reputationWeight = percent(project.stakedReputationBalances(_address), project.totalReputationStaked(), 2)
+        : reputationWeight = 0;
+<span class="cstat-no" title="statement not covered" >      project.totalTokensStaked() != 0</span>
+        ? tokenWeight = percent(project.stakedTokenBalances(_address), project.totalTokensStaked(), 2)
+        : tokenWeight = 0;
+<span class="cstat-no" title="statement not covered" >      return (reputationWeight + tokenWeight) / 2;</span>
+    }
+  // =====================================================================
+  // STATE CHANGE
+  // =====================================================================
+<span class="fstat-no" title="function not covered" >    function checkStaked(address _projectAddress) public returns (bool</span>) {
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      require(project.state() == 1)</span>;
+<span class="cstat-no" title="statement not covered" >      if(isStaked(_projectAddress)) {</span>
+<span class="cstat-no" title="statement not covered" >        uint256 nextDeadline = now + project.stakedStatePeriod()</span>;
+        project.setState(2, nextDeadline);
+<span class="cstat-no" title="statement not covered" >        return true;</span>
+      } else {
+<span class="cstat-no" title="statement not covered" >        if(timesUp(_projectAddress)) {</span>
+          project.setState(8, 0);
+          project.clearProposerStake();
+        }
+<span class="cstat-no" title="statement not covered" >        return false;</span>
+      }
+<span class="cstat-no" title="statement not covered" >      return false;</span>
+    }
+<span class="fstat-no" title="function not covered" >    function checkActive(address _projectAddress, bytes32 _taskHash) public returns (bool</span>) {
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      require(project.state() == 2)</span>;
+<span class="cstat-no" title="statement not covered" >      if(timesUp(_projectAddress)) {</span>
+        uint256 nextDeadline;
+<span class="cstat-no" title="statement not covered" >        if(_taskHash != 0) {</span>
+<span class="cstat-no" title="statement not covered" >          nextDeadline = now + project.activeStatePeriod()</span>;
+          project.setState(3, nextDeadline);
+<span class="cstat-no" title="statement not covered" >          return true;</span>
+        } else {
+          project.setState(7, 0);
+<span class="cstat-no" title="statement not covered" >          return false;</span>
+        }
+      }
+<span class="cstat-no" title="statement not covered" >      return false;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function checkValidate(address _projectAddress, address _tokenRegistryAddress, address _distributeTokenAddress) publi</span>c {
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      TokenRegistry tr = TokenRegistry(_tokenRegistryAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      require(project.state() == 3)</span>;
+<span class="cstat-no" title="statement not covered" >      if (timesUp(_projectAddress)) {</span>
+<span class="cstat-no" title="statement not covered" >        uint256 nextDeadline = now + project.validateStatePeriod()</span>;
+        project.setState(4, nextDeadline);
+<span class="cstat-no" title="statement not covered" >        for(uint i = 0; i &lt; project.getTaskCount(); i++) {</span>
+<span class="cstat-no" title="statement not covered" >          Task task = Task(project.tasks(i))</span>;
+<span class="cstat-no" title="statement not covered" >          if (task.complete() == false) {</span>
+<span class="cstat-no" title="statement not covered" >            uint reward = task.weiReward()</span>;
+            tr.revertWei(reward);
+            project.returnWei(_distributeTokenAddress, reward);
+            task.setTaskReward(0, 0, task.claimer());
+          }
+        }
+      }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function checkVoting(address _projectAddress, address _tokenRegistryAddress, address _distributeTokenAddress, address _plcrVoting) publi</span>c {
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      TokenRegistry tr = TokenRegistry(_tokenRegistryAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      PLCRVoting plcr = PLCRVoting(_plcrVoting)</span>;
+<span class="cstat-no" title="statement not covered" >      require(project.state() == 4)</span>;
+<span class="cstat-no" title="statement not covered" >      if (timesUp(_projectAddress)) {</span>
+        project.setState(5, 0);
+<span class="cstat-no" title="statement not covered" >        for(uint i = 0; i &lt; project.getTaskCount(); i++) {</span>
+<span class="cstat-no" title="statement not covered" >          Task task = Task(project.tasks(i))</span>;
+<span class="cstat-no" title="statement not covered" >          if (task.complete()) {</span>
+<span class="cstat-no" title="statement not covered" >            if (task.opposingValidator()) {   // there is an opposing validator, poll required</span>
+              task.setPollId(plcr.startPoll(51, project.voteCommitPeriod(), project.voteRevealPeriod())); // function handles storage of voting pollId
+            } else {
+<span class="cstat-no" title="statement not covered" >              bool repClaim = task.markTaskClaimable(true)</span>;
+<span class="cstat-no" title="statement not covered" >              if (!repClaim) {</span>
+<span class="cstat-no" title="statement not covered" >                uint reward = task.weiReward()</span>;
+                tr.revertWei(reward);
+                project.returnWei(_distributeTokenAddress, reward);
+              }
+            }
+          }
+        }
+      }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function checkEnd(address _projectAddress, address _tokenRegistryAddress, address _distributeTokenAddress, address _plcrVoting) publi</span>c {
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      TokenRegistry tr = TokenRegistry(_tokenRegistryAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      PLCRVoting plcr = PLCRVoting(_plcrVoting)</span>;
+<span class="cstat-no" title="statement not covered" >      require(project.state() == 5)</span>;
+<span class="cstat-no" title="statement not covered" >      for (uint i = 0; i &lt; project.getTaskCount(); i++) {</span>
+<span class="cstat-no" title="statement not covered" >        Task task = Task(project.tasks(i))</span>;
+<span class="cstat-no" title="statement not covered" >        if (task.complete() &amp;&amp; task.opposingValidator()) {      // check tasks with polls only</span>
+<span class="cstat-no" title="statement not covered" >          if (plcr.pollEnded(task.pollId())) {</span>
+<span class="cstat-no" title="statement not covered" >            if (plcr.isPassed(task.pollId())) {</span>
+              task.markTaskClaimable(true);
+            } else {
+              task.markTaskClaimable(false);
+<span class="cstat-no" title="statement not covered" >              uint reward = task.weiReward()</span>;
+              tr.revertWei(reward);
+              project.returnWei(_distributeTokenAddress, reward);
+            }
+          }
+        }
+      }
+<span class="cstat-no" title="statement not covered" >      calculatePassAmount(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      if (project.passAmount() &gt;= project.passThreshold()) {</span>
+        project.setState(6, 0);
+      } else {
+        project.setState(7, 0);
+      }
+    }
+&nbsp;
+  // =====================================================================
+  // VALIDATION
+  // =====================================================================
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function validate(address _projectAddress, address _staker, uint256 _index, uint256 _tokens, bool _validationState) publi</span>c {
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      require(project.state() == 4)</span>;
+<span class="cstat-no" title="statement not covered" >      Task task = Task(project.tasks(_index))</span>;
+<span class="cstat-no" title="statement not covered" >      require(_tokens &gt; 0)</span>;
+<span class="cstat-no" title="statement not covered" >      if (_validationState == true) {</span>
+        task.setValidator(_staker, 1, _tokens);
+      }
+      else <span class="cstat-no" title="statement not covered" >if (_validationState == false){</span>
+        task.setValidator(_staker, 0, _tokens);
+      }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function calculatePassAmount(address _projectAddress) public returns (uin</span>t){
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+      uint totalWeighting;
+<span class="cstat-no" title="statement not covered" >      require(project.state() == 5)</span>;
+<span class="cstat-no" title="statement not covered" >      for (uint i = 0; i &lt; project.getTaskCount(); i++) {</span>
+<span class="cstat-no" title="statement not covered" >        Task task = Task(project.tasks(i))</span>;
+<span class="cstat-no" title="statement not covered" >        if (task.claimableByRep()) {</span>
+<span class="cstat-no" title="statement not covered" >          totalWeighting += task.weighting()</span>;
+        }
+      }
+      project.setPassAmount(totalWeighting);
+<span class="cstat-no" title="statement not covered" >      return totalWeighting;</span>
+    }
+&nbsp;
+  // =====================================================================
+  // TASK
+  // =====================================================================
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function claimTaskReward(uint256 _index, address _projectAddress, address _claimer) public returns (uint256</span>) {
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      require(project.state() == 6)</span>;
+<span class="cstat-no" title="statement not covered" >      Task task = Task(project.tasks(_index))</span>;
+<span class="cstat-no" title="statement not covered" >      require(task.claimer() == _claimer &amp;&amp; task.claimableByRep())</span>;
+<span class="cstat-no" title="statement not covered" >      uint256 weiReward = task.weiReward()</span>;
+<span class="cstat-no" title="statement not covered" >      uint256 reputationReward = task.reputationReward()</span>;
+      task.setTaskReward(0, 0, _claimer);
+      project.transferWeiReward(_claimer, weiReward);
+<span class="cstat-no" title="statement not covered" >      return reputationReward;</span>
+    }
+&nbsp;
+  // =====================================================================
+  // STAKER
+  // =====================================================================
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function refundStaker(address _projectAddress, address _staker) public returns (uint256</span>) {
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      require(project.state() == 6 || project.state() == 8)</span>;
+<span class="cstat-no" title="statement not covered" >      if (project.isTR(msg.sender)) {</span>
+<span class="cstat-no" title="statement not covered" >        return handleTokenStaker(_projectAddress, _staker);</span>
+      } else <span class="cstat-no" title="statement not covered" >if (project.isRR(msg.sender)) {</span>
+<span class="cstat-no" title="statement not covered" >        return handleReputationStaker(_projectAddress, _staker);</span>
+      }
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function handleTokenStaker(address _projectAddress, address _staker) internal returns (uint256</span>) {
+      uint256 refund;
+      // account for proportion of successful tasks
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      if(project.totalTokensStaked() != 0) {</span>
+<span class="cstat-no" title="statement not covered" >        refund = project.stakedTokenBalances(_staker) * project.passAmount() / 100</span>;
+        project.clearTokenStake(_staker);
+      }
+<span class="cstat-no" title="statement not covered" >      tokenRefund(_staker, refund)</span>;
+<span class="cstat-no" title="statement not covered" >      return refund;</span>
+    }
+&nbsp;
+<span class="fstat-no" title="function not covered" >    function handleReputationStaker(address _projectAddress, address _staker) internal returns (uint256</span>) {
+      uint256 refund;
+<span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
+<span class="cstat-no" title="statement not covered" >      if(project.totalReputationStaked() != 0) {</span>
+<span class="cstat-no" title="statement not covered" >        refund = project.stakedReputationBalances(_staker) * project.passAmount() / 100</span>;
+        project.clearReputationStake(_staker);
+      }
+<span class="cstat-no" title="statement not covered" >      reputationRefund(_projectAddress, _staker, refund)</span>;
+<span class="cstat-no" title="statement not covered" >      return refund;</span>
+    }
+&nbsp;
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Mar 16 2018 01:51:47 GMT+0530 (IST)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

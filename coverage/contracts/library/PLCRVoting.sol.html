@@ -1,0 +1,1358 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for contracts/library/PLCRVoting.sol</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../index.html">all files</a> / <a href="index.html">contracts/library/</a> PLCRVoting.sol
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">4.12% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>4/97</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>0/78</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">4% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>1/25</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">3.92% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>4/102</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">pragma solidity ^0.4.8;
+&nbsp;
+//import files
+import "./DLL.sol";
+import "./AttributeStore.sol";
+import "../ProjectRegistry.sol";
+&nbsp;
+/**
+@title Partial-Lock-Commit-Reveal Voting scheme with ERC20 tokens
+@author Team: Aspyn Palatnick, Cem Ozer, Yorke Rhodes
+*/
+contract PLCRVoting {
+&nbsp;
+    event VoteCommitted(address voter, uint pollID, uint numTokens);
+    event VoteRevealed(address voter, uint pollID, uint numTokens, uint choice);
+    event PollCreated(uint voteQuorum, uint commitDuration, uint revealDuration, uint pollID);
+    event VotingRightsGranted(address voter, uint numTokens);
+    event VotingRightsWithdrawn(address voter, uint numTokens);
+&nbsp;
+    /// maps user's address to voteToken balance
+    mapping(address =&gt; uint) public voteTokenBalance;
+    mapping(address =&gt; uint) public voteReputationBalance;
+&nbsp;
+    struct Poll {
+        uint commitEndDate;     /// expiration date of commit period for poll
+        uint revealEndDate;     /// expiration date of reveal period for poll
+        uint voteQuorum;	    /// number of votes required for a proposal to pass
+        uint votesFor;		    /// tally of votes supporting proposal
+        uint votesAgainst;      /// tally of votes countering proposal
+    }
+&nbsp;
+    /// maps pollID to Poll struct
+    mapping(uint =&gt; Poll) public pollMap;
+    uint pollNonce;
+&nbsp;
+    using DLL for DLL.Data;
+    mapping(address =&gt; DLL.Data) dllMap;
+&nbsp;
+    using AttributeStore for AttributeStore.Data;
+    AttributeStore.Data store;
+&nbsp;
+    // =====================================================================
+    // MODIFIERS
+    // =====================================================================
+&nbsp;
+<span class="fstat-no" title="function not covered" >      modifier onlyTRW</span>R() {
+<span class="cstat-no" title="statement not covered" >        require(msg.sender == reputationRegistry || msg.sender == tokenRegistry)</span>;
+        _;
+      }
+&nbsp;
+<span class="fstat-no" title="function not covered" >      modifier onlyT</span>R() {
+<span class="cstat-no" title="statement not covered" >        require(msg.sender == tokenRegistry)</span>;
+        _;
+      }
+&nbsp;
+    // ============
+    // CONSTRUCTOR:
+    // ============
+&nbsp;
+    uint256 constant INITIAL_POLL_NONCE = 0;
+&nbsp;
+    address tokenRegistry;
+    address reputationRegistry;
+    address projectRegistry;
+&nbsp;
+    /**
+    @dev Initializes voteQuorum, commitDuration, revealDuration, and pollNonce in addition to token contract and trusted mapping
+    */
+    function PLCRVoting(address _tokenRegistry, address _reputationRegistry, address _projectRegistry) public {
+        tokenRegistry = _tokenRegistry;
+        reputationRegistry = _reputationRegistry;
+        projectRegistry = _projectRegistry;
+        pollNonce = INITIAL_POLL_NONCE;
+    }
+&nbsp;
+    // ================
+    // TOKEN INTERFACE:
+    // ================
+&nbsp;
+    /**
+    @notice Loads _numTokens ERC20 tokens into the voting contract for one-to-one voting rights
+    @dev Assumes that msg.sender has approved voting contract to spend on their behalf
+    @param _numTokens The number of votingTokens desired in exchange for ERC20 tokens
+    */
+<span class="fstat-no" title="function not covered" >    function requestVotingRights(address _staker, uint _numTokens) public onlyTRWR(</span>) {
+        //checks done in THR/WR to ensure that staker has tokens to vote with
+<span class="cstat-no" title="statement not covered" >        if (msg.sender == tokenRegistry) {</span>
+<span class="cstat-no" title="statement not covered" >          voteTokenBalance[_staker] += _numTokens</span>;
+<span class="cstat-no" title="statement not covered" >          VotingRightsGranted(_staker, _numTokens)</span>;
+        }
+<span class="cstat-no" title="statement not covered" >        if (msg.sender == reputationRegistry) {</span>
+<span class="cstat-no" title="statement not covered" >          voteReputationBalance[_staker] += _numTokens</span>;
+<span class="cstat-no" title="statement not covered" >          VotingRightsGranted(_staker, _numTokens)</span>;
+        }
+    }
+&nbsp;
+    /**
+    @notice Withdraw _numTokens ERC20 tokens from the voting contract, revoking these voting rights
+    @param _numTokens The number of ERC20 tokens desired in exchange for voting rights
+    */
+<span class="fstat-no" title="function not covered" >    function withdrawVotingRights(address _staker, uint _numTokens) external onlyTRWR(</span>) {
+<span class="cstat-no" title="statement not covered" >        if (msg.sender == tokenRegistry) {</span>
+<span class="cstat-no" title="statement not covered" >          uint256 availableTokens = voteTokenBalance[_staker] - getLockedTokens(_staker)</span>;
+<span class="cstat-no" title="statement not covered" >          require(availableTokens &gt;= _numTokens)</span>;
+<span class="cstat-no" title="statement not covered" >          voteTokenBalance[_staker] -= _numTokens</span>;
+<span class="cstat-no" title="statement not covered" >          VotingRightsWithdrawn(_staker, _numTokens)</span>;
+        }
+        else <span class="cstat-no" title="statement not covered" >if (msg.sender == reputationRegistry) {</span>
+<span class="cstat-no" title="statement not covered" >          availableTokens = voteReputationBalance[_staker] - getLockedTokens(_staker)</span>;
+<span class="cstat-no" title="statement not covered" >          require(availableTokens &gt;= _numTokens)</span>;
+<span class="cstat-no" title="statement not covered" >          voteReputationBalance[_staker] -= _numTokens</span>;
+<span class="cstat-no" title="statement not covered" >          VotingRightsWithdrawn(_staker, _numTokens)</span>;
+        }
+    }
+&nbsp;
+    /**
+    @dev Unlocks tokens locked in unrevealed vote where poll has ended
+    @param _pollID Integer identifier associated with the target poll
+    */
+<span class="fstat-no" title="function not covered" >    function rescueTokens(address _staker, uint _pollID) onlyTRWR() externa</span>l {
+<span class="cstat-no" title="statement not covered" >        require(pollEnded(_pollID))</span>;
+<span class="cstat-no" title="statement not covered" >        if(!hasBeenRevealed(_staker, _pollID)) {</span>
+            dllMap[_staker].remove(_pollID);
+        }
+    }
+&nbsp;
+    // =================
+    // VOTING INTERFACE:
+    // =================
+&nbsp;
+    /**
+    @notice Commits vote using hash of choice and secret salt to conceal vote until reveal
+    @param _pollID Integer identifier associated with target poll
+    @param _secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order)
+    @param _numTokens The number of tokens to be committed towards the target poll
+    @param _prevPollID The ID of the poll that the user has voted the maximum number of tokens in which is still less than or equal to numTokens
+    */
+<span class="fstat-no" title="function not covered" >    function commitVote(address _staker, uint _pollID, bytes32 _secretHash, uint _numTokens, uint _prevPollID) onlyTRWR() externa</span>l {
+<span class="cstat-no" title="statement not covered" >        require(commitPeriodActive(_pollID))</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (msg.sender == reputationRegistry) {</span>
+<span class="cstat-no" title="statement not covered" >          require(voteReputationBalance[_staker] &gt;= _numTokens)</span>; // prevent user from overspending
+        }
+<span class="cstat-no" title="statement not covered" >        if (msg.sender == tokenRegistry) {</span>
+<span class="cstat-no" title="statement not covered" >          require(voteTokenBalance[_staker] &gt;= _numTokens)</span>; // prevent user from overspending
+        }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        require(_pollID != 0)</span>;                // prevent user from committing to zero node placeholder
+&nbsp;
+        // TODO: Move all insert validation into the DLL lib
+        // Check if _prevPollID exists
+<span class="cstat-no" title="statement not covered" >        require(_prevPollID == 0 || getCommitHash(_staker, _prevPollID) != 0)</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        uint nextPollID = dllMap[_staker].getNext(_prevPollID)</span>;
+&nbsp;
+        // if nextPollID is equal to _pollID, _pollID is being updated,
+<span class="cstat-no" title="statement not covered" >        nextPollID = (nextPollID == _pollID) ? dllMap[_staker].getNext(_pollID) : nextPollID</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        require(validPosition(_prevPollID, nextPollID, _staker, _numTokens))</span>;
+        dllMap[_staker].insert(_prevPollID, _pollID, nextPollID);
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        bytes32 UUID = attrUUID(_staker, _pollID)</span>;
+&nbsp;
+        store.attachAttribute(UUID, "numTokens", _numTokens);
+        store.attachAttribute(UUID, "commitHash", uint(_secretHash));
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        VoteCommitted(_staker, _pollID, _numTokens)</span>;
+    }
+&nbsp;
+    /**
+    @dev Compares previous and next poll's committed tokens for sorting purposes
+    @param _prevID Integer identifier associated with previous poll in sorted order
+    @param _nextID Integer identifier associated with next poll in sorted order
+    @param _voter Address of user to check DLL position for
+    @param _numTokens The number of tokens to be committed towards the poll (used for sorting)
+    @return valid Boolean indication of if the specified position maintains the sort
+    */
+<span class="fstat-no" title="function not covered" >    function validPosition(uint _prevID, uint _nextID, address _voter, uint _numTokens) public constant returns (bool valid</span>) {
+<span class="cstat-no" title="statement not covered" >        bool prevValid = (_numTokens &gt;= getNumTokens(_voter, _prevID))</span>;
+        // if next is zero node, _numTokens does not need to be greater
+<span class="cstat-no" title="statement not covered" >        bool nextValid = (_numTokens &lt;= getNumTokens(_voter, _nextID) || _nextID == 0)</span>;
+<span class="cstat-no" title="statement not covered" >        return prevValid &amp;&amp; nextValid;</span>
+    }
+&nbsp;
+    /**
+    @notice Reveals vote with choice and secret salt used in generating commitHash to attribute committed tokens
+    @param _pollID Integer identifier associated with target poll
+    @param _voteOption Vote choice used to generate commitHash for associated poll
+    @param _salt Secret number used to generate commitHash for associated poll
+    */
+<span class="fstat-no" title="function not covered" >    function revealVote(uint _pollID, uint _voteOption, uint _salt) onlyTRWR() externa</span>l {
+        // Make sure the reveal period is active
+<span class="cstat-no" title="statement not covered" >        require(revealPeriodActive(_pollID))</span>;
+<span class="cstat-no" title="statement not covered" >        require(!hasBeenRevealed(msg.sender, _pollID))</span>;                        // prevent user from revealing multiple times
+<span class="cstat-no" title="statement not covered" >        require(keccak256(_voteOption, _salt) == getCommitHash(msg.sender, _pollID))</span>; // compare resultant hash from inputs to original commitHash
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        uint numTokens = getNumTokens(msg.sender, _pollID)</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (_voteOption == 1) // apply numTokens to appropriate poll choice</span>
+<span class="cstat-no" title="statement not covered" >            pollMap[_pollID].votesFor += numTokens</span>;
+        else
+<span class="cstat-no" title="statement not covered" >            pollMap[_pollID].votesAgainst += numTokens</span>;
+&nbsp;
+        dllMap[msg.sender].remove(_pollID); // remove the node referring to this vote upon reveal
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        VoteRevealed(msg.sender, _pollID, numTokens, _voteOption)</span>;
+    }
+&nbsp;
+    /**
+    @param _pollID Integer identifier associated with target poll
+    @param _salt Arbitrarily chosen integer used to generate secretHash
+    @return correctVotes Number of tokens voted for winning option
+    */
+<span class="fstat-no" title="function not covered" >    function getNumPassingTokens(address _voter, uint _pollID, uint _salt) public constant returns (uint correctVotes</span>) {
+<span class="cstat-no" title="statement not covered" >        require(pollEnded(_pollID))</span>;
+<span class="cstat-no" title="statement not covered" >        require(hasBeenRevealed(_voter, _pollID))</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        uint winningChoice = isPassed(_pollID) ? 1 : 0</span>;
+<span class="cstat-no" title="statement not covered" >        bytes32 winnerHash = keccak256(winningChoice, _salt)</span>;
+<span class="cstat-no" title="statement not covered" >        bytes32 commitHash = getCommitHash(_voter, _pollID)</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        return (winnerHash == commitHash) ? getNumTokens(_voter, _pollID) : 0;</span>
+    }
+&nbsp;
+    // ==================
+    // POLLING INTERFACE:
+    // ==================
+&nbsp;
+    /**
+    @dev Initiates a poll with canonical configured parameters at pollID emitted by PollCreated event
+    @param _voteQuorum Type of majority (out of 100) that is necessary for poll to be successful
+    @param _commitDuration Length of desired commit period in seconds
+    @param _revealDuration Length of desired reveal period in seconds
+    */
+<span class="fstat-no" title="function not covered" >    function startPoll(uint _voteQuorum, uint _commitDuration, uint _revealDuration) public returns (uint pollID</span>) {
+<span class="cstat-no" title="statement not covered" >        require(msg.sender == projectRegistry)</span>;
+<span class="cstat-no" title="statement not covered" >        pollNonce = pollNonce + 1</span>;
+<span class="cstat-no" title="statement not covered" >        pollMap[pollNonce] = Poll({</span>
+            voteQuorum: _voteQuorum,
+            commitEndDate: block.timestamp + _commitDuration,
+            revealEndDate: block.timestamp + _commitDuration + _revealDuration,
+            votesFor: 0,
+            votesAgainst: 0
+        });
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        PollCreated(_voteQuorum, _commitDuration, _revealDuration, pollNonce)</span>;
+<span class="cstat-no" title="statement not covered" >        return pollNonce;</span>
+    }
+&nbsp;
+    /**
+    @notice Determines if proposal has passed
+    @dev Check if votesFor out of totalVotes exceeds votesQuorum (requires pollEnded)
+    @param _pollID Integer identifier associated with target poll
+    */
+<span class="fstat-no" title="function not covered" >    function isPassed(uint _pollID) onlyTRWR() constant public returns (bool passed</span>) {
+<span class="cstat-no" title="statement not covered" >        require(msg.sender == tokenRegistry)</span>;
+<span class="cstat-no" title="statement not covered" >        require(pollEnded(_pollID))</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        Poll memory poll = pollMap[_pollID]</span>;
+<span class="cstat-no" title="statement not covered" >        return (100 * poll.votesFor) &gt; (poll.voteQuorum * (poll.votesFor + poll.votesAgainst));</span>
+    }
+&nbsp;
+    // ----------------
+    // POLLING HELPERS:
+    // ----------------
+&nbsp;
+    /**
+    @dev Gets the total winning votes for reward distribution purposes
+    @param _pollID Integer identifier associated with target poll
+    @return Total number of votes committed to the winning option for specified poll
+    */
+<span class="fstat-no" title="function not covered" >    function getTotalNumberOfTokensForWinningOption(uint _pollID) constant public returns (uint numTokens</span>) {
+<span class="cstat-no" title="statement not covered" >        require(pollEnded(_pollID))</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if (isPassed(_pollID))</span>
+<span class="cstat-no" title="statement not covered" >            return pollMap[_pollID].votesFor;</span>
+        else
+<span class="cstat-no" title="statement not covered" >            return pollMap[_pollID].votesAgainst;</span>
+    }
+&nbsp;
+    /**
+    @notice Determines if poll is over
+    @dev Checks isExpired for specified poll's revealEndDate
+    @return Boolean indication of whether polling period is over
+    */
+<span class="fstat-no" title="function not covered" >    function pollEnded(uint _pollID) constant public returns (bool ended</span>) {
+<span class="cstat-no" title="statement not covered" >        require(pollExists(_pollID))</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        return isExpired(pollMap[_pollID].revealEndDate);</span>
+    }
+&nbsp;
+    /**
+    @notice Checks if the commit period is still active for the specified poll
+    @dev Checks isExpired for the specified poll's commitEndDate
+    @param _pollID Integer identifier associated with target poll
+    @return Boolean indication of isCommitPeriodActive for target poll
+    */
+<span class="fstat-no" title="function not covered" >    function commitPeriodActive(uint _pollID) constant public returns (bool active</span>) {
+<span class="cstat-no" title="statement not covered" >        require(pollExists(_pollID))</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        return !isExpired(pollMap[_pollID].commitEndDate);</span>
+    }
+&nbsp;
+    /**
+    @notice Checks if the reveal period is still active for the specified poll
+    @dev Checks isExpired for the specified poll's revealEndDate
+    @param _pollID Integer identifier associated with target poll
+    */
+<span class="fstat-no" title="function not covered" >    function revealPeriodActive(uint _pollID) constant public returns (bool active</span>) {
+<span class="cstat-no" title="statement not covered" >        require(pollExists(_pollID))</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        return !isExpired(pollMap[_pollID].revealEndDate) &amp;&amp; !commitPeriodActive(_pollID);</span>
+    }
+&nbsp;
+    /**
+    @dev Checks if user has already revealed for specified poll
+    @param _voter Address of user to check against
+    @param _pollID Integer identifier associated with target poll
+    @return Boolean indication of whether user has already revealed
+    */
+<span class="fstat-no" title="function not covered" >    function hasBeenRevealed(address _voter, uint _pollID) constant public returns (bool revealed</span>) {
+<span class="cstat-no" title="statement not covered" >        require(pollExists(_pollID))</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        uint prevID = dllMap[_voter].getPrev(_pollID)</span>;
+<span class="cstat-no" title="statement not covered" >        uint nextID = dllMap[_voter].getNext(_pollID)</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        return (prevID == _pollID) &amp;&amp; (nextID == _pollID);</span>
+    }
+&nbsp;
+    /**
+    @dev Checks if a poll exists, throws if the provided poll is in an impossible state
+    @param _pollID The pollID whose existance is to be evaluated.
+    @return Boolean Indicates whether a poll exists for the provided pollID
+    */
+<span class="fstat-no" title="function not covered" >    function pollExists(uint _pollID) constant public returns (bool exists</span>) {
+<span class="cstat-no" title="statement not covered" >        uint commitEndDate = pollMap[_pollID].commitEndDate</span>;
+<span class="cstat-no" title="statement not covered" >        uint revealEndDate = pollMap[_pollID].revealEndDate</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        assert(!(commitEndDate == 0 &amp;&amp; revealEndDate != 0))</span>;
+<span class="cstat-no" title="statement not covered" >        assert(!(commitEndDate != 0 &amp;&amp; revealEndDate == 0))</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        if(commitEndDate == 0 || revealEndDate == 0) { <span class="cstat-no" title="statement not covered" >return false;</span> }</span>
+<span class="cstat-no" title="statement not covered" >        return true;</span>
+    }
+&nbsp;
+    // ---------------------------
+    // DOUBLE-LINKED-LIST HELPERS:
+    // ---------------------------
+&nbsp;
+    /**
+    @dev Gets the bytes32 commitHash property of target poll
+    @param _voter Address of user to check against
+    @param _pollID Integer identifier associated with target poll
+    @return Bytes32 hash property attached to target poll
+    */
+<span class="fstat-no" title="function not covered" >    function getCommitHash(address _voter, uint _pollID) constant public returns (bytes32 commitHash</span>) {
+<span class="cstat-no" title="statement not covered" >        return bytes32(store.getAttribute(attrUUID(_voter, _pollID), "commitHash"));</span>
+    }
+&nbsp;
+    /**
+    @dev Wrapper for getAttribute with attrName="numTokens"
+    @param _voter Address of user to check against
+    @param _pollID Integer identifier associated with target poll
+    @return Number of tokens committed to poll in sorted poll-linked-list
+    */
+<span class="fstat-no" title="function not covered" >    function getNumTokens(address _voter, uint _pollID) constant public returns (uint numTokens</span>) {
+<span class="cstat-no" title="statement not covered" >        return store.getAttribute(attrUUID(_voter, _pollID), "numTokens");</span>
+    }
+&nbsp;
+    /**
+    @dev Gets top element of sorted poll-linked-list
+    @param _voter Address of user to check against
+    @return Integer identifier to poll with maximum number of tokens committed to it
+    */
+<span class="fstat-no" title="function not covered" >    function getLastNode(address _voter) constant public returns (uint pollID</span>) {
+<span class="cstat-no" title="statement not covered" >        return dllMap[_voter].getPrev(0);</span>
+    }
+&nbsp;
+    /**
+    @dev Gets the numTokens property of getLastNode
+    @param _voter Address of user to check against
+    @return Maximum number of tokens committed in poll specified
+    */
+<span class="fstat-no" title="function not covered" >    function getLockedTokens(address _voter) constant public returns (uint numTokens</span>) {
+<span class="cstat-no" title="statement not covered" >        return getNumTokens(_voter, getLastNode(_voter));</span>
+    }
+&nbsp;
+    /**
+    @dev Gets the prevNode a new node should be inserted after given the sort factor
+    @param _voter The voter whose DLL will be searched
+    @param _numTokens The value for the numTokens attribute in the node to be inserted
+    @return the node which the propoded node should be inserted after
+    */
+<span class="fstat-no" title="function not covered" >    function getInsertPointForNumTokens(address _voter, uint _numTokens)</span>
+    constant public returns (uint prevNode) {
+<span class="cstat-no" title="statement not covered" >      uint nodeID = getLastNode(_voter)</span>;
+<span class="cstat-no" title="statement not covered" >      uint tokensInNode = getNumTokens(_voter, nodeID)</span>;
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      while(tokensInNode != 0) {</span>
+<span class="cstat-no" title="statement not covered" >        tokensInNode = getNumTokens(_voter, nodeID)</span>;
+<span class="cstat-no" title="statement not covered" >        if(tokensInNode &lt; _numTokens) {</span>
+<span class="cstat-no" title="statement not covered" >          return nodeID;</span>
+        }
+<span class="cstat-no" title="statement not covered" >        nodeID = dllMap[_voter].getPrev(nodeID)</span>;
+      }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      return nodeID;</span>
+    }
+&nbsp;
+    // ----------------
+    // GENERAL HELPERS:
+    // ----------------
+&nbsp;
+    /**
+    @dev Checks if an expiration date has been reached
+    @param _terminationDate Integer timestamp of date to compare current timestamp with
+    @return expired Boolean indication of whether the terminationDate has passed
+    */
+<span class="fstat-no" title="function not covered" >    function isExpired(uint _terminationDate) constant public returns (bool expired</span>) {
+<span class="cstat-no" title="statement not covered" >        return (block.timestamp &gt; _terminationDate);</span>
+    }
+&nbsp;
+    /**
+    @dev Generates an identifier which associates a user and a poll together
+    @param _pollID Integer identifier associated with target poll
+    @return UUID Hash which is deterministic from _user and _pollID
+    */
+<span class="fstat-no" title="function not covered" >    function attrUUID(address _user, uint _pollID) public pure returns (bytes32 UUID</span>) {
+<span class="cstat-no" title="statement not covered" >        return keccak256(_user, _pollID);</span>
+    }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Mar 16 2018 01:51:47 GMT+0530 (IST)
+</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>
