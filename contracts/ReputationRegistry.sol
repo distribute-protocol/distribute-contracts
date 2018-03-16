@@ -10,8 +10,9 @@ import "./Project.sol";
 import "./ProjectLibrary.sol";
 import "./ProjectRegistry.sol";
 import "./DistributeToken.sol";
-import "./library/PLCRVoting.sol";
 import "./Task.sol";
+import "./library/PLCRVoting.sol";
+import "./library/Division.sol";
 
 contract ReputationRegistry{
 
@@ -29,7 +30,7 @@ contract ReputationRegistry{
   uint256 public totalSupply;               //total supply of reputation in all states
   uint256 public totalUsers;
 
-  uint256 proposeProportion = 20;           // tokensupply/proposeProportion is the number of tokens the proposer must stake
+  uint256 proposeProportion = 200000000000;           // tokensupply/proposeProportion is the number of tokens the proposer must stake
   uint256 rewardProportion = 100;
   // This represents both the initial starting amount and the maximum level the faucet will provide.
   uint256 public initialRepVal = 10000;
@@ -101,8 +102,8 @@ contract ReputationRegistry{
       //calculate cost of project in tokens currently (_cost in wei)
       //check proposer has at least 5% of the proposed cost in tokens
       require(now < _stakingPeriod && _cost > 0);
-      uint256 costProportion = _cost / distributeToken.weiBal();
-      uint256 proposerReputationCost = (costProportion / proposeProportion) * totalSupply;
+      uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
+      uint256 proposerReputationCost = (Division.percent(costProportion, proposeProportion, 10) * distributeToken.totalSupply()) / 10000000000;           //divide by 20 to get 5 percent of tokens
       require(balances[msg.sender] >= proposerReputationCost);
       balances[msg.sender] -= proposerReputationCost;
       address projectAddress = projectRegistry.createProject(_cost, costProportion, _stakingPeriod, msg.sender, 2, proposerReputationCost, _ipfsHash);

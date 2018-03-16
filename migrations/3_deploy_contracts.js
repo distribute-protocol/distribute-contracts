@@ -13,7 +13,7 @@ const Division = artifacts.require('library/Division')
 module.exports = function (deployer) {
   deployer.deploy(ProjectLibrary)
   deployer.deploy(Division)
-  deployer.link(Division, DistributeToken)
+  deployer.link(Division, [DistributeToken, ProjectLibrary, ReputationRegistry, TokenRegistry])
   deployer.link(ProjectLibrary, [TokenRegistry, ReputationRegistry, ProjectRegistry])
   deployer.then(function () {
     return deployer.deploy(TokenRegistry)

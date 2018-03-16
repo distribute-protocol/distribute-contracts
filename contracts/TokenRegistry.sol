@@ -8,10 +8,12 @@ pragma solidity ^0.4.8;
 
 import "./ProjectRegistry.sol";
 import "./DistributeToken.sol";
-import "./library/PLCRVoting.sol";
 import "./Project.sol";
 import "./ProjectLibrary.sol";
 import "./Task.sol";
+import "./library/PLCRVoting.sol";
+import "./library/Division.sol";
+
 
 contract TokenRegistry {
 
@@ -22,7 +24,7 @@ contract TokenRegistry {
   DistributeToken distributeToken;
   PLCRVoting plcrVoting;
 
-  uint256 proposeProportion = 20;                           // tokensupply/proposeProportion is the number of tokens the proposer must stake
+  uint256 proposeProportion = 200000000000;                           // tokensupply/proposeProportion is the number of tokens the proposer must stake
   uint256 rewardProportion = 100;
 
 // =====================================================================
@@ -63,10 +65,8 @@ contract TokenRegistry {
       //calculate cost of project in tokens currently (_cost in wei)
       //check proposer has at least 5% of the proposed cost in tokens
       require(now < _stakingPeriod && _cost > 0);
-      // this truncation is going to be a problem
-      uint256 costProportion = _cost / distributeToken.weiBal();
-      // this truncation is going to be a problem
-      uint256 proposerTokenCost = (costProportion / proposeProportion) * distributeToken.totalSupply();           //divide by 20 to get 5 percent of tokens
+      uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
+      uint256 proposerTokenCost = (Division.percent(costProportion, proposeProportion, 10) * distributeToken.totalSupply()) / 10000000000;           //divide by 20 to get 5 percent of tokens
       require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
       distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
       address projectAddress = projectRegistry.createProject(_cost, costProportion, _stakingPeriod, msg.sender, 1, proposerTokenCost, _ipfsHash);
