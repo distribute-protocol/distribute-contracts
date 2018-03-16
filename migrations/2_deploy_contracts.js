@@ -20,15 +20,13 @@ module.exports = function (deployer) {
   deployer.deploy(ProjectRegistry)
   deployer.deploy(DistributeToken, TokenRegistry.address, ReputationRegistry.address)
   deployer.deploy(PLCRVoting, TokenRegistry.address, ReputationRegistry.address, ProjectRegistry.address)
-  ProjectRegistry.deployed().then(function (instance) {
-    return instance.init(DistributeToken.address, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address)
-  }).then(function () {
-    return TokenRegistry.deployed()
-  }).then(function (instance) {
-    return instance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address)
-  }).then(function () {
-    return ReputationRegistry.deployed()
-  }).then(function (instance) {
-    return instance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address)
+  ProjectRegistry.deployed().then((instance) => {
+    instance.init(DistributeToken.address, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address)
+  })
+  TokenRegistry.deployed().then((instance) => {
+    instance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address)
+  })
+  ReputationRegistry.deployed().then((instance) => {
+    instance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address)
   })
 }

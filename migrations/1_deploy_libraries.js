@@ -7,12 +7,9 @@ const StandardToken = artifacts.require('library/StandardToken')
   deploys and connects contracts
 */
 module.exports = function(deployer) {
-    // deploy libraries
-    deployer.deploy(DLL)
-    deployer.deploy(AttributeStore)
-    // deployer.deploy(Token)
-    deployer.deploy(StandardToken)
-    // link libraries
-    deployer.link(DLL, PLCRVoting)
-    deployer.link(AttributeStore, PLCRVoting)
+  deployer.deploy(DLL)
+  deployer.deploy(AttributeStore)
+  deployer.deploy(StandardToken)
+  deployer.link(DLL, PLCRVoting)
+  deployer.link(AttributeStore, PLCRVoting)
 }
