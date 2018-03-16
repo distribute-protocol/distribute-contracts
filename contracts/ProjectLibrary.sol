@@ -213,32 +213,30 @@ library ProjectLibrary {
       Project project = Project(_projectAddress);
       require(project.state() == 6 || project.state() == 8);
       if (project.isTR(msg.sender)) {
-        return handleTokenStaker(_projectAddress, _staker);
+        return handleTokenStaker(project, _staker);
       } else if (project.isRR(msg.sender)) {
-        return handleReputationStaker(_projectAddress, _staker);
+        return handleReputationStaker(project, _staker);
+      } else {
+        return 0;
       }
     }
 
-    function handleTokenStaker(address _projectAddress, address _staker) internal returns (uint256) {
+    function handleTokenStaker(Project _project, address _staker) internal returns (uint256) {
       uint256 refund;
       // account for proportion of successful tasks
-      Project project = Project(_projectAddress);
-      if(project.totalTokensStaked() != 0) {
-        refund = project.stakedTokenBalances(_staker) * project.passAmount() / 100;
-        project.clearTokenStake(_staker);
+      if(_project.totalTokensStaked() != 0) {
+        refund = _project.stakedTokenBalances(_staker) * _project.passAmount() / 100;
       }
       tokenRefund(_staker, refund);
       return refund;
     }
 
-    function handleReputationStaker(address _projectAddress, address _staker) internal returns (uint256) {
+    function handleReputationStaker(Project _project, address _staker) internal returns (uint256) {
       uint256 refund;
-      Project project = Project(_projectAddress);
-      if(project.totalReputationStaked() != 0) {
-        refund = project.stakedReputationBalances(_staker) * project.passAmount() / 100;
-        project.clearReputationStake(_staker);
+      if(_project.totalReputationStaked() != 0) {
+        refund = _project.stakedReputationBalances(_staker) * _project.passAmount() / 100;
       }
-      reputationRefund(_projectAddress, _staker, refund);
+      reputationRefund(address(_project), _staker, refund);
       return refund;
     }
 

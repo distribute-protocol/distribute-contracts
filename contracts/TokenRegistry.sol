@@ -174,9 +174,14 @@ contract TokenRegistry {
   // COMPLETE
   // =====================================================================
 
-    function refundStaker(address _projectAddress, uint _index) public {
+    function refundStaker(address _projectAddress) public {
       uint256 refund = _projectAddress.refundStaker(msg.sender);
+      require(refund > 0);
+      Project(_projectAddress).clearTokenStake(msg.sender);
       distributeToken.transferFromEscrow(msg.sender, refund);
+    }
+
+    function rescueTokens(address _projectAddress, uint _index) public {
       //rescue locked tokens that weren't revealed
       uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
       plcrVoting.rescueTokens(msg.sender, pollId);

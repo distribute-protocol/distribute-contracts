@@ -20,24 +20,24 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">97.78% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>44/45</span>
+        <span class='fraction'>42/42</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">64.29% </span>
+        <span class="strong">65.38% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>18/28</span>
+        <span class='fraction'>17/26</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">86.67% </span>
+        <span class="strong">92.86% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>13/15</span>
+        <span class='fraction'>13/14</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">97.96% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>48/49</span>
+        <span class='fraction'>46/46</span>
       </div>
     </div>
   </div>
@@ -189,14 +189,8 @@
 144
 145
 146
-147
-148
-149
-150
-151
-152
-153
-154</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+147</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -241,12 +235,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">6×</span>
-<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">8×</span>
+<span class="cline-any cline-yes">4×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">2×</span>
 <span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -260,17 +254,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">26×</span>
+<span class="cline-any cline-yes">43×</span>
+<span class="cline-any cline-yes">25×</span>
 <span class="cline-any cline-yes">25×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">23×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">23×</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">39×</span>
 <span class="cline-any cline-yes">39×</span>
@@ -279,11 +269,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">40×</span>
 <span class="cline-any cline-yes">40×</span>
-<span class="cline-any cline-yes">17×</span>
+<span class="cline-any cline-yes">40×</span>
+<span class="cline-any cline-yes">40×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">23×</span>
-<span class="cline-any cline-yes">23×</span>
-<span class="cline-any cline-yes">23×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -328,9 +316,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -353,6 +339,7 @@
 &nbsp;
 import "./library/StandardToken.sol";
 import "./library/SafeMath.sol";
+import "./library/Division.sol";
 &nbsp;
 contract DistributeToken is StandardToken {
 &nbsp;
@@ -369,8 +356,8 @@ contract DistributeToken is StandardToken {
 &nbsp;
   uint256 public weiBal;
 &nbsp;
-  // .0001 ether
-  uint256 baseCost = 100000000000000;
+  // .00005 ether
+  uint256 baseCost = 50000000000000;
 &nbsp;
 // =====================================================================
 // EVENTS
@@ -399,7 +386,7 @@ contract DistributeToken is StandardToken {
   }
 &nbsp;
   modifier onlyTRorRR() {
-    <span class="missing-if-branch" title="else path not taken" >E</span>require(msg.sender == tokenRegistryAddress || msg.sender == reputationRegistryAddress);
+    require(msg.sender == tokenRegistryAddress || msg.sender == reputationRegistryAddress);
     _;
   }
 &nbsp;
@@ -414,14 +401,10 @@ contract DistributeToken is StandardToken {
   function currentPrice() public view returns (uint256) {
     //calculated current burn reward of 1 token at current weiBal and free token supply
     if (weiBal == 0 || totalSupply == 0) { return baseCost; }
-    return weiBal / totalSupply;
-  }
-&nbsp;
-  function percent(uint256 _numerator, uint256 _denominator, uint256 _precision) internal pure returns (uint256) {
-     // caution, check safe-to-multiply here
-    uint256 numerator = _numerator * 10 ** (_precision + 1);
-    // with rounding of last digit
-    return ((numerator / _denominator) + 5) / 10;
+    uint256 price = weiBal / totalSupply;
+    return price &lt; baseCost
+      ? baseCost
+      : price;
   }
 &nbsp;
   function weiRequired(uint256 _tokens) public view returns (uint256) {
@@ -431,13 +414,11 @@ contract DistributeToken is StandardToken {
 &nbsp;
   function targetPrice(uint _tokens) public view returns (uint256) {
     <span class="missing-if-branch" title="else path not taken" >E</span>require(_tokens &gt; 0);
-    if (totalSupply == 0 || weiBal == 0) {
-      return baseCost;
-    }
-    uint256 newSupply = totalSupply + _tokens;
     uint256 cp = currentPrice();
-    return cp * (1000 + percent(_tokens, newSupply, 3)) / 1000;
+    uint256 newSupply = totalSupply + _tokens;
+    return cp * (1000 + Division.percent(_tokens, newSupply, 3)) / 1000;
   }
+&nbsp;
   // =====================================================================
   // TOKEN
   // =====================================================================
@@ -480,10 +461,8 @@ contract DistributeToken is StandardToken {
       _address.transfer(_weiValue);
     }
 &nbsp;
-    // THIS IS A DANGEROUS FUNCTION - ONLY TO BE USED FOR EASE OF TESTING
-&nbsp;
-<span class="fstat-no" title="function not covered" >    function returnWei(uint value) public onlyT</span>R {
-<span class="cstat-no" title="statement not covered" >      weiBal += value</span>;
+    function returnWei(uint value) public onlyTR {
+      weiBal += value;
     }
 &nbsp;
     function transferToEscrow(address _owner, uint256 _value) public onlyTR returns (bool) {
@@ -508,7 +487,7 @@ contract DistributeToken is StandardToken {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Mar 16 2018 09:22:12 GMT+0530 (IST)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Mar 16 2018 14:30:51 GMT+0530 (IST)
 </div>
 </div>
 <script src="../prettify.js"></script>

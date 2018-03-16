@@ -20,9 +20,9 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">9.43% </span>
+        <span class="strong">11.32% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>5/53</span>
+        <span class='fraction'>6/53</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">2.63% </span>
@@ -30,14 +30,14 @@
         <span class='fraction'>1/38</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">6.25% </span>
+        <span class="strong">12.5% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>1/16</span>
+        <span class='fraction'>2/16</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">7.46% </span>
+        <span class="strong">8.96% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>5/67</span>
+        <span class='fraction'>6/67</span>
       </div>
     </div>
   </div>
@@ -240,7 +240,13 @@
 195
 196
 197
-198</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+198
+199
+200
+201</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -313,7 +319,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -451,6 +457,9 @@ import "./Task.sol";
 import "./ReputationRegistry.sol";
 &nbsp;
 contract ProjectRegistry {
+&nbsp;
+  using ProjectLibrary for address;
+&nbsp;
   PLCRVoting plcrVoting;
 &nbsp;
   address tokenRegistryAddress;
@@ -509,24 +518,24 @@ contract ProjectRegistry {
   // =====================================================================
 &nbsp;
 &nbsp;
-<span class="fstat-no" title="function not covered" >    function checkStaked(address _projectAddress) public returns (bool</span>) {
-<span class="cstat-no" title="statement not covered" >      return ProjectLibrary.checkStaked(_projectAddress);</span>
+    function checkStaked(address _projectAddress) public returns (bool) {
+      return _projectAddress.checkStaked();
     }
 &nbsp;
 <span class="fstat-no" title="function not covered" >    function checkActive(address _projectAddress) public returns (bool</span>) {
-<span class="cstat-no" title="statement not covered" >      return ProjectLibrary.checkActive(_projectAddress, stakedProjects[_projectAddress].topTaskHash);</span>
+<span class="cstat-no" title="statement not covered" >      return _projectAddress.checkActive(stakedProjects[_projectAddress].topTaskHash);</span>
     }
 &nbsp;
 <span class="fstat-no" title="function not covered" >    function checkValidate(address _projectAddress) publi</span>c {
-      ProjectLibrary.checkValidate(_projectAddress, tokenRegistryAddress, distributeTokenAddress);
+      _projectAddress.checkValidate(tokenRegistryAddress, distributeTokenAddress);
     }
 &nbsp;
 <span class="fstat-no" title="function not covered" >    function checkVoting(address _projectAddress) publi</span>c {
-      ProjectLibrary.checkVoting(_projectAddress, tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
+      _projectAddress.checkVoting(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
     }
 &nbsp;
 <span class="fstat-no" title="function not covered" >    function checkEnd(address _projectAddress) publi</span>c {
-      ProjectLibrary.checkEnd(_projectAddress, tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
+      _projectAddress.checkEnd(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
 <span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
 <span class="cstat-no" title="statement not covered" >      if (project.state() == 7) {</span>
 <span class="cstat-no" title="statement not covered" >        TokenRegistry(tokenRegistryAddress)</span>.burnTokens(project.totalTokensStaked());
@@ -574,10 +583,10 @@ contract ProjectRegistry {
 &nbsp;
 <span class="fstat-no" title="function not covered" >    function addTaskHash(address _projectAddress, bytes32 _taskHash) public</span>  {      // format of has should be 'description', 'percentage', check via js that percentages add up to 100 prior to calling contract
 <span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
-<span class="cstat-no" title="statement not covered" >      require(ProjectLibrary.isStaker(_projectAddress, msg.sender) == true)</span>;
+<span class="cstat-no" title="statement not covered" >      require(_projectAddress.isStaker(msg.sender) == true)</span>;
 <span class="cstat-no" title="statement not covered" >      checkActive(_projectAddress)</span>;
 <span class="cstat-no" title="statement not covered" >      if (project.state() == 2) {</span>
-<span class="cstat-no" title="statement not covered" >        uint256 stakerWeight = ProjectLibrary.calculateWeightOfAddress(_projectAddress, msg.sender)</span>;
+<span class="cstat-no" title="statement not covered" >        uint256 stakerWeight = _projectAddress.calculateWeightOfAddress(msg.sender)</span>;
 <span class="cstat-no" title="statement not covered" >        stakedTaskHash(msg.sender, _projectAddress, _taskHash, stakerWeight)</span>;
       }
     }
@@ -603,7 +612,7 @@ contract ProjectRegistry {
   // Doesn't Change State Here Could Possibly move to ProjectLibrary
 <span class="fstat-no" title="function not covered" >    function submitHashList(address _projectAddress, bytes32[] _hashes) publi</span>c {
 <span class="cstat-no" title="statement not covered" >      Project project = Project(_projectAddress)</span>;
-<span class="cstat-no" title="statement not covered" >      require(ProjectLibrary.isStaker(_projectAddress, msg.sender) == true)</span>;
+<span class="cstat-no" title="statement not covered" >      require(_projectAddress.isStaker(msg.sender) == true)</span>;
 <span class="cstat-no" title="statement not covered" >      require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash)</span>;
       project.setTaskLength(_hashes.length);
 <span class="cstat-no" title="statement not covered" >      for (uint256 i = 0; i &lt; _hashes.length; i++) {</span>
@@ -640,7 +649,7 @@ contract ProjectRegistry {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Mar 16 2018 09:22:12 GMT+0530 (IST)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Mar 16 2018 14:30:51 GMT+0530 (IST)
 </div>
 </div>
 <script src="../prettify.js"></script>

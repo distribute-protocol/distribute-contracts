@@ -90,10 +90,27 @@ contract('DistributeToken', function (accounts) {
     assert.equal(weiBal, 0, "doesn't transfer wei correctly")
   })
 
-  it('only allows the tokenRegistry to call transferWeiFrom', async () => {
+  it('only allows the tokenRegistry to call transferWeiTo', async () => {
     let errorThrown = false
     try {
-      await DT.transferWeiFrom(account1, web3.toWei(3, 'ether'))
+      await DT.transferWeiTo(account1, web3.toWei(3, 'ether'))
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('allows tokenRegistry to call returnWei', async () => {
+    // let weiRequired = await spoofedDT.weiRequired(tokens)
+    await spoofedDT.returnWei(1000)
+    let weiBal = await spoofedDT.weiBal()
+    assert.equal(weiBal, 1000, "doesn't transfer wei correctly")
+  })
+
+  it('only allows the tokenRegistry to call returnWei', async () => {
+    let errorThrown = false
+    try {
+      await DT.returnWei(1000)
     } catch (e) {
       errorThrown = true
     }

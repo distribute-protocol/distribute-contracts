@@ -194,6 +194,7 @@ contract ReputationRegistry{
     function refundStaker(address _projectAddress) public {                                                                       //called by worker who staked or voted
       uint256 _refund = _projectAddress.refundStaker(msg.sender);
       require(_refund > 0);
+      Project(_projectAddress).clearReputationStake(msg.sender);
       balances[msg.sender] += _refund * 3 / 2;
     }
 

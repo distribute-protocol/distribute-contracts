@@ -19,7 +19,7 @@ contract DistributeToken is StandardToken {
 
   uint256 public weiBal;
 
-  // .0001 ether
+  // .00005 ether
   uint256 baseCost = 50000000000000;
 
 // =====================================================================
@@ -81,6 +81,7 @@ contract DistributeToken is StandardToken {
     uint256 newSupply = totalSupply + _tokens;
     return cp * (1000 + Division.percent(_tokens, newSupply, 3)) / 1000;
   }
+
   // =====================================================================
   // TOKEN
   // =====================================================================
@@ -122,8 +123,6 @@ contract DistributeToken is StandardToken {
       weiBal -= _weiValue;
       _address.transfer(_weiValue);
     }
-
-    // THIS IS A DANGEROUS FUNCTION - ONLY TO BE USED FOR EASE OF TESTING
 
     function returnWei(uint value) public onlyTR {
       weiBal += value;

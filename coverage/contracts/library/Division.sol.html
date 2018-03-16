@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>Code coverage report for contracts/library/AttributeStore.sol</title>
+    <title>Code coverage report for contracts/library/Division.sol</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
@@ -16,13 +16,13 @@
 <div class='wrapper'>
   <div class='pad1'>
     <h1>
-      <a href="../../index.html">all files</a> / <a href="index.html">contracts/library/</a> AttributeStore.sol
+      <a href="../../index.html">all files</a> / <a href="index.html">contracts/library/</a> Division.sol
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">0% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>0/4</span>
+        <span class='fraction'>2/2</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
@@ -30,18 +30,18 @@
         <span class='fraction'>0/0</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">0% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>0/2</span>
+        <span class='fraction'>1/1</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">0% </span>
+        <span class="strong">100% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>0/4</span>
+        <span class='fraction'>2/2</span>
       </div>
     </div>
   </div>
-  <div class='status-line low'></div>
+  <div class='status-line high'></div>
 <pre><table class="coverage">
 <tr><td class="line-count quiet">1
 2
@@ -55,44 +55,29 @@
 10
 11
 12
-13
-14
-15
-16
-17
-18</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+13</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">50×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">50×</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">pragma solidity ^0.4.8;
 &nbsp;
-library AttributeStore {
-    struct Data {
-        mapping(bytes32 =&gt; uint) store;
-    }
+library Division {
 &nbsp;
-<span class="fstat-no" title="function not covered" >    function getAttribute(Data storage self, bytes32 _UUID, string _attrName) public view returns (uint</span>) {
-<span class="cstat-no" title="statement not covered" >        bytes32 key = keccak256(_UUID, _attrName)</span>;
-<span class="cstat-no" title="statement not covered" >        return self.store[key];</span>
-    }
+  function percent(uint256 _numerator, uint256 _denominator, uint256 _precision) public pure returns (uint256) {
+     // caution, check safe-to-multiply here
+    uint256 numerator = _numerator * 10 ** (_precision + 1);
+    // with rounding of last digit
+    return ((numerator / _denominator) + 5) / 10;
+  }
 &nbsp;
-<span class="fstat-no" title="function not covered" >    function attachAttribute(Data storage self, bytes32 _UUID, string _attrName, uint _attrVal) publi</span>c {
-<span class="cstat-no" title="statement not covered" >        bytes32 key = keccak256(_UUID, _attrName)</span>;
-<span class="cstat-no" title="statement not covered" >        self.store[key] = _attrVal</span>;
-    }
 }
 &nbsp;</pre></td></tr>
 </table></pre>

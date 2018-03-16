@@ -1,6 +1,7 @@
 const TokenRegistry = artifacts.require('TokenRegistry')
 const ReputationRegistry = artifacts.require('ReputationRegistry')
 const ProjectRegistry = artifacts.require('ProjectRegistry')
+const Project = artifacts.require('Project')
 const PLCRVoting = artifacts.require('PLCRVoting')
 const DistributeToken = artifacts.require('DistributeToken')
 const ProjectLibrary = artifacts.require('ProjectLibrary')
@@ -29,7 +30,7 @@ const Division = artifacts.require('library/Division')
 // }
 module.exports = function (deployer) {
   deployer.deploy(Division)
-  deployer.link(Division, [DistributeToken, ProjectLibrary, ReputationRegistry, TokenRegistry, ProjectRegistry])
+  deployer.link(Division, [DistributeToken, ProjectLibrary, ReputationRegistry, TokenRegistry, ProjectRegistry, Project])
   deployer.deploy(ProjectLibrary)
   deployer.link(ProjectLibrary, [TokenRegistry, ReputationRegistry, ProjectRegistry])
   deployer.then(function () {
