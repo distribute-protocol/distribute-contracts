@@ -43,7 +43,7 @@ contract PLCRVoting {
     // MODIFIERS
     // =====================================================================
 
-      modifier onlyTRWR() {
+      modifier onlyTRRR() {
         require(msg.sender == reputationRegistry || msg.sender == tokenRegistry);
         _;
       }
@@ -82,7 +82,7 @@ contract PLCRVoting {
     @dev Assumes that msg.sender has approved voting contract to spend on their behalf
     @param _numTokens The number of votingTokens desired in exchange for ERC20 tokens
     */
-    function requestVotingRights(address _staker, uint _numTokens) public onlyTRWR() {
+    function requestVotingRights(address _staker, uint _numTokens) public onlyTRRR() {
         //checks done in THR/WR to ensure that staker has tokens to vote with
         if (msg.sender == tokenRegistry) {
           voteTokenBalance[_staker] += _numTokens;
@@ -98,7 +98,7 @@ contract PLCRVoting {
     @notice Withdraw _numTokens ERC20 tokens from the voting contract, revoking these voting rights
     @param _numTokens The number of ERC20 tokens desired in exchange for voting rights
     */
-    function withdrawVotingRights(address _staker, uint _numTokens) external onlyTRWR() {
+    function withdrawVotingRights(address _staker, uint _numTokens) external onlyTRRR() {
         if (msg.sender == tokenRegistry) {
           uint256 availableTokens = voteTokenBalance[_staker] - getLockedTokens(_staker);
           require(availableTokens >= _numTokens);
@@ -117,7 +117,7 @@ contract PLCRVoting {
     @dev Unlocks tokens locked in unrevealed vote where poll has ended
     @param _pollID Integer identifier associated with the target poll
     */
-    function rescueTokens(address _staker, uint _pollID) onlyTRWR() external {
+    function rescueTokens(address _staker, uint _pollID) onlyTRRR() external {
         require(pollEnded(_pollID));
         if(!hasBeenRevealed(_staker, _pollID)) {
             dllMap[_staker].remove(_pollID);
@@ -135,7 +135,7 @@ contract PLCRVoting {
     @param _numTokens The number of tokens to be committed towards the target poll
     @param _prevPollID The ID of the poll that the user has voted the maximum number of tokens in which is still less than or equal to numTokens
     */
-    function commitVote(address _staker, uint _pollID, bytes32 _secretHash, uint _numTokens, uint _prevPollID) onlyTRWR() external {
+    function commitVote(address _staker, uint _pollID, bytes32 _secretHash, uint _numTokens, uint _prevPollID) onlyTRRR() external {
         require(commitPeriodActive(_pollID));
 
         if (msg.sender == reputationRegistry) {
@@ -188,7 +188,7 @@ contract PLCRVoting {
     @param _voteOption Vote choice used to generate commitHash for associated poll
     @param _salt Secret number used to generate commitHash for associated poll
     */
-    function revealVote(uint _pollID, uint _voteOption, uint _salt) onlyTRWR() external {
+    function revealVote(uint _pollID, uint _voteOption, uint _salt) onlyTRRR() external {
         // Make sure the reveal period is active
         require(revealPeriodActive(_pollID));
         require(!hasBeenRevealed(msg.sender, _pollID));                        // prevent user from revealing multiple times
@@ -252,7 +252,7 @@ contract PLCRVoting {
     @dev Check if votesFor out of totalVotes exceeds votesQuorum (requires pollEnded)
     @param _pollID Integer identifier associated with target poll
     */
-    function isPassed(uint _pollID) onlyTRWR() constant public returns (bool passed) {
+    function isPassed(uint _pollID) onlyTRRR() constant public returns (bool passed) {
         require(msg.sender == tokenRegistry);
         require(pollEnded(_pollID));
 
