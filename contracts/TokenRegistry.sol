@@ -17,6 +17,8 @@ import "./library/Division.sol";
 
 contract TokenRegistry {
 
+  using ProjectLibrary for address;
+
 // =====================================================================
 // STATE VARIABLES
 // =====================================================================
@@ -120,7 +122,7 @@ contract TokenRegistry {
     function validateTask(address _projectAddress, uint256 _index, uint256 _tokens, bool _validationState) public {
       require(distributeToken.balanceOf(msg.sender) >= _tokens);
       distributeToken.transferToEscrow(msg.sender, _tokens);
-      ProjectLibrary.validate(_projectAddress, msg.sender, _index, _tokens, _validationState);
+      _projectAddress.validate(msg.sender, _index, _tokens, _validationState);
     }
 
     function rewardValidator(address _projectAddress, uint256 _index) public {
@@ -173,7 +175,7 @@ contract TokenRegistry {
   // =====================================================================
 
     function refundStaker(address _projectAddress, uint _index) public {
-      uint256 refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender);
+      uint256 refund = _projectAddress.refundStaker(msg.sender);
       distributeToken.transferFromEscrow(msg.sender, refund);
       //rescue locked tokens that weren't revealed
       uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();

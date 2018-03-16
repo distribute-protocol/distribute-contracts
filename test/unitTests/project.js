@@ -2,6 +2,7 @@ const Project = artifacts.require('Project')
 const TokenRegistry = artifacts.require('TokenRegistry')
 const ReputationRegistry = artifacts.require('ReputationRegistry')
 const ProjectRegistry = artifacts.require('ProjectRegistry')
+const ProjectLibrary = artifacts.require('library/ProjectLibrary')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const Promise = require('bluebird')
 web3.eth = Promise.promisifyAll(web3.eth)
@@ -10,10 +11,12 @@ const assertThrown = require('../utils/AssertThrown')
 contract('Project', function (accounts) {
   let TR, RR, P, spoofedP
   let projectCost = web3.toWei(1, 'ether')
-  let costProportion = 20
+  let costProportion = 10
   let stakingPeriod = 10000000000
   let proposer = accounts[1]
   let proposerTypeToken = 1
+  let proposerTokenCost = 10000
+  let ipfsHash = 'ipfsHash'
   let proposerTypeRep = 2
   let spoofedTRaddress = accounts[2]
   let spoofedPRaddress = accounts[3]
@@ -31,8 +34,8 @@ contract('Project', function (accounts) {
     TR = await TokenRegistry.deployed()
     RR = await ReputationRegistry.deployed()
     PR = await ProjectRegistry.deployed()
-    P = await Project.new(projectCost, costProportion, stakingPeriod, RR.address, TR.address, {from: spoofedPRaddress})
-    spoofedP = await Project.new(projectCost, costProportion, stakingPeriod, RR.address, spoofedTRaddress, {from: spoofedPRaddress})
+    P = await Project.new(projectCost, costProportion, stakingPeriod, proposer, proposerTypeToken, proposerTokenCost, ipfsHash, RR.address, TR.address, {from: spoofedPRaddress})
+    spoofedP = await Project.new(projectCost, costProportion, stakingPeriod, proposer, proposerTypeToken, proposerTokenCost, ipfsHash, RR.address, spoofedTRaddress, {from: spoofedPRaddress})
   })
 
   it('stakes tokens', async () => {
@@ -50,8 +53,8 @@ contract('Project', function (accounts) {
     RR.stakeReputation(spoofedP.address, 1, {from: repStaker})
     let stakedReputationBalance = await spoofedP.stakedReputationBalances(repStaker)
     let repRegBal = await RR.balances(repStaker)
-    assert.equal(stakedReputationBalance, 1, 'staked reputation is incorrect')
-    assert.equal(repRegBal, 0, 'reputation balance not updated correctly')
+    assert.equal(stakedReputationBalance, 10000, 'staked reputation is incorrect')
+    assert.equal(repRegBal.toNumber(), 0, 'reputation balance not updated correctly')
   })
 
   it('returns a bool for an address whether they are a project staker', async () => {

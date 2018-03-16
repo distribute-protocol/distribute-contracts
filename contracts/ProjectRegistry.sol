@@ -12,6 +12,9 @@ import "./Task.sol";
 import "./ReputationRegistry.sol";
 
 contract ProjectRegistry {
+
+  using ProjectLibrary for address;
+
   PLCRVoting plcrVoting;
 
   address tokenRegistryAddress;
@@ -71,23 +74,23 @@ contract ProjectRegistry {
 
 
     function checkStaked(address _projectAddress) public returns (bool) {
-      return ProjectLibrary.checkStaked(_projectAddress);
+      return _projectAddress.checkStaked();
     }
 
     function checkActive(address _projectAddress) public returns (bool) {
-      return ProjectLibrary.checkActive(_projectAddress, stakedProjects[_projectAddress].topTaskHash);
+      return _projectAddress.checkActive(stakedProjects[_projectAddress].topTaskHash);
     }
 
     function checkValidate(address _projectAddress) public {
-      ProjectLibrary.checkValidate(_projectAddress, tokenRegistryAddress, distributeTokenAddress);
+      _projectAddress.checkValidate(tokenRegistryAddress, distributeTokenAddress);
     }
 
     function checkVoting(address _projectAddress) public {
-      ProjectLibrary.checkVoting(_projectAddress, tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
+      _projectAddress.checkVoting(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
     }
 
     function checkEnd(address _projectAddress) public {
-      ProjectLibrary.checkEnd(_projectAddress, tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
+      _projectAddress.checkEnd(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
       Project project = Project(_projectAddress);
       if (project.state() == 7) {
         TokenRegistry(tokenRegistryAddress).burnTokens(project.totalTokensStaked());
@@ -135,10 +138,10 @@ contract ProjectRegistry {
 
     function addTaskHash(address _projectAddress, bytes32 _taskHash) public  {      // format of has should be 'description', 'percentage', check via js that percentages add up to 100 prior to calling contract
       Project project = Project(_projectAddress);
-      require(ProjectLibrary.isStaker(_projectAddress, msg.sender) == true);
+      require(_projectAddress.isStaker(msg.sender) == true);
       checkActive(_projectAddress);
       if (project.state() == 2) {
-        uint256 stakerWeight = ProjectLibrary.calculateWeightOfAddress(_projectAddress, msg.sender);
+        uint256 stakerWeight = _projectAddress.calculateWeightOfAddress(msg.sender);
         stakedTaskHash(msg.sender, _projectAddress, _taskHash, stakerWeight);
       }
     }
@@ -164,7 +167,7 @@ contract ProjectRegistry {
   // Doesn't Change State Here Could Possibly move to ProjectLibrary
     function submitHashList(address _projectAddress, bytes32[] _hashes) public {
       Project project = Project(_projectAddress);
-      require(ProjectLibrary.isStaker(_projectAddress, msg.sender) == true);
+      require(_projectAddress.isStaker(msg.sender) == true);
       require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
       project.setTaskLength(_hashes.length);
       for (uint256 i = 0; i < _hashes.length; i++) {

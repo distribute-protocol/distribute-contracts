@@ -16,6 +16,8 @@ import "./library/Division.sol";
 
 contract ReputationRegistry{
 
+  using ProjectLibrary for address;
+
 // =====================================================================
 // STATE VARIABLES
 // =====================================================================
@@ -150,7 +152,7 @@ contract ReputationRegistry{
     }
 
     function rewardTask(address _projectAddress, uint8 _index) public {                                   //called by worker who completed a task
-      uint256 reward = ProjectLibrary.claimTaskReward(_index, _projectAddress, msg.sender);
+      uint256 reward = _projectAddress.claimTaskReward(_index, msg.sender);
       balances[msg.sender] += reward;
     }
 
@@ -190,7 +192,7 @@ contract ReputationRegistry{
   // =====================================================================
 
     function refundStaker(address _projectAddress) public {                                                                       //called by worker who staked or voted
-      uint256 _refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender);
+      uint256 _refund = _projectAddress.refundStaker(msg.sender);
       require(_refund > 0);
       balances[msg.sender] += _refund * 3 / 2;
     }

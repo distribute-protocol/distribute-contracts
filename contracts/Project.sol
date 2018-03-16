@@ -108,7 +108,7 @@ contract Project {
     tokenRegistryAddress = _tokenRegistry;
     projectRegistryAddress = msg.sender;
     weiCost = _cost;
-    reputationCost = _costProportion * ReputationRegistry(_reputationRegistry).totalSupply();
+    reputationCost = _costProportion * ReputationRegistry(_reputationRegistry).totalSupply() / 100;
     state = 1;
     nextDeadline = _stakingPeriod;
     proposer = _proposer;

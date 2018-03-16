@@ -193,7 +193,7 @@ library ProjectLibrary {
   // TASK
   // =====================================================================
 
-    function claimTaskReward(uint256 _index, address _projectAddress, address _claimer) public returns (uint256) {
+    function claimTaskReward(address _projectAddress, uint256 _index, address _claimer) public returns (uint256) {
       Project project = Project(_projectAddress);
       require(project.state() == 6);
       Task task = Task(project.tasks(_index));
