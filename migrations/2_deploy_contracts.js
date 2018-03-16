@@ -11,8 +11,8 @@ const Division = artifacts.require('library/Division')
 */
 
 // module.exports = async function (deployer) {
-//   deployer.deploy(Division)
-//   deployer.link(Division, [DistributeToken, ProjectLibrary, ReputationRegistry, TokenRegistry])
+  // deployer.deploy(Division)
+  // deployer.link(Division, [DistributeToken, ProjectLibrary, ReputationRegistry, TokenRegistry])
 //   deployer.deploy(ProjectLibrary)
 //   deployer.link(ProjectLibrary, [TokenRegistry, ReputationRegistry, ProjectRegistry])
 //   deployer.deploy(TokenRegistry)
@@ -28,6 +28,8 @@ const Division = artifacts.require('library/Division')
 //   RRInstance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address)
 // }
 module.exports = function (deployer) {
+  deployer.deploy(Division)
+  deployer.link(Division, [DistributeToken, ProjectLibrary, ReputationRegistry, TokenRegistry, ProjectRegistry])
   deployer.deploy(ProjectLibrary)
   deployer.link(ProjectLibrary, [TokenRegistry, ReputationRegistry, ProjectRegistry])
   deployer.then(function () {

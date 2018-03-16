@@ -64,7 +64,10 @@ contract DistributeToken is StandardToken {
   function currentPrice() public view returns (uint256) {
     //calculated current burn reward of 1 token at current weiBal and free token supply
     if (weiBal == 0 || totalSupply == 0) { return baseCost; }
-    return weiBal / totalSupply;
+    uint256 price = weiBal / totalSupply;
+    return price < baseCost
+      ? baseCost
+      : price;
   }
 
   function weiRequired(uint256 _tokens) public view returns (uint256) {

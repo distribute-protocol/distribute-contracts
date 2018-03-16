@@ -10,6 +10,7 @@ import "./ProjectRegistry.sol";
 import "./ReputationRegistry.sol";
 import "./Task.sol";
 import "./library/SafeMath.sol";
+import "./library/Division.sol";
 
 contract Project {
 
@@ -183,7 +184,7 @@ contract Project {
       require(state == 1);
       require(stakedTokenBalances[_staker].sub(_tokens) < stakedTokenBalances[_staker] &&   //check overflow
            stakedTokenBalances[_staker] >= _tokens);   //make sure _staker has the tokens staked to unstake */
-      uint256 weiVal = (_tokens / totalTokensStaked) * weiBal;
+      uint256 weiVal = (Division.percent(_tokens, totalTokensStaked, 10) * weiBal) / 10000000000;
       stakedTokenBalances[_staker] -= _tokens;
       totalTokensStaked -= _tokens;
       weiBal -= weiVal;
