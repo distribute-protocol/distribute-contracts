@@ -5,6 +5,7 @@ import "./TokenRegistry.sol";
 import "./ProjectRegistry.sol";
 import "./Task.sol";
 import "./library/PLCRVoting.sol";
+import "./library/Division.sol";
 
 library ProjectLibrary {
 
@@ -37,22 +38,15 @@ library ProjectLibrary {
       return (now > Project(_projectAddress).nextDeadline());
     }
 
-    function percent(uint256 _numerator, uint256 _denominator, uint256 _precision) internal pure returns (uint256) {
-       // caution, check safe-to-multiply here
-      uint256 numerator  = _numerator * 10 ** (_precision + 1);
-      // with rounding of last digit
-      return ((numerator / _denominator) + 5) / 10;
-    }
-
     function calculateWeightOfAddress(address _projectAddress, address _address) public view returns (uint256) {
       uint256 reputationWeight;
       uint256 tokenWeight;
       Project project = Project(_projectAddress);
       project.totalReputationStaked() != 0
-        ? reputationWeight = percent(project.stakedReputationBalances(_address), project.totalReputationStaked(), 2)
+        ? reputationWeight = Division.percent(project.stakedReputationBalances(_address), project.totalReputationStaked(), 2)
         : reputationWeight = 0;
       project.totalTokensStaked() != 0
-        ? tokenWeight = percent(project.stakedTokenBalances(_address), project.totalTokensStaked(), 2)
+        ? tokenWeight = Division.percent(project.stakedTokenBalances(_address), project.totalTokensStaked(), 2)
         : tokenWeight = 0;
       return (reputationWeight + tokenWeight) / 2;
     }

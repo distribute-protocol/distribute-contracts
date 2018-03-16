@@ -2,6 +2,7 @@ pragma solidity ^0.4.8;
 
 import "./library/StandardToken.sol";
 import "./library/SafeMath.sol";
+import "./library/Division.sol";
 
 contract DistributeToken is StandardToken {
 
@@ -66,13 +67,6 @@ contract DistributeToken is StandardToken {
     return weiBal / totalSupply;
   }
 
-  function percent(uint256 _numerator, uint256 _denominator, uint256 _precision) internal pure returns (uint256) {
-     // caution, check safe-to-multiply here
-    uint256 numerator = _numerator * 10 ** (_precision + 1);
-    // with rounding of last digit
-    return ((numerator / _denominator) + 5) / 10;
-  }
-
   function weiRequired(uint256 _tokens) public view returns (uint256) {
     require(_tokens > 0);
     return targetPrice(_tokens) *  _tokens;
@@ -82,7 +76,7 @@ contract DistributeToken is StandardToken {
     require(_tokens > 0);
     uint256 cp = currentPrice();
     uint256 newSupply = totalSupply + _tokens;
-    return cp * (1000 + percent(_tokens, newSupply, 3)) / 1000;
+    return cp * (1000 + Division.percent(_tokens, newSupply, 3)) / 1000;
   }
   // =====================================================================
   // TOKEN
