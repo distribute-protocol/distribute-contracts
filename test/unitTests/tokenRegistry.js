@@ -52,10 +52,12 @@ contract('TokenRegistry', function (accounts) {
     TR.proposeProject(web3.toWei(1, 'ether'), stakingPeriod, {from: proposer});
     await TR.ProjectCreated(async (error, result) => {
       if (!error) {
-        console.log(result)
-        // assert.equal(result.args.staker, staker, "doesn't log the correct staker succeeds")
-        // assert.equal(result.args.refund.toNumber(), (tokens * 2), "doesn't log the correct refund value succeeds")
+        // console.log(result)
+        // return 10
+        assert.equal(result.args.staker, staker, "doesn't log the correct staker succeeds")
+        assert.equal(result.args.refund.toNumber(), (tokens * 2), "doesn't log the correct refund value succeeds")
       }
+      return false
     })
     // await spoofedP.stakeTokens(staker, tokens, web3.toWei(0.5, 'ether'), {from: spoofedTRaddress})
     // let tokenBalance = await spoofedP.stakedTokenBalances(staker)
