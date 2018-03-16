@@ -20,7 +20,7 @@ contract('DistributeToken', function (accounts) {
 
   it('returns baseCost as the current price when no tokens are available', async () => {
     let currentPrice = await DT.currentPrice()
-    assert.equal(currentPrice, 100000000000000, 'currentPrice not returned correctly')
+    assert.equal(currentPrice, 50000000000000, 'currentPrice not returned correctly')
   })
 
   it('returns the correct wei required', async () => {

@@ -950,7 +950,7 @@ contract PLCRVoting {
     // MODIFIERS
     // =====================================================================
 &nbsp;
-<span class="fstat-no" title="function not covered" >      modifier onlyTRW</span>R() {
+<span class="fstat-no" title="function not covered" >      modifier onlyTRR</span>R() {
 <span class="cstat-no" title="statement not covered" >        require(msg.sender == reputationRegistry || msg.sender == tokenRegistry)</span>;
         _;
       }
@@ -989,7 +989,7 @@ contract PLCRVoting {
     @dev Assumes that msg.sender has approved voting contract to spend on their behalf
     @param _numTokens The number of votingTokens desired in exchange for ERC20 tokens
     */
-<span class="fstat-no" title="function not covered" >    function requestVotingRights(address _staker, uint _numTokens) public onlyTRWR(</span>) {
+<span class="fstat-no" title="function not covered" >    function requestVotingRights(address _staker, uint _numTokens) public onlyTRRR(</span>) {
         //checks done in THR/WR to ensure that staker has tokens to vote with
 <span class="cstat-no" title="statement not covered" >        if (msg.sender == tokenRegistry) {</span>
 <span class="cstat-no" title="statement not covered" >          voteTokenBalance[_staker] += _numTokens</span>;
@@ -1005,7 +1005,7 @@ contract PLCRVoting {
     @notice Withdraw _numTokens ERC20 tokens from the voting contract, revoking these voting rights
     @param _numTokens The number of ERC20 tokens desired in exchange for voting rights
     */
-<span class="fstat-no" title="function not covered" >    function withdrawVotingRights(address _staker, uint _numTokens) external onlyTRWR(</span>) {
+<span class="fstat-no" title="function not covered" >    function withdrawVotingRights(address _staker, uint _numTokens) external onlyTRRR(</span>) {
 <span class="cstat-no" title="statement not covered" >        if (msg.sender == tokenRegistry) {</span>
 <span class="cstat-no" title="statement not covered" >          uint256 availableTokens = voteTokenBalance[_staker] - getLockedTokens(_staker)</span>;
 <span class="cstat-no" title="statement not covered" >          require(availableTokens &gt;= _numTokens)</span>;
@@ -1024,7 +1024,7 @@ contract PLCRVoting {
     @dev Unlocks tokens locked in unrevealed vote where poll has ended
     @param _pollID Integer identifier associated with the target poll
     */
-<span class="fstat-no" title="function not covered" >    function rescueTokens(address _staker, uint _pollID) onlyTRWR() externa</span>l {
+<span class="fstat-no" title="function not covered" >    function rescueTokens(address _staker, uint _pollID) onlyTRRR() externa</span>l {
 <span class="cstat-no" title="statement not covered" >        require(pollEnded(_pollID))</span>;
 <span class="cstat-no" title="statement not covered" >        if(!hasBeenRevealed(_staker, _pollID)) {</span>
             dllMap[_staker].remove(_pollID);
@@ -1042,7 +1042,7 @@ contract PLCRVoting {
     @param _numTokens The number of tokens to be committed towards the target poll
     @param _prevPollID The ID of the poll that the user has voted the maximum number of tokens in which is still less than or equal to numTokens
     */
-<span class="fstat-no" title="function not covered" >    function commitVote(address _staker, uint _pollID, bytes32 _secretHash, uint _numTokens, uint _prevPollID) onlyTRWR() externa</span>l {
+<span class="fstat-no" title="function not covered" >    function commitVote(address _staker, uint _pollID, bytes32 _secretHash, uint _numTokens, uint _prevPollID) onlyTRRR() externa</span>l {
 <span class="cstat-no" title="statement not covered" >        require(commitPeriodActive(_pollID))</span>;
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        if (msg.sender == reputationRegistry) {</span>
@@ -1095,7 +1095,7 @@ contract PLCRVoting {
     @param _voteOption Vote choice used to generate commitHash for associated poll
     @param _salt Secret number used to generate commitHash for associated poll
     */
-<span class="fstat-no" title="function not covered" >    function revealVote(uint _pollID, uint _voteOption, uint _salt) onlyTRWR() externa</span>l {
+<span class="fstat-no" title="function not covered" >    function revealVote(uint _pollID, uint _voteOption, uint _salt) onlyTRRR() externa</span>l {
         // Make sure the reveal period is active
 <span class="cstat-no" title="statement not covered" >        require(revealPeriodActive(_pollID))</span>;
 <span class="cstat-no" title="statement not covered" >        require(!hasBeenRevealed(msg.sender, _pollID))</span>;                        // prevent user from revealing multiple times
@@ -1159,7 +1159,7 @@ contract PLCRVoting {
     @dev Check if votesFor out of totalVotes exceeds votesQuorum (requires pollEnded)
     @param _pollID Integer identifier associated with target poll
     */
-<span class="fstat-no" title="function not covered" >    function isPassed(uint _pollID) onlyTRWR() constant public returns (bool passed</span>) {
+<span class="fstat-no" title="function not covered" >    function isPassed(uint _pollID) onlyTRRR() constant public returns (bool passed</span>) {
 <span class="cstat-no" title="statement not covered" >        require(msg.sender == tokenRegistry)</span>;
 <span class="cstat-no" title="statement not covered" >        require(pollEnded(_pollID))</span>;
 &nbsp;
@@ -1342,7 +1342,7 @@ contract PLCRVoting {
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Mar 16 2018 01:51:47 GMT+0530 (IST)
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Fri Mar 16 2018 09:22:12 GMT+0530 (IST)
 </div>
 </div>
 <script src="../../prettify.js"></script>

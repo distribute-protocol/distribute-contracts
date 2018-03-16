@@ -19,7 +19,7 @@ contract DistributeToken is StandardToken {
   uint256 public weiBal;
 
   // .0001 ether
-  uint256 baseCost = 100000000000000;
+  uint256 baseCost = 50000000000000;
 
 // =====================================================================
 // EVENTS
@@ -80,11 +80,8 @@ contract DistributeToken is StandardToken {
 
   function targetPrice(uint _tokens) public view returns (uint256) {
     require(_tokens > 0);
-    if (totalSupply == 0 || weiBal == 0) {
-      return baseCost;
-    }
-    uint256 newSupply = totalSupply + _tokens;
     uint256 cp = currentPrice();
+    uint256 newSupply = totalSupply + _tokens;
     return cp * (1000 + percent(_tokens, newSupply, 3)) / 1000;
   }
   // =====================================================================

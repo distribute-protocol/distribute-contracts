@@ -10,27 +10,29 @@ const assertThrown = require('../utils/AssertThrown')
 contract('Project', function (accounts) {
   let TR, RR, P, spoofedP
   let projectCost = web3.toWei(1, 'ether')
-  let proposeProportion = 20
+  let costProportion = 20
   let stakingPeriod = 10000000000
-
-  let spoofedTRaddress = accounts[7]
-  let spoofedPRaddress = accounts[4]
+  let proposer = accounts[1]
+  let proposerTypeToken = 1
+  let proposerTypeRep = 2
+  let spoofedTRaddress = accounts[2]
+  let spoofedPRaddress = accounts[3]
   let tokens = 10000
-  let staker = accounts[2]
+  let staker = accounts[4]
   let staker2 = accounts[5]
   let repStaker = accounts[6]
-  let nonStaker = accounts[3]
+  let nonStaker = accounts[7]
 
-  let proposer
-  let proposerType
+
+
   let proposerStake
-  
+
   before(async function () {
     TR = await TokenRegistry.deployed()
     RR = await ReputationRegistry.deployed()
     PR = await ProjectRegistry.deployed()
-    P = await Project.new(projectCost, proposeProportion, stakingPeriod, RR.address, TR.address, {from: spoofedPRaddress})
-    spoofedP = await Project.new(projectCost, proposeProportion, stakingPeriod, RR.address, spoofedTRaddress, {from: spoofedPRaddress})
+    P = await Project.new(projectCost, costProportion, stakingPeriod, RR.address, TR.address, {from: spoofedPRaddress})
+    spoofedP = await Project.new(projectCost, costProportion, stakingPeriod, RR.address, spoofedTRaddress, {from: spoofedPRaddress})
   })
 
   it('stakes tokens', async () => {
