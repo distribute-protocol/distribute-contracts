@@ -127,7 +127,9 @@ contract ReputationRegistry{
 
     function stakeReputation(address _projectAddress, uint256 _reputation) public {
       require(balances[msg.sender] >= _reputation && _reputation > 0);                    //make sure project exists & RH has tokens to stake
-      balances[msg.sender] -= _reputation;
+      Project project = Project(_projectAddress);
+      uint256 repRemaining = project.reputationCost() - project.totalReputationStaked();
+      balances[msg.sender] -= _reputation < repRemaining ? _reputation : repRemaining;
       Project(_projectAddress).stakeReputation(msg.sender, _reputation);
       projectRegistry.checkStaked(_projectAddress);
     }
