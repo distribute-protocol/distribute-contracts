@@ -111,7 +111,8 @@ library ProjectLibrary {
       PLCRVoting plcr = PLCRVoting(_plcrVoting);
       require(project.state() == 4);
       if (timesUp(_projectAddress)) {
-        project.setState(5, 0);
+        uint256 nextDeadline = now + project.voteCommitPeriod() + project.voteRevealPeriod();
+        project.setState(5, nextDeadline);
         for(uint i = 0; i < project.getTaskCount(); i++) {
           Task task = Task(project.tasks(i));
           if (task.complete()) {
