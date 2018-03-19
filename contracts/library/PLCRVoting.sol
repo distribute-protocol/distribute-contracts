@@ -78,6 +78,17 @@ contract PLCRVoting {
     // ================
 
     /**
+    FILL THIS IN
+    @notice Loads _numTokens ERC20 tokens into the voting contract for one-to-one voting rights
+    @dev Assumes that msg.sender has approved voting contract to spend on their behalf
+    @param _numTokens The number of votingTokens desired in exchange for ERC20 tokens
+    */
+    function getAvailableTokens(address _voter, uint _type) public returns(uint256) {
+        return _type == 1
+            ? voteTokenBalance[_voter] - getLockedTokens(_voter)
+            : voteReputationBalance[_voter] - getLockedTokens(_voter);
+    }
+    /**
     @notice Loads _numTokens ERC20 tokens into the voting contract for one-to-one voting rights
     @dev Assumes that msg.sender has approved voting contract to spend on their behalf
     @param _numTokens The number of votingTokens desired in exchange for ERC20 tokens
@@ -85,12 +96,11 @@ contract PLCRVoting {
     function requestVotingRights(address _staker, uint _numTokens) public onlyTRRR() {
         //checks done in THR/WR to ensure that staker has tokens to vote with
         if (msg.sender == tokenRegistry) {
-          voteTokenBalance[_staker] += _numTokens;
-          VotingRightsGranted(_staker, _numTokens);
-        }
-        if (msg.sender == reputationRegistry) {
-          voteReputationBalance[_staker] += _numTokens;
-          VotingRightsGranted(_staker, _numTokens);
+            voteTokenBalance[_staker] += _numTokens;
+            VotingRightsGranted(_staker, _numTokens);
+        } else if (msg.sender == reputationRegistry) {
+            voteReputationBalance[_staker] += _numTokens;
+            VotingRightsGranted(_staker, _numTokens);
         }
     }
 
@@ -100,16 +110,15 @@ contract PLCRVoting {
     */
     function withdrawVotingRights(address _staker, uint _numTokens) external onlyTRRR() {
         if (msg.sender == tokenRegistry) {
-          uint256 availableTokens = voteTokenBalance[_staker] - getLockedTokens(_staker);
-          require(availableTokens >= _numTokens);
-          voteTokenBalance[_staker] -= _numTokens;
-          VotingRightsWithdrawn(_staker, _numTokens);
-        }
-        else if (msg.sender == reputationRegistry) {
-          availableTokens = voteReputationBalance[_staker] - getLockedTokens(_staker);
-          require(availableTokens >= _numTokens);
-          voteReputationBalance[_staker] -= _numTokens;
-          VotingRightsWithdrawn(_staker, _numTokens);
+            uint256 availableTokens = voteTokenBalance[_staker] - getLockedTokens(_staker);
+            require(availableTokens >= _numTokens);
+            voteTokenBalance[_staker] -= _numTokens;
+            VotingRightsWithdrawn(_staker, _numTokens);
+        } else if (msg.sender == reputationRegistry) {
+            availableTokens = voteReputationBalance[_staker] - getLockedTokens(_staker);
+            require(availableTokens >= _numTokens);
+            voteReputationBalance[_staker] -= _numTokens;
+            VotingRightsWithdrawn(_staker, _numTokens);
         }
     }
 
@@ -119,6 +128,7 @@ contract PLCRVoting {
     */
     function rescueTokens(address _staker, uint _pollID) onlyTRRR() external {
         require(pollEnded(_pollID));
+
         if(!hasBeenRevealed(_staker, _pollID)) {
             dllMap[_staker].remove(_pollID);
         }
@@ -135,35 +145,32 @@ contract PLCRVoting {
     @param _numTokens The number of tokens to be committed towards the target poll
     @param _prevPollID The ID of the poll that the user has voted the maximum number of tokens in which is still less than or equal to numTokens
     */
-    function commitVote(address _staker, uint _pollID, bytes32 _secretHash, uint _numTokens, uint _prevPollID) onlyTRRR() external {
+    function commitVote(
+        address _staker,
+        uint _pollID,
+        bytes32 _secretHash,
+        uint _numTokens,
+        uint _prevPollID
+    ) onlyTRRR() external {
         require(commitPeriodActive(_pollID));
-
-        if (msg.sender == reputationRegistry) {
-          require(voteReputationBalance[_staker] >= _numTokens); // prevent user from overspending
-        }
-        if (msg.sender == tokenRegistry) {
-          require(voteTokenBalance[_staker] >= _numTokens); // prevent user from overspending
-        }
-
+        msg.sender == reputationRegistry
+            ? require(voteReputationBalance[_staker] >= _numTokens) // prevent user from overspending
+            : require(voteTokenBalance[_staker] >= _numTokens); // prevent user from overspending
         require(_pollID != 0);                // prevent user from committing to zero node placeholder
-
         // TODO: Move all insert validation into the DLL lib
         // Check if _prevPollID exists
         require(_prevPollID == 0 || getCommitHash(_staker, _prevPollID) != 0);
 
         uint nextPollID = dllMap[_staker].getNext(_prevPollID);
-
         // if nextPollID is equal to _pollID, _pollID is being updated,
-        nextPollID = (nextPollID == _pollID) ? dllMap[_staker].getNext(_pollID) : nextPollID;
-
+        nextPollID = (nextPollID == _pollID)
+            ? dllMap[_staker].getNext(_pollID)
+            : nextPollID;
         require(validPosition(_prevPollID, nextPollID, _staker, _numTokens));
         dllMap[_staker].insert(_prevPollID, _pollID, nextPollID);
-
         bytes32 UUID = attrUUID(_staker, _pollID);
-
         store.attachAttribute(UUID, "numTokens", _numTokens);
         store.attachAttribute(UUID, "commitHash", uint(_secretHash));
-
         VoteCommitted(_staker, _pollID, _numTokens);
     }
 
@@ -175,7 +182,12 @@ contract PLCRVoting {
     @param _numTokens The number of tokens to be committed towards the poll (used for sorting)
     @return valid Boolean indication of if the specified position maintains the sort
     */
-    function validPosition(uint _prevID, uint _nextID, address _voter, uint _numTokens) public constant returns (bool valid) {
+    function validPosition(
+        uint _prevID,
+        uint _nextID,
+        address _voter,
+        uint _numTokens
+    ) public constant returns (bool valid) {
         bool prevValid = (_numTokens >= getNumTokens(_voter, _prevID));
         // if next is zero node, _numTokens does not need to be greater
         bool nextValid = (_numTokens <= getNumTokens(_voter, _nextID) || _nextID == 0);
@@ -189,21 +201,21 @@ contract PLCRVoting {
     @param _salt Secret number used to generate commitHash for associated poll
     */
     function revealVote(uint _pollID, uint _voteOption, uint _salt) onlyTRRR() external {
-        // Make sure the reveal period is active
-        require(revealPeriodActive(_pollID));
-        require(!hasBeenRevealed(msg.sender, _pollID));                        // prevent user from revealing multiple times
-        require(keccak256(_voteOption, _salt) == getCommitHash(msg.sender, _pollID)); // compare resultant hash from inputs to original commitHash
+    // Make sure the reveal period is active
+    require(revealPeriodActive(_pollID));
+    require(!hasBeenRevealed(msg.sender, _pollID));                        // prevent user from revealing multiple times
+    require(keccak256(_voteOption, _salt) == getCommitHash(msg.sender, _pollID)); // compare resultant hash from inputs to original commitHash
 
-        uint numTokens = getNumTokens(msg.sender, _pollID);
+    uint numTokens = getNumTokens(msg.sender, _pollID);
 
-        if (_voteOption == 1) // apply numTokens to appropriate poll choice
-            pollMap[_pollID].votesFor += numTokens;
-        else
-            pollMap[_pollID].votesAgainst += numTokens;
+    if (_voteOption == 1) // apply numTokens to appropriate poll choice
+        pollMap[_pollID].votesFor += numTokens;
+    else
+        pollMap[_pollID].votesAgainst += numTokens;
 
-        dllMap[msg.sender].remove(_pollID); // remove the node referring to this vote upon reveal
+    dllMap[msg.sender].remove(_pollID); // remove the node referring to this vote upon reveal
 
-        VoteRevealed(msg.sender, _pollID, numTokens, _voteOption);
+    VoteRevealed(msg.sender, _pollID, numTokens, _voteOption);
     }
 
     /**
@@ -211,10 +223,13 @@ contract PLCRVoting {
     @param _salt Arbitrarily chosen integer used to generate secretHash
     @return correctVotes Number of tokens voted for winning option
     */
-    function getNumPassingTokens(address _voter, uint _pollID, uint _salt) public constant returns (uint correctVotes) {
+    function getNumPassingTokens(
+      address _voter,
+      uint _pollID,
+      uint _salt
+    ) public constant returns (uint correctVotes) {
         require(pollEnded(_pollID));
         require(hasBeenRevealed(_voter, _pollID));
-
         uint winningChoice = isPassed(_pollID) ? 1 : 0;
         bytes32 winnerHash = keccak256(winningChoice, _salt);
         bytes32 commitHash = getCommitHash(_voter, _pollID);
@@ -232,8 +247,13 @@ contract PLCRVoting {
     @param _commitDuration Length of desired commit period in seconds
     @param _revealDuration Length of desired reveal period in seconds
     */
-    function startPoll(uint _voteQuorum, uint _commitDuration, uint _revealDuration) public returns (uint pollID) {
+    function startPoll(
+      uint _voteQuorum,
+      uint _commitDuration,
+      uint _revealDuration
+    ) public returns (uint pollID) {
         require(msg.sender == projectRegistry);
+
         pollNonce = pollNonce + 1;
         pollMap[pollNonce] = Poll({
             voteQuorum: _voteQuorum,
@@ -242,7 +262,6 @@ contract PLCRVoting {
             votesFor: 0,
             votesAgainst: 0
         });
-
         PollCreated(_voteQuorum, _commitDuration, _revealDuration, pollNonce);
         return pollNonce;
     }
@@ -391,20 +410,19 @@ contract PLCRVoting {
     @param _numTokens The value for the numTokens attribute in the node to be inserted
     @return the node which the propoded node should be inserted after
     */
-    function getInsertPointForNumTokens(address _voter, uint _numTokens)
-    constant public returns (uint prevNode) {
-      uint nodeID = getLastNode(_voter);
-      uint tokensInNode = getNumTokens(_voter, nodeID);
+    function getInsertPointForNumTokens(
+        address _voter,
+        uint _numTokens
+    ) constant public returns (uint prevNode) {
+        uint nodeID = getLastNode(_voter);
+        uint tokensInNode = getNumTokens(_voter, nodeID);
 
-      while(tokensInNode != 0) {
-        tokensInNode = getNumTokens(_voter, nodeID);
-        if(tokensInNode < _numTokens) {
-          return nodeID;
+        while(tokensInNode != 0) {
+            tokensInNode = getNumTokens(_voter, nodeID);
+            if(tokensInNode < _numTokens) { return nodeID; }
+            nodeID = dllMap[_voter].getPrev(nodeID);
         }
-        nodeID = dllMap[_voter].getPrev(nodeID);
-      }
-
-      return nodeID;
+        return nodeID;
     }
 
     // ----------------
