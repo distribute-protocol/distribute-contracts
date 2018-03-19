@@ -171,7 +171,7 @@ contract ProjectRegistry {
       require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
       project.setTaskLength(_hashes.length);
       for (uint256 i = 0; i < _hashes.length; i++) {
-        Task newTask = new Task(_hashes[i], tokenRegistryAddress);
+        Task newTask = new Task(_hashes[i], tokenRegistryAddress, reputationRegistryAddress);
         project.setTaskAddress(address(newTask), i);
       }
     }

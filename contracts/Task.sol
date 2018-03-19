@@ -10,6 +10,7 @@ import "./Project.sol";
 contract Task {
   address projectRegistryAddress;
   address tokenRegistryAddress;
+  address reputationRegistryAddress;
   bytes32 public taskHash;
   bool public claimable;
   bool public claimableByRep;
@@ -48,13 +49,19 @@ contract Task {
     _;
   }
 
+  modifier onlyPRorRR() {
+    require(msg.sender == projectRegistryAddress || msg.sender == reputationRegistryAddress);
+    _;
+  }
+
 // =====================================================================
 // CONSTRUCTOR
 // =====================================================================
 
-  function Task(bytes32 _hash, address _tokenRegistry) public {
+  function Task(bytes32 _hash, address _tokenRegistry, address _reputationRegistry) public {
     projectRegistryAddress = msg.sender;
     tokenRegistryAddress = _tokenRegistry;
+    reputationRegistryAddress = _reputationRegistry;
     taskHash = _hash;
   }
 
@@ -66,7 +73,7 @@ contract Task {
     weighting = _weighting;
   }
 
-  function setTaskReward(uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyPR {
+  function setTaskReward(uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyPRorRR {
     weiReward = _weiVal;
     reputationReward = _reputationVal;
     claimTime = now;
