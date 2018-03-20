@@ -7,8 +7,8 @@ import "./library/Division.sol";
 /**
 @title Bonded Curve Implementation of an ERC20 token
 @author Team: Jessica Marshall, Ashoka Finley
-@notice This contract implements functionality to be controlled by a TokenRegistry & a ReputationRegistry
-@dev This contract must be initialized with both a TokenRegistry & a ReputationRegistry
+@notice This contract implements functionality to be controlled by a TokenRegistry & a ReputationRegistry.
+@dev This contract must be initialized with both a TokenRegistry & a ReputationRegistry.
 */
 contract DistributeToken is StandardToken {
 

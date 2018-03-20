@@ -6,13 +6,23 @@ import "./Task.sol";
 import "./library/SafeMath.sol";
 import "./library/Division.sol";
 
-// ===================================================================== //
-// This contract manages the ether and balances of stakers & validators of a given project.
-// It holds its own state as well, set by a call from the PR.
-// ===================================================================== //
+/**
+@title An individual project in the distribute DAO system
+@author Team: Jessica Marshall, Ashoka Finley
+@notice This contract is used to manage the state of all project related parameters while also
+maintaining a wei balance to be used in the case of reward. The project can be in 8 state represented by
+integers. They are as follows: [1: Proposed, 2: Staked, 3: Active, 4: Validation, 5: Voting, 6: Complete,
+7: Failed, 8: Expired]
+@dev This contract is managed and deployed by a Project Registry contract, and must be initialized
+with a ReputationRegistry and TokenRegistry for full control.
+*/
 contract Project {
 
     using SafeMath for uint256;
+
+    // =====================================================================
+    // STATE VARIABLES
+    // =====================================================================
 
     address tokenRegistryAddress;
     address reputationRegistryAddress;
@@ -20,8 +30,8 @@ contract Project {
 
     uint256 public state;
 
-    /* POSSIBLE STATES */
     /*
+    POSSIBLE PROJECT STATES
         1: Proposed,
         2: Staked,
         3: Active,
@@ -94,6 +104,20 @@ contract Project {
     // CONSTRUCTOR
     // =====================================================================
 
+    /**
+    @dev Initialize a Project with a Reputation Registry and a Token Registry, and all related project values.
+    @param _cost The total cost of the project in wei
+    @param _costProportion The proportion of the project cost divided by theDistributeToken weiBal
+    represented as integer
+    @param _stakingPeriod The length of time this project is open for staking
+    @param _proposer The address of the user proposing the project
+    @param _proposerType Denotes if a proposer is using reputation or tokens,
+    value must be 1: tokens or 2: reputation
+    @param _proposerStake The amount of reputation or tokens needed to create the proposal
+    @param _ipfsHash The ipfs hash of the full project description
+    @param _reputationRegistry Address of the Reputation Registry
+    @param _tokenRegistry Address of the contract system Token Registry
+    */
     function Project(
         uint256 _cost,
         uint256 _costProportion,
@@ -119,13 +143,20 @@ contract Project {
     }
 
     // =====================================================================
-    // FUNCTIONS
+    // FALLBACK
     // =====================================================================
+
+    function() public payable {}
 
     // =====================================================================
     // GETTERS
     // =====================================================================
-
+    /**
+    @notice The amount of tasks created in the project during the Staked period.
+    @dev Helper function used by the project library
+    @param
+    @return The number of tasks in the task array
+    */
     function getTaskCount() public view returns (uint256) {
         return tasks.length;
     }
@@ -134,37 +165,77 @@ contract Project {
     // SETTERS
     // =====================================================================
 
+    /**
+    @notice Set the project state to `_state`, and update the nextDeadline to `_nextDeadline`
+    @dev Only callable by the Project Registry initialized during construction
+    @param _state The state to update the project to
+    @param _nextDeadline The nextDeadline to transition project to the next state
+    */
     function setState(uint256 _state, uint256 _nextDeadline) public onlyPR {
         state = _state;
         nextDeadline = _nextDeadline;
     }
 
+    /**
+    @notice Clears the proposer stake on proposal expiration
+    @dev Only callable by the Project Registry initialized during construction
+    */
     function clearProposerStake() public onlyPR {
         proposerStake = 0;
     }
 
+    /**
+    @notice Clear the token stake of `_staker`, used during stake claiming
+    @dev Only callable by the Token Registry initialized during construction
+    @param _staker Address of the staker
+    */
     function clearTokenStake(address _staker) public onlyTR {
         tokenBalances[_staker] = 0;
     }
 
+    /**
+    @notice Clear the reputation stake of `_staker`, used during stake claiming
+    @dev Only callable by the Reputation Registry initialized during construction
+    @param _staker Address of the staker
+    */
     function clearReputationStake(address _staker) public onlyRR {
         reputationBalances[_staker] = 0;
     }
 
+    /**
+    @notice Clear the stake of all stakers in the event of Project failure
+    @dev Only callable by the Project Registry initialized during construction, in the case of project failure
+    */
     function clearStake() public onlyPR {
         tokensStaked = 0;
         reputationStaked = 0;
     }
 
+    /**
+    @notice Set the number of project tasks to `_tasksLength` as defined by the project stakers
+    @dev Only callable by the Project Registry initialized during construction
+    @param _tasksLength The amount of tasks as defined by the project stakers
+    */
     function setTaskLength(uint _tasksLength) public onlyPR {
         tasks.length = _tasksLength;
     }
 
+    /**
+    @notice Set the address of a task at index `_index`
+    @dev Only callable by the Project Registry initialized during construction
+    @param _taskAddress Address of the task contract
+    @param _index Index of the task in the tasks array
+    */
     function setTaskAddress(address _taskAddress, uint _index) public onlyPR {
         require(state == 3);
         tasks[_index] = _taskAddress;
     }
 
+    /**
+    @notice Set the weighting of the amount of tasks that passed to `_passAmount`
+    @dev Only callable by the Project Registry initialized during construction
+    @param _passAmount The total weighting of all tasks which passed
+    */
     function setPassAmount(uint256 _passAmount) public onlyPR {
         passAmount = _passAmount;
     }
@@ -173,6 +244,13 @@ contract Project {
     // STAKE
     // =====================================================================
 
+    /**
+    @notice Stake `_tokens` tokens from `_staker` and add `_weiValue` to the project ether balance
+    @dev Only callable by the Token Registry initialized during construction, to maintain control flow
+    @param _staker Address of the staker who is staking
+    @param _tokens Amount of tokens to stake on the project
+    @param _weiValue Amount of wei transferred to the project
+    */
     function stakeTokens(address _staker, uint256 _tokens, uint256 _weiValue) public onlyTR {
         require(state == 1);
 
@@ -181,6 +259,15 @@ contract Project {
         weiBal += _weiValue;
     }
 
+    /**
+    @notice Unstake `_tokens` tokens from the project, subtract this value from the balance of `_staker`
+    Returns the amount of ether to subtract from the project's ether balance
+    @dev Only callable by the Token Registry initialized during construction, to maintain control flow
+    @param _staker Address of the staker who is unstaking
+    @param _tokens Amount of tokens to unstake on the project
+    @return The amount of ether to deduct from the projects balance
+
+    */
     function unstakeTokens(address _staker, uint256 _tokens) public onlyTR returns (uint256) {
         require(state == 1);
         require(
@@ -195,6 +282,12 @@ contract Project {
         return weiVal;
     }
 
+    /**
+    @notice Stake `_reputation` reputation from `_staker`
+    @dev Only callable by the Reputation Registry initialized during construction, to maintain control flow
+    @param _staker Address of the staker who is staking
+    @param _reputation Amount of reputation to stake on the project
+    */
     function stakeReputation(address _staker, uint256 _reputation) public onlyRR {
         require(state == 1);
         require(reputationBalances[_staker] + _reputation > reputationBalances[_staker]);
@@ -203,6 +296,12 @@ contract Project {
         reputationStaked += _reputation;
     }
 
+    /**
+    @notice Unstake `_reputation` reputation from the project, and update staked balance of `_staker`
+    @dev Only callable by the Reputation Registry initialized during construction, to maintain control flow
+    @param _staker Address of the staker who is unstaking
+    @param _reputation Amount of reputation to unstake on the project
+    */
     function unstakeReputation(address _staker, uint256 _reputation) public onlyRR {
         require(state == 1);
         require(
@@ -218,6 +317,11 @@ contract Project {
     // REWARD
     // =====================================================================
 
+    /**
+    @notice Transfer `_reward` wei as reward for completing a task to `_rewardee
+    @dev Only callable by the Reputation Registry initialized during construction, to maintain control flow
+    @param _rewardee The account who claimed and completed the task.
+    */
     function transferWeiReward(address _rewardee, uint _reward) public onlyRR {
         require(_reward <= weiBal);
 
@@ -225,9 +329,14 @@ contract Project {
         _rewardee.transfer(_reward);
     }
 
-    function returnWei(address _distributeToken, uint value) public onlyPR {
-        _distributeToken.transfer(value);
+    /**
+    @notice Transfer `_value` wei back to distribute token balance on task failure
+    @dev Only callable by the Project Registry initialized during construction, to maintain control flow
+    @param _distributeToken The address of the systems token contract.
+    @param _value The amount of ether to send
+    */
+    function returnWei(address _distributeToken, uint _value) public onlyPR {
+        _distributeToken.transfer(_value);
     }
 
-    function() public payable {}
 }
