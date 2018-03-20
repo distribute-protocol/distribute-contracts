@@ -7,25 +7,12 @@ import "./library/Division.sol";
 /**
 @title Bonded Curve Implementation of an ERC20 token
 @author Team: Jessica Marshall, Ashoka Finley
+@notice This contract implements functionality to be controlled by a TokenRegistry & a ReputationRegistry
+@dev This contract must be initialized with both a TokenRegistry & a ReputationRegistry
 */
 contract DistributeToken is StandardToken {
 
     using SafeMath for uint256;
-
-    address tokenRegistryAddress;
-    address reputationRegistryAddress;
-
-    string public constant symbol = "DST";
-    string public constant name = "Distributed Utility Token";
-    uint8 public constant decimals = 18;
-
-    //total supply of capital tokens in all staking states
-    uint256 public totalSupply = 0;
-
-    uint256 public weiBal;
-
-    // .00005 ether
-    uint256 baseCost = 50000000000000;
 
     // =====================================================================
     // EVENTS
@@ -35,15 +22,21 @@ contract DistributeToken is StandardToken {
     event LogWithdraw(uint256 amountWithdrawn, uint256 reward);
 
     // =====================================================================
-    // CONSTRUCTOR
+    // STATE VARIABLES
     // =====================================================================
 
-    function DistributeToken(address _tokenRegistry, address _reputationRegistry) public {
-        require(tokenRegistryAddress == 0 && reputationRegistryAddress == 0);
+    address tokenRegistryAddress;
+    address reputationRegistryAddress;
 
-        tokenRegistryAddress = _tokenRegistry;
-        reputationRegistryAddress = _reputationRegistry;
-    }
+    string public constant symbol = "DST";
+    string public constant name = "Distributed Utility Token";
+    uint8 public constant decimals = 18;
+
+    uint256 public totalSupply = 0;
+    uint256 public weiBal;
+
+    // .00005 ether
+    uint256 baseCost = 50000000000000;
 
     // =====================================================================
     // MODIFIERS
@@ -62,32 +55,68 @@ contract DistributeToken is StandardToken {
         _;
     }
 
-// =====================================================================
-// FUNCTIONS
-// =====================================================================
+    // =====================================================================
+    // CONSTRUCTOR
+    // =====================================================================
+
+    /**
+    @dev Initialize the DistributeToken contract with the address of a TokenRegistry contract & a
+    ReputationRegistry contract
+    @param _tokenRegistry Address of the Token Registry
+    @param _reputationRegistry Address of the ReputationRegistry
+    */
+    function DistributeToken(address _tokenRegistry, address _reputationRegistry) public {
+        require(tokenRegistryAddress == 0 && reputationRegistryAddress == 0);
+
+        tokenRegistryAddress = _tokenRegistry;
+        reputationRegistryAddress = _reputationRegistry;
+    }
+
+    // =====================================================================
+    // FALLBACK
+    // =====================================================================
+
+    function() public payable {}
 
     // =====================================================================
     // UTILITY
     // =====================================================================
 
+    /**
+    @notice Returns the current price of a token calculated as the contract wei balance divided
+    by the token supply
+    @return The current price of 1 token in wei
+    */
     function currentPrice() public view returns (uint256) {
-        //calculated current burn reward of 1 token at current weiBal and free token supply
+        //calculated current burn reward of 1 token at current weiBal and token supply
         if (weiBal == 0 || totalSupply == 0) { return baseCost; }
+        // If totalTokenSupply is greater than weiBal this will fail
         uint256 price = weiBal / totalSupply;
         return price < baseCost
             ? baseCost
             : price;
     }
 
+    /**
+    @notice Return the wei required to mint `_tokens` tokens
+    @dev Calulates the target price and multiplies it by the number of tokens desired
+    @param _tokens The number of tokens requested to be minted
+    @return The wei required to purchase the given amount of tokens
+    */
     function weiRequired(uint256 _tokens) public view returns (uint256) {
         require(_tokens > 0);
 
         return targetPrice(_tokens) *  _tokens;
     }
 
-    function targetPrice(uint _tokens) public view returns (uint256) {
-        require(_tokens > 0);
-
+    /**
+    @notice Calulates the price of `_tokens` tokens dependent on the market share that `_tokens`
+    tokens represent.
+    @dev A helper function to provide clarity for weiRequired
+    @param _tokens The number of tokens requested to be minted
+    @return The target price of the amount of tokens requested
+    */
+    function targetPrice(uint _tokens) internal view returns (uint256) {
         uint256 cp = currentPrice();
         uint256 newSupply = totalSupply + _tokens;
         return cp * (1000 + Division.percent(_tokens, newSupply, 3)) / 1000;
@@ -97,6 +126,12 @@ contract DistributeToken is StandardToken {
     // TOKEN
     // =====================================================================
 
+    /**
+    @notice Mint `_tokens` tokens, add `_tokens` to the contract totalSupply and add the weiRequired to
+    the contract weiBalance
+    @dev The required amount of wei must be transferred as the msg.value
+    @param _tokens The number of tokens requested to be minted
+    */
     function mint(uint _tokens) public payable {
         uint256 weiRequiredVal = weiRequired(_tokens);
         require(msg.value >= weiRequiredVal);
@@ -109,20 +144,32 @@ contract DistributeToken is StandardToken {
         if (fundsLeft > 0) { msg.sender.transfer(fundsLeft); }
     }
 
-    function burn(uint256 _numTokens) public onlyTR {
-        require(_numTokens <= totalSupply && _numTokens > 0);
-
-        totalSupply -= _numTokens;
+    /**
+    @notice Burn `_tokens` tokens by removing them from the total supply, and from the Token Registry
+    balance.
+    @dev Only to be called by the Token Registry initialized during constrction
+    @param _tokens The number of tokens to burn
+    */
+    function burn(uint256 _tokens) public onlyTR {
+        require(_tokens <= totalSupply && _tokens > 0);
+        balances[msg.sender] -= _tokens;
+        totalSupply -= _tokens;
     }
 
-    function sell(uint256 _numTokens) public {
-        require(_numTokens > 0 && (_numTokens <= balances[msg.sender]));
+    /**
+    @notice Sell `_tokens` tokens at the current token price.
+    @dev Checks that `_tokens` is greater than 0 and that `msg.sender` has sufficient balance. The
+    corresponding amount of wei is transferred to the `msg.sender`
+    @param _tokens The number of tokens to sell.
+    */
+    function sell(uint256 _tokens) public {
+        require(_tokens > 0 && (_tokens <= balances[msg.sender]));
 
-        uint256 weiVal = _numTokens * currentPrice();
-        balances[msg.sender] -= _numTokens;
-        totalSupply = totalSupply.sub(_numTokens);
+        uint256 weiVal = _tokens * currentPrice();
+        balances[msg.sender] -= _tokens;
+        totalSupply = totalSupply.sub(_tokens);
         weiBal -= weiVal;
-        LogWithdraw(_numTokens, weiVal);
+        LogWithdraw(_tokens, weiVal);
         msg.sender.transfer(weiVal);
     }
 
@@ -130,6 +177,13 @@ contract DistributeToken is StandardToken {
     // TRANSFER
     // =====================================================================
 
+    /**
+    @notice Transfer `_weiValue` wei to `_address`
+    @dev Only callable by the TokenRegistry or ReputationRegistry initialized during contract
+    construction
+    @param _address Receipient of wei value
+    @param _weiValue The amount of wei to transfer to the _address
+    */
     function transferWeiTo(address _address, uint256 _weiValue) public onlyTRorRR {
         require(_weiValue <= weiBal);
 
@@ -137,23 +191,39 @@ contract DistributeToken is StandardToken {
         _address.transfer(_weiValue);
     }
 
-    function returnWei(uint value) public onlyTR {
-        weiBal += value;
+    /**
+    @notice Return `_weiValue` wei back to Distribute Token contract
+    @dev Only callable by the TokenRegistry initialized during contract construction
+    @param _weiValue The amount of wei to transfer back to the token contract
+    */
+    function returnWei(uint _weiValue) public onlyTR {
+        weiBal += _weiValue;
     }
 
-    function transferToEscrow(address _owner, uint256 _value) public onlyTR returns (bool) {
-        require(balances[_owner] >= _value);
-        balances[_owner] -= _value;
-        balances[msg.sender] += _value;
+    /**
+    @notice Transfer `_tokens` tokens from the balance of `_owner` to the TokenRegistry escrow
+    @dev Only callable by the TokenRegistry initialized during contract construction
+    @param _owner Owner of the tokens being transferred
+    @param _tokens The number of tokens to transfer
+    */
+    function transferToEscrow(address _owner, uint256 _tokens) public onlyTR returns (bool) {
+        require(balances[_owner] >= _tokens);
+        balances[_owner] -= _tokens;
+        balances[msg.sender] += _tokens;
         return true;
     }
 
-    function transferFromEscrow(address _owner, uint256 _value) public onlyTR returns (bool) {
-        require(balances[msg.sender] >= _value);
-        balances[msg.sender] -= _value;
-        balances[_owner] += _value;
+    /**
+    @notice Transfer `_tokens` tokens from the TokenRegistry escrow to the balance of `_receipient`
+    @dev Only callable by the TokenRegistry initialized during contract construction
+    @param _receipient Receipient of the tokens being transferred
+    @param _tokens The number of tokens to transfer
+    */
+    function transferFromEscrow(address _receipient, uint256 _tokens) public onlyTR returns (bool) {
+        require(balances[msg.sender] >= _tokens);
+        balances[msg.sender] -= _tokens;
+        balances[_receipient] += _tokens;
         return true;
     }
 
-    function() public payable {}
 }
