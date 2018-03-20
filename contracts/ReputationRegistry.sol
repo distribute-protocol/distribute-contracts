@@ -8,14 +8,31 @@ import "./Task.sol";
 import "./library/PLCRVoting.sol";
 import "./library/Division.sol";
 
+/**
+@title Reputation Registry for Distribute Network
+@author Team: Jessica Marshall, Ashoka Finley
+@notice This contract manages the reputation balances of each user and serves as the interface through
+which users stake reputation, come to consensus around tasks, claim tasks, vote, refund their stakes,
+and claim their task rewards.
+@dev This contract must be initialized with the address of a valid DistributeToken, ProjectRegistry,
+and PLCR Voting contract
+*/
 // ===================================================================== //
-// This contract manages the reputation balances of each user and serves as
-// the interface through which users stake reputation, come to consensus around
-// tasks, claim tasks, vote, refund their stakes, and claim their task rewards.
+//
 // ===================================================================== //
 contract ReputationRegistry{
 
     using ProjectLibrary for address;
+
+    // =====================================================================
+    // EVENTS
+    // =====================================================================
+
+    event ProjectCreated(
+        address indexed projectAddress,
+        uint256 projectCost,
+        uint256 proposerStake
+    );
 
     // =====================================================================
     // STATE VARIABLES
@@ -34,18 +51,7 @@ contract ReputationRegistry{
 
     uint256 proposeProportion = 200000000000; // tokensupply/proposeProportion is the number of tokens the proposer must stake
     uint256 rewardProportion = 100;
-    // This represents both the initial starting amount and the maximum level the faucet will provide.
     uint256 public initialRepVal = 10000;
-
-    // =====================================================================
-    // EVENTS
-    // =====================================================================
-
-    event ProjectCreated(
-        address indexed projectAddress,
-        uint256 projectCost,
-        uint256 proposerStake
-    );
 
     // =====================================================================
     // MODIFIERS
@@ -56,14 +62,17 @@ contract ReputationRegistry{
         _;
     }
 
-// =====================================================================
-// FUNCTIONS
-// =====================================================================
-
     // =====================================================================
     // QUASI-CONSTRUCTOR
     // =====================================================================
 
+    /**
+    @dev Quasi contstructer is called after contract is deployed, must be called with distributeToken,
+    projectRegistry, and plcrVoting intialized to 0
+    @param _distributeToken Address of DistributeToken contract
+    @param _projectRegistry Address of ProjectRegistry contract
+    @param _plcrVoting Address of PLCRVoting contract
+    */
     function init(address _distributeToken, address _projectRegistry, address _plcrVoting) public {
         require(
             address(distributeToken) == 0 &&
@@ -79,6 +88,10 @@ contract ReputationRegistry{
     // UTILITY
     // =====================================================================
 
+    /**
+    @notice Return the average reputation balance of the network users
+    @return Average balance of each user
+    */
     function averageBalance() public view returns(uint256) {
         return totalSupply / totalUsers;
     }
@@ -87,6 +100,11 @@ contract ReputationRegistry{
     // START UP
     // =====================================================================
 
+    /**
+    @notice Register an account `msg.sender` for the first time in the reputation registry, grant 10,000
+    repuation to start.
+    @dev Has no sybil protection, thus a user can auto generate accounts to receive excess reputation.
+    */
     function register() public {
         require(balances[msg.sender] == 0 && first[msg.sender] == false);
         first[msg.sender] = true;
@@ -99,6 +117,14 @@ contract ReputationRegistry{
     // PROPOSE
     // =====================================================================
 
+    /**
+    @notice Propose a project of cost `_cost` with staking period `_stakingPeriod` and hash `_ipfsHash`,
+    with reputation.
+    @dev Calls ProjectRegistry.createProject finalize transaction
+    @param _cost Total project cost in wei
+    @param _stakingPeriod Length of time the project can be staked before it expires
+    @param _ipfsHash Hash of the project description
+    */
     function proposeProject(uint256 _cost, uint256 _stakingPeriod, string _ipfsHash) public {    //_cost of project in ether
         //calculate cost of project in tokens currently (_cost in wei)
         //check proposer has at least 5% of the proposed cost in tokens
@@ -124,6 +150,10 @@ contract ReputationRegistry{
         ProjectCreated(projectAddress, _cost, proposerReputationCost);
     }
 
+    /**
+    @notice Refund a reputation proposer upon proposal success, transfer 1% of the project cost in
+    wei as a reward along with any reputation staked.
+    */
     function refundProposer(address _projectAddress) public {
         Project project = Project(_projectAddress);                                         //called by proposer to get refund once project is active
         require(project.proposer() == msg.sender);
@@ -137,6 +167,12 @@ contract ReputationRegistry{
     // STAKE
     // =====================================================================
 
+    /**
+    @notice Stake `_reputation` reputation on project at `_projectAddress`
+    @dev Prevents over staking and returns any excess reputation staked.
+    @param _projectAddress Address of the project
+    @param _reputation Amount of reputation to stake
+    */
     function stakeReputation(address _projectAddress, uint256 _reputation) public {
         require(balances[msg.sender] >= _reputation && _reputation > 0);                    //make sure project exists & RH has tokens to stake
         Project project = Project(_projectAddress);
@@ -146,6 +182,12 @@ contract ReputationRegistry{
         projectRegistry.checkStaked(_projectAddress);
     }
 
+    /**
+    @notice Unstake `_reputation` reputation from project at `_projectAddress`
+    @dev Require repuation unstaked is greater than 0
+    @param _projectAddress Address of the project
+    @param _reputation Amount of reputation to unstake
+    */
     function unstakeReputation(address _projectAddress, uint256 _reputation) public {
         require(_reputation > 0);
         balances[msg.sender] += _reputation;
@@ -156,6 +198,15 @@ contract ReputationRegistry{
     // TASK
     // =====================================================================
 
+    /**
+    @notice Claim a task at index `_index` from project at `_projectAddress` with description
+    `_taskDescription` and weighting `_weighting`
+    @dev Requires the reputation of msg.sender to be greater than the reputationVal of the task
+    @param _projectAddress Address of the project
+    @param _index Index of the task
+    @param _taskDescription Description of the task
+    @param _weighting Weighting of the task
+    */
     function claimTask(
         address _projectAddress,
         uint256 _index,
@@ -178,6 +229,11 @@ contract ReputationRegistry{
         );
     }
 
+    /**
+    @notice Reward the claimer of a task that has been successfully validated.
+    @param _projectAddress Address of the project
+    @param _index Index of the task
+    */
     //called by reputation holder who completed a task
     function rewardTask(address _projectAddress, uint8 _index) public {
         uint256 reward = _projectAddress.claimTaskReward(_index, msg.sender);
@@ -188,6 +244,16 @@ contract ReputationRegistry{
     // VOTING
     // =====================================================================
 
+    /**
+    @notice First part of voting process. Commits a vote using reputation to task at index `_index`
+    of project at `projectAddress` for reputation `_reputation`. Submits a secrect hash `_secretHash`,
+    which is a tightly packed hash of the voters choice and their salt
+    @param _projectAddress Address of the project
+    @param _index Index of the task
+    @param _reputation Reputation to vote with
+    @param _secretHash Secret Hash of voter choice and salt
+    @param _prevPollID ?
+    */
     function voteCommit(
         address _projectAddress,
         uint256 _index,
@@ -195,7 +261,7 @@ contract ReputationRegistry{
         bytes32 _secretHash,
         uint256 _prevPollID
     ) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
-        require(balances[msg.sender] > 1);      //worker can't vote with only 1 token
+        require(balances[msg.sender] > 10000); //prevent network effect of new account creation
         Project project = Project(_projectAddress);
         uint256 pollId = Task(project.tasks(_index)).pollId();
         //calculate available tokens for voting
@@ -210,6 +276,14 @@ contract ReputationRegistry{
         plcrVoting.commitVote(msg.sender, pollId, _secretHash, _reputation, _prevPollID);
     }
 
+    /**
+    @notice Second part of voting process. Reveal existing vote.
+    @param _projectAddress Address of the project
+    @param _index Index of the task
+    @param _voteOption Vote choice of account
+    @param _salt Salt of account
+    @return
+    */
     function voteReveal(
         address _projectAddress,
         uint256 _index,
@@ -221,6 +295,10 @@ contract ReputationRegistry{
         plcrVoting.revealVote(pollId, _voteOption, _salt);
     }
 
+    /**
+    @notice Withdraw voting rights from PLCR Contract
+    @param _reputation Amount of reputation to withdraw
+    */
     function refundVotingReputation(uint256 _reputation) public {
         plcrVoting.withdrawVotingRights(msg.sender, _reputation);
         balances[msg.sender] += _reputation;
@@ -230,7 +308,11 @@ contract ReputationRegistry{
     // COMPLETE
     // =====================================================================
 
-    function refundStaker(address _projectAddress) public {                                                                       //called by worker who staked or voted
+    /**
+    @notice Refund a reputation staker from project at `_projectAddress`
+    @param _projectAddress Address of the project
+    */
+    function refundStaker(address _projectAddress) public {     //called by worker who staked or voted
         uint256 _refund = _projectAddress.refundStaker(msg.sender);
         require(_refund > 0);
         Project(_projectAddress).clearReputationStake(msg.sender);
@@ -241,7 +323,13 @@ contract ReputationRegistry{
     // FAILED
     // =====================================================================
 
+    /**
+    @notice Burn reputation in event of project failure
+    @dev Only callable by the ProjectRegistry contract
+    @param _reputation Amount of reputation to burn
+    */
     function burnReputation(uint256 _reputation) public onlyPR {
         totalSupply -= _reputation;
     }
+
 }
