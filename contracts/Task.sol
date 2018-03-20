@@ -1,13 +1,20 @@
-
-// ===================================================================== //
-// This contract manages a single task each project.
-// ===================================================================== //
-
 pragma solidity ^0.4.8;
 
 import "./Project.sol";
 
+/**
+@title Task Contract for Distribute Network
+@author Team: Jessica Marshall, Ashoka Finley
+@notice  This contract manages a single task for a project
+@dev This contract is initialized by the Project Registry contract with the address of a valid
+TokenRegistry, and ReputationRegistry.
+*/
 contract Task {
+
+    // =====================================================================
+    // STATE VARIABLES
+    // =====================================================================
+
     address projectRegistryAddress;
     address tokenRegistryAddress;
     address reputationRegistryAddress;
@@ -59,6 +66,15 @@ contract Task {
     // CONSTRUCTOR
     // =====================================================================
 
+    /**
+    @notice Initialize a task related to a project with a hash of the description and weighting
+    `_hash` and the addresses of the TokenRegistry `_tokenRegistry` and ReputationRegistry
+    `_reputationRegistry`
+    @dev Created iteratively by the Project Registry contract
+    @param _hash Hash of the tasks Description and Weighting
+    @param _tokenRegistry Address of the TokenRegistry
+    @param _reputationRegistry Address of the ReputationRegistry
+    */
     function Task(bytes32 _hash, address _tokenRegistry, address _reputationRegistry) public {
         projectRegistryAddress = msg.sender;
         tokenRegistryAddress = _tokenRegistry;
@@ -67,13 +83,27 @@ contract Task {
     }
 
     // =====================================================================
-    // FUNCTIONS
+    // SETTERS
     // =====================================================================
 
+    /**
+    @notice Set the weighting of the task to `_weighting` which represent the proportion of the project
+    cost it represents
+    @dev Only callable by the Project Registry
+    @param _weighting Weighting of the task
+    */
     function setWeighting(uint256 _weighting) public onlyPR {
         weighting = _weighting;
     }
 
+    /**
+    @notice Set the ether reward of the task to `weiVal` and the required reputation to claim to
+    `_reputationVal`, with the address of the claimer `_claimer`
+    @dev Only callable by the ReputationRegistry or ProjectRegistry
+    @param _weiVal Ether Reward of the Task
+    @param _reputationVal Reputation threshold for claiming
+    @param _claimer Address of account who has claimed the task
+    */
     function setTaskReward(uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyPRorRR {
         weiReward = _weiVal;
         reputationReward = _reputationVal;
@@ -82,12 +112,25 @@ contract Task {
         claimer = _claimer;
     }
 
+    /**
+    @notice Marks task as completed
+    @dev Only callable by the Project Registry
+    */
     function markTaskComplete() public onlyPR {
         complete = true;
     }
 
-    function setValidator(address _staker, uint256 _validationVal, uint256 _tokens) public onlyTR {
-        validators[_staker] = Validator(_validationVal, _tokens);
+    /**
+    @notice Set validator of the current task, if the validator is of a different type than the other
+    validators i.e. No when there are only Yes validators, then sets opposingValidator to true.
+    @dev Only callable by the Token Registry
+    @param _validator Address of validator
+    @param _validationVal Flag for positive or negative validation
+    @param _tokens Amount of tokens to stake on Validation.
+    @return
+    */
+    function setValidator(address _validator, uint256 _validationVal, uint256 _tokens) public onlyTR {
+        validators[_validator] = Validator(_validationVal, _tokens);
         _validationVal == 1
             ? totalValidateAffirmative += _tokens
             : totalValidateNegative += _tokens;
@@ -96,18 +139,30 @@ contract Task {
         }
     }
 
+    /**
+    @notice Sets the PLCR poll id of the current task
+    @dev Only callable by Project Registery
+    @param _pollId Poll ID of PLCRVoting poll.
+    */
     function setPollId(uint256 _pollId) public onlyPR {
         require(pollId == 0);
         pollId = _pollId;
     }
 
-    function markTaskClaimable(bool passed) public onlyPR returns(bool) {             // passed only matters in voting
+    /**
+    @notice Marks a task claimable by the correct or only validators. Determines if the task reward
+    is claimable by the reputation holder who initially claimed the task.
+    @dev Only callable by the ProjectRegistry
+    @param _passed Boolean describing the validation state the task should be claimable for.
+    @return
+    */
+    function markTaskClaimable(bool _passed) public onlyPR returns(bool) {             // passed only matters in voting
         if (totalValidateAffirmative == 0 || totalValidateNegative == 0) {
             claimable = true;
             if (totalValidateAffirmative > totalValidateNegative) { claimableByRep = true; }
         } else {
             claimable = true;
-            if (passed) {
+            if (_passed) {
                 claimableByRep = true;
                 totalValidateNegative = 0;
             } else {
@@ -117,7 +172,12 @@ contract Task {
         return claimableByRep;
     }
 
-    function clearValidatorStake(address _staker) public onlyTR {
-        validators[_staker].stake = 0;
+    /**
+    @notice Clear the validator stake of validator at `_validator`
+    @dev Only callable by TokenRegistry
+    @param _validator Address of validator
+    */
+    function clearValidatorStake(address _validator) public onlyTR {
+        validators[_validator].stake = 0;
     }
 }
