@@ -1,4 +1,4 @@
-pragma solidity ^0.4.19;
+pragma solidity 0.4.19;
 
 import "./library/StandardToken.sol";
 import "./library/SafeMath.sol";
