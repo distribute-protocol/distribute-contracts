@@ -1,5 +1,5 @@
 Arguments: 
-  /Users/shokishoki/.nvm/versions/node/v8.9.0/bin/node /usr/local/Cellar/yarn/1.5.1/libexec/bin/yarn.js coverage
+  /Users/shokishoki/.nvm/versions/node/v8.9.0/bin/node /usr/local/Cellar/yarn/1.5.1/libexec/bin/yarn.js mythril
 
 PATH: 
   /Users/shokishoki/.nvm/versions/node/v8.9.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/mysql/bin:/opt/X11/bin:/usr/local/sbin:/Users/ashokafinley/bin::/usr/local/bin:/Users/shokishoki/Library/Android/sdk/tools:/Users/shokishoki/Library/Android/sdk/platform-tools
@@ -3915,7 +3915,7 @@ Trace:
   Error: Command failed.
   Exit code: 1
   Command: sh
-  Arguments: -c ./node_modules/.bin/solidity-coverage
+  Arguments: -c myth -o markdown --truffle > report.md
   Directory: /Users/shokishoki/development/consensys/distribute/contracts
   Output:
   

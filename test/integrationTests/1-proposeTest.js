@@ -18,6 +18,7 @@ const TokenRegistry = artifacts.require('TokenRegistry')
 const DistributeToken = artifacts.require('DistributeToken')
 const ProjectRegistry = artifacts.require('ProjectRegistry')
 const Project = artifacts.require('Project')
+const ProjectLibrary = artifacts.require('ProjectLibrary')
 const Promise = require('bluebird')
 const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
@@ -27,6 +28,7 @@ contract('Proposed State', (accounts) => {
   let TR
   let PR
   let DT
+  let PL
   let PROJ, PROJ2
   let proposer = accounts[0]
   let nonProposer = accounts[1]
@@ -37,10 +39,10 @@ contract('Proposed State', (accounts) => {
   let stakingPeriod = 20000000000     // 10/11/2603 @ 11:33am (UTC)
   let stakingPeriodFail = 10          // January 1st, 1970
   let projectCost = web3.toWei(1, 'ether')
+  let ipfsHash = 'ipfsHash'
   let proposeProportion = 20
   let proposeReward = 100
   let totalTokenSupply
-  let totalFreeSupply
   let currentPrice
   let projectAddress, projectAddress2
   let tx
@@ -51,50 +53,37 @@ contract('Proposed State', (accounts) => {
     TR = await TokenRegistry.deployed()
     DT = await DistributeToken.deployed()
     PR = await ProjectRegistry.deployed()
+    PL = await ProjectLibrary.deployed()
 
-    // calculate price of 1000 tokens
     let mintingCost = await DT.weiRequired(tokens, {from: proposer})
-    // console.log('mintingCost: ', mintingCost.toNumber())
-    // fund proposer with 10000 tokens and make sure they are minted successfully
     await DT.mint(tokens, {from: proposer, value: mintingCost})
     mintingCost = await DT.weiRequired(tokens, {from: staker})
-    // console.log('mintingCost: ', mintingCost.toNumber())
-    // fund staker with 10000 tokens and make sure they are minted successfully
     await DT.mint(tokens, {from: staker, value: mintingCost})
     let proposerBalance = await DT.balanceOf(proposer)
     let stakerBalance = await DT.balanceOf(staker)
     totalTokenSupply = await DT.totalSupply()
-    totalFreeSupply = await DT.totalFreeSupply()
     assert.equal(2 * tokens, proposerBalance.toNumber() + stakerBalance.toNumber(), 'proposer or staker did not successfully mint tokens')
     assert.equal(2 * tokens, totalTokenSupply, 'total supply did not update correctly')
-    assert.equal(2 * tokens, totalFreeSupply, 'total free supply did not update correctly')
   })
 
   it('Proposer can propose project', async function () {
-    // propose project & calculate proposer stake
     currentPrice = await DT.currentPrice()              // put this before propose project because current price changes slightly (rounding errors)
-    // console.log('current price', currentPrice.toNumber())
-    tx = await TR.proposeProject(projectCost, stakingPeriod, {from: proposer})
-    let proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion) + 1
-    //console.log('proposer token cost', proposerTokenCost)
+    tx = await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: proposer})
+    let proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion)
     let proposerBalance = await DT.balanceOf(proposer)
-    // console.log('proposer balance', proposerBalance.toNumber())
-    totalFreeSupply = await DT.totalFreeSupply()
-    assert.equal(2 * tokens - proposerTokenCost, totalFreeSupply, 'total free supply did not update correctly')
     assert.equal(2 * tokens, totalTokenSupply, 'total supply shouldn\'t have updated')
-    assert.equal(proposerBalance, tokens - proposerTokenCost, 'DT did not set aside appropriate proportion to escrow')
+    assert.equal(proposerBalance.toNumber(), tokens - proposerTokenCost, 'DT did not set aside appropriate proportion to escrow')
   })
 
   it('Token registry emits accurate event on project creation', async function() {
     //THIS TEST MUST BE DIRECTLY BELOW "proposer can propose project"
-    //let tx = await TR.proposeProject(projectCost, stakingPeriod, {from: proposer})
-    let proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion) + 1
+    // let tx = await TR.proposeProject(projectCost, stakingPeriod, {from: proposer})
+    let proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion)
     let log = tx.logs[0].args
     projectAddress = log.projectAddress.toString()
     PROJ = await Project.at(projectAddress)
-    let storedProposer = await PR.getProposerAddress(projectAddress)
-    // console.log(storedProposer)
-    assert.equal(proposerTokenCost, log.proposerStake, 'event logged incorrect proposer stake')
+    let storedProposer = await PROJ.proposer()
+    assert.equal(proposerTokenCost, log.proposerStake.toNumber(), 'event logged incorrect proposer stake')
     assert.equal(storedProposer, proposer, 'PR stored incorrect proposer address')
   })
 
@@ -110,48 +99,36 @@ contract('Proposed State', (accounts) => {
   })
 
   it('User can stake tokens on a proposed project below the required ether amount', async function () {
-    let requiredTokens = Math.ceil(projectCost / await DT.currentPrice())
-    // console.log('required tokens', requiredTokens)
+    let requiredTokens = Math.ceil(projectCost / await DT.currentPrice()) - 100
     let stakerBalanceBefore = await DT.balanceOf(staker)
-    let freeTokensBefore = await DT.totalFreeSupply()
-    // console.log('staker token balance', stakerBalanceBefore.toNumber())
-    await TR.stakeTokens(projectAddress, requiredTokens - 1, {from: staker})
-    let stakedTokens = await PROJ.totalTokensStaked()
-    let isStaker = await PROJ.isStaker(staker)
-    // console.log('staked tokens', stakedTokens.toNumber())
+    await TR.stakeTokens(projectAddress, requiredTokens, {from: staker})
+    let stakedTokens = await PROJ.tokensStaked()
+    let isStaker = await PL.isStaker(projectAddress, staker)
     let stakerBalanceAfter = await DT.balanceOf(staker)
-    let freeTokensAfter = await DT.totalFreeSupply()
-    let stakedBalance = await PROJ.stakedTokenBalances(staker)
+    let stakedBalance = await PROJ.tokenBalances(staker)
     let state = await PROJ.state()
     let weiCost = await PROJ.weiCost()
     let weiBal = await PROJ.weiBal()
-    assert.equal(stakedTokens.toNumber(), requiredTokens - 1, 'did not successfully stake tokens')
-    assert.equal(stakerBalanceAfter, stakerBalanceBefore - requiredTokens + 1, 'staker balance does not change correctly')
-    assert.equal(freeTokensAfter, freeTokensBefore - requiredTokens + 1, 'free token supply does not change correctly')
+    assert.equal(stakedTokens.toNumber(), requiredTokens, 'did not successfully stake tokens')
+    assert.equal(stakerBalanceAfter, stakerBalanceBefore - requiredTokens, 'staker balance does not change correctly')
     assert.isTrue(isStaker, 'contract incorrectly reports that staker is not a staker')
-    assert.equal(stakedBalance, requiredTokens - 1, 'staked balance did not update in project contract')
+    assert.equal(stakedBalance, requiredTokens, 'staked balance did not update in project contract')
     assert.equal(state.toNumber(), 1, 'project should still be in proposed state')
     assert.isBelow(weiBal.toNumber(), weiCost.toNumber(), 'project has more wei than it should')
   })
 
   it('staker can unstake tokens', async function () {
-    let stakedTokensBefore = await PROJ.totalTokensStaked()
+    let stakedTokensBefore = await PROJ.tokensStaked()
     let stakerBalanceBefore = await DT.balanceOf(staker)
-    let freeTokensBefore = await DT.totalFreeSupply()
-    // let stakedBalanceBefore = await PROJ.stakedTokenBalances(staker)
-    // console.log('staker token balance', stakerBalanceBefore.toNumber())
     await TR.unstakeTokens(projectAddress, 1, {from: staker})
-    let stakedTokensAfter = await PROJ.totalTokensStaked()
-    // console.log('staked tokens', stakedTokens.toNumber())
+    let stakedTokensAfter = await PROJ.tokensStaked()
     let stakerBalanceAfter = await DT.balanceOf(staker)
-    let freeTokensAfter = await DT.totalFreeSupply()
-    let stakedBalanceAfter = await PROJ.stakedTokenBalances(staker)
+    let stakedBalanceAfter = await PROJ.tokenBalances(staker)
     let state = await PROJ.state()
     let weiCost = await PROJ.weiCost()
     let weiBal = await PROJ.weiBal()
     assert.equal(stakedTokensAfter, stakedTokensBefore - 1, 'did not successfully stake tokens')
     assert.equal(stakerBalanceAfter, stakerBalanceBefore.toNumber() + 1, 'staker balance does not change correctly')
-    assert.equal(freeTokensAfter, freeTokensBefore.toNumber() + 1, 'free token supply does not change correctly')
     assert.equal(stakedBalanceAfter, stakedTokensBefore.toNumber() - 1, 'staked balance did not update in project contract')
     assert.equal(state.toNumber(), 1, 'project should still be in proposed state')
     assert.isBelow(weiBal.toNumber(), weiCost.toNumber(), 'project has more wei than it should')
@@ -189,30 +166,20 @@ contract('Proposed State', (accounts) => {
 
   it('User can stake extra tokens on a proposed project but only the required amount of wei and tokens is sent', async function () {
     let weiCost = await PROJ.weiCost()
-    // console.log('wei cost', weiCost.toNumber())
     let weiBal = await PROJ.weiBal()
-    // let projectWeiBal = weiBal
     let weiNeeded = weiCost - weiBal
-    // console.log('wei needed', weiNeeded)
     let requiredTokens = Math.ceil(weiNeeded / await DT.currentPrice())   // need next largest whole token
-    // console.log('required tokens', requiredTokens)
-    let stakedTokensBefore = await PROJ.totalTokensStaked()
+    let stakedTokensBefore = await PROJ.tokensStaked()
     let stakerBalanceBefore = await DT.balanceOf(staker)
-    // console.log('staker balance before', stakerBalanceBefore.toNumber())
-    let freeTokensBefore = await DT.totalFreeSupply()
-    let stakedBalanceBefore = await PROJ.stakedTokenBalances(staker)
+    let stakedBalanceBefore = await PROJ.tokenBalances(staker)
     await TR.stakeTokens(projectAddress, requiredTokens + 1, {from: staker})      // stake one extra token
-    let stakedTokensAfter = await PROJ.totalTokensStaked()
-    // console.log('staked tokens', stakedTokens.toNumber())
+    let stakedTokensAfter = await PROJ.tokensStaked()
     let stakerBalanceAfter = await DT.balanceOf(staker)
-    let freeTokensAfter = await DT.totalFreeSupply()
-    let stakedBalanceAfter = await PROJ.stakedTokenBalances(staker)
+    let stakedBalanceAfter = await PROJ.tokenBalances(staker)
     let state = await PROJ.state()
     let newWeiBal = await PROJ.weiBal()
-    // console.log('wei bal', newWeiBal.toNumber())
     assert.equal(stakedTokensAfter.toNumber(), stakedTokensBefore.toNumber() + requiredTokens, 'did not successfully stake tokens')
     assert.equal(stakerBalanceAfter.toNumber(), stakerBalanceBefore.toNumber() - requiredTokens, 'staker balance does not change correctly')
-    assert.equal(freeTokensAfter.toNumber(), freeTokensBefore.toNumber() - requiredTokens, 'free token supply does not change correctly')
     assert.equal(stakedBalanceAfter.toNumber(), stakedBalanceBefore.toNumber() + requiredTokens, 'staked balance did not update in project contract')
     assert.equal(state.toNumber(), 2, 'project should be in open state as it is now fully staked')
     assert.equal(weiCost.toNumber(), newWeiBal.toNumber(), 'project was not funded exactly')
@@ -229,16 +196,12 @@ contract('Proposed State', (accounts) => {
   })
 
   it('Refund proposer works after a project is fully staked', async function () {
-    // let proposer = await PR.getProposerAddress(projectAddress)
-    // console.log('proposer address', proposer)
-    // console.log(proposer)
     let weiBalBefore = await DT.weiBal()
     await TR.refundProposer(projectAddress, {from: proposer})
     let weiBalAfter = await DT.weiBal()
-    let proposerStake = await PR.proposedProjects.call(projectAddress)
-    // console.log(proposerStake)
-    assert.equal(weiBalBefore - weiBalAfter, Math.floor(projectCost/proposeReward), 'incorrect propose reward was sent')
-    assert.equal(proposerStake[1].toNumber(), 0, 'proposer stake unsuccessfully reset in PR')
+    let proposerStake = await PROJ.proposerStake()
+    assert.equal(weiBalBefore - weiBalAfter, Math.floor(projectCost / proposeReward), 'incorrect propose reward was sent')
+    assert.equal(proposerStake.toNumber(), 0, 'proposer stake unsuccessfully reset in PR')
   })
 
   it('User can\'t stake tokens on nonexistant project', async function () {
@@ -282,13 +245,13 @@ contract('Proposed State', (accounts) => {
   })
 
   it('proposed project becomes failed if not staked', async function() {
-    tx = await TR.proposeProject(projectCost, stakingPeriod, {from: proposer})
+    tx = await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: proposer})
     let log = tx.logs[0].args
     projectAddress2 = log.projectAddress.toString()
     PROJ2 = await Project.at(projectAddress2)
     await evmIncreaseTime(20000000000)
-    await PR.checkOpen(projectAddress2)
+    await PR.checkStaked(projectAddress2)
     let state = await PROJ2.state()
-    assert.equal(state.toNumber(), 9, 'project should\'ve failed')
+    assert.equal(state.toNumber(), 8, 'project should\'ve failed')
   })
 })
