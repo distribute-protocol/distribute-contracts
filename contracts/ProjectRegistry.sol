@@ -257,7 +257,7 @@ contract ProjectRegistry {
         uint256 _stakerWeight
     ) internal {
         StakedState storage ss = stakedProjects[_projectAddress];
-        if(ss.taskHashSubmissions[_staker] !=  0) {   //Not time submission for this particular address
+        if(ss.taskHashSubmissions[_staker] !=  0) {   //Not first time submission for this particular address
             bytes32 submittedTaskHash = ss.taskHashSubmissions[_staker];
             ss.numSubmissionsByWeight[submittedTaskHash] -= _stakerWeight;
         }
