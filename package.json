@@ -13,6 +13,7 @@
   },
   "scripts": {
     "test": "truffle test",
-    "coverage": "./node_modules/.bin/solidity-coverage"
+    "coverage": "./node_modules/.bin/solidity-coverage",
+    "mythril": "myth -o markdown --truffle > report.md"
   }
 }
