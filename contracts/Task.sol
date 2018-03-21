@@ -92,7 +92,7 @@ contract Task {
     @dev Only callable by the Project Registry
     @param _weighting Weighting of the task
     */
-    function setWeighting(uint256 _weighting) public onlyPR {
+    function setWeighting(uint256 _weighting) external onlyPR {
         weighting = _weighting;
     }
 
@@ -104,7 +104,7 @@ contract Task {
     @param _reputationVal Reputation threshold for claiming
     @param _claimer Address of account who has claimed the task
     */
-    function setTaskReward(uint256 _weiVal, uint256 _reputationVal, address _claimer) public onlyPRorRR {
+    function setTaskReward(uint256 _weiVal, uint256 _reputationVal, address _claimer) external onlyPRorRR {
         weiReward = _weiVal;
         reputationReward = _reputationVal;
         claimTime = now;
@@ -116,7 +116,7 @@ contract Task {
     @notice Marks task as completed
     @dev Only callable by the Project Registry
     */
-    function markTaskComplete() public onlyPR {
+    function markTaskComplete() external onlyPR {
         complete = true;
     }
 
@@ -128,7 +128,7 @@ contract Task {
     @param _validationVal Flag for positive or negative validation
     @param _tokens Amount of tokens to stake on Validation.
     */
-    function setValidator(address _validator, uint256 _validationVal, uint256 _tokens) public onlyTR {
+    function setValidator(address _validator, uint256 _validationVal, uint256 _tokens) external onlyTR {
         validators[_validator] = Validator(_validationVal, _tokens);
         _validationVal == 1
             ? totalValidateAffirmative += _tokens
@@ -143,7 +143,7 @@ contract Task {
     @dev Only callable by Project Registery
     @param _pollId Poll ID of PLCRVoting poll.
     */
-    function setPollId(uint256 _pollId) public onlyPR {
+    function setPollId(uint256 _pollId) external onlyPR {
         require(pollId == 0);
         pollId = _pollId;
     }
@@ -154,7 +154,7 @@ contract Task {
     @dev Only callable by the ProjectRegistry
     @param _passed Boolean describing the validation state the task should be claimable for.
     */
-    function markTaskClaimable(bool _passed) public onlyPR returns(bool) {             // passed only matters in voting
+    function markTaskClaimable(bool _passed) external onlyPR returns(bool) {             // passed only matters in voting
         if (totalValidateAffirmative == 0 || totalValidateNegative == 0) {
             claimable = true;
             if (totalValidateAffirmative > totalValidateNegative) { claimableByRep = true; }
@@ -175,7 +175,7 @@ contract Task {
     @dev Only callable by TokenRegistry
     @param _validator Address of validator
     */
-    function clearValidatorStake(address _validator) public onlyTR {
+    function clearValidatorStake(address _validator) external onlyTR {
         validators[_validator].stake = 0;
     }
 }

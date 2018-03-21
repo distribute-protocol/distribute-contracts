@@ -92,7 +92,7 @@ contract ReputationRegistry{
     @notice Return the average reputation balance of the network users
     @return Average balance of each user
     */
-    function averageBalance() public view returns(uint256) {
+    function averageBalance() external view returns(uint256) {
         return totalSupply / totalUsers;
     }
 
@@ -105,7 +105,7 @@ contract ReputationRegistry{
     repuation to start.
     @dev Has no sybil protection, thus a user can auto generate accounts to receive excess reputation.
     */
-    function register() public {
+    function register() external {
         require(balances[msg.sender] == 0 && first[msg.sender] == false);
         first[msg.sender] = true;
         balances[msg.sender] = initialRepVal;
@@ -125,7 +125,7 @@ contract ReputationRegistry{
     @param _stakingPeriod Length of time the project can be staked before it expires
     @param _ipfsHash Hash of the project description
     */
-    function proposeProject(uint256 _cost, uint256 _stakingPeriod, string _ipfsHash) public {    //_cost of project in ether
+    function proposeProject(uint256 _cost, uint256 _stakingPeriod, string _ipfsHash) external {    //_cost of project in ether
         //calculate cost of project in tokens currently (_cost in wei)
         //check proposer has at least 5% of the proposed cost in tokens
         require(now < _stakingPeriod && _cost > 0);
@@ -155,7 +155,7 @@ contract ReputationRegistry{
     wei as a reward along with any reputation staked.
     @param _projectAddress Address of the project
     */
-    function refundProposer(address _projectAddress) public {
+    function refundProposer(address _projectAddress) external {
         Project project = Project(_projectAddress);                                         //called by proposer to get refund once project is active
         require(project.proposer() == msg.sender);
         require(project.proposerType() == 2);
@@ -174,7 +174,7 @@ contract ReputationRegistry{
     @param _projectAddress Address of the project
     @param _reputation Amount of reputation to stake
     */
-    function stakeReputation(address _projectAddress, uint256 _reputation) public {
+    function stakeReputation(address _projectAddress, uint256 _reputation) external {
         require(balances[msg.sender] >= _reputation && _reputation > 0);                    //make sure project exists & RH has tokens to stake
         Project project = Project(_projectAddress);
         uint256 repRemaining = project.reputationCost() - project.reputationStaked();
@@ -190,7 +190,7 @@ contract ReputationRegistry{
     @param _projectAddress Address of the project
     @param _reputation Amount of reputation to unstake
     */
-    function unstakeReputation(address _projectAddress, uint256 _reputation) public {
+    function unstakeReputation(address _projectAddress, uint256 _reputation) external {
         require(_reputation > 0);
         balances[msg.sender] += _reputation;
         Project(_projectAddress).unstakeReputation(msg.sender, _reputation);
@@ -214,7 +214,7 @@ contract ReputationRegistry{
         uint256 _index,
         bytes32 _taskDescription,
         uint _weighting
-    ) public {
+    ) external {
         Project project = Project(_projectAddress);
         uint reputationVal = project.reputationCost() * _weighting / 100;
         require(balances[msg.sender] >= reputationVal);
@@ -237,7 +237,7 @@ contract ReputationRegistry{
     @param _index Index of the task
     */
     //called by reputation holder who completed a task
-    function rewardTask(address _projectAddress, uint8 _index) public {
+    function rewardTask(address _projectAddress, uint8 _index) external {
         uint256 reward = _projectAddress.claimTaskReward(_index, msg.sender);
         balances[msg.sender] += reward;
     }
@@ -262,7 +262,7 @@ contract ReputationRegistry{
         uint256 _reputation,
         bytes32 _secretHash,
         uint256 _prevPollID
-    ) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+    ) external {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
         require(balances[msg.sender] > 10000); //prevent network effect of new account creation
         Project project = Project(_projectAddress);
         uint256 pollId = Task(project.tasks(_index)).pollId();
@@ -290,7 +290,7 @@ contract ReputationRegistry{
         uint256 _index,
         uint256 _voteOption,
         uint _salt
-    ) public {
+    ) external {
         Project project = Project(_projectAddress);
         uint256 pollId = Task(project.tasks(_index)).pollId();
         plcrVoting.revealVote(pollId, _voteOption, _salt);
@@ -300,7 +300,7 @@ contract ReputationRegistry{
     @notice Withdraw voting rights from PLCR Contract
     @param _reputation Amount of reputation to withdraw
     */
-    function refundVotingReputation(uint256 _reputation) public {
+    function refundVotingReputation(uint256 _reputation) external {
         plcrVoting.withdrawVotingRights(msg.sender, _reputation);
         balances[msg.sender] += _reputation;
     }
@@ -313,7 +313,7 @@ contract ReputationRegistry{
     @notice Refund a reputation staker from project at `_projectAddress`
     @param _projectAddress Address of the project
     */
-    function refundStaker(address _projectAddress) public {     //called by worker who staked or voted
+    function refundStaker(address _projectAddress) external {     //called by worker who staked or voted
         uint256 _refund = _projectAddress.refundStaker(msg.sender);
         require(_refund > 0);
         Project(_projectAddress).clearReputationStake(msg.sender);
@@ -326,7 +326,7 @@ contract ReputationRegistry{
     @param _projectAddress Address of the project
     @param _index Index of the task
     */
-    function rescueTokens(address _projectAddress, uint _index) public {
+    function rescueTokens(address _projectAddress, uint _index) external {
         //rescue locked reputation that wasn't revealed
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         plcrVoting.rescueTokens(msg.sender, pollId);
@@ -342,7 +342,7 @@ contract ReputationRegistry{
     @dev Only callable by the ProjectRegistry contract
     @param _reputation Amount of reputation to burn
     */
-    function burnReputation(uint256 _reputation) public onlyPR {
+    function burnReputation(uint256 _reputation) external onlyPR {
         totalSupply -= _reputation;
     }
 

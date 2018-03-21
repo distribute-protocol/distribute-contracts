@@ -88,13 +88,13 @@ contract Project {
         _;
     }
 
-    function isTR(address _sender) public view returns (bool) {
+    function isTR(address _sender) external view returns (bool) {
         return _sender == tokenRegistryAddress
             ? true
             : false;
     }
 
-    function isRR(address _sender) public view returns (bool) {
+    function isRR(address _sender) external view returns (bool) {
         return _sender == reputationRegistryAddress
             ? true
             : false;
@@ -156,7 +156,7 @@ contract Project {
     @dev Helper function used by the project library
     @return The number of tasks in the task array
     */
-    function getTaskCount() public view returns (uint256) {
+    function getTaskCount() external view returns (uint256) {
         return tasks.length;
     }
 
@@ -170,7 +170,7 @@ contract Project {
     @param _state The state to update the project to
     @param _nextDeadline The nextDeadline to transition project to the next state
     */
-    function setState(uint256 _state, uint256 _nextDeadline) public onlyPR {
+    function setState(uint256 _state, uint256 _nextDeadline) external onlyPR {
         state = _state;
         nextDeadline = _nextDeadline;
     }
@@ -179,7 +179,7 @@ contract Project {
     @notice Clears the proposer stake on proposal expiration
     @dev Only callable by the Project Registry initialized during construction
     */
-    function clearProposerStake() public onlyPR {
+    function clearProposerStake() external onlyPR {
         proposerStake = 0;
     }
 
@@ -188,7 +188,7 @@ contract Project {
     @dev Only callable by the Token Registry initialized during construction
     @param _staker Address of the staker
     */
-    function clearTokenStake(address _staker) public onlyTR {
+    function clearTokenStake(address _staker) external onlyTR {
         tokenBalances[_staker] = 0;
     }
 
@@ -197,7 +197,7 @@ contract Project {
     @dev Only callable by the Reputation Registry initialized during construction
     @param _staker Address of the staker
     */
-    function clearReputationStake(address _staker) public onlyRR {
+    function clearReputationStake(address _staker) external onlyRR {
         reputationBalances[_staker] = 0;
     }
 
@@ -205,7 +205,7 @@ contract Project {
     @notice Clear the stake of all stakers in the event of Project failure
     @dev Only callable by the Project Registry initialized during construction, in the case of project failure
     */
-    function clearStake() public onlyPR {
+    function clearStake() external onlyPR {
         tokensStaked = 0;
         reputationStaked = 0;
     }
@@ -215,7 +215,7 @@ contract Project {
     @dev Only callable by the Project Registry initialized during construction
     @param _tasksLength The amount of tasks as defined by the project stakers
     */
-    function setTaskLength(uint _tasksLength) public onlyPR {
+    function setTaskLength(uint _tasksLength) external onlyPR {
         tasks.length = _tasksLength;
     }
 
@@ -225,7 +225,7 @@ contract Project {
     @param _taskAddress Address of the task contract
     @param _index Index of the task in the tasks array
     */
-    function setTaskAddress(address _taskAddress, uint _index) public onlyPR {
+    function setTaskAddress(address _taskAddress, uint _index) external onlyPR {
         require(state == 3);
         tasks[_index] = _taskAddress;
     }
@@ -235,7 +235,7 @@ contract Project {
     @dev Only callable by the Project Registry initialized during construction
     @param _passAmount The total weighting of all tasks which passed
     */
-    function setPassAmount(uint256 _passAmount) public onlyPR {
+    function setPassAmount(uint256 _passAmount) external onlyPR {
         passAmount = _passAmount;
     }
 
@@ -250,7 +250,7 @@ contract Project {
     @param _tokens Amount of tokens to stake on the project
     @param _weiValue Amount of wei transferred to the project
     */
-    function stakeTokens(address _staker, uint256 _tokens, uint256 _weiValue) public onlyTR {
+    function stakeTokens(address _staker, uint256 _tokens, uint256 _weiValue) external onlyTR {
         require(state == 1);
 
         tokenBalances[_staker] += _tokens;
@@ -267,7 +267,7 @@ contract Project {
     @return The amount of ether to deduct from the projects balance
 
     */
-    function unstakeTokens(address _staker, uint256 _tokens) public onlyTR returns (uint256) {
+    function unstakeTokens(address _staker, uint256 _tokens) external onlyTR returns (uint256) {
         require(state == 1);
         require(
             tokenBalances[_staker].sub(_tokens) < tokenBalances[_staker] &&  //check overflow
@@ -287,7 +287,7 @@ contract Project {
     @param _staker Address of the staker who is staking
     @param _reputation Amount of reputation to stake on the project
     */
-    function stakeReputation(address _staker, uint256 _reputation) public onlyRR {
+    function stakeReputation(address _staker, uint256 _reputation) external onlyRR {
         require(state == 1);
         require(reputationBalances[_staker] + _reputation > reputationBalances[_staker]);
 
@@ -301,7 +301,7 @@ contract Project {
     @param _staker Address of the staker who is unstaking
     @param _reputation Amount of reputation to unstake on the project
     */
-    function unstakeReputation(address _staker, uint256 _reputation) public onlyRR {
+    function unstakeReputation(address _staker, uint256 _reputation) external onlyRR {
         require(state == 1);
         require(
             reputationBalances[_staker].sub(_reputation) < reputationBalances[_staker] &&  //check overflow
@@ -321,7 +321,7 @@ contract Project {
     @dev Only callable by the Reputation Registry initialized during construction, to maintain control flow
     @param _rewardee The account who claimed and completed the task.
     */
-    function transferWeiReward(address _rewardee, uint _reward) public onlyRR {
+    function transferWeiReward(address _rewardee, uint _reward) external onlyRR {
         require(_reward <= weiBal);
 
         weiBal -= _reward;
@@ -334,7 +334,7 @@ contract Project {
     @param _distributeToken The address of the systems token contract.
     @param _value The amount of ether to send
     */
-    function returnWei(address _distributeToken, uint _value) public onlyPR {
+    function returnWei(address _distributeToken, uint _value) external onlyPR {
         _distributeToken.transfer(_value);
     }
 

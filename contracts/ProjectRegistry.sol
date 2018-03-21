@@ -104,7 +104,7 @@ contract ProjectRegistry {
     @param _projectAddress Address of the project
     @return Boolean representing Staked status
     */
-    function checkStaked(address _projectAddress) public returns (bool) {
+    function checkStaked(address _projectAddress) external returns (bool) {
         return _projectAddress.checkStaked();
     }
 
@@ -125,7 +125,7 @@ contract ProjectRegistry {
     @param _projectAddress Address of the project
     @return Boolean representing Validate status
     */
-    function checkValidate(address _projectAddress) public {
+    function checkValidate(address _projectAddress) external {
         _projectAddress.checkValidate(tokenRegistryAddress, distributeTokenAddress);
     }
 
@@ -135,7 +135,7 @@ contract ProjectRegistry {
     @param _projectAddress Address of the project
     @return Boolean representing Voting status
     */
-    function checkVoting(address _projectAddress) public {
+    function checkVoting(address _projectAddress) external {
         _projectAddress.checkVoting(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
     }
 
@@ -145,7 +145,7 @@ contract ProjectRegistry {
     @param _projectAddress Address of the project
     @return Boolean representing Final Status
     */
-    function checkEnd(address _projectAddress) public {
+    function checkEnd(address _projectAddress) external {
         _projectAddress.checkEnd(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
         Project project = Project(_projectAddress);
         if (project.state() == 7) {
@@ -183,7 +183,7 @@ contract ProjectRegistry {
         uint256 _proposerType,
         uint256 _proposerStake,
         string _ipfsHash
-    ) public onlyTRorRR returns (address) {
+    ) external onlyTRorRR returns (address) {
         Project newProject = new Project(
             _cost,
             _costProportion,
@@ -207,7 +207,7 @@ contract ProjectRegistry {
     @param _projectAddress Address of the project
     @return An array with the weiCost of the project and the proposers stake
     */
-    function refundProposer(address _projectAddress) public onlyTRorRR returns (uint256[2]) {
+    function refundProposer(address _projectAddress) external onlyTRorRR returns (uint256[2]) {
         Project project =  Project(_projectAddress);
         require(project.state() > 1 && project.state() != 8);
         require(project.proposerStake() > 0);
@@ -230,7 +230,7 @@ contract ProjectRegistry {
     @param _projectAddress Address of the project
     @param _taskHash Hash of the task list
     */
-    function addTaskHash(address _projectAddress, bytes32 _taskHash) public  {      // format of has should be 'description', 'percentage', check via js that percentages add up to 100 prior to calling contract
+    function addTaskHash(address _projectAddress, bytes32 _taskHash) external  {      // format of has should be 'description', 'percentage', check via js that percentages add up to 100 prior to calling contract
         Project project = Project(_projectAddress);
         require(_projectAddress.isStaker(msg.sender) == true);
 
@@ -281,7 +281,7 @@ contract ProjectRegistry {
     @param _hashes Array of task hashes
     */
     // Doesn't Change State Here Could Possibly move to ProjectLibrary
-    function submitHashList(address _projectAddress, bytes32[] _hashes) public {
+    function submitHashList(address _projectAddress, bytes32[] _hashes) external {
         Project project = Project(_projectAddress);
         require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
 
@@ -314,7 +314,7 @@ contract ProjectRegistry {
         uint _weighting,
         uint _weiVal,
         uint _reputationVal
-    ) public onlyRR {
+    ) external onlyRR {
         Project project = Project(_projectAddress);
         require(project.state() == 3);
         Task task = Task(project.tasks(_index));
@@ -334,7 +334,7 @@ contract ProjectRegistry {
     @param _index Index of the task in task array
     */
     // Doesn't Change State Here Could Possibly move to ProjectLibrary
-    function submitTaskComplete(address _projectAddress, uint256 _index) public {
+    function submitTaskComplete(address _projectAddress, uint256 _index) external {
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));
         require(task.claimer() == msg.sender);

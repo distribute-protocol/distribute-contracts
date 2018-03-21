@@ -89,7 +89,7 @@ contract TokenRegistry {
     @param _stakingPeriod Length of time the project can be staked before it expires
     @param _ipfsHash Hash of the project description
     */
-    function proposeProject(uint256 _cost, uint256 _stakingPeriod, string _ipfsHash) public { //_cost of project in ether
+    function proposeProject(uint256 _cost, uint256 _stakingPeriod, string _ipfsHash) external { //_cost of project in ether
         //calculate cost of project in tokens currently (_cost in wei)
         //check proposer has at least 5% of the proposed cost in tokens
         require(now < _stakingPeriod && _cost > 0);
@@ -119,7 +119,7 @@ contract TokenRegistry {
     wei as a reward along with any tokens staked.
     @param _projectAddress Address of the project
     */
-    function refundProposer(address _projectAddress) public {                                 //called by proposer to get refund once project is active
+    function refundProposer(address _projectAddress) external {                                 //called by proposer to get refund once project is active
         Project project = Project(_projectAddress);                            //called by proposer to get refund once project is active
         require(project.proposer() == msg.sender);
         require(project.proposerType() == 1);
@@ -139,7 +139,7 @@ contract TokenRegistry {
     @param _projectAddress Address of the project
     @param _tokens Amount of tokens to stake
     */
-    function stakeTokens(address _projectAddress, uint256 _tokens) public {
+    function stakeTokens(address _projectAddress, uint256 _tokens) external {
         require(distributeToken.balanceOf(msg.sender) >= _tokens);
 
         Project project = Project(_projectAddress);
@@ -168,7 +168,7 @@ contract TokenRegistry {
     @param _projectAddress Address of the project
     @param _tokens Amount of reputation to unstake
     */
-    function unstakeTokens(address _projectAddress, uint256 _tokens) public {
+    function unstakeTokens(address _projectAddress, uint256 _tokens) external {
         uint256 weiVal = Project(_projectAddress).unstakeTokens(msg.sender, _tokens);
         distributeToken.transferWeiTo(msg.sender, weiVal);
         distributeToken.transferFromEscrow(msg.sender, _tokens);
@@ -192,7 +192,7 @@ contract TokenRegistry {
         uint256 _index,
         uint256 _tokens,
         bool _validationState
-    ) public {
+    ) external {
         require(distributeToken.balanceOf(msg.sender) >= _tokens);
         distributeToken.transferToEscrow(msg.sender, _tokens);
         _projectAddress.validate(msg.sender, _index, _tokens, _validationState);
@@ -203,7 +203,7 @@ contract TokenRegistry {
     @param _projectAddress Address of the project
     @param _index Index of the task
     */
-    function rewardValidator(address _projectAddress, uint256 _index) public {
+    function rewardValidator(address _projectAddress, uint256 _index) external {
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));
         require(task.claimable());
@@ -241,7 +241,7 @@ contract TokenRegistry {
         uint256 _tokens,
         bytes32 _secretHash,
         uint256 _prevPollID
-    ) public {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+    ) external {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         require(pollId != 0);
         //calculate available tokens for voting
@@ -268,7 +268,7 @@ contract TokenRegistry {
         uint256 _index,
         uint256 _voteOption,
         uint _salt
-    ) public {
+    ) external {
         plcrVoting.revealVote(Task(Project(_projectAddress).tasks(_index)).pollId(), _voteOption, _salt);
     }
 
@@ -276,7 +276,7 @@ contract TokenRegistry {
     @notice Withdraw voting rights from PLCR Contract
     @param _tokens Amount of tokens to withdraw
     */
-    function refundVotingTokens(uint256 _tokens) public {
+    function refundVotingTokens(uint256 _tokens) external {
         plcrVoting.withdrawVotingRights(msg.sender, _tokens);
         distributeToken.transferFromEscrow(msg.sender, _tokens);
     }
@@ -289,7 +289,7 @@ contract TokenRegistry {
     @notice Refund a token staker from project at `_projectAddress`
     @param _projectAddress Address of the project
     */
-    function refundStaker(address _projectAddress) public {
+    function refundStaker(address _projectAddress) external {
         uint256 refund = _projectAddress.refundStaker(msg.sender);
         require(refund > 0);
 
@@ -303,7 +303,7 @@ contract TokenRegistry {
     @param _projectAddress Address of the project
     @param _index Index of the task
     */
-    function rescueTokens(address _projectAddress, uint _index) public {
+    function rescueTokens(address _projectAddress, uint _index) external {
         //rescue locked tokens that weren't revealed
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         plcrVoting.rescueTokens(msg.sender, pollId);
@@ -318,7 +318,7 @@ contract TokenRegistry {
     @dev Only callable by the ProjectRegistry contract
     @param _value Amount of wei to transfer to the distributeToken contract
     */
-    function revertWei(uint256 _value) public onlyPR {
+    function revertWei(uint256 _value) external onlyPR {
         distributeToken.returnWei(_value);
     }
 
@@ -327,7 +327,7 @@ contract TokenRegistry {
     @dev Only callable by the ProjectRegistry contract
     @param _tokens Amount of reputation to burn
     */
-    function burnTokens(uint256 _tokens) public onlyPR {
+    function burnTokens(uint256 _tokens) external onlyPR {
         distributeToken.burn(_tokens);
     }
 

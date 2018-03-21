@@ -132,7 +132,7 @@ contract DistributeToken is StandardToken {
     @dev The required amount of wei must be transferred as the msg.value
     @param _tokens The number of tokens requested to be minted
     */
-    function mint(uint _tokens) public payable {
+    function mint(uint _tokens) external payable {
         uint256 weiRequiredVal = weiRequired(_tokens);
         require(msg.value >= weiRequiredVal);
 
@@ -150,7 +150,7 @@ contract DistributeToken is StandardToken {
     @dev Only to be called by the Token Registry initialized during constrction
     @param _tokens The number of tokens to burn
     */
-    function burn(uint256 _tokens) public onlyTR {
+    function burn(uint256 _tokens) external onlyTR {
         require(_tokens <= totalSupply && _tokens > 0);
         balances[msg.sender] -= _tokens;
         totalSupply -= _tokens;
@@ -162,7 +162,7 @@ contract DistributeToken is StandardToken {
     corresponding amount of wei is transferred to the `msg.sender`
     @param _tokens The number of tokens to sell.
     */
-    function sell(uint256 _tokens) public {
+    function sell(uint256 _tokens) external {
         require(_tokens > 0 && (_tokens <= balances[msg.sender]));
 
         uint256 weiVal = _tokens * currentPrice();
@@ -184,7 +184,7 @@ contract DistributeToken is StandardToken {
     @param _address Receipient of wei value
     @param _weiValue The amount of wei to transfer to the _address
     */
-    function transferWeiTo(address _address, uint256 _weiValue) public onlyTRorRR {
+    function transferWeiTo(address _address, uint256 _weiValue) external onlyTRorRR {
         require(_weiValue <= weiBal);
 
         weiBal -= _weiValue;
@@ -196,7 +196,7 @@ contract DistributeToken is StandardToken {
     @dev Only callable by the TokenRegistry initialized during contract construction
     @param _weiValue The amount of wei to transfer back to the token contract
     */
-    function returnWei(uint _weiValue) public onlyTR {
+    function returnWei(uint _weiValue) external onlyTR {
         weiBal += _weiValue;
     }
 
@@ -206,7 +206,7 @@ contract DistributeToken is StandardToken {
     @param _owner Owner of the tokens being transferred
     @param _tokens The number of tokens to transfer
     */
-    function transferToEscrow(address _owner, uint256 _tokens) public onlyTR returns (bool) {
+    function transferToEscrow(address _owner, uint256 _tokens) external onlyTR returns (bool) {
         require(balances[_owner] >= _tokens);
         balances[_owner] -= _tokens;
         balances[msg.sender] += _tokens;
@@ -219,7 +219,7 @@ contract DistributeToken is StandardToken {
     @param _receipient Receipient of the tokens being transferred
     @param _tokens The number of tokens to transfer
     */
-    function transferFromEscrow(address _receipient, uint256 _tokens) public onlyTR returns (bool) {
+    function transferFromEscrow(address _receipient, uint256 _tokens) external onlyTR returns (bool) {
         require(balances[msg.sender] >= _tokens);
         balances[msg.sender] -= _tokens;
         balances[_receipient] += _tokens;
