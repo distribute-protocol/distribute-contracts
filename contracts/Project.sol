@@ -1,4 +1,4 @@
-pragma solidity ^0.4.10;
+pragma solidity ^0.4.19;
 
 import "./ProjectRegistry.sol";
 import "./ReputationRegistry.sol";
@@ -154,7 +154,6 @@ contract Project {
     /**
     @notice The amount of tasks created in the project during the Staked period.
     @dev Helper function used by the project library
-    @param
     @return The number of tasks in the task array
     */
     function getTaskCount() public view returns (uint256) {

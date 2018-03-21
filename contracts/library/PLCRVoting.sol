@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.19;
 
 //import files
 import "./DLL.sol";
@@ -78,12 +78,11 @@ contract PLCRVoting {
     // ================
 
     /**
-    FILL THIS IN
-    @notice Loads _numTokens ERC20 tokens into the voting contract for one-to-one voting rights
-    @dev Assumes that msg.sender has approved voting contract to spend on their behalf
-    @param _numTokens The number of votingTokens desired in exchange for ERC20 tokens
+    @notice Returns the available tokens for voting for voter `_voter`
+    @param _voter Address of the voter
+    @param _type The type of the validator
     */
-    function getAvailableTokens(address _voter, uint _type) public returns(uint256) {
+    function getAvailableTokens(address _voter, uint _type) public view returns(uint256) {
         return _type == 1
             ? voteTokenBalance[_voter] - getLockedTokens(_voter)
             : voteReputationBalance[_voter] - getLockedTokens(_voter);

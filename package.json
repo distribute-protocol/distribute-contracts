@@ -10,5 +10,9 @@
   },
   "devDependencies": {
     "solidity-coverage": "^0.4.13"
+  },
+  "scripts": {
+    "test": "truffle test",
+    "coverage": "./node_modules/.bin/solidity-coverage"
   }
 }

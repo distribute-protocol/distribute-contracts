@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.19;
 
 import "./library/PLCRVoting.sol";
 import "./ReputationRegistry.sol";
@@ -86,8 +86,7 @@ contract ProjectRegistry {
         require(
             tokenRegistryAddress == 0 &&
             reputationRegistryAddress == 0 &&
-            distributeTokenAddress == 0 &&
-            plcrVoting == 0
+            distributeTokenAddress == 0
         );
         distributeTokenAddress = _distributeToken;
         tokenRegistryAddress = _tokenRegistry;
@@ -250,7 +249,6 @@ contract ProjectRegistry {
     @param _staker Address of the staker
     @param _taskHash Hash of the task list
     @param _stakerWeight Weight of the staker
-    @return
     */
     function stakedTaskHash(
         address _projectAddress,

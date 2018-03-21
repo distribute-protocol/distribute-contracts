@@ -1,4 +1,4 @@
-pragma solidity ^0.4.10;
+pragma solidity ^0.4.19;
 
 import "./Project.sol";
 import "./ProjectLibrary.sol";
@@ -67,7 +67,7 @@ contract ReputationRegistry{
     // =====================================================================
 
     /**
-    @dev Quasi contstructer is called after contract is deployed, must be called with distributeToken,
+    @dev Quasi contstructor is called after contract is deployed, must be called with distributeToken,
     projectRegistry, and plcrVoting intialized to 0
     @param _distributeToken Address of DistributeToken contract
     @param _projectRegistry Address of ProjectRegistry contract
@@ -153,6 +153,7 @@ contract ReputationRegistry{
     /**
     @notice Refund a reputation proposer upon proposal success, transfer 1% of the project cost in
     wei as a reward along with any reputation staked.
+    @param _projectAddress Address of the project
     */
     function refundProposer(address _projectAddress) public {
         Project project = Project(_projectAddress);                                         //called by proposer to get refund once project is active
@@ -177,8 +178,9 @@ contract ReputationRegistry{
         require(balances[msg.sender] >= _reputation && _reputation > 0);                    //make sure project exists & RH has tokens to stake
         Project project = Project(_projectAddress);
         uint256 repRemaining = project.reputationCost() - project.reputationStaked();
-        balances[msg.sender] -= _reputation < repRemaining ? _reputation : repRemaining;
-        Project(_projectAddress).stakeReputation(msg.sender, _reputation);
+        uint256 reputationVal = _reputation < repRemaining ? _reputation : repRemaining;
+        balances[msg.sender] -= reputationVal;
+        Project(_projectAddress).stakeReputation(msg.sender, reputationVal);
         projectRegistry.checkStaked(_projectAddress);
     }
 
@@ -252,7 +254,7 @@ contract ReputationRegistry{
     @param _index Index of the task
     @param _reputation Reputation to vote with
     @param _secretHash Secret Hash of voter choice and salt
-    @param _prevPollID ?
+    @param _prevPollID The nonce of the previous poll. This is stored off chain
     */
     function voteCommit(
         address _projectAddress,
@@ -282,7 +284,6 @@ contract ReputationRegistry{
     @param _index Index of the task
     @param _voteOption Vote choice of account
     @param _salt Salt of account
-    @return
     */
     function voteReveal(
         address _projectAddress,
@@ -318,6 +319,19 @@ contract ReputationRegistry{
         Project(_projectAddress).clearReputationStake(msg.sender);
         balances[msg.sender] += _refund * 3 / 2;
     }
+
+    /**
+    @notice Rescue unrevealed reputation votes from expired polls of task at `_index` of project at
+    `_projectAddress`
+    @param _projectAddress Address of the project
+    @param _index Index of the task
+    */
+    function rescueTokens(address _projectAddress, uint _index) public {
+        //rescue locked reputation that wasn't revealed
+        uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
+        plcrVoting.rescueTokens(msg.sender, pollId);
+    }
+
 
     // =====================================================================
     // FAILED

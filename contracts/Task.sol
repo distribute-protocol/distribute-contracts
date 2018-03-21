@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.19;
 
 import "./Project.sol";
 
@@ -127,7 +127,6 @@ contract Task {
     @param _validator Address of validator
     @param _validationVal Flag for positive or negative validation
     @param _tokens Amount of tokens to stake on Validation.
-    @return
     */
     function setValidator(address _validator, uint256 _validationVal, uint256 _tokens) public onlyTR {
         validators[_validator] = Validator(_validationVal, _tokens);
@@ -154,7 +153,6 @@ contract Task {
     is claimable by the reputation holder who initially claimed the task.
     @dev Only callable by the ProjectRegistry
     @param _passed Boolean describing the validation state the task should be claimable for.
-    @return
     */
     function markTaskClaimable(bool _passed) public onlyPR returns(bool) {             // passed only matters in voting
         if (totalValidateAffirmative == 0 || totalValidateNegative == 0) {

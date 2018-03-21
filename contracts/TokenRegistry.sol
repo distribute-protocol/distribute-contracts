@@ -1,10 +1,4 @@
-// ===================================================================== //
-// This contract serves as the interface through which users propose projects,
-// stake tokens, come to consensus around tasks, validate projects, vote on projects,
-// refund their stakes, and claim their rewards.
-// ===================================================================== //
-
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.19;
 
 import "./ProjectRegistry.sol";
 import "./DistributeToken.sol";
@@ -14,17 +8,15 @@ import "./Task.sol";
 import "./library/PLCRVoting.sol";
 import "./library/Division.sol";
 
-
+/**
+@title This contract serves as the interface through which users propose projects, stake tokens,
+come to consensus around tasks, validate projects, vote on projects, refund their stakes, and
+claim their rewards.
+@author Team: Jessica Marshall, Ashoka Finley
+*/
 contract TokenRegistry {
 
     using ProjectLibrary for address;
-
-    ProjectRegistry projectRegistry;
-    DistributeToken distributeToken;
-    PLCRVoting plcrVoting;
-
-    uint256 proposeProportion = 200000000000;  // tokensupply/proposeProportion is the number of tokens the proposer must stake
-    uint256 rewardProportion = 100;
 
     // =====================================================================
     // EVENTS
@@ -37,6 +29,17 @@ contract TokenRegistry {
     );
 
     // =====================================================================
+    // STATE VARIABLES
+    // =====================================================================
+
+    ProjectRegistry projectRegistry;
+    DistributeToken distributeToken;
+    PLCRVoting plcrVoting;
+
+    uint256 proposeProportion = 200000000000;  // tokensupply/proposeProportion is the number of tokens the proposer must stake
+    uint256 rewardProportion = 100;
+
+    // =====================================================================
     // MODIFIERS
     // =====================================================================
 
@@ -46,15 +49,22 @@ contract TokenRegistry {
     }
 
     // =====================================================================
-    // FUNCTIONS
-    // =====================================================================
-
-    // =====================================================================
     // QUASI-CONSTRUCTOR
     // =====================================================================
 
+    /**
+    @dev Quasi constructor is called after contract is deployed, must be called with distributeToken,
+    projectRegistry, and plcrVoting intialized to 0
+    @param _distributeToken Address of DistributeToken contract
+    @param _projectRegistry Address of ProjectRegistry contract
+    @param _plcrVoting Address of PLCRVoting contract
+    */
     function init(address _distributeToken, address _projectRegistry, address _plcrVoting) public { //contract is created
-        require(address(distributeToken) == 0 && address(projectRegistry) == 0 && address(plcrVoting) == 0);
+        require(
+            address(distributeToken) == 0 &&
+            address(projectRegistry) == 0 &&
+            address(plcrVoting) == 0
+        );
 
         distributeToken = DistributeToken(_distributeToken);
         projectRegistry = ProjectRegistry(_projectRegistry);
@@ -62,9 +72,23 @@ contract TokenRegistry {
     }
 
     // =====================================================================
+    // FALLBACK
+    // =====================================================================
+
+    function() public payable {}
+
+    // =====================================================================
     // PROPOSE
     // =====================================================================
 
+    /**
+    @notice Propose a project of cost `_cost` with staking period `_stakingPeriod` and hash `_ipfsHash`,
+    with tokens.
+    @dev Calls ProjectRegistry.createProject finalize transaction
+    @param _cost Total project cost in wei
+    @param _stakingPeriod Length of time the project can be staked before it expires
+    @param _ipfsHash Hash of the project description
+    */
     function proposeProject(uint256 _cost, uint256 _stakingPeriod, string _ipfsHash) public { //_cost of project in ether
         //calculate cost of project in tokens currently (_cost in wei)
         //check proposer has at least 5% of the proposed cost in tokens
@@ -90,6 +114,11 @@ contract TokenRegistry {
         ProjectCreated(projectAddress, _cost, proposerTokenCost);
     }
 
+    /**
+    @notice Refund a reputation proposer upon proposal success, transfer 1% of the project cost in
+    wei as a reward along with any tokens staked.
+    @param _projectAddress Address of the project
+    */
     function refundProposer(address _projectAddress) public {                                 //called by proposer to get refund once project is active
         Project project = Project(_projectAddress);                            //called by proposer to get refund once project is active
         require(project.proposer() == msg.sender);
@@ -104,6 +133,12 @@ contract TokenRegistry {
     // STAKE
     // =====================================================================
 
+    /**
+    @notice Stake `_tokens` tokens on project at `_projectAddress`
+    @dev Prevents over staking and returns any excess tokens staked.
+    @param _projectAddress Address of the project
+    @param _tokens Amount of tokens to stake
+    */
     function stakeTokens(address _projectAddress, uint256 _tokens) public {
         require(distributeToken.balanceOf(msg.sender) >= _tokens);
 
@@ -127,6 +162,12 @@ contract TokenRegistry {
         projectRegistry.checkStaked(_projectAddress);
     }
 
+    /**
+    @notice Unstake `_tokens` tokens from project at `_projectAddress`
+    @dev Require tokens unstaked is greater than 0
+    @param _projectAddress Address of the project
+    @param _tokens Amount of reputation to unstake
+    */
     function unstakeTokens(address _projectAddress, uint256 _tokens) public {
         uint256 weiVal = Project(_projectAddress).unstakeTokens(msg.sender, _tokens);
         distributeToken.transferWeiTo(msg.sender, weiVal);
@@ -137,6 +178,15 @@ contract TokenRegistry {
     // VALIDATION
     // =====================================================================
 
+    /**
+    @notice Validate a task at index `_index` from project at `_projectAddress` with `_tokens`
+    tokens for validation state `_validationState`
+    @dev Requires the token balance of msg.sender to be greater than the reputationVal of the task
+    @param _projectAddress Address of the project
+    @param _index Index of the task
+    @param _tokens Amount of tokens to stake on the validation state
+    @param _validationState Approve or Deny task
+    */
     function validateTask(
         address _projectAddress,
         uint256 _index,
@@ -148,6 +198,11 @@ contract TokenRegistry {
         _projectAddress.validate(msg.sender, _index, _tokens, _validationState);
     }
 
+    /**
+    @notice Reward the validator of a task if they have been determined to have validated correctly.
+    @param _projectAddress Address of the project
+    @param _index Index of the task
+    */
     function rewardValidator(address _projectAddress, uint256 _index) public {
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));
@@ -170,6 +225,16 @@ contract TokenRegistry {
     // VOTING
     // =====================================================================
 
+    /**
+    @notice First part of voting process. Commits a vote using tokens to task at index `_index`
+    of project at `projectAddress` for tokens `_tokens`. Submits a secrect hash `_secretHash`,
+    which is a tightly packed hash of the voters choice and their salt
+    @param _projectAddress Address of the project
+    @param _index Index of the task
+    @param _tokens Tokens to vote with
+    @param _secretHash Secret Hash of voter choice and salt
+    @param _prevPollID The nonce of the previous poll. This is stored off chain
+    */
     function voteCommit(
         address _projectAddress,
         uint256 _index,
@@ -191,6 +256,13 @@ contract TokenRegistry {
         plcrVoting.commitVote(msg.sender, pollId, _secretHash, _tokens, _prevPollID);
     }
 
+    /**
+    @notice Second part of voting process. Reveal existing vote.
+    @param _projectAddress Address of the project
+    @param _index Index of the task
+    @param _voteOption Vote choice of account
+    @param _salt Salt of account
+    */
     function voteReveal(
         address _projectAddress,
         uint256 _index,
@@ -200,6 +272,10 @@ contract TokenRegistry {
         plcrVoting.revealVote(Task(Project(_projectAddress).tasks(_index)).pollId(), _voteOption, _salt);
     }
 
+    /**
+    @notice Withdraw voting rights from PLCR Contract
+    @param _tokens Amount of tokens to withdraw
+    */
     function refundVotingTokens(uint256 _tokens) public {
         plcrVoting.withdrawVotingRights(msg.sender, _tokens);
         distributeToken.transferFromEscrow(msg.sender, _tokens);
@@ -209,6 +285,10 @@ contract TokenRegistry {
     // COMPLETE
     // =====================================================================
 
+    /**
+    @notice Refund a token staker from project at `_projectAddress`
+    @param _projectAddress Address of the project
+    */
     function refundStaker(address _projectAddress) public {
         uint256 refund = _projectAddress.refundStaker(msg.sender);
         require(refund > 0);
@@ -217,6 +297,12 @@ contract TokenRegistry {
         distributeToken.transferFromEscrow(msg.sender, refund);
     }
 
+    /**
+    @notice Rescue unrevealed reputation votes from expired polls of task at `_index` of project at
+    `_projectAddress`
+    @param _projectAddress Address of the project
+    @param _index Index of the task
+    */
     function rescueTokens(address _projectAddress, uint _index) public {
         //rescue locked tokens that weren't revealed
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
@@ -227,12 +313,22 @@ contract TokenRegistry {
     // FAILED
     // =====================================================================
 
+    /**
+    @notice Return wei from project balance if task fails
+    @dev Only callable by the ProjectRegistry contract
+    @param _value Amount of wei to transfer to the distributeToken contract
+    */
     function revertWei(uint256 _value) public onlyPR {
         distributeToken.returnWei(_value);
     }
+
+    /**
+    @notice Burn tokens in event of project failure
+    @dev Only callable by the ProjectRegistry contract
+    @param _tokens Amount of reputation to burn
+    */
     function burnTokens(uint256 _tokens) public onlyPR {
         distributeToken.burn(_tokens);
     }
 
-    function() public payable {}
 }

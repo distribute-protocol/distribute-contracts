@@ -1,0 +1,15 @@
+/*
+getProposerAddress
+startPoll
+pollEnded
+createProject
+refundProposer
+checkOpen
+checkActive
+checkValidate
+checkVoting
+checkEnd
+addTaskHash
+submitHashList
+claimTask
+*/

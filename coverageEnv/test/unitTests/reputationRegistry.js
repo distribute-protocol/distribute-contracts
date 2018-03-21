@@ -1,0 +1,12 @@
+/*
+register
+stakeReputation
+unstakeReputation
+claimTask
+voteCommit
+voteReveal
+refundVotingReputation
+burnReputation
+refundStaker
+rewardTask
+*/

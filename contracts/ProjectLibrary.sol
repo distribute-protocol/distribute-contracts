@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.19;
 
 import "./Project.sol";
 import "./TokenRegistry.sol";
@@ -286,7 +286,6 @@ library ProjectLibrary {
     @param _index Index of the task in the projects task array
     @param _tokens Amount of tokens validator is staking
     @param _validationState Bool representing validators choice.s
-    @return
     */
     function validate(
         address _projectAddress,
