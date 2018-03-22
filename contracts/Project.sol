@@ -129,6 +129,34 @@ contract Project {
         address _reputationRegistry,
         address _tokenRegistry
     ) public {
+        setup(_cost, _costProportion, _stakingPeriod, _proposer, _proposerType, _proposerStake, _ipfsHash, _reputationRegistry, _tokenRegistry);
+    }
+
+    /**
+    @dev Used for proxy deployment of this contract.
+    @param _cost The total cost of the project in wei
+    @param _costProportion The proportion of the project cost divided by theDistributeToken weiBal
+    represented as integer
+    @param _stakingPeriod The length of time this project is open for staking
+    @param _proposer The address of the user proposing the project
+    @param _proposerType Denotes if a proposer is using reputation or tokens,
+    value must be 1: tokens or 2: reputation
+    @param _proposerStake The amount of reputation or tokens needed to create the proposal
+    @param _ipfsHash The ipfs hash of the full project description
+    @param _reputationRegistry Address of the Reputation Registry
+    @param _tokenRegistry Address of the contract system Token Registry
+    */
+    function setup(
+        uint256 _cost,
+        uint256 _costProportion,
+        uint256 _stakingPeriod,
+        address _proposer,
+        uint256 _proposerType,
+        uint256 _proposerStake,
+        string _ipfsHash,
+        address _reputationRegistry,
+        address _tokenRegistry
+    ) public {
         reputationRegistryAddress = _reputationRegistry;
         tokenRegistryAddress = _tokenRegistry;
         projectRegistryAddress = msg.sender;
@@ -141,6 +169,7 @@ contract Project {
         proposerStake = _proposerStake;
         ipfsHash = _ipfsHash;
     }
+
 
     // =====================================================================
     // FALLBACK
