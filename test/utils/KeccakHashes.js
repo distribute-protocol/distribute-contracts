@@ -40,4 +40,27 @@ const hashTasksArray = (taskArray, cost) => {
   return taskHash
 }
 
+// function hashTasksArray (data) {
+//   let hashList = hashTask(data)
+//   hashList.map(arr => arr.slice(2))
+//   let numArgs = hashList.length
+//   let args = 'bytes32'.concat(' bytes32'.repeat(numArgs - 1)).split(' ')
+//   let taskHash = keccakHashes(args, hashList)
+//   // console.log('0x' + taskHash)
+//   return '0x' + taskHash
+// }
+//
+// function hashTask (data) {
+//   let tasks = data.split(',')     // split tasks up
+//   let taskHashArray = []
+//   let args = ['string', 'uint', 'uint']
+//   // let args = ['bytes32', 'bytes32', 'bytes32']
+//   for (var i = 0; i < tasks.length; i++) {
+//     let thisTask = tasks[i].split(';')  // split each task into elements
+//     taskHashArray.push('0x' + keccakHashes(args, thisTask))
+//   }
+//   // console.log(taskHashArray)
+//   return taskHashArray
+// }
+
 module.exports = {KeccakHashes, hashTasks, hashTasksArray}
