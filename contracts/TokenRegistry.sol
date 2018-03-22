@@ -139,9 +139,10 @@ contract TokenRegistry {
     @param _projectAddress Address of the project
     @param _tokens Amount of tokens to stake
     */
+    // ATTENTION: Will likely revert at the end...look at best practice, should we revert at beginning or in the context of checkStaked
     function stakeTokens(address _projectAddress, uint256 _tokens) external {
+        require(projectRegistry.projects(_projectAddress) == true);
         require(distributeToken.balanceOf(msg.sender) >= _tokens);
-
         Project project = Project(_projectAddress);
         // require(project.state() == 1);   ------> this now happens in project.stakeTokens()
         uint256 weiRemaining = project.weiCost() - project.weiBal();
@@ -169,6 +170,7 @@ contract TokenRegistry {
     @param _tokens Amount of reputation to unstake
     */
     function unstakeTokens(address _projectAddress, uint256 _tokens) external {
+        require(projectRegistry.projects(_projectAddress) == true);
         uint256 weiVal = Project(_projectAddress).unstakeTokens(msg.sender, _tokens);
         distributeToken.transferWeiTo(msg.sender, weiVal);
         distributeToken.transferFromEscrow(msg.sender, _tokens);
@@ -193,6 +195,7 @@ contract TokenRegistry {
         uint256 _tokens,
         bool _validationState
     ) external {
+        require(projectRegistry.projects(_projectAddress) == true);
         require(distributeToken.balanceOf(msg.sender) >= _tokens);
         distributeToken.transferToEscrow(msg.sender, _tokens);
         _projectAddress.validate(msg.sender, _index, _tokens, _validationState);
@@ -204,6 +207,7 @@ contract TokenRegistry {
     @param _index Index of the task
     */
     function rewardValidator(address _projectAddress, uint256 _index) external {
+        require(projectRegistry.projects(_projectAddress) == true);
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));
         require(task.claimable());
@@ -242,6 +246,7 @@ contract TokenRegistry {
         bytes32 _secretHash,
         uint256 _prevPollID
     ) external {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+        require(projectRegistry.projects(_projectAddress) == true);
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         require(pollId != 0);
         //calculate available tokens for voting
@@ -269,6 +274,7 @@ contract TokenRegistry {
         uint256 _voteOption,
         uint _salt
     ) external {
+        require(projectRegistry.projects(_projectAddress) == true);
         plcrVoting.revealVote(Task(Project(_projectAddress).tasks(_index)).pollId(), _voteOption, _salt);
     }
 
@@ -290,6 +296,7 @@ contract TokenRegistry {
     @param _projectAddress Address of the project
     */
     function refundStaker(address _projectAddress) external {
+        require(projectRegistry.projects(_projectAddress) == true);
         uint256 refund = _projectAddress.refundStaker(msg.sender);
         require(refund > 0);
 
@@ -304,6 +311,7 @@ contract TokenRegistry {
     @param _index Index of the task
     */
     function rescueTokens(address _projectAddress, uint _index) external {
+        require(projectRegistry.projects(_projectAddress) == true);
         //rescue locked tokens that weren't revealed
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         plcrVoting.rescueTokens(msg.sender, pollId);

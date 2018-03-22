@@ -38,6 +38,10 @@ contract ProjectRegistry {
     address reputationRegistryAddress;
     address distributeTokenAddress;
 
+    uint256 projectNonce = 0;
+
+    mapping (address => bool) public projects;
+
     struct StakedState {
         bytes32 topTaskHash;
         mapping(address => bytes32) taskHashSubmissions;
@@ -105,6 +109,7 @@ contract ProjectRegistry {
     @return Boolean representing Staked status
     */
     function checkStaked(address _projectAddress) external returns (bool) {
+        require(projects[_projectAddress] == true);
         return _projectAddress.checkStaked();
     }
 
@@ -116,6 +121,7 @@ contract ProjectRegistry {
     @return Boolean representing Active status
     */
     function checkActive(address _projectAddress) public returns (bool) {
+        require(projects[_projectAddress] == true);
         return _projectAddress.checkActive(stakedProjects[_projectAddress].topTaskHash);
     }
 
@@ -126,6 +132,7 @@ contract ProjectRegistry {
     @return Boolean representing Validate status
     */
     function checkValidate(address _projectAddress) external {
+        require(projects[_projectAddress] == true);
         _projectAddress.checkValidate(tokenRegistryAddress, distributeTokenAddress);
     }
 
@@ -136,6 +143,7 @@ contract ProjectRegistry {
     @return Boolean representing Voting status
     */
     function checkVoting(address _projectAddress) external {
+        require(projects[_projectAddress] == true);
         _projectAddress.checkVoting(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
     }
 
@@ -146,6 +154,7 @@ contract ProjectRegistry {
     @return Boolean representing Final Status
     */
     function checkEnd(address _projectAddress) external {
+        require(projects[_projectAddress] == true);
         _projectAddress.checkEnd(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
         Project project = Project(_projectAddress);
         if (project.state() == 7) {
@@ -196,6 +205,8 @@ contract ProjectRegistry {
             tokenRegistryAddress
         );
         address projectAddress = address(newProject);
+        projects[projectAddress] = true;
+        projectNonce += 1;
         LogProjectCreated(projectAddress, _proposer, _cost, _proposerStake);
         return projectAddress;
     }
@@ -208,6 +219,7 @@ contract ProjectRegistry {
     @return An array with the weiCost of the project and the proposers stake
     */
     function refundProposer(address _projectAddress) external onlyTRorRR returns (uint256[2]) {
+        require(projects[_projectAddress] == true);
         Project project =  Project(_projectAddress);
         require(project.state() > 1 && project.state() != 8);
         require(project.proposerStake() > 0);
@@ -231,6 +243,7 @@ contract ProjectRegistry {
     @param _taskHash Hash of the task list
     */
     function addTaskHash(address _projectAddress, bytes32 _taskHash) external  {      // format of has should be 'description', 'percentage', check via js that percentages add up to 100 prior to calling contract
+        require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
         require(_projectAddress.isStaker(msg.sender) == true);
 
@@ -282,6 +295,7 @@ contract ProjectRegistry {
     */
     // Doesn't Change State Here Could Possibly move to ProjectLibrary
     function submitHashList(address _projectAddress, bytes32[] _hashes) external {
+        require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
         require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
 
