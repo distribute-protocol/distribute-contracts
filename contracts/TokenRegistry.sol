@@ -139,7 +139,6 @@ contract TokenRegistry {
     @param _projectAddress Address of the project
     @param _tokens Amount of tokens to stake
     */
-    // ATTENTION: Will likely revert at the end...look at best practice, should we revert at beginning or in the context of checkStaked
     function stakeTokens(address _projectAddress, uint256 _tokens) external {
         require(projectRegistry.projects(_projectAddress) == true);
         require(distributeToken.balanceOf(msg.sender) >= _tokens);

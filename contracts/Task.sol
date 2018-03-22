@@ -76,6 +76,16 @@ contract Task {
     @param _reputationRegistry Address of the ReputationRegistry
     */
     function Task(bytes32 _hash, address _tokenRegistry, address _reputationRegistry) public {
+        setup(_hash, _tokenRegistry, _reputationRegistry);
+    }
+
+    /**
+    @dev Used for proxy deployment of this contract.
+    @param _hash Hash of the tasks Description and Weighting
+    @param _tokenRegistry Address of the TokenRegistry
+    @param _reputationRegistry Address of the ReputationRegistry
+    */
+    function setup(bytes32 _hash, address _tokenRegistry, address _reputationRegistry) public {
         projectRegistryAddress = msg.sender;
         tokenRegistryAddress = _tokenRegistry;
         reputationRegistryAddress = _reputationRegistry;
