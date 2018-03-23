@@ -4,4 +4,5 @@ git_push.sh
 secrets.json
 node_modules/
 coverage/
+coverage.json
 coverageEnv/
