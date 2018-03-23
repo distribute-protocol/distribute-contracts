@@ -10,7 +10,7 @@ import "./library/Division.sol";
 @notice This contract implements functionality to be controlled by a TokenRegistry & a ReputationRegistry.
 @dev This contract must be initialized with both a TokenRegistry & a ReputationRegistry.
 */
-contract DistributeToken is EIP20 {
+contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
 
     using SafeMath for uint256;
 
@@ -28,11 +28,6 @@ contract DistributeToken is EIP20 {
     address tokenRegistryAddress;
     address reputationRegistryAddress;
 
-    string public constant symbol = "DST";
-    string public constant name = "Distributed Utility Token";
-    uint8 public constant decimals = 18;
-
-    uint256 public totalSupply = 0;
     uint256 public weiBal;
 
     // .00005 ether
@@ -67,7 +62,6 @@ contract DistributeToken is EIP20 {
     */
     function DistributeToken(address _tokenRegistry, address _reputationRegistry) public {
         require(tokenRegistryAddress == 0 && reputationRegistryAddress == 0);
-
         tokenRegistryAddress = _tokenRegistry;
         reputationRegistryAddress = _reputationRegistry;
     }
