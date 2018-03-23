@@ -14,7 +14,7 @@ const Division = artifacts.require('library/Division')
 module.exports = function (deployer) {
   deployer.then(async () => {
     await deployer.deploy(Division)
-    await deployer.link(Division, [DistributeToken, ProjectLibrary, ReputationRegistry, TokenRegistry, Project])
+    await deployer.link(Division, [DistributeToken, ProjectLibrary, ProjectRegistry, ReputationRegistry, TokenRegistry, Project])
     await deployer.deploy(ProjectLibrary)
     await deployer.link(ProjectLibrary, [TokenRegistry, ReputationRegistry, ProjectRegistry])
     await deployer.deploy(TokenRegistry)

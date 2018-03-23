@@ -1,14 +1,15 @@
 pragma solidity 0.4.19;
 
 //import files
+import "./EIP20.sol";
 import "./DLL.sol";
 import "./AttributeStore.sol";
-import "../ProjectRegistry.sol";
 
 /**
-@title Partial-Lock-Commit-Reveal Voting scheme with ERC20 tokens
-@author Team: Aspyn Palatnick, Cem Ozer, Yorke Rhodes
+@title Extension of Partial-Lock-Commit-Reveal Voting scheme with ERC20 tokens to include non-ERC20 token
+@author Team: Jessica Marshall, Ashoka Finley, borrowed heavily from Cem Ozer, Aspyn Palatnick, Yorke Rhodes
 */
+
 contract PLCRVoting {
 
     event VoteCommitted(address voter, uint pollID, uint numTokens);
@@ -168,8 +169,8 @@ contract PLCRVoting {
         require(validPosition(_prevPollID, nextPollID, _staker, _numTokens));
         dllMap[_staker].insert(_prevPollID, _pollID, nextPollID);
         bytes32 UUID = attrUUID(_staker, _pollID);
-        store.attachAttribute(UUID, "numTokens", _numTokens);
-        store.attachAttribute(UUID, "commitHash", uint(_secretHash));
+        store.setAttribute(UUID, "numTokens", _numTokens);
+        store.setAttribute(UUID, "commitHash", uint(_secretHash));
         VoteCommitted(_staker, _pollID, _numTokens);
     }
 
