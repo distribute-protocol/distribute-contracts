@@ -1,8 +1,9 @@
 // Abstract contract for the full ERC 20 Token standard
-// https://github.com/ethereum/EIPs/issues/20
-pragma solidity 0.4.19;
+// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20.md
+pragma solidity ^0.4.18;
 
-contract Token {
+
+contract EIP20Interface {
     /* This is a slight change to the ERC20 base standard.
     function totalSupply() constant returns (uint256 supply);
     is replaced with:
@@ -43,6 +44,7 @@ contract Token {
     /// @return Amount of remaining tokens allowed to spent
     function allowance(address _owner, address _spender) public view returns (uint256 remaining);
 
+    // solhint-disable-next-line no-simple-event-func-name
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 }

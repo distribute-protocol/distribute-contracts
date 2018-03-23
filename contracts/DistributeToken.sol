@@ -1,6 +1,6 @@
 pragma solidity 0.4.19;
 
-import "./library/StandardToken.sol";
+import "./library/EIP20.sol";
 import "./library/SafeMath.sol";
 import "./library/Division.sol";
 
@@ -10,7 +10,7 @@ import "./library/Division.sol";
 @notice This contract implements functionality to be controlled by a TokenRegistry & a ReputationRegistry.
 @dev This contract must be initialized with both a TokenRegistry & a ReputationRegistry.
 */
-contract DistributeToken is StandardToken {
+contract DistributeToken is EIP20 {
 
     using SafeMath for uint256;
 
