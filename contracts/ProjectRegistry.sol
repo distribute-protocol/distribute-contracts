@@ -39,6 +39,8 @@ contract ProjectRegistry {
     address tokenRegistryAddress;
     address reputationRegistryAddress;
     address distributeTokenAddress;
+    address projectContractAddress;
+    address taskContractAddress;
 
     uint256 projectNonce = 0;
     mapping (uint => address) public projectsList;
@@ -87,7 +89,9 @@ contract ProjectRegistry {
         address _distributeToken,
         address _tokenRegistry,
         address _reputationRegistry,
-        address _plcrVoting
+        address _plcrVoting,
+        address _projectAddress,
+        address _taskAddress
     ) public {       //contract is created
         require(
             tokenRegistryAddress == 0 &&
@@ -98,6 +102,8 @@ contract ProjectRegistry {
         tokenRegistryAddress = _tokenRegistry;
         reputationRegistryAddress = _reputationRegistry;
         plcrVoting = PLCRVoting(_plcrVoting);
+        projectContractAddress = _projectAddress;
+        taskContractAddress = _taskAddress;
     }
 
     // =====================================================================
@@ -215,6 +221,7 @@ contract ProjectRegistry {
     @param _ipfsHash The ipfs hash of the full project description
     @return Address of the created project
     */
+    /* 0xe7b7c2a6  project signature */
     function createProject(
         uint256 _cost,
         uint256 _costProportion,
@@ -224,6 +231,7 @@ contract ProjectRegistry {
         uint256 _proposerStake,
         string _ipfsHash
     ) external onlyTRorRR returns (address) {
+        /* createProxy(projectContractAddress, (0xe7b7c2a6 + )) */
         Project newProject = new Project(
             _cost,
             _costProportion,
@@ -236,6 +244,7 @@ contract ProjectRegistry {
             tokenRegistryAddress
         );
         address projectAddress = address(newProject);
+        /* address projectAddress = createProxy(projectContractAddress, (0xe7b7c2a6 + )) */
         projects[projectAddress] = true;
         projectsList[projectNonce] = projectAddress;
         projectNonce += 1;
@@ -326,6 +335,7 @@ contract ProjectRegistry {
     @param _hashes Array of task hashes
     */
     // Doesn't Change State Here Could Possibly move to ProjectLibrary
+    /* 0xae4d1af6 task signature*/
     function submitHashList(address _projectAddress, bytes32[] _hashes) external {
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
@@ -333,6 +343,7 @@ contract ProjectRegistry {
 
         project.setTaskLength(_hashes.length);
         for (uint256 i = 0; i < _hashes.length; i++) {
+            /* createProxy(taskContractAddress, (0xae4d1af6 + ) */
             Task newTask = new Task(_hashes[i], tokenRegistryAddress, reputationRegistryAddress);
             project.setTaskAddress(address(newTask), i);
         }
