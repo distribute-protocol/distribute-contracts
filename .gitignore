@@ -6,3 +6,4 @@ node_modules/
 coverage/
 coverage.json
 coverageEnv/
+yarn-error.log
