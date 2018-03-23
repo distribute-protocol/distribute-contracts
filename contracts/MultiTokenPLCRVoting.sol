@@ -7,7 +7,7 @@ import "library/PLCRVoting.sol";
 @title Extension of Partial-Lock-Commit-Reveal Voting scheme with ERC20 tokens to include non-ERC20 token
 @author Team: Jessica Marshall, Ashoka Finley
 */
-contract ExtendedPLCRVoting {
+contract MultiTokenPLCRVoting is PLCRVoting {
 
     event VoteCommitted(address voter, uint pollID, uint numTokens);
     event VoteRevealed(address voter, uint pollID, uint numTokens, uint choice);
@@ -166,8 +166,8 @@ contract ExtendedPLCRVoting {
         require(validPosition(_prevPollID, nextPollID, _staker, _numTokens));
         dllMap[_staker].insert(_prevPollID, _pollID, nextPollID);
         bytes32 UUID = attrUUID(_staker, _pollID);
-        store.attachAttribute(UUID, "numTokens", _numTokens);
-        store.attachAttribute(UUID, "commitHash", uint(_secretHash));
+        store.setAttribute(UUID, "numTokens", _numTokens);
+        store.setAttribute(UUID, "commitHash", uint(_secretHash));
         VoteCommitted(_staker, _pollID, _numTokens);
     }
 

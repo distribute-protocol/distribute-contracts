@@ -10,7 +10,7 @@ library AttributeStore {
         return self.store[key];
     }
 
-    function attachAttribute(Data storage self, bytes32 _UUID, string _attrName, uint _attrVal) public {
+    function setAttribute(Data storage self, bytes32 _UUID, string _attrName, uint _attrVal) public {
         bytes32 key = keccak256(_UUID, _attrName);
         self.store[key] = _attrVal;
     }
