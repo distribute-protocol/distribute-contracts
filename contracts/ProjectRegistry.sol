@@ -287,9 +287,7 @@ contract ProjectRegistry {
             _proposer,
             _proposerType,
             _proposerStake,
-            _ipfsHash,
-            reputationRegistryAddress,
-            tokenRegistryAddress
+            _ipfsHash
         );
         projects[projectAddress] = true;
         projectsList[projectNonce] = projectAddress;
