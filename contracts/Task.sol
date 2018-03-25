@@ -69,18 +69,7 @@ contract Task {
     /**
     @notice Initialize a task related to a project with a hash of the description and weighting
     `_hash` and the addresses of the TokenRegistry `_tokenRegistry` and ReputationRegistry
-    `_reputationRegistry`
-    @dev Created iteratively by the Project Registry contract
-    @param _hash Hash of the tasks Description and Weighting
-    @param _tokenRegistry Address of the TokenRegistry
-    @param _reputationRegistry Address of the ReputationRegistry
-    */
-    function Task(bytes32 _hash, address _tokenRegistry, address _reputationRegistry) public {
-        setup(_hash, _tokenRegistry, _reputationRegistry);
-    }
-
-    /**
-    @dev Used for proxy deployment of this contract.
+    `_reputationRegistry`    @dev Used for proxy deployment of this contract.
     @param _hash Hash of the tasks Description and Weighting
     @param _tokenRegistry Address of the TokenRegistry
     @param _reputationRegistry Address of the ReputationRegistry

@@ -2,9 +2,10 @@ pragma solidity 0.4.19;
 
 import "./library/PLCRVoting.sol";
 import "./ReputationRegistry.sol";
-import "./Project.sol";
+/* import "./Project.sol"; */
 import "./ProjectLibrary.sol";
 import "./Task.sol";
+import "bytes/BytesLib.sol";
 
 /**
 @title Project Registry for Distribute Network
@@ -16,6 +17,7 @@ and Distribute Token
 contract ProjectRegistry {
 
     using ProjectLibrary for address;
+    using BytesLib for bytes;
 
     // =====================================================================
     // EVENTS
@@ -29,6 +31,8 @@ contract ProjectRegistry {
     );
 
     event ProxyDeployed(address proxyAddress, address targetAddress);
+
+    event ProxyData(bytes data);
 
     // =====================================================================
     // STATE VARIABLES
@@ -115,7 +119,7 @@ contract ProjectRegistry {
     @param _target Address of the master contract
     @param _data Packed function bytes id + parameters
     */
-    function createProxy(address _target, bytes _data) public returns (address proxyContract) {
+    function createProxy(address _target, bytes _data) internal returns (address proxyContract) {
        assembly {
            let contractCode := mload(0x40) // Find empty storage location using "free memory pointer"
 
@@ -131,8 +135,33 @@ contract ProjectRegistry {
                if call(gas, proxyContract, 0, add(_data, 0x20), mload(_data), 0, 0) { revert(0, 0) }
            }
        }
-
        ProxyDeployed(proxyContract, _target);
+    }
+
+    function createProxyProject(
+        uint256 _cost,
+        uint256 _costProportion,
+        uint256 _stakingPeriod,
+        address _proposer,
+        uint256 _proposerType,
+        uint256 _proposerStake,
+        bytes _ipfsHash
+    ) internal returns (address) {
+        bytes memory proxyData = hex"e7b7c2a6";
+        bytes memory dataToSend = proxyData.concat(msg.data.slice(4, msg.data.length - 4));
+        address projectAddress = createProxy(projectContractAddress, dataToSend);
+        return projectAddress;
+    }
+
+    function createProxyTask(
+        bytes32 _hash,
+        address _tokenRegistry,
+        address _reputationRegistry
+    ) internal returns (address) {
+        bytes memory proxyData = hex"ae4d1af6";
+        bytes memory dataToSend = proxyData.concat(msg.data.slice(4, msg.data.length - 4));
+        address taskAddress = createProxy(taskContractAddress, dataToSend);
+        return taskAddress;
     }
 
     // =====================================================================
@@ -221,7 +250,6 @@ contract ProjectRegistry {
     @param _ipfsHash The ipfs hash of the full project description
     @return Address of the created project
     */
-    /* 0xe7b7c2a6  project signature */
     function createProject(
         uint256 _cost,
         uint256 _costProportion,
@@ -229,22 +257,17 @@ contract ProjectRegistry {
         address _proposer,
         uint256 _proposerType,
         uint256 _proposerStake,
-        string _ipfsHash
+        bytes _ipfsHash
     ) external onlyTRorRR returns (address) {
-        /* createProxy(projectContractAddress, (0xe7b7c2a6 + )) */
-        Project newProject = new Project(
+        address projectAddress = createProxyProject(
             _cost,
             _costProportion,
             _stakingPeriod,
             _proposer,
             _proposerType,
             _proposerStake,
-            _ipfsHash,
-            reputationRegistryAddress,
-            tokenRegistryAddress
+            _ipfsHash
         );
-        address projectAddress = address(newProject);
-        /* address projectAddress = createProxy(projectContractAddress, (0xe7b7c2a6 + )) */
         projects[projectAddress] = true;
         projectsList[projectNonce] = projectAddress;
         projectNonce += 1;
@@ -335,7 +358,6 @@ contract ProjectRegistry {
     @param _hashes Array of task hashes
     */
     // Doesn't Change State Here Could Possibly move to ProjectLibrary
-    /* 0xae4d1af6 task signature*/
     function submitHashList(address _projectAddress, bytes32[] _hashes) external {
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
@@ -343,9 +365,8 @@ contract ProjectRegistry {
 
         project.setTaskLength(_hashes.length);
         for (uint256 i = 0; i < _hashes.length; i++) {
-            /* createProxy(taskContractAddress, (0xae4d1af6 + ) */
-            Task newTask = new Task(_hashes[i], tokenRegistryAddress, reputationRegistryAddress);
-            project.setTaskAddress(address(newTask), i);
+            address newTask = createProxyTask(_hashes[i], tokenRegistryAddress, reputationRegistryAddress);
+            project.setTaskAddress(newTask, i);
         }
     }
 
