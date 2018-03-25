@@ -102,7 +102,7 @@ contract TokenRegistry {
         require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
 
         distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
-            address projectAddress = projectRegistry.createProject(
+        address projectAddress = projectRegistry.createProject(
             _cost,
             costProportion,
             _stakingPeriod,

@@ -145,10 +145,31 @@ contract ProjectRegistry {
         address _proposer,
         uint256 _proposerType,
         uint256 _proposerStake,
-        bytes _ipfsHash
+        bytes _ipfsHash,
+        address _reputationRegistry,
+        address _tokenRegistry
     ) internal returns (address) {
+        /* bytes memory dataToSend;
+
+        assembly {
+            dataToSend := mload(0x40) // Find empty storage location using "free memory pointer"
+
+            mstore(add(dataToSend, 0x4), 0xe7b7c2a6) // this is the function ID
+            mstore(add(dataToSend, 0x24), _cost)
+            mstore(add(dataToSend, 0x44), _costProportion)
+            mstore(add(dataToSend, 0x64), _stakingPeriod)
+            mstore(add(dataToSend, 0x84), _tokenRegistry)
+            mstore(add(dataToSend, 0x64), _reputationRegistry)
+
+            mstore(dataToSend, 0x64) // 4 bytes (function ID) + 32 bytes per parameter * 3 = 100 bytes [0x64 bytes]
+
+            mstore(0x40, add(dataToSend, 0x84))
+        } */
+
+
         bytes memory proxyData = hex"e7b7c2a6";
         bytes memory dataToSend = proxyData.concat(msg.data.slice(4, msg.data.length - 4));
+        ProxyData(dataToSend);
         address projectAddress = createProxy(projectContractAddress, dataToSend);
         return projectAddress;
     }
@@ -266,7 +287,9 @@ contract ProjectRegistry {
             _proposer,
             _proposerType,
             _proposerStake,
-            _ipfsHash
+            _ipfsHash,
+            reputationRegistryAddress,
+            tokenRegistryAddress
         );
         projects[projectAddress] = true;
         projectsList[projectNonce] = projectAddress;
