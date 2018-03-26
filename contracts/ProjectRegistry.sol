@@ -149,8 +149,10 @@ contract ProjectRegistry {
         address _reputationRegistry,
         address _tokenRegistry
     ) internal returns (address) {
-        /* bytes memory dataToSend;
+        bytes memory dataToSend2;
+        dataToSend2 = abi.encode(_cost, _costProportion, _stakingPeriod, _proposer, _proposerType, _proposerStake, _ipfsHash, _reputationRegistry, _tokenRegistry);
 
+        /* bytes memory dataToSend;
         assembly {
             dataToSend := mload(0x40) // Find empty storage location using "free memory pointer"
 
@@ -158,7 +160,12 @@ contract ProjectRegistry {
             mstore(add(dataToSend, 0x24), _cost)
             mstore(add(dataToSend, 0x44), _costProportion)
             mstore(add(dataToSend, 0x64), _stakingPeriod)
-            mstore(add(dataToSend, 0x84), _tokenRegistry)
+            mstore(add(dataToSend, 0x84), _proposer)
+            mstore(add(dataToSend, 0xa4), _proposerType)
+            mstore(add(dataToSend, 0xc4), _proposerStake)
+            mstore(add(dataToSend, 34
+            mstore(add(dataToSend, 0xe4), _ipfsHash)
+
             mstore(add(dataToSend, 0x64), _reputationRegistry)
 
             mstore(dataToSend, 0x64) // 4 bytes (function ID) + 32 bytes per parameter * 3 = 100 bytes [0x64 bytes]
@@ -287,7 +294,9 @@ contract ProjectRegistry {
             _proposer,
             _proposerType,
             _proposerStake,
-            _ipfsHash
+            _ipfsHash,
+            reputationRegistryAddress,
+            tokenRegistryAddress
         );
         projects[projectAddress] = true;
         projectsList[projectNonce] = projectAddress;
