@@ -180,7 +180,6 @@ contract PLCRVoting {
             ? require(voteReputationBalance[_staker] >= _numTokens) // prevent user from overspending
             : require(voteTokenBalance[_staker] >= _numTokens); // prevent user from overspending
         require(_pollID != 0);                // prevent user from committing to zero node placeholder
-        // TODO: Move all insert validation into the DLL lib
         // Check if _prevPollID exists
         require(_prevPollID == 0 || getCommitHash(_staker, _prevPollID) != 0);
 
