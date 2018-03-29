@@ -1,7 +1,6 @@
 pragma solidity 0.4.19;
 
 //import files
-import "./EIP20.sol";
 import "./DLL.sol";
 import "./AttributeStore.sol";
 
