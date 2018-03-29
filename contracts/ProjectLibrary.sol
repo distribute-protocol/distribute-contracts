@@ -208,7 +208,8 @@ library ProjectLibrary {
                 Task task = Task(project.tasks(i));
                 if (task.complete()) {
                     if (task.opposingValidator()) {   // there is an opposing validator, poll required
-                        task.setPollId(plcr.startPoll(51, project.voteCommitPeriod(), project.voteRevealPeriod())); // function handles storage of voting pollId
+                        uint pollNonce = plcr.startPoll(51, project.voteCommitPeriod(), project.voteRevealPeriod());
+                        task.setPollId(pollNonce); // function handles storage of voting pollId
                     } else {
                         bool repClaim = task.markTaskClaimable(true);
                         if (!repClaim) {
