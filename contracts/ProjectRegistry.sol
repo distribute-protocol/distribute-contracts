@@ -149,34 +149,31 @@ contract ProjectRegistry {
         address _reputationRegistry,
         address _tokenRegistry
     ) internal returns (address) {
-        bytes memory dataToSend2;
-        dataToSend2 = abi.encode(_cost, _costProportion, _stakingPeriod, _proposer, _proposerType, _proposerStake, _ipfsHash, _reputationRegistry, _tokenRegistry);
-
-        /* bytes memory dataToSend;
+        bytes memory dataToSend;
         assembly {
-            dataToSend := mload(0x40) // Find empty storage location using "free memory pointer"
+            //let ipfsHashSize := mload(_ipfsHash)
 
-            mstore(add(dataToSend, 0x4), 0xe7b7c2a6) // this is the function ID
-            mstore(add(dataToSend, 0x24), _cost)
+            dataToSend := mload(0x40) // Find empty memory location using "free memory pointer"
+
+            mstore(add(dataToSend, 0x20), 0xe7b7c2a6)
+            mstore(add(dataToSend, 0x24), _cost) // this is the function ID
             mstore(add(dataToSend, 0x44), _costProportion)
             mstore(add(dataToSend, 0x64), _stakingPeriod)
             mstore(add(dataToSend, 0x84), _proposer)
             mstore(add(dataToSend, 0xa4), _proposerType)
             mstore(add(dataToSend, 0xc4), _proposerStake)
-            mstore(add(dataToSend, 34
-            mstore(add(dataToSend, 0xe4), _ipfsHash)
+            mstore(add(dataToSend, 0xe4), add(dataToSend, 0x144)) <--- _ipfsHash data location part (length + contents)
+            mstore(add(dataToSend, 0x104), _reputationRegistry)
+            mstore(add(dataToSend, 0x124), _tokenRegistry)
+            mstore(add(dataToSend, 0x144), 46) // <--- Length of the IPFS hash size
+            mstore(add(dataToSend, 0x164), mload(add(_ipfsHash, 0x20)))
+            mstore(add(dataToSend, 0x184), mload(add(_ipfsHash, 0x40)))
 
-            mstore(add(dataToSend, 0x64), _reputationRegistry)
+            mstore(dataToSend, 0x172) // 4 bytes (function ID) + 32 bytes per parameter * 9 + 32 bytes of "length of bytes" + first 32 bytes of bytes data + 14 bytes = 370 bytes [0x172 bytes]
 
-            mstore(dataToSend, 0x64) // 4 bytes (function ID) + 32 bytes per parameter * 3 = 100 bytes [0x64 bytes]
-
-            mstore(0x40, add(dataToSend, 0x84))
-        } */
-
-
-        bytes memory proxyData = hex"e7b7c2a6";
-        bytes memory dataToSend = proxyData.concat(msg.data.slice(4, msg.data.length - 4));
-        ProxyData(dataToSend);
+            // updating the free memory pointer with the length of tightly packed
+            mstore(0x40, add(dataToSend, 0x192)) // 0x192 == 0x172 + 0x20
+        }
         address projectAddress = createProxy(projectContractAddress, dataToSend);
         return projectAddress;
     }
@@ -186,8 +183,17 @@ contract ProjectRegistry {
         address _tokenRegistry,
         address _reputationRegistry
     ) internal returns (address) {
-        bytes memory proxyData = hex"ae4d1af6";
-        bytes memory dataToSend = proxyData.concat(msg.data.slice(4, msg.data.length - 4));
+        bytes memory dataToSend;
+        assembly {
+          dataToSend := mload(0x40)
+          mstore(add(dataToSend, 0x20), 0xae4d1af6)
+          mstore(add(dataToSend, 0x24), _hash)
+          mstore(add(dataToSend, 0x44), _tokenRegistry)
+          mstore(add(dataToSend, 0x64), _reputationRegistry)
+
+          mstore(dataToSend, 0x64)/// 4 + 32 * 3 == 100 bytes
+          mstore(0x40, add(dataToSend, 0x84))
+        }
         address taskAddress = createProxy(taskContractAddress, dataToSend);
         return taskAddress;
     }
