@@ -120,22 +120,26 @@ contract ProjectRegistry {
     @param _data Packed function bytes id + parameters
     */
     function createProxy(address _target, bytes _data) internal returns (address proxyContract) {
-       assembly {
-           let contractCode := mload(0x40) // Find empty storage location using "free memory pointer"
+        assembly {
+            let contractCode := mload(0x40) // Find empty storage location using "free memory pointer"
 
-           mstore(add(contractCode, 0x0b), _target) // Add target address, with a 11 bytes [i.e. 23 - (32 - 20)] offset to later accomodate first part of the bytecode
-           mstore(sub(contractCode, 0x09), 0x000000000000000000603160008181600b9039f3600080808080368092803773) // First part of the bytecode, shifted left by 9 bytes, overwrites left padding of target address
-           mstore(add(contractCode, 0x2b), 0x5af43d828181803e808314603057f35bfd000000000000000000000000000000) // Final part of bytecode, offset by 42 bytes
+            mstore(add(contractCode, 0x0b), _target) // Add target address, with a 11 bytes [i.e. 23 - (32 - 20)] offset to later accomodate first part of the bytecode
+            mstore(sub(contractCode, 0x09), 0x000000000000000000603160008181600b9039f3600080808080368092803773) // First part of the bytecode, shifted left by 9 bytes, overwrites left padding of target address
+            mstore(add(contractCode, 0x2b), 0x5af43d828181803e808314602f57f35bfd000000000000000000000000000000) // Final part of bytecode, offset by 43 bytes
 
-           proxyContract := create(0, contractCode, 0x3c) // total length 60 bytes
-           if iszero(extcodesize(proxyContract)) { revert(0,0) }
+            proxyContract := create(0, contractCode, 60) // total length 60 bytes
+            if iszero(extcodesize(proxyContract)) {
+                revert(0, 0)
+            }
 
-           // check if the _data.length > 0 and if it is forward it to the newly created contract
-           if iszero(iszero(mload(_data))) {
-               if call(gas, proxyContract, 0, add(_data, 0x20), mload(_data), 0, 0) { revert(0, 0) }
-           }
-       }
-       ProxyDeployed(proxyContract, _target);
+            // check if the _data.length > 0 and if it is forward it to the newly created contract
+            let dataLength := mload(_data)
+            if iszero(iszero(dataLength)) {
+                if iszero(call(gas, proxyContract, 0, add(_data, 0x20), dataLength, 0, 0)) {
+                    revert(0, 0)
+                }
+            }
+        }
     }
 
     function createProxyProject(
@@ -149,12 +153,11 @@ contract ProjectRegistry {
         address _reputationRegistry,
         address _tokenRegistry
     ) internal returns (address) {
+        require(_ipfsHash.length == 46);
         bytes memory dataToSend;
         assembly {
             //let ipfsHashSize := mload(_ipfsHash)
-
             dataToSend := mload(0x40) // Find empty memory location using "free memory pointer"
-
             mstore(add(dataToSend, 0x20), 0xe7b7c2a6)
             mstore(add(dataToSend, 0x24), _cost) // this is the function ID
             mstore(add(dataToSend, 0x44), _costProportion)
@@ -162,13 +165,12 @@ contract ProjectRegistry {
             mstore(add(dataToSend, 0x84), _proposer)
             mstore(add(dataToSend, 0xa4), _proposerType)
             mstore(add(dataToSend, 0xc4), _proposerStake)
-            mstore(add(dataToSend, 0xe4), add(dataToSend, 0x144)) <--- _ipfsHash data location part (length + contents)
+            mstore(add(dataToSend, 0xe4), add(dataToSend, 0x144)) // <--- _ipfsHash data location part (length + contents)
             mstore(add(dataToSend, 0x104), _reputationRegistry)
             mstore(add(dataToSend, 0x124), _tokenRegistry)
             mstore(add(dataToSend, 0x144), 46) // <--- Length of the IPFS hash size
             mstore(add(dataToSend, 0x164), mload(add(_ipfsHash, 0x20)))
             mstore(add(dataToSend, 0x184), mload(add(_ipfsHash, 0x40)))
-
             mstore(dataToSend, 0x172) // 4 bytes (function ID) + 32 bytes per parameter * 9 + 32 bytes of "length of bytes" + first 32 bytes of bytes data + 14 bytes = 370 bytes [0x172 bytes]
 
             // updating the free memory pointer with the length of tightly packed
