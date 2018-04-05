@@ -65,6 +65,7 @@ contract Project {
     mapping (address => uint) public tokenBalances;
     mapping (address => uint) public reputationBalances;
 
+    // MAKE THIS A DLL!
     address[] public tasks;
 
     uint256 public passAmount;

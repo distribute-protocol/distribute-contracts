@@ -129,6 +129,7 @@ contract Task {
     @param _tokens Amount of tokens to stake on Validation.
     */
     function setValidator(address _validator, uint256 _validationVal, uint256 _tokens) external onlyTR {
+        require(validators[_validator].stake == 0);
         validators[_validator] = Validator(_validationVal, _tokens);
         _validationVal == 1
             ? totalValidateAffirmative += _tokens

@@ -272,4 +272,8 @@ contract('Staked State |', (accounts) => {
    state = await PROJ3.state()
    assert.equal(state.toNumber(), 7, 'project should have entered dispute period')
  })
+
+ it('can\'t change project to active or failed state before time is up', async function () {
+   
+ })
 })

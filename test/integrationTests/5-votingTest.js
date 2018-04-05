@@ -1,4 +1,3 @@
-// Test functions in open state of a project
 // Before, fund a user with tokens and have them propose and fully stake 2 projects
 var assert = require('assert')
 const TokenRegistry = artifacts.require('TokenRegistry')
@@ -12,7 +11,7 @@ const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const keccakHashes = require('../utils/KeccakHashes')
 web3.eth = Promise.promisifyAll(web3.eth)
 
-contract('Validation State', (accounts) => {
+contract('Voting State', (accounts) => {
   let TR, PR, DT, PROJ, RR
   let errorThrown
   // proposer only necessary in the
@@ -219,11 +218,21 @@ contract('Validation State', (accounts) => {
     assert.equal(1, 1, 'math broke')
   })
 
-// check that tasks have correct .complete, .weireward and .taskreward values
-// token holder can validate tasks if they exist && they have enough tokens
-// reputation holder can't validate tasks
-// validator can't validate twice on same tasks
-// project goes to correct state after it all ends
-// project doesn't change state before time's up
+// INITIAL COMMIT PHASE
+// check to make sure tasks go into voting or not based on validationDetails
+// check that tasks have correct .complete, .opposingValidator, etc values
+// check that you can't vote on singly validated tasks
+// check that both users can vote on opposingly validated tasks
+// check that worker gets rewarded for singly validated correct tasks
+// check that worker doesn't get rewarded for singly validated incorrect or opposingly validated tasks
+// check that validators get correct reward for singly validated stuff
+// make sure users can only vote with enough tokens/reputation
+
+// REVEAL PHASE
+// make sure no more people can vote
+// make sure reveal works correctly
+// make sure all the validation reward stuff from first list still works
+// make sure that project goes to correct state when time's up
+// make sure that project state doesn't change before time's up
 
 })

@@ -1,4 +1,3 @@
-// Test functions in open state of a project
 // Before, fund a user with tokens and have them propose and fully stake 2 projects
 var assert = require('assert')
 const TokenRegistry = artifacts.require('TokenRegistry')
@@ -12,7 +11,7 @@ const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const keccakHashes = require('../utils/KeccakHashes')
 web3.eth = Promise.promisifyAll(web3.eth)
 
-contract('Validation State', (accounts) => {
+contract('Voting State', (accounts) => {
   let TR, PR, DT, PROJ, RR
   let errorThrown
   // proposer only necessary in the
@@ -219,11 +218,11 @@ contract('Validation State', (accounts) => {
     assert.equal(1, 1, 'math broke')
   })
 
-// check that tasks have correct .complete, .weireward and .taskreward values
-// token holder can validate tasks if they exist && they have enough tokens
-// reputation holder can't validate tasks
-// validator can't validate twice on same tasks
-// project goes to correct state after it all ends
-// project doesn't change state before time's up
+// workers can pull rewards if the vote said they can
+
+// workers get reward or not based on vote outcome
+// validators/workers can still pull rewards from validation state
+// voters can remove their tokens/rep from polls
+// stakers lose their tokens / rep from project
 
 })
