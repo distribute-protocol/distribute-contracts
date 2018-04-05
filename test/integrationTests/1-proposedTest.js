@@ -64,38 +64,11 @@ contract('Proposed State', (accounts) => {
     totalTokenSupply = await DT.totalSupply()
     assert.equal(2 * tokens, proposerBalance.toNumber() + stakerBalance.toNumber(), 'proposer or staker did not successfully mint tokens')
     assert.equal(2 * tokens, totalTokenSupply, 'total supply did not update correctly')
-  })
-
-  it('Proposer can propose project', async function () {
     currentPrice = await DT.currentPrice()              // put this before propose project because current price changes slightly (rounding errors)
     tx = await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: proposer})
-    let proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion)
-    let proposerBalance = await DT.balanceOf(proposer)
-    assert.equal(2 * tokens, totalTokenSupply, 'total supply shouldn\'t have updated')
-    assert.equal(proposerBalance.toNumber(), tokens - proposerTokenCost, 'DT did not set aside appropriate proportion to escrow')
-  })
-
-  it('Token registry emits accurate event on project creation', async function() {
-    //THIS TEST MUST BE DIRECTLY BELOW "proposer can propose project"
-    // let tx = await TR.proposeProject(projectCost, stakingPeriod, {from: proposer})
-    let proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion)
     let log = tx.logs[0].args
     projectAddress = log.projectAddress.toString()
     PROJ = await Project.at(projectAddress)
-    let storedProposer = await PROJ.proposer()
-    assert.equal(proposerTokenCost, log.proposerStake.toNumber(), 'event logged incorrect proposer stake')
-    assert.equal(storedProposer, proposer, 'PR stored incorrect proposer address')
-  })
-
-  it('User can\'t propose project without the required token stake', async function () {
-    // propose project & calculate proposer stake
-    errorThrown = false
-    try {
-      await TR.proposeProject(projectCost, stakingPeriod, {from: nonProposer})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
   })
 
   it('User can stake tokens on a proposed project below the required ether amount', async function () {
@@ -117,7 +90,7 @@ contract('Proposed State', (accounts) => {
     assert.isBelow(weiBal.toNumber(), weiCost.toNumber(), 'project has more wei than it should')
   })
 
-  it('staker can unstake tokens', async function () {
+  it('token staker can unstake tokens', async function () {
     let stakedTokensBefore = await PROJ.tokensStaked()
     let stakerBalanceBefore = await DT.balanceOf(staker)
     await TR.unstakeTokens(projectAddress, 1, {from: staker})
@@ -134,6 +107,13 @@ contract('Proposed State', (accounts) => {
     assert.isBelow(weiBal.toNumber(), weiCost.toNumber(), 'project has more wei than it should')
   })
 
+  it('User can stake reputation on a proposed project below the required reputation amount', async function () {
+  })
+
+  it('reputation staker can unstake reputation', async function () {
+  })
+
+
   it('Non-staker can\'t unstake tokens', async function () {
     errorThrown = false
     try {
@@ -142,6 +122,9 @@ contract('Proposed State', (accounts) => {
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('Non-staker can\'t unstake reputation', async function () {
   })
 
   it('User can\'t stake tokens they don\'t have', async function () {
@@ -154,7 +137,10 @@ contract('Proposed State', (accounts) => {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('Refund proposer can\'t be called while still in propose period', async function () {
+  it('User can\'t stake reputation they don\'t have', async function () {
+  })
+
+  it('Refund proposer can\'t be called from token registry while still in propose period', async function () {
     errorThrown = false
     try {
       await TR.refundProposer(projectAddress, {from: proposer})
@@ -162,6 +148,9 @@ contract('Proposed State', (accounts) => {
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('Refund proposer can\'t be called from reputation registry while still in propose period', async function () {
   })
 
   it('User can stake extra tokens on a proposed project but only the required amount of wei and tokens is sent', async function () {
@@ -185,6 +174,9 @@ contract('Proposed State', (accounts) => {
     assert.equal(weiCost.toNumber(), newWeiBal.toNumber(), 'project was not funded exactly')
   })
 
+  it('User can stake extra reputation on a proposed project but only the required amount of reputation is sent', async function () {
+  })
+
   it('A staker can no longer call unstake token once in the open period', async function () {
     errorThrown = false
     try {
@@ -193,6 +185,9 @@ contract('Proposed State', (accounts) => {
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('A staker can no longer call unstake reputation once in the open period', async function () {
   })
 
   it('Refund proposer works after a project is fully staked', async function () {
@@ -214,7 +209,10 @@ contract('Proposed State', (accounts) => {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('Non-proposer can\'t call refund proposer', async function () {
+  it('User can\'t stake reputation on nonexistant project', async function () {
+  })
+
+  it('Non-proposer can\'t call refund proposer from token registry', async function () {
     errorThrown = false
     try {
       await TR.refundProposer(projectAddress, {from: nonProposer})
@@ -224,7 +222,10 @@ contract('Proposed State', (accounts) => {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('Proposer can\'t refund proposer multiple times', async function () {
+  it('Non-proposer can\'t call refund proposer from reputation registry', async function () {
+  })
+
+  it('Proposer can\'t call refund proposer multiple times from token registry', async function () {
     errorThrown = false
     try {
       await TR.refundProposer(projectAddress, {from: proposer})
@@ -234,7 +235,10 @@ contract('Proposed State', (accounts) => {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('can\'t propose a project whose staking deadline has passed', async function () {
+  it('Proposer can\'t call refund proposer multiple times from reputation registry', async function () {
+  })
+
+  it('can\'t propose a project from token registry whose staking deadline has passed', async function () {
     errorThrown = false
     try {
       await TR.proposeProject(1, stakingPeriodFail, {from: proposer})
@@ -244,7 +248,10 @@ contract('Proposed State', (accounts) => {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('proposed project becomes failed if not staked', async function() {
+  it('can\'t propose a project from reputation registry whose staking deadline has passed', async function () {
+  })
+
+  it('proposed project from token registry becomes failed if not staked', async function() {
     tx = await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: proposer})
     let log = tx.logs[0].args
     projectAddress2 = log.projectAddress.toString()
@@ -254,4 +261,8 @@ contract('Proposed State', (accounts) => {
     let state = await PROJ2.state()
     assert.equal(state.toNumber(), 8, 'project should\'ve failed')
   })
+
+  it('proposed project from reputation registry becomes failed if not staked', async function() {
+  })
+
 })
