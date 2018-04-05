@@ -132,6 +132,51 @@ contract('Active State', (accounts) => {
     assert.equal(totalReputation, 30000, 'incorrect total reputation stored')
   })
 
+  it('non-staker can\'t submit correct hash list of active project', async function () {
+    errorThrown = false
+    try {
+      await PR.submitHashList(projectAddress2, hashTasks(data2), {from: nonStaker})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('token staker can\'t submit incorrect hash list of active project', async function () {
+    errorThrown = false
+    try {
+      await PR.submitHashList(projectAddress2, hashTasks(data1), {from: staker1})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('reputation staker can\'t submit incorrect hash list of active project', async function () {
+  })
+
+  it('token staker can submit hash list of active project', async function () {
+  //   await evmIncreaseTime(7 * 25 * 60 * 60)
+  //   await PR.checkActive(projectAddress2)
+  //   await PR.submitHashList(projectAddress2, hashTasks(data2), {from: staker1})
+  //   let contractHash = await PR.stakedProjects.call(projectAddress2)
+  //   let testHash = hashTasksArray(data2)
+  //   assert.equal(contractHash, testHash, 'some hashing thing is screwed up')
+  })
+
+  it('reputation staker can submit hash list of active project', async function () {
+  })
+
+  it('staker can\'t submit hash list for active project', async function () {
+    errorThrown = false
+    try {
+      await PR.submitHashList(projectAddress, hashTasks(data2), {from: staker1})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
   it('worker1 can claim a task', async function () {
     let repPrice = 1
     let weiReward = 100000
