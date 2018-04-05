@@ -1,14 +1,6 @@
 // Test functions in proposal state of a project
 // Before, fund a user with tokens and have them propose a project
 
-// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TO DO STILL:
-//
-// test a project that is proposed but fails to be staked (stakers receive stakes back, proposer doesn't)
-// also have to do reputation stake testing
-//
-// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 /*
 let ethPrice = await getEthPriceNow.getEthPriceNow()
 ethPrice = ethPrice[Object.keys(ethPrice)].ETH.USD
@@ -107,6 +99,14 @@ contract('Proposed State', (accounts) => {
     assert.isBelow(weiBal.toNumber(), weiCost.toNumber(), 'project has more wei than it should')
   })
 
+  it('checkStaked does not change token registry proposed project to staked if not fully staked', async function() {
+
+  })
+
+  it('checkStaked does not change reputation registry proposed project to staked if not fully staked', async function() {
+
+  })
+
   it('User can stake reputation on a proposed project below the required reputation amount', async function () {
   })
 
@@ -153,6 +153,12 @@ contract('Proposed State', (accounts) => {
   it('Refund proposer can\'t be called from reputation registry while still in propose period', async function () {
   })
 
+  it('Refund staker can\'t be called from token registry while still in propose period', async function () {
+  })
+
+  it('Refund staker can\'t be called from reputation registry while still in propose period', async function () {
+  })
+
   it('User can stake extra tokens on a proposed project but only the required amount of wei and tokens is sent', async function () {
     let weiCost = await PROJ.weiCost()
     let weiBal = await PROJ.weiBal()
@@ -190,13 +196,16 @@ contract('Proposed State', (accounts) => {
   it('A staker can no longer call unstake reputation once in the open period', async function () {
   })
 
-  it('Refund proposer works after a project is fully staked', async function () {
+  it('Refund proposer from token registry works after a project is fully staked', async function () {
     let weiBalBefore = await DT.weiBal()
     await TR.refundProposer(projectAddress, {from: proposer})
     let weiBalAfter = await DT.weiBal()
     let proposerStake = await PROJ.proposerStake()
     assert.equal(weiBalBefore - weiBalAfter, Math.floor(projectCost / proposeReward), 'incorrect propose reward was sent')
     assert.equal(proposerStake.toNumber(), 0, 'proposer stake unsuccessfully reset in PR')
+  })
+
+  it('Refund proposer from reputation registry works after a project is fully staked', async function () {
   })
 
   it('User can\'t stake tokens on nonexistant project', async function () {
@@ -251,7 +260,7 @@ contract('Proposed State', (accounts) => {
   it('can\'t propose a project from reputation registry whose staking deadline has passed', async function () {
   })
 
-  it('proposed project from token registry becomes failed if not staked', async function() {
+  it('proposed project from token registry becomes expired if not staked', async function() {
     tx = await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: proposer})
     let log = tx.logs[0].args
     projectAddress2 = log.projectAddress.toString()
@@ -259,10 +268,22 @@ contract('Proposed State', (accounts) => {
     await evmIncreaseTime(20000000000)
     await PR.checkStaked(projectAddress2)
     let state = await PROJ2.state()
-    assert.equal(state.toNumber(), 8, 'project should\'ve failed')
+    assert.equal(state.toNumber(), 8, 'project should\'ve expired')
   })
 
-  it('proposed project from reputation registry becomes failed if not staked', async function() {
+  it('proposed project from reputation registry becomes expired if not staked', async function() {
+  })
+
+  it('proposer can\'t call refund proposer for expired project from token registry', async function () {
+  })
+
+  it('proposer can\'t call refund proposer for expired project from reputation registry', async function () {
+  })
+
+  it('Refund staker can be called from token registry once project has expired', async function () {
+  })
+
+  it('Refund staker can be called from reputation registry once project has expired', async function () {
   })
 
 })
