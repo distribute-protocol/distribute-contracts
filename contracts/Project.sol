@@ -119,17 +119,7 @@ contract Project {
     @param _reputationRegistry Address of the Reputation Registry
     @param _tokenRegistry Address of the contract system Token Registry
     */
-    function setup(
-        uint256 _cost,
-        uint256 _costProportion,
-        uint256 _stakingPeriod,
-        address _proposer,
-        uint256 _proposerType,
-        uint256 _proposerStake,
-        bytes _ipfsHash,
-        address _reputationRegistry,
-        address _tokenRegistry
-    ) public {
+    function public {
         reputationRegistryAddress = _reputationRegistry;
         tokenRegistryAddress = _tokenRegistry;
         projectRegistryAddress = msg.sender;
