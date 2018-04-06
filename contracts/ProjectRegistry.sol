@@ -165,7 +165,7 @@ contract ProjectRegistry {
             mstore(add(dataToSend, 0x84), _proposer)
             mstore(add(dataToSend, 0xa4), _proposerType)
             mstore(add(dataToSend, 0xc4), _proposerStake)
-            mstore(add(dataToSend, 0xe4), add(dataToSend, 0x144)) // <--- _ipfsHash data location part (length + contents)
+            mstore(add(dataToSend, 0xe4), add(dataToSend, 0x140)) // <--- _ipfsHash data location part (length + contents)
             mstore(add(dataToSend, 0x104), _reputationRegistry)
             mstore(add(dataToSend, 0x124), _tokenRegistry)
             mstore(add(dataToSend, 0x144), 46) // <--- Length of the IPFS hash size
