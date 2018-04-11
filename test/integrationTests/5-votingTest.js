@@ -201,26 +201,28 @@ contract('Voting State', (accounts) => {
 
   })
 
-  it('worker can\'t claim a task once the active period is up', async function () {
-    errorThrown = false
-    try {
-      let repPrice = 1
-      let weiReward = 100
-      let index = 3
-      await RR.claimTask(projectAddress, index, 'save the world', weiReward, repPrice, {from: worker3})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+  it('a task validated true has no opposing validator, been marked claimable and has a nonzero wei reward and task reward', async function () {
+
   })
 
-  it('math works', async function () {
-    assert.equal(1, 1, 'math broke')
+  it('a task validated false has no opposing validator, been marked claimable, has a zero wei reward, and has a nonzero task reward', async function () {
+
   })
+
+  it('the token registry sent the reward wei back to the distribute token contract for the failed task', async function () {
+
+  })
+
+  it('a task with an opposing validator has not been marked claimable, has a nonzero wei reward and task reward, and has an associatd poll ID', async function () {
+
+  })
+
+  it('no task r')
+
 
 // INITIAL COMMIT PHASE
 // check to make sure tasks go into voting or not based on validationDetails
-// check that tasks have correct .complete, .opposingValidator, etc values
+// check that tasks have correct .complete, .opposingValidator, etc values --> FIGURE OUT IF TASKS NEED TO BE COMPLETE TO BE VALIDATED
 // check that you can't vote on singly validated tasks
 // check that both users can vote on opposingly validated tasks
 // check that worker gets rewarded for singly validated correct tasks

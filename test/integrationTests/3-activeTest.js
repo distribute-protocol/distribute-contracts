@@ -313,6 +313,10 @@ contract('Active State', (accounts) => {
 
   })
 
+  it('can\'t change project to validating state before time is up', async function () {
+
+  })
+
   it('active project becomes validating project when active period is up', async function () {
     let state = await PROJ.state()
     assert.equal(state.toNumber(), 3, 'project should be in active state')
