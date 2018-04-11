@@ -171,6 +171,10 @@ contract('Active State', (accounts) => {
   //   assert.equal(contractHash, testHash, 'some hashing thing is screwed up')
   })
 
+  it('correct tasks are created upon hash list submission', async function () {
+
+  })
+
   it('reputation staker can submit correct hash list of active project', async function () {
   })
 
@@ -192,6 +196,10 @@ contract('Active State', (accounts) => {
     assert.equal(totalReputation, 3, 'incorrect total reputation stored')
     assert.equal(totalFreeReputation, 2, 'incorrect free reputation stored')
     // console.log(reward)
+  })
+
+  it('correct task updates on worker claiming of task', async function () {
+
   })
 
   it('worker can\'t claim a task if they don\'t have enough reputation', async function () {
@@ -293,6 +301,18 @@ contract('Active State', (accounts) => {
     assert.equal(totalFreeReputation, 1, 'incorrect free reputation stored')
   })
 
+  it('worker cannot mark a task complete that they have not claimed', async function () {
+
+  })
+
+  it('worker can mark a task complete that they have claimed', async function () {
+
+  })
+
+  it('task opens up to reclaiming if worker does not mark it complete before the turnover time is reached', async function () {
+
+  })
+
   it('active project becomes validating project when active period is up', async function () {
     let state = await PROJ.state()
     assert.equal(state.toNumber(), 3, 'project should be in active state')
@@ -306,6 +326,6 @@ contract('Active State', (accounts) => {
 // worker claiming
 // marking completed
 // worker reclaiming
-// task expires
+// task expires?
 // project goes to correct next state after it all ends
 })

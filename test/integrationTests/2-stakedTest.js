@@ -274,6 +274,6 @@ contract('Staked State |', (accounts) => {
  })
 
  it('can\'t change project to active or failed state before time is up', async function () {
-   
+
  })
 })
