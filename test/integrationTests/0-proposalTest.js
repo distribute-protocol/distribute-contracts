@@ -12,7 +12,6 @@ web3.eth = Promise.promisifyAll(web3.eth)
 
 contract('Project Proposal', async (accounts) => {
   let projObj = await projectHelper(web3, accounts)
-  console.log(projObj, projectHelper)
   let {TR, RR, DT, PR, PL} = projObj.contracts
   let {tokenProposer, repProposer, notProposer} = projObj.user
   let {tokenstoMint} = projObj.minting
