@@ -4,12 +4,13 @@ const DistributeToken = artifacts.require('DistributeToken')
 const ProjectRegistry = artifacts.require('ProjectRegistry')
 const ProjectLibrary = artifacts.require('ProjectLibrary')
 
-export default async function projectHelper (web3, accounts) {
+module.exports = async function projectHelper (web3, accounts) {
   let obj = {}
   obj.user = {}
   obj.minting = {}
   obj.project = {}
   obj.contracts = {}
+  obj.returnProject = {}
 
   // set up user identities
   // accounts[0] - tokens
@@ -45,15 +46,17 @@ export default async function projectHelper (web3, accounts) {
 
   obj.user.notProject = accounts[7]
 
-  // minting details
+  // mutable minting details for each user
   obj.minting.tokensToMint = 10000
 
-  // project details
+  // mutable project details
   obj.project.stakingPeriod = 20000000000     // 10/11/2603 @ 11:33am (UTC)
   obj.project.expiredStakingPeriod = 10       // January 1st, 1970
   obj.project.projectCost = web3.toWei(1, 'ether')
-  obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala'
-  obj.project.incorrectipfsHash = 'whyiseveryspokeleadawhiteman'
+  obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala'   // length == 46
+  obj.project.incorrectipfsHash = 'whyiseveryspokeleadawhiteman'            // length != 46
+
+  // immutable project details
   obj.project.proposePropostion = 20
   obj.project.proposeReward = 100
 
@@ -63,6 +66,32 @@ export default async function projectHelper (web3, accounts) {
   obj.contracts.DT = await DistributeToken.deployed()
   obj.contracts.PR = await ProjectRegistry.deployed()
   obj.contracts.PL = await ProjectLibrary.deployed()
+
+  // functions
+  // return project proposed by token holder
+  obj.returnProject.proposed_T = function () {
+    console.log(obj.user.tokenProposer)
+  }
+
+  // return project proposed by reputation holder
+  obj.returnProject.proposed_R = function () {
+
+  }
+
+  // return project proposed and only staked by token holders
+  obj.returnProject.staked_T = function () {
+
+  }
+
+  // return project proposed by token holder and staked by both
+  obj.returnProject.staked_TR = function () {
+
+  }
+
+  // return project proposed by reputation holder and staked by both
+  obj.returnProject.staked_RT = function () {
+
+  }
 
   return obj
 }

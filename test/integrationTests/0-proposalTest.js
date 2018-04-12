@@ -10,8 +10,9 @@ const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
 web3.eth = Promise.promisifyAll(web3.eth)
 
-contract('Project Proposal', (accounts) => {
-  let projObj = projectHelper(web3, accounts)
+contract('Project Proposal', async (accounts) => {
+  let projObj = await projectHelper(web3, accounts)
+  console.log(projObj, projectHelper)
   let {TR, RR, DT, PR, PL} = projObj.contracts
   let {tokenProposer, repProposer, notProposer} = projObj.user
   let {tokenstoMint} = projObj.minting
@@ -92,4 +93,4 @@ contract('Project Proposal', (accounts) => {
   it('User can\'t propose project without the required reputation stake', async function () {
   })
 
-}
+})

@@ -217,9 +217,6 @@ contract('Voting State', (accounts) => {
 
   })
 
-  it('no task r')
-
-
 // INITIAL COMMIT PHASE
 // check to make sure tasks go into voting or not based on validationDetails
 // check that tasks have correct .complete, .opposingValidator, etc values --> FIGURE OUT IF TASKS NEED TO BE COMPLETE TO BE VALIDATED
