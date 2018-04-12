@@ -67,29 +67,39 @@ module.exports = async function projectHelper (web3, accounts) {
   obj.contracts.PR = await ProjectRegistry.deployed()
   obj.contracts.PL = await ProjectLibrary.deployed()
 
-  // functions
-  // return project proposed by token holder
-  obj.returnProject.proposed_T = function () {
+  // helper functions
+  obj.mint = async function (user, numTokens) {
+    if (numTokens === undefined) {                // use default minting amount
+      numTokens = obj.minting.tokensToMint
+    }
+    let mintingCost = await obj.contracts.DT.weiRequired(numTokens, {from: user})
+    await obj.contracts.DT.mint(numTokens, {from: user, value: mintingCost})
+  }
+
+
+  // project return functions
+  // return project (address) proposed by token holder
+  obj.returnProject.proposed_T = async function () {
     console.log(obj.user.tokenProposer)
   }
 
-  // return project proposed by reputation holder
-  obj.returnProject.proposed_R = function () {
+  // return project (address) proposed by reputation holder
+  obj.returnProject.proposed_R = async function () {
 
   }
 
-  // return project proposed and only staked by token holders
-  obj.returnProject.staked_T = function () {
+  // return project (address) proposed and only staked by token holders
+  obj.returnProject.staked_T = async function () {
 
   }
 
-  // return project proposed by token holder and staked by both
-  obj.returnProject.staked_TR = function () {
+  // return project (address) proposed by token holder and staked by both
+  obj.returnProject.staked_TR = async function () {
 
   }
 
-  // return project proposed by reputation holder and staked by both
-  obj.returnProject.staked_RT = function () {
+  // return project (address) proposed by reputation holder and staked by both
+  obj.returnProject.staked_RT = async function () {
 
   }
 
