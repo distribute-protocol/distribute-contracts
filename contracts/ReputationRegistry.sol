@@ -110,7 +110,7 @@ contract ReputationRegistry{
         first[msg.sender] = true;
         balances[msg.sender] = initialRepVal;
         totalSupply += initialRepVal;
-        totalUsers += 1;
+        totalUsers += 10000;
     }
 
     // =====================================================================
@@ -127,11 +127,11 @@ contract ReputationRegistry{
     */
     function proposeProject(uint256 _cost, uint256 _stakingPeriod, string _ipfsHash) external {    //_cost of project in ether
         //calculate cost of project in tokens currently (_cost in wei)
-        //check proposer has at least 5% of the proposed cost in tokens
+        //check proposer has at least 5% of the proposed cost in reputation
         require(now < _stakingPeriod && _cost > 0);
 
         uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
-        uint256 proposerReputationCost = ( //divide by 20 to get 5 percent of tokens
+        uint256 proposerReputationCost = ( //divide by 20 to get 5 percent of reputation
         Division.percent(costProportion, proposeProportion, 10) *
         distributeToken.totalSupply()) /
         10000000000;

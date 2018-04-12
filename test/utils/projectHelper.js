@@ -68,37 +68,69 @@ module.exports = async function projectHelper (web3, accounts) {
   obj.contracts.PL = await ProjectLibrary.deployed()
 
   // helper functions
-  obj.mint = async function (user, numTokens) {
-    if (numTokens === undefined) {                // use default minting amount
-      numTokens = obj.minting.tokensToMint
+  obj.mint = async function (_user, _numTokens) {
+    if (_numTokens === undefined) {                // use default minting amount
+      _numTokens = obj.minting.tokensToMint
     }
-    let mintingCost = await obj.contracts.DT.weiRequired(numTokens, {from: user})
-    await obj.contracts.DT.mint(numTokens, {from: user, value: mintingCost})
+    let mintingCost = await obj.contracts.DT.weiRequired(_numTokens, {from: _user})
+    await obj.contracts.DT.mint(_numTokens, {from: _user, value: mintingCost})
   }
 
+  obj.register = async function (_user) {
+    if (await obj.contracts.RR.balances(_user) === 0 && await obj.contracts.RR.first(_user) === false) {
+      await obj.contracts.RR.register({from: _user})
+    }
+  }
 
   // project return functions
   // return project (address) proposed by token holder
-  obj.returnProject.proposed_T = async function () {
-    console.log(obj.user.tokenProposer)
+  obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash) {
+    if (_cost === undefined) {
+      _cost = obj.project.projectCost             // use default project cost
+    }
+    if (_stakingPeriod === undefined) {
+      _stakingPeriod = obj.project.stakingPeriod  // use default staking period
+    }
+    if (_ipfsHash === undefined) {
+      _ipfsHash = obj.project.ipfsHash            // use default staking period
+    }
+    let currentPrice = await obj.contracts.DT.currentPrice()              // put this before propose project because current price changes slightly (rounding errors)
+    let proposerTokenCost = Math.floor(Math.floor(_cost / currentPrice) / obj.project.proposeProportion)
+    await obj.mint(obj.user.tokenProposer, proposerTokenCost)
+    let tx = await obj.contracts.TR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.tokenProposer})
+    let log = tx.logs[0].args
+    return log.projectAddress.toString()
   }
 
   // return project (address) proposed by reputation holder
-  obj.returnProject.proposed_R = async function () {
+  obj.returnProject.proposed_R = async function (_cost, _stakingPeriod, _ipfsHash) {
+    if (_cost === undefined) {
+      _cost = obj.project.projectCost             // use default project cost
+    }
+    if (_stakingPeriod === undefined) {
+      _stakingPeriod = obj.project.stakingPeriod  // use default staking period
+    }
+    if (_ipfsHash === undefined) {
+      _ipfsHash = obj.project.ipfsHash            // use default staking period
+    }
+    await obj.register(obj.user.repProposer)
+    let tx = await obj.contracts.RR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.repProposer})
+    let log = tx.logs[0].args
+    return log.projectAddress.toString()
+  }
+
+  // return project (address) proposed and only staked by 2 token holders
+  obj.returnProject.staked_T = async function (_cost, _stakingPeriod, _ipfsHash) {
+    let projectAddress = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
 
   }
 
-  // return project (address) proposed and only staked by token holders
-  obj.returnProject.staked_T = async function () {
-
-  }
-
-  // return project (address) proposed by token holder and staked by both
+  // return project (address) proposed by token holder and staked by 2 of each
   obj.returnProject.staked_TR = async function () {
 
   }
 
-  // return project (address) proposed by reputation holder and staked by both
+  // return project (address) proposed by reputation holder and staked by 2 of each
   obj.returnProject.staked_RT = async function () {
 
   }
