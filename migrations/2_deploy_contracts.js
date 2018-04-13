@@ -29,7 +29,7 @@ module.exports = function (deployer) {
     return Promise.all([
       PRInstance.init(DistributeToken.address, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address),
       TRInstance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address),
-      RRInstance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address)
+      RRInstance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address, TokenRegistry.address)
     ])
   })
 }

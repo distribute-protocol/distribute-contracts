@@ -11,7 +11,7 @@ const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const keccakHashes = require('../utils/KeccakHashes')
 web3.eth = Promise.promisifyAll(web3.eth)
 
-contract('Voting State', (accounts) => {
+contract('Complete State', (accounts) => {
   let TR, PR, DT, PROJ, RR
   let errorThrown
   // proposer only necessary in the

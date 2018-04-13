@@ -12,7 +12,7 @@ const {hashTasks, hashTasksArray} = require('../utils/KeccakHashes')
 
 web3.eth = Promise.promisifyAll(web3.eth)
 
-contract('Staked State |', (accounts) => {
+contract('Staked State', (accounts) => {
   let TR
   let PR
   let DT

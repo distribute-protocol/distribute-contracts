@@ -1,4 +1,4 @@
-pragma solidity 0.4.19;
+pragma solidity 0.4.21;
 
 import "./ProjectRegistry.sol";
 import "./DistributeToken.sol";
@@ -111,7 +111,7 @@ contract TokenRegistry {
             proposerTokenCost,
             _ipfsHash
         );
-        ProjectCreated(projectAddress, _cost, proposerTokenCost);
+        emit ProjectCreated(projectAddress, _cost, proposerTokenCost);
     }
 
     /**
@@ -211,8 +211,8 @@ contract TokenRegistry {
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));
         require(task.claimable());
-
-        var (status, reward) = task.validators(msg.sender);
+        uint status = task.getValidatorStatus(msg.sender);
+        uint reward = task.getValidatorStake(msg.sender);
         if (task.totalValidateNegative() == 0) {
             require(status == 1);
         } else if (task.totalValidateAffirmative() == 0) {

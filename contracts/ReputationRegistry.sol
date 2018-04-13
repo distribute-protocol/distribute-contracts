@@ -1,4 +1,4 @@
-pragma solidity 0.4.19;
+pragma solidity 0.4.21;
 
 import "./Project.sol";
 import "./ProjectLibrary.sol";
@@ -41,6 +41,7 @@ contract ReputationRegistry{
     DistributeToken distributeToken;
     ProjectRegistry projectRegistry;
     PLCRVoting plcrVoting;
+    address tokenRegistryAddress;
 
     mapping (address => uint) public balances;
     mapping (address => bool) public first;   //indicates if address has registerd
@@ -73,15 +74,17 @@ contract ReputationRegistry{
     @param _projectRegistry Address of ProjectRegistry contract
     @param _plcrVoting Address of PLCRVoting contract
     */
-    function init(address _distributeToken, address _projectRegistry, address _plcrVoting) public {
+    function init(address _distributeToken, address _projectRegistry, address _plcrVoting, address _tokenRegistry) public {
         require(
             address(distributeToken) == 0 &&
             address(projectRegistry) == 0 &&
-            address(plcrVoting) == 0
+            address(plcrVoting) == 0 &&
+            tokenRegistryAddress == 0
         );
         projectRegistry = ProjectRegistry(_projectRegistry);
         plcrVoting = PLCRVoting(_plcrVoting);
         distributeToken= DistributeToken(_distributeToken);
+        tokenRegistryAddress = _tokenRegistry;
     }
 
     // =====================================================================
@@ -106,11 +109,11 @@ contract ReputationRegistry{
     @dev Has no sybil protection, thus a user can auto generate accounts to receive excess reputation.
     */
     function register() external {
-        require(balances[msg.sender] == 0 && first[msg.sender] == false);
+        require(balances[msg.sender] == 0);
         first[msg.sender] = true;
         balances[msg.sender] = initialRepVal;
         totalSupply += initialRepVal;
-        totalUsers += 10000;
+        totalUsers += 1;
     }
 
     // =====================================================================
@@ -129,11 +132,10 @@ contract ReputationRegistry{
         //calculate cost of project in tokens currently (_cost in wei)
         //check proposer has at least 5% of the proposed cost in reputation
         require(now < _stakingPeriod && _cost > 0);
-
         uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
         uint256 proposerReputationCost = ( //divide by 20 to get 5 percent of reputation
         Division.percent(costProportion, proposeProportion, 10) *
-        distributeToken.totalSupply()) /
+        totalSupply) /
         10000000000;
         require(balances[msg.sender] >= proposerReputationCost);
 
@@ -142,12 +144,12 @@ contract ReputationRegistry{
             _cost,
             costProportion,
             _stakingPeriod,
-            msg.sender,
+            tokenRegistryAddress,
             2,
             proposerReputationCost,
             _ipfsHash
         );
-        ProjectCreated(projectAddress, _cost, proposerReputationCost);
+        emit ProjectCreated(projectAddress, _cost, proposerReputationCost);
     }
 
     /**

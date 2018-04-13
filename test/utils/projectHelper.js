@@ -4,10 +4,13 @@ const DistributeToken = artifacts.require('DistributeToken')
 const ProjectRegistry = artifacts.require('ProjectRegistry')
 const ProjectLibrary = artifacts.require('ProjectLibrary')
 
+const evmIncreaseTime = require('./evmIncreaseTime')
+
 module.exports = async function projectHelper (web3, accounts) {
   let obj = {}
   obj.user = {}
   obj.minting = {}
+  obj.reputation = {}
   obj.project = {}
   obj.contracts = {}
   obj.returnProject = {}
@@ -49,15 +52,19 @@ module.exports = async function projectHelper (web3, accounts) {
   // mutable minting details for each user
   obj.minting.tokensToMint = 10000
 
+  // immutable registration reputation amount
+  obj.reputation.registeredRep = 10000
+
   // mutable project details
-  obj.project.stakingPeriod = 20000000000     // 10/11/2603 @ 11:33am (UTC)
-  obj.project.expiredStakingPeriod = 10       // January 1st, 1970
-  obj.project.projectCost = web3.toWei(1, 'ether')
+  obj.project.now = new Date().getTime()                                    // now in milliseconds
+  obj.project.stakingPeriod = Math.floor((obj.project.now + 604800) / 1000) // blockchain understands seconds                    // one week from now
+  obj.project.expiredStakingPeriod = 10                                     // January 1st, 1970
+  obj.project.projectCost = parseInt(web3.toWei(0.5, 'ether'))
   obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala'   // length == 46
-  obj.project.incorrectipfsHash = 'whyiseveryspokeleadawhiteman'            // length != 46
+  obj.project.incorrectIpfsHash = 'whyiseveryspokeleadawhiteman'            // length != 46
 
   // immutable project details
-  obj.project.proposePropostion = 20
+  obj.project.proposeProportion = 20
   obj.project.proposeReward = 100
 
   // contracts
@@ -77,9 +84,33 @@ module.exports = async function projectHelper (web3, accounts) {
   }
 
   obj.register = async function (_user) {
-    if (await obj.contracts.RR.balances(_user) === 0 && await obj.contracts.RR.first(_user) === false) {
-      await obj.contracts.RR.register({from: _user})
-    }
+    await obj.contracts.RR.register({from: _user})
+  }
+
+  // getters
+  obj.getTokenBalance = async function (_user) {
+    let bal = await obj.contracts.DT.balanceOf(_user)
+    return bal.toNumber()
+  }
+
+  obj.getRepBalance = async function (_user) {
+    let bal = await obj.contracts.RR.balances(_user)
+    return bal.toNumber()
+  }
+
+  obj.getTotalTokens = async function () {
+    let total = await obj.contracts.DT.totalSupply()
+    return total.toNumber()
+  }
+
+  obj.getTotalRep = async function () {
+    let total = await obj.contracts.RR.totalSupply()
+    return total.toNumber()
+  }
+
+  obj.getWeiBal = async function () {
+    let weiBal = await obj.contracts.DT.weiBal()
+    return weiBal.toNumber()
   }
 
   // project return functions
@@ -122,7 +153,6 @@ module.exports = async function projectHelper (web3, accounts) {
   // return project (address) proposed and only staked by 2 token holders
   obj.returnProject.staked_T = async function (_cost, _stakingPeriod, _ipfsHash) {
     let projectAddress = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
-
   }
 
   // return project (address) proposed by token holder and staked by 2 of each

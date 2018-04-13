@@ -1,4 +1,4 @@
-pragma solidity 0.4.19;
+pragma solidity 0.4.21;
 
 import "./Project.sol";
 import "./TokenRegistry.sol";
@@ -18,8 +18,8 @@ library ProjectLibrary {
     // EVENTS
     // =====================================================================
 
-    event tokenRefund(address staker, uint256 refund);
-    event reputationRefund(address projectAddress, address staker, uint256 refund);
+    event TokenRefund(address staker, uint256 refund);
+    event ReputationRefund(address projectAddress, address staker, uint256 refund);
 
     // =====================================================================
     // UTILITY
@@ -388,7 +388,7 @@ library ProjectLibrary {
         if(_project.tokensStaked() != 0) {
             refund = _project.tokenBalances(_staker) * _project.passAmount() / 100;
         }
-        tokenRefund(_staker, refund);
+        emit TokenRefund(_staker, refund);
         return refund;
     }
 
@@ -404,7 +404,7 @@ library ProjectLibrary {
         if(_project.reputationStaked() != 0) {
             refund = _project.reputationBalances(_staker) * _project.passAmount() / 100;
         }
-        reputationRefund(address(_project), _staker, refund);
+        emit ReputationRefund(address(_project), _staker, refund);
         return refund;
     }
 }
