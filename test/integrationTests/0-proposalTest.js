@@ -47,7 +47,7 @@ contract('Project Proposal', async (accounts) => {
 
     // token supply, token balance checks
     tBal = await projObj.getTokenBalance(tokenProposer)
-    weiBal = await projObj.getWeiBal()
+    weiBal = await projObj.getWeiPoolBal()
     totalTokens = await projObj.getTotalTokens()
     totalReputation = await projObj.getTotalRep()
 
@@ -91,7 +91,7 @@ contract('Project Proposal', async (accounts) => {
 
     // token supply, token balance checks
     rBal = await projObj.getRepBalance(repProposer)
-    weiBal = await projObj.getWeiBal()
+    weiBal = await projObj.getWeiPoolBal()
     totalTokens = await projObj.getTotalTokens()
     totalReputation = await projObj.getTotalRep()
 
