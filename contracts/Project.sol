@@ -130,6 +130,7 @@ contract Project {
         address _reputationRegistry,
         address _tokenRegistry
     ) public {
+        require (bytes(_ipfsHash).length == 46);
         reputationRegistryAddress = _reputationRegistry;
         tokenRegistryAddress = _tokenRegistry;
         projectRegistryAddress = msg.sender;
