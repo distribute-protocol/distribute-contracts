@@ -89,8 +89,8 @@ contract('Project Proposal', async (accounts) => {
     // token supply, token balance checks
     weiBal = await projObj.getWeiBal()
     proposerCost = Math.floor((projectCost / weiBal / proposeProportion) * totalReputation)
-    rBal = await RR.balances(repProposer)
-    totalReputation = await RR.totalSupply()
+    rBal = await projObj.getRepBalance(repProposer)
+    totalReputation = await projObj.getTotalRep()
 
     assert.equal(registeredRep, totalReputation, 'total reputation supply shouldn\'t have updated')
     assert.equal(rBal, registeredRep - proposerCost, 'DT did not set aside appropriate proportion to escrow')
@@ -116,7 +116,7 @@ contract('Project Proposal', async (accounts) => {
     assert.equal(projectCost, _weiCost, 'PR stored incorrect project cost')
     assert.equal(1, _state, 'PR stored incorrect state')
     assert.equal(stakingPeriod, _nextDeadline, 'PR stored incorrect staking period')
-    assert.equal(tokenProposer, _proposer, 'PR stored incorrect proposer address')
+    assert.equal(repProposer, _proposer, 'PR stored incorrect proposer address')
     assert.equal(2, _proposerType, 'PR stored incorrect proposer type')
     assert.equal(proposerCost, _proposerStake, 'PR stored incorrect proposer stake')
     assert.equal(ipfsHash, _ipfsHash, 'PR stored incorrect ipfs hash')

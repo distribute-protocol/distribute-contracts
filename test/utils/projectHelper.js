@@ -50,14 +50,14 @@ module.exports = async function projectHelper (web3, accounts) {
   obj.user.notProject = accounts[7]
 
   // mutable minting details for each user
-  obj.minting.tokensToMint = 10000
+  obj.minting.tokensToMint = 100000
 
   // immutable registration reputation amount
   obj.reputation.registeredRep = 10000
 
   // mutable project details
-  obj.project.now = new Date().getTime()                                    // now in milliseconds
-  obj.project.stakingPeriod = Math.floor((obj.project.now + 604800) / 1000) // blockchain understands seconds                    // one week from now
+  obj.project.now = new Date().getTime() / 1000                             // in seconds
+  obj.project.stakingPeriod = Math.floor(obj.project.now + 604800)          // blockchain understands seconds                    // one week from now
   obj.project.expiredStakingPeriod = 10                                     // January 1st, 1970
   obj.project.projectCost = parseInt(web3.toWei(0.5, 'ether'))
   obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala'   // length == 46
@@ -152,7 +152,7 @@ module.exports = async function projectHelper (web3, accounts) {
 
   // return project (address) proposed and only staked by 2 token holders
   obj.returnProject.staked_T = async function (_cost, _stakingPeriod, _ipfsHash) {
-    let projectAddress = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
+    let projAddr = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
   }
 
   // return project (address) proposed by token holder and staked by 2 of each

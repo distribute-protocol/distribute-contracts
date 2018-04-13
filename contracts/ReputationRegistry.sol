@@ -41,7 +41,6 @@ contract ReputationRegistry{
     DistributeToken distributeToken;
     ProjectRegistry projectRegistry;
     PLCRVoting plcrVoting;
-    address tokenRegistryAddress;
 
     mapping (address => uint) public balances;
     mapping (address => bool) public first;   //indicates if address has registerd
@@ -74,17 +73,15 @@ contract ReputationRegistry{
     @param _projectRegistry Address of ProjectRegistry contract
     @param _plcrVoting Address of PLCRVoting contract
     */
-    function init(address _distributeToken, address _projectRegistry, address _plcrVoting, address _tokenRegistry) public {
+    function init(address _distributeToken, address _projectRegistry, address _plcrVoting) public {
         require(
             address(distributeToken) == 0 &&
             address(projectRegistry) == 0 &&
-            address(plcrVoting) == 0 &&
-            tokenRegistryAddress == 0
+            address(plcrVoting) == 0
         );
         projectRegistry = ProjectRegistry(_projectRegistry);
         plcrVoting = PLCRVoting(_plcrVoting);
-        distributeToken= DistributeToken(_distributeToken);
-        tokenRegistryAddress = _tokenRegistry;
+        distributeToken = DistributeToken(_distributeToken);
     }
 
     // =====================================================================
@@ -144,7 +141,7 @@ contract ReputationRegistry{
             _cost,
             costProportion,
             _stakingPeriod,
-            tokenRegistryAddress,
+            msg.sender,
             2,
             proposerReputationCost,
             _ipfsHash

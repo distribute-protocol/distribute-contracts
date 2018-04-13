@@ -24,9 +24,9 @@ contract Project {
     // STATE VARIABLES
     // =====================================================================
 
-    address tokenRegistryAddress;
-    address reputationRegistryAddress;
-    address projectRegistryAddress;
+    address public tokenRegistryAddress;
+    address public reputationRegistryAddress;
+    address public projectRegistryAddress;
 
     uint256 public state;
 
@@ -65,7 +65,7 @@ contract Project {
     mapping (address => uint) public tokenBalances;
     mapping (address => uint) public reputationBalances;
 
-    // MAKE THIS A DLL!
+    // MAKE THIS A DLL EVENTUALLY
     address[] public tasks;
 
     uint256 public passAmount;
