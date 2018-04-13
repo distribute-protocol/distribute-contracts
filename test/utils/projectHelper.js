@@ -7,7 +7,7 @@ const Project = artifacts.require('Project')
 
 const evmIncreaseTime = require('./evmIncreaseTime')
 
-module.exports = async function projectHelper (web3, accounts) {
+module.exports = function projectHelper (web3, accounts) {
   let obj = {}
   obj.user = {}
   obj.minting = {}
@@ -52,7 +52,7 @@ module.exports = async function projectHelper (web3, accounts) {
   obj.user.notProject = accounts[8]
 
   // mutable minting details for each user
-  obj.minting.tokensToMint = 100000
+  obj.minting.tokensToMint = 10000
 
   // immutable registration reputation amount
   obj.reputation.registeredRep = 10000
@@ -70,11 +70,15 @@ module.exports = async function projectHelper (web3, accounts) {
   obj.project.proposeReward = 100
 
   // contracts
-  obj.contracts.TR = await TokenRegistry.deployed()
-  obj.contracts.RR = await ReputationRegistry.deployed()
-  obj.contracts.DT = await DistributeToken.deployed()
-  obj.contracts.PR = await ProjectRegistry.deployed()
-  obj.contracts.PL = await ProjectLibrary.deployed()
+  TokenRegistry.deployed().then(instance => obj.contracts.TR = instance)
+  .then(() =>
+    ReputationRegistry.deployed()).then(instance => { obj.contracts.RR = instance; return true })
+    .then(() =>
+      DistributeToken.deployed()).then(instance => obj.contracts.DT = instance)
+      .then(() =>
+        ProjectRegistry.deployed()).then(instance => obj.contracts.PR = instance)
+        .then(() =>
+          ProjectLibrary.deployed()).then(instance => obj.contracts.PL = instance)
 
   // helper functions
   obj.mint = async function (_user, _numTokens) {
@@ -86,11 +90,19 @@ module.exports = async function projectHelper (web3, accounts) {
   }
 
   obj.register = async function (_user) {
-    // should put check in here, but wasn't working earlier
-    await obj.contracts.RR.register({from: _user})
+    let bal = await obj.contracts.RR.balances(_user)
+    let first = await obj.contracts.RR.first(_user)
+    if (bal.toNumber() === 0 && first === false) {
+      await obj.contracts.RR.register({from: _user})
+    }
   }
 
   // getters
+  obj.getRepHolders = async function () {
+    let repHolders = await obj.contracts.RR.totalUsers()
+    return repHolders.toNumber()
+  }
+
   obj.getTokenBalance = async function (_user) {
     let bal = await obj.contracts.DT.balanceOf(_user)
     return bal.toNumber()
@@ -186,7 +198,7 @@ module.exports = async function projectHelper (web3, accounts) {
     }
 
     // ensure proposer has enough tokens
-    let currentPrice = await obj.contracts.DT.currentPrice()
+    let currentPrice = await obj.getCurrentPrice()
     let proposerTokenCost = Math.floor(Math.floor(_cost / currentPrice) / obj.project.proposeProportion)
     let tBal = await obj.getTokenBalance(obj.user.tokenProposer)
     if (tBal < proposerTokenCost) {
@@ -195,7 +207,7 @@ module.exports = async function projectHelper (web3, accounts) {
 
     // ensure someone has registered for reputation
     // reputation proposer is ordinary reputation holder in this case
-    await obj.register(obj.user.repProposer)
+    // await obj.register(obj.user.repProposer)
 
     // propose project
     let tx = await obj.contracts.TR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.tokenProposer})

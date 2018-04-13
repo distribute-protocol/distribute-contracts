@@ -1,11 +1,13 @@
 const Project = artifacts.require('Project')
 
+const assert = require('assert')
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 
-contract('Project Proposal', async (accounts) => {
+contract('proposalTest', (accounts) => {
   // projectHelper variables
-  let projObj = await projectHelper(web3, accounts)
+  let projObj = projectHelper(web3, accounts)
+
   let {TR, RR, PR} = projObj.contracts
   let {tokenProposer, repProposer, notProposer} = projObj.user
   let {tokensToMint} = projObj.minting
@@ -16,29 +18,42 @@ contract('Project Proposal', async (accounts) => {
   let projAddr
   let PROJ_T, PROJ_R
   let totalTokens, totalReputation
-  let tBal, rBal, nBal
+  let ttBal, rtBal, ntBal
+  let trBal, rrBal, nrBal
   let proposerCost, repCost
+  let repHolders
   let weiBal
   let tx, log
   let errorThrown
 
   before(async function () {
+
     // fund users with tokens and reputation
     await projObj.mint(tokenProposer, tokensToMint)   // mint 10000 tokens for token proposer
     await projObj.register(repProposer)               // register 10000 reputation for rep proposer
 
-    // check that minting, totalTokenSupply, and totalReputationSupply check out
-    tBal = await projObj.getTokenBalance(tokenProposer)
-    rBal = await projObj.getTokenBalance(repProposer)
-    nBal = await projObj.getTokenBalance(notProposer)
+    // take stock of variables after minting and registering
+    ttBal = await projObj.getTokenBalance(tokenProposer)
+    rtBal = await projObj.getTokenBalance(repProposer)
+    ntBal = await projObj.getTokenBalance(notProposer)
+
+    trBal = await projObj.getRepBalance(tokenProposer)
+    rrBal = await projObj.getRepBalance(repProposer)
+    nrBal = await projObj.getRepBalance(notProposer)
 
     totalTokens = await projObj.getTotalTokens()
     totalReputation = await projObj.getTotalRep()
+    repHolders = await projObj.getRepHolders()
 
-    assert.equal(0, rBal + nBal, 'rep proposer or not proposer somehow have tokens')
-    assert.equal(tokensToMint, tBal + rBal + nBal, 'proposer did not successfully mint tokens')
+    // checks
+    assert.equal(0, rtBal + ntBal, 'rep proposer or not proposer somehow have tokens')
+    assert.equal(tokensToMint, ttBal + rtBal + ntBal, 'proposer did not successfully mint tokens')
+    assert.equal(0, trBal + nrBal, 'token proposer or not proposer somehow have reputation')
+    assert.equal(registeredRep, trBal + rrBal + nrBal, 'proposer did not successfully register for reputation')
     assert.equal(tokensToMint, totalTokens, 'total token supply did not update correctly')
     assert.equal(registeredRep, totalReputation, 'total reputation supply did not update correctly')
+    assert.equal(1, repHolders, 'there should be 1 rep holder after registering repProposer')
+
   })
 
   it('Proposer can propose project with tokens', async function () {

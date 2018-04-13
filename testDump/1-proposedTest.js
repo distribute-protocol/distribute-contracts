@@ -35,7 +35,7 @@ contract('Proposed State', async (accounts) => {
     projAddrR = await projObj.returnProject.proposed_R()     // to check staking, refund proposer
     PROJ_T = await Project.at(projAddrT)
     PROJ_R = await Project.at(projAddrR)
-    
+
     // propose projects that should fail
     projAddrTx = await projObj.returnProject.proposed_T()     // to check expiration
     projAddrRx = await projObj.returnProject.proposed_R()     // to check expiration
@@ -57,7 +57,7 @@ contract('Proposed State', async (accounts) => {
     totalTokens = await projObj.getTotalTokens()
     totalReputation = await projObj.getTotalRep()
 
-    // pre-staking checks if we need them
+    // pre-staking checks
     // assert.equal()
   })
 

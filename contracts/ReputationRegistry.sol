@@ -106,7 +106,7 @@ contract ReputationRegistry{
     @dev Has no sybil protection, thus a user can auto generate accounts to receive excess reputation.
     */
     function register() external {
-        require(balances[msg.sender] == 0);
+        require(balances[msg.sender] == 0 && first[msg.sender] == false);
         first[msg.sender] = true;
         balances[msg.sender] = initialRepVal;
         totalSupply += initialRepVal;
