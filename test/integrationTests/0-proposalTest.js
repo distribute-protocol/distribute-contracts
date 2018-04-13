@@ -1,14 +1,14 @@
 const Project = artifacts.require('Project')
 
-const assert = require('assert')
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 
-contract('proposalTest', (accounts) => {
-  // projectHelper variables
+contract('Propose Projects', function (accounts) {
+  // set up project helper
   let projObj = projectHelper(web3, accounts)
 
-  let {TR, RR, PR} = projObj.contracts
+  // get projectHelper variables
+  let TR, RR, PR
   let {tokenProposer, repProposer, notProposer} = projObj.user
   let {tokensToMint} = projObj.minting
   let {registeredRep} = projObj.reputation
@@ -27,6 +27,11 @@ contract('proposalTest', (accounts) => {
   let errorThrown
 
   before(async function () {
+    // get contracts
+    await projObj.contracts.setContracts()
+    TR = projObj.contracts.TR
+    RR = projObj.contracts.RR
+    PR = projObj.contracts.PR
 
     // fund users with tokens and reputation
     await projObj.mint(tokenProposer, tokensToMint)   // mint 10000 tokens for token proposer
@@ -61,7 +66,7 @@ contract('proposalTest', (accounts) => {
     tx = await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: tokenProposer})
 
     // token supply, token balance checks
-    tBal = await projObj.getTokenBalance(tokenProposer)
+    ttBal = await projObj.getTokenBalance(tokenProposer)
     weiBal = await projObj.getWeiPoolBal()
     totalTokens = await projObj.getTotalTokens()
     totalReputation = await projObj.getTotalRep()
@@ -70,7 +75,7 @@ contract('proposalTest', (accounts) => {
     repCost = Math.floor((projectCost / weiBal) * totalReputation)
 
     assert.equal(tokensToMint, totalTokens, 'total token supply shouldn\'t have updated')
-    assert.equal(tBal, tokensToMint - proposerCost, 'DT did not set aside appropriate proportion to escrow')
+    assert.equal(ttBal, tokensToMint - proposerCost, 'DT did not set aside appropriate proportion to escrow')
 
     // project contract creation, log checks
     log = tx.logs[0].args

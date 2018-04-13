@@ -70,15 +70,14 @@ module.exports = function projectHelper (web3, accounts) {
   obj.project.proposeReward = 100
 
   // contracts
-  TokenRegistry.deployed().then(instance => obj.contracts.TR = instance)
-  .then(() =>
-    ReputationRegistry.deployed()).then(instance => { obj.contracts.RR = instance; return true })
-    .then(() =>
-      DistributeToken.deployed()).then(instance => obj.contracts.DT = instance)
-      .then(() =>
-        ProjectRegistry.deployed()).then(instance => obj.contracts.PR = instance)
-        .then(() =>
-          ProjectLibrary.deployed()).then(instance => obj.contracts.PL = instance)
+  obj.contracts.setContracts = async function () {
+    obj.contracts.TR = await TokenRegistry.deployed()
+    obj.contracts.RR = await ReputationRegistry.deployed()
+    obj.contracts.DT = await DistributeToken.deployed()
+    obj.contracts.PR = await ProjectRegistry.deployed()
+    obj.contracts.PL = await ProjectLibrary.deployed()
+  }
+
 
   // helper functions
   obj.mint = async function (_user, _numTokens) {

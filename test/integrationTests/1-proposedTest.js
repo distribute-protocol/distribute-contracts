@@ -7,10 +7,9 @@ const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
 
-contract('Proposed State', async (accounts) => {
+contract('Proposed State', (accounts) => {
   // projectHelper variables
-  let projObj = await projectHelper(web3, accounts)
-  let {TR, RR, PR} = projObj.contracts
+  let projObj = projectHelper(web3, accounts)
   let {tokenProposer, repProposer, notProposer} = projObj.user
   let {tokenStaker1, tokenStaker2} = projObj.user
   let {repStaker1, repStaker2, notStaker} = projObj.user
@@ -30,6 +29,12 @@ contract('Proposed State', async (accounts) => {
   let errorThrown
 
   before(async function () {
+    // get contracts
+    await projObj.contracts.setContracts()
+    TR = projObj.contracts.TR
+    RR = projObj.contracts.RR
+    PR = projObj.contracts.PR
+
     // propose projects that should succeed
     projAddrT = await projObj.returnProject.proposed_T()     // to check staking, refund proposer
     projAddrR = await projObj.returnProject.proposed_R()     // to check staking, refund proposer
