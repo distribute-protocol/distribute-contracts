@@ -6,7 +6,7 @@ const assertThrown = require('../utils/assertThrown')
 contract('Project Proposal', async (accounts) => {
   // projectHelper variables
   let projObj = await projectHelper(web3, accounts)
-  let {TR, RR, DT, PR} = projObj.contracts
+  let {TR, RR, PR} = projObj.contracts
   let {tokenProposer, repProposer, notProposer} = projObj.user
   let {tokensToMint} = projObj.minting
   let {registeredRep} = projObj.reputation

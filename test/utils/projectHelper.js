@@ -84,6 +84,7 @@ module.exports = async function projectHelper (web3, accounts) {
   }
 
   obj.register = async function (_user) {
+    // should put check in here, but wasn't working earlier
     await obj.contracts.RR.register({from: _user})
   }
 
@@ -115,7 +116,9 @@ module.exports = async function projectHelper (web3, accounts) {
 
   // project return functions
   // return project (address) proposed by token holder
-  obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash) {
+  obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash, _onlyT) {
+
+    // input parameter checks
     if (_cost === undefined) {
       _cost = obj.project.projectCost             // use default project cost
     }
@@ -125,16 +128,29 @@ module.exports = async function projectHelper (web3, accounts) {
     if (_ipfsHash === undefined) {
       _ipfsHash = obj.project.ipfsHash            // use default staking period
     }
-    let currentPrice = await obj.contracts.DT.currentPrice()              // put this before propose project because current price changes slightly (rounding errors)
+
+    // ensure proposer has enough tokens
+    let currentPrice = await obj.contracts.DT.currentPrice()
     let proposerTokenCost = Math.floor(Math.floor(_cost / currentPrice) / obj.project.proposeProportion)
-    await obj.mint(obj.user.tokenProposer, proposerTokenCost)
-    let tx = await obj.contracts.TR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.tokenProposer})
+    let tBal = await obj.contracts.getTokenBalance(obj.user.tokenProposer)
+    if (tBal < proposerTokenCost) {
+      await obj.mint(obj.user.tokenProposer, proposerTokenCost - tBal)
+    }
+
+    // ensure someone has registered for reputation
+    // reputation proposer is ordinary reputation holder in this case
+    await obj.register(obj.user.repProposer)
+
+    // propose project
+    let tx = await obj.contraPcts.TR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.tokenProposer})
     let log = tx.logs[0].args
-    return log.projectAddress.toString()
+    return log.projectAddress.toString()         // return project address
   }
 
   // return project (address) proposed by reputation holder
   obj.returnProject.proposed_R = async function (_cost, _stakingPeriod, _ipfsHash) {
+
+    // input parameter checks
     if (_cost === undefined) {
       _cost = obj.project.projectCost             // use default project cost
     }
@@ -144,24 +160,30 @@ module.exports = async function projectHelper (web3, accounts) {
     if (_ipfsHash === undefined) {
       _ipfsHash = obj.project.ipfsHash            // use default staking period
     }
+
+    // ensure proposer has reputation
     await obj.register(obj.user.repProposer)
+
+    // ensure someone has minted tokens -- not necessary, but realistic
+    // token proposer is ordinary token holder in this case
+    await obj.mint(obj.user.tokenProposer)
+
+    // propose project
     let tx = await obj.contracts.RR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.repProposer})
     let log = tx.logs[0].args
     return log.projectAddress.toString()
   }
 
-  // return project (address) proposed and only staked by 2 token holders
-  obj.returnProject.staked_T = async function (_cost, _stakingPeriod, _ipfsHash) {
-    let projAddr = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
-  }
-
   // return project (address) proposed by token holder and staked by 2 of each
   obj.returnProject.staked_TR = async function () {
+    let projAddr = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
 
   }
 
   // return project (address) proposed by reputation holder and staked by 2 of each
   obj.returnProject.staked_RT = async function () {
+    let projAddr = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
+
 
   }
 
