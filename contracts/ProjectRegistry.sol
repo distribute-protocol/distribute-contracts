@@ -32,8 +32,6 @@ contract ProjectRegistry {
 
     event ProxyDeployed(address proxyAddress, address targetAddress);
 
-    event ProxyData(bytes data);
-
     // =====================================================================
     // STATE VARIABLES
     // =====================================================================
@@ -114,12 +112,19 @@ contract ProjectRegistry {
     // PROXY DEPLOYER
     // =====================================================================
 
-    /**
-    @dev Used to create proxy deployments of the project and task contracts
-    @param _target Address of the master contract
-    @param _data Packed function bytes id + parameters
-    */
-    function createProxy(address _target, bytes _data) internal returns (address proxyContract) {
+    function createProxy(address _target, bytes _data)
+        internal
+        returns (address proxyContract)
+    {
+        proxyContract = createProxyImpl(_target, _data);
+
+        ProxyDeployed(proxyContract, _target);
+    }
+
+    function createProxyImpl(address _target, bytes _data)
+        internal
+        returns (address proxyContract)
+    {
         assembly {
             let contractCode := mload(0x40) // Find empty storage location using "free memory pointer"
 
@@ -158,7 +163,7 @@ contract ProjectRegistry {
         assembly {
             //let ipfsHashSize := mload(_ipfsHash)
             dataToSend := mload(0x40) // Find empty memory location using "free memory pointer"
-            mstore(add(dataToSend, 0x20), 0xe7b7c2a6)
+            mstore(add(dataToSend, 0x20), 0xf58a1adb)
             mstore(add(dataToSend, 0x24), _cost) // this is the function ID
             mstore(add(dataToSend, 0x44), _costProportion)
             mstore(add(dataToSend, 0x64), _stakingPeriod)
