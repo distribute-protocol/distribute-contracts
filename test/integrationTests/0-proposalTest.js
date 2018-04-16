@@ -1,11 +1,12 @@
 const Project = artifacts.require('Project')
 
+const assert = require('assert')
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 
 contract('Propose Projects', function (accounts) {
   // set up project helper
-  let projObj = projectHelper(web3, accounts)
+  let projObj = projectHelper(accounts)
 
   // get projectHelper variables
   let TR, RR, PR

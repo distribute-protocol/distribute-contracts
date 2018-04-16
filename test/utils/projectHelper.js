@@ -7,7 +7,7 @@ const Project = artifacts.require('Project')
 
 const evmIncreaseTime = require('./evmIncreaseTime')
 
-module.exports = function projectHelper (web3, accounts) {
+module.exports = function projectHelper (accounts) {
   let obj = {}
   obj.user = {}
   obj.minting = {}
@@ -78,7 +78,6 @@ module.exports = function projectHelper (web3, accounts) {
     obj.contracts.PL = await ProjectLibrary.deployed()
   }
 
-
   // helper functions
   obj.mint = async function (_user, _numTokens) {
     if (_numTokens === undefined) {                // use default minting amount
@@ -96,6 +95,13 @@ module.exports = function projectHelper (web3, accounts) {
     }
   }
 
+  obj.mintIfNecessary = async function (_user, _numTokens) {
+    let bal = await obj.getTokenBalance(_user)
+    if (_numTokens > bal) {
+      obj.mint(_user, _numTokens - bal)
+    }
+  }
+
   // getters
   obj.getRepHolders = async function () {
     let repHolders = await obj.contracts.RR.totalUsers()
@@ -103,7 +109,7 @@ module.exports = function projectHelper (web3, accounts) {
   }
 
   obj.getTokenBalance = async function (_user) {
-    let bal = await obj.contracts.DT.balanceOf(_user)
+    let bal = await obj.contracts.DT.balances(_user)
     return bal.toNumber()
   }
 
@@ -154,7 +160,7 @@ module.exports = function projectHelper (web3, accounts) {
     let weiRemaining = await obj.project.getWeiRemaining(_projAddr)
     let currentPrice = await obj.getCurrentPrice()
     let requiredTokens = Math.ceil(weiRemaining / currentPrice)
-    return requiredTokens.toNumber()
+    return requiredTokens
   }
 
   obj.project.getStakedTokens = async function (_projAddr) {
@@ -184,7 +190,6 @@ module.exports = function projectHelper (web3, accounts) {
   // project return functions
   // return project (address) proposed by token holder
   obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash) {
-
     // input parameter checks
     if (_cost === undefined) {
       _cost = obj.project.projectCost             // use default project cost
@@ -196,17 +201,15 @@ module.exports = function projectHelper (web3, accounts) {
       _ipfsHash = obj.project.ipfsHash            // use default staking period
     }
 
-    // ensure proposer has enough tokens
-    let currentPrice = await obj.getCurrentPrice()
-    let proposerTokenCost = Math.floor(Math.floor(_cost / currentPrice) / obj.project.proposeProportion)
-    let tBal = await obj.getTokenBalance(obj.user.tokenProposer)
-    if (tBal < proposerTokenCost) {
-      await obj.mint(obj.user.tokenProposer, proposerTokenCost - tBal)
-    }
+    // seed the system with tokens and rep
+    await obj.mint(obj.user.tokenProposer)
+    await obj.register(obj.user.repProposer)
 
-    // ensure someone has registered for reputation
-    // reputation proposer is ordinary reputation holder in this case
-    // await obj.register(obj.user.repProposer)
+    // ensure proposer has enough tokens
+    let weiBal = await obj.getWeiPoolBal()
+    let totalTokens = await obj.getTotalTokens()
+    let proposerTokenCost = Math.floor((_cost / weiBal / obj.project.proposeProportion) * totalTokens)
+    obj.mintIfNecessary(obj.user.tokenProposer, proposerTokenCost)
 
     // propose project
     let tx = await obj.contracts.TR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.tokenProposer})
@@ -216,7 +219,6 @@ module.exports = function projectHelper (web3, accounts) {
 
   // return project (address) proposed by reputation holder
   obj.returnProject.proposed_R = async function (_cost, _stakingPeriod, _ipfsHash) {
-
     // input parameter checks
     if (_cost === undefined) {
       _cost = obj.project.projectCost             // use default project cost
@@ -228,12 +230,9 @@ module.exports = function projectHelper (web3, accounts) {
       _ipfsHash = obj.project.ipfsHash            // use default staking period
     }
 
-    // ensure proposer has reputation
-    await obj.register(obj.user.repProposer)
-
-    // ensure someone has minted tokens -- not necessary, but realistic
-    // token proposer is ordinary token holder in this case
+    // seed the system with tokens and rep
     await obj.mint(obj.user.tokenProposer)
+    await obj.register(obj.user.repProposer)
 
     // propose project
     let tx = await obj.contracts.RR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.repProposer})
