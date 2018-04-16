@@ -1,4 +1,4 @@
-pragma solidity 0.4.19;
+pragma solidity 0.4.21;
 
 import "./library/EIP20.sol";
 import "./library/SafeMath.sol";
@@ -133,7 +133,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
         totalSupply += _tokens;
         balances[msg.sender] += _tokens;
         weiBal += weiRequiredVal;
-        LogMint(_tokens, weiRequiredVal);
+        emit LogMint(_tokens, weiRequiredVal);
         uint256 fundsLeft = msg.value - weiRequiredVal;
         if (fundsLeft > 0) { msg.sender.transfer(fundsLeft); }
     }
@@ -163,7 +163,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
         balances[msg.sender] -= _tokens;
         totalSupply = totalSupply.sub(_tokens);
         weiBal -= weiVal;
-        LogWithdraw(_tokens, weiVal);
+        emit LogWithdraw(_tokens, weiVal);
         msg.sender.transfer(weiVal);
     }
 

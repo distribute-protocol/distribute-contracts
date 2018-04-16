@@ -202,8 +202,76 @@ contract('Validation State', (accounts) => {
 
   })
 
-  it('math works', async function () {
-    assert.equal(1, 1, 'math broke')
+  it('worker can\'t claim a task once the active period is up', async function () {
+    errorThrown = false
+    try {
+      let repPrice = 1
+      let weiReward = 100
+      let index = 3
+      await RR.claimTask(projectAddress, index, 'save the world', weiReward, repPrice, {from: worker3})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
   })
+
+  it('worker can\'t mark a task complete once the active period is up', async function () {
+
+  })
+
+  it('tasks marked complete have true complete values', async function () {
+
+  })
+
+  it('tasks not marked complete have false complete values', async function () {
+
+  })
+
+  it('tasks marked complete have nonzero weiReward and taskReward values', async function () {
+
+  })
+
+  it('tasks not marked complete have zero weiReward and taskReward values', async function () {
+
+  })
+
+  it('token holder can validate task if it exists and they have enough tokens', async function () {
+
+  })
+
+  it('token holder cannot validate nonexistant task', async function () {
+
+  })
+
+  it('token holder cannot validate incomplete task', async function () {
+
+  })
+
+  it('token holder cannot validate task with tokens they do not have', async function () {
+
+  })
+
+  it('reputation holder cannot validate task with reputation', async function () {
+
+  })
+
+  it('validator cannot validate a task more than once', async function () {
+
+  })
+
+  it('can\'t change project to voting state before time is up', async function () {
+
+  })
+
+  it('project changes to voting state when time is up', async function () {
+
+  })
+
+// check that tasks have correct .complete, .weireward and .taskreward values
+// token holder can validate tasks if they exist && they have enough tokens
+// reputation holder can't validate tasks
+// validator can't validate twice on same tasks
+// project goes to correct state after it all ends
+// project doesn't change state before time's up
 
 })

@@ -1,4 +1,4 @@
-pragma solidity 0.4.19;
+pragma solidity 0.4.21;
 
 import "./Project.sol";
 import "./ProjectLibrary.sol";
@@ -81,7 +81,7 @@ contract ReputationRegistry{
         );
         projectRegistry = ProjectRegistry(_projectRegistry);
         plcrVoting = PLCRVoting(_plcrVoting);
-        distributeToken= DistributeToken(_distributeToken);
+        distributeToken = DistributeToken(_distributeToken);
     }
 
     // =====================================================================
@@ -127,13 +127,12 @@ contract ReputationRegistry{
     */
     function proposeProject(uint256 _cost, uint256 _stakingPeriod, string _ipfsHash) external {    //_cost of project in ether
         //calculate cost of project in tokens currently (_cost in wei)
-        //check proposer has at least 5% of the proposed cost in tokens
+        //check proposer has at least 5% of the proposed cost in reputation
         require(now < _stakingPeriod && _cost > 0);
-
         uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
-        uint256 proposerReputationCost = ( //divide by 20 to get 5 percent of tokens
+        uint256 proposerReputationCost = ( //divide by 20 to get 5 percent of reputation
         Division.percent(costProportion, proposeProportion, 10) *
-        distributeToken.totalSupply()) /
+        totalSupply) /
         10000000000;
         require(balances[msg.sender] >= proposerReputationCost);
 
@@ -147,7 +146,7 @@ contract ReputationRegistry{
             proposerReputationCost,
             _ipfsHash
         );
-        ProjectCreated(projectAddress, _cost, proposerReputationCost);
+        emit ProjectCreated(projectAddress, _cost, proposerReputationCost);
     }
 
     /**

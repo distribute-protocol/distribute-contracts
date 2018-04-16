@@ -1,4 +1,4 @@
-pragma solidity 0.4.19;
+pragma solidity 0.4.21;
 
 import "./library/PLCRVoting.sol";
 import "./ReputationRegistry.sol";
@@ -208,7 +208,7 @@ contract ProjectRegistry {
         projects[projectAddress] = true;
         projectsList[projectNonce] = projectAddress;
         projectNonce += 1;
-        LogProjectCreated(projectAddress, _proposer, _cost, _proposerStake);
+        emit LogProjectCreated(projectAddress, _proposer, _cost, _proposerStake);
         return projectAddress;
     }
 

@@ -132,7 +132,53 @@ contract('Active State', (accounts) => {
     assert.equal(totalReputation, 30000, 'incorrect total reputation stored')
   })
 
-  it('worker1 can claim a task', async function () {
+  // stakers can no longer overwrite the top task hash and submit new task lists because the project is active
+  it('token staker can\'t submit a task hash', async function () {
+  })
+
+  it('reputation staker can\'t submit a task hash', async function () {
+  })
+
+  it('non-staker can\'t submit correct hash list of active project', async function () {
+    errorThrown = false
+    try {
+      await PR.submitHashList(projectAddress2, hashTasks(data2), {from: nonStaker})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('token staker can\'t submit incorrect hash list of active project', async function () {
+    errorThrown = false
+    try {
+      await PR.submitHashList(projectAddress2, hashTasks(data1), {from: staker1})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('reputation staker can\'t submit incorrect hash list of active project', async function () {
+  })
+
+  it('token staker can submit correct hash list of active project', async function () {
+  //   await evmIncreaseTime(7 * 25 * 60 * 60)
+  //   await PR.checkActive(projectAddress2)
+  //   await PR.submitHashList(projectAddress2, hashTasks(data2), {from: staker1})
+  //   let contractHash = await PR.stakedProjects.call(projectAddress2)
+  //   let testHash = hashTasksArray(data2)
+  //   assert.equal(contractHash, testHash, 'some hashing thing is screwed up')
+  })
+
+  it('correct tasks are created upon hash list submission', async function () {
+
+  })
+
+  it('reputation staker can submit correct hash list of active project', async function () {
+  })
+
+  it('worker can claim a task if they have enough reputation', async function () {
     let repPrice = 1
     let weiReward = 100000
     let index = 0
@@ -152,7 +198,11 @@ contract('Active State', (accounts) => {
     // console.log(reward)
   })
 
-  it('worker1 can\'t claim another task', async function () {
+  it('correct task updates on worker claiming of task', async function () {
+
+  })
+
+  it('worker can\'t claim a task if they don\'t have enough reputation', async function () {
     errorThrown = false
     try {
       let repPrice = 1
@@ -178,24 +228,11 @@ contract('Active State', (accounts) => {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('worker2 can\'t claim a task if incorrect reputation price is provided', async function () {
+  it('worker can\'t claim a task if incorrect weighting is provided', async function () {
     errorThrown = false
     try {
       let repPrice = 0
       let weiReward = 2000000
-      let index = 1
-      await RR.claimTask(projectAddress, index, 'install a supernode', weiReward, repPrice, {from: worker2})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
-
-  it('worker2 can\'t claim a task if incorrect wei reward is provided', async function () {
-    errorThrown = false
-    try {
-      let repPrice = 1
-      let weiReward = 20000000
       let index = 1
       await RR.claimTask(projectAddress, index, 'install a supernode', weiReward, repPrice, {from: worker2})
     } catch (e) {
@@ -243,27 +280,15 @@ contract('Active State', (accounts) => {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('worker2 can\'t claim a task costing more reputation points than she has', async function () {
-    errorThrown = false
-    try {
-      let repPrice = 2
-      let weiReward = 100
-      let index = 2
-      await RR.claimTask(projectAddress, index, 'break the internet', weiReward, repPrice, {from: worker2})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
 
-  it('worker2 can claim another task', async function () {
+  it('worker can claim another task if they have enough reputation', async function () {
     let repPrice = 1
     let weiReward = 200000
     let index = 1
     await RR.claimTask(projectAddress, index, 'install a supernode', 90, {from: worker2})
     let workerBalance2New = await RR.balances.call(worker2)
     // console.log(workerBalance1New.toNumber())
-    assert.equal(workerBalance2New, workerBalance2 - repPrice, 'worker 1 reputation balance not decremented appropriately')
+    assert.equal(workerBalance2New, workerBalance2 - repPrice, 'worker 2 reputation balance not decremented appropriately')
     let taskHash = hashTasks(data)[index]
     let reward = await PROJ.taskRewards.call(taskHash)
     assert.equal(reward[0].toNumber(), weiReward, 'wei reward stored incorrectly')
@@ -276,6 +301,22 @@ contract('Active State', (accounts) => {
     assert.equal(totalFreeReputation, 1, 'incorrect free reputation stored')
   })
 
+  it('worker cannot mark a task complete that they have not claimed', async function () {
+
+  })
+
+  it('worker can mark a task complete that they have claimed', async function () {
+
+  })
+
+  it('task opens up to reclaiming if worker does not mark it complete before the turnover time is reached', async function () {
+
+  })
+
+  it('can\'t change project to validating state before time is up', async function () {
+
+  })
+
   it('active project becomes validating project when active period is up', async function () {
     let state = await PROJ.state()
     assert.equal(state.toNumber(), 3, 'project should be in active state')
@@ -285,17 +326,10 @@ contract('Active State', (accounts) => {
     assert.equal(state.toNumber(), 4, 'project should have entered validating state')
   })
 
-  it('worker3 can\'t claim a task once the active period is up', async function () {
-    errorThrown = false
-    try {
-      let repPrice = 1
-      let weiReward = 100
-      let index = 3
-      await RR.claimTask(projectAddress, index, 'save the world', weiReward, repPrice, {from: worker3})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
-
+// check to make sure tasks have been created
+// worker claiming
+// marking completed
+// worker reclaiming
+// task expires?
+// project goes to correct next state after it all ends
 })

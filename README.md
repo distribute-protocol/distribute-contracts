@@ -1,5 +1,4 @@
 # Distribute
-[ ![Codeship Status for jessicagmarshall/Distribute](https://app.codeship.com/projects/bfec7110-964f-0135-8d76-6ed07d805e5a/status?branch=master)](https://app.codeship.com/projects/251547)
 
 #### An experiment in using smart contract-enabled token economies to decentralize the governance, maintenance, and financial support of public utilities, communal infrastructure, and common pool resources.
 

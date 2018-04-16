@@ -1,4 +1,4 @@
-pragma solidity 0.4.19;
+pragma solidity 0.4.21;
 
 import "./ProjectRegistry.sol";
 import "./ReputationRegistry.sol";
@@ -24,9 +24,9 @@ contract Project {
     // STATE VARIABLES
     // =====================================================================
 
-    address tokenRegistryAddress;
-    address reputationRegistryAddress;
-    address projectRegistryAddress;
+    address public tokenRegistryAddress;
+    address public reputationRegistryAddress;
+    address public projectRegistryAddress;
 
     uint256 public state;
 
@@ -65,6 +65,7 @@ contract Project {
     mapping (address => uint) public tokenBalances;
     mapping (address => uint) public reputationBalances;
 
+    // MAKE THIS A DLL EVENTUALLY
     address[] public tasks;
 
     uint256 public passAmount;
@@ -129,6 +130,7 @@ contract Project {
         address _reputationRegistry,
         address _tokenRegistry
     ) public {
+        require (bytes(_ipfsHash).length == 46);
         reputationRegistryAddress = _reputationRegistry;
         tokenRegistryAddress = _tokenRegistry;
         projectRegistryAddress = msg.sender;
