@@ -141,6 +141,12 @@ module.exports = function projectHelper (accounts) {
     return currPrice.toNumber()
   }
 
+  obj.project.getState = async function (_projAddr) {
+    let PROJ = await Project.at(_projAddr)
+    let state = await PROJ.state()
+    return state.toNumber()
+  }
+
   obj.project.getWeiCost = async function (_projAddr) {
     let PROJ = await Project.at(_projAddr)
     let weiCost = await PROJ.weiCost()

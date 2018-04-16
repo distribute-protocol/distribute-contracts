@@ -202,12 +202,34 @@ contract('Proposed State', (accounts) => {
     assert.equal(0, stakedRepAfter, 'projAddrR should not have any rep staked on it after tokenStaker1 stakes')
   })
 
-  it('checkStaked does not change token registry proposed project to staked if not fully staked', async function() {
+  it('checkStaked() does not change TR proposed project to staked if not fully staked', async function () {
+    // take stock of variables before calling checkStaked
+    let stateBefore = await projObj.project.getState(projAddrT)
 
+    // attempt to checkStaked
+    await PR.checkStaked(projAddrT)
+
+    // take stock of variables after calling checkStaked
+    let stateAfter = await projObj.project.getState(projAddrT)
+
+    // checks
+    assert.equal(stateBefore, 1, 'state before should be 1')
+    assert.equal(stateAfter, 1, 'state should not have changed')
   })
 
-  it('checkStaked does not change reputation registry proposed project to staked if not fully staked', async function() {
+  it('checkStaked() does not change RR proposed project to staked if not fully staked', async function () {
+    // take stock of variables before calling checkStaked
+    let stateBefore = await projObj.project.getState(projAddrR)
 
+    // attempt to checkStaked
+    await PR.checkStaked(projAddrR)
+
+    // take stock of variables after calling checkStaked
+    let stateAfter = await projObj.project.getState(projAddrR)
+
+    // checks
+    assert.equal(stateBefore, 1, 'state before should be 1')
+    assert.equal(stateAfter, 1, 'state should not have changed')
   })
 
   it('User can stake reputation on a proposed project below the required reputation amount', async function () {
