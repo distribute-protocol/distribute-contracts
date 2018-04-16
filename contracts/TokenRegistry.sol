@@ -171,8 +171,8 @@ contract TokenRegistry {
     */
     function unstakeTokens(address _projectAddress, uint256 _tokens) external {
         require(projectRegistry.projects(_projectAddress) == true);
-        uint256 weiVal = Project(_projectAddress).unstakeTokens(msg.sender, _tokens);
-        distributeToken.transferWeiTo(msg.sender, weiVal);
+        uint256 weiVal = Project(_projectAddress).unstakeTokens(msg.sender, _tokens, address(distributeToken));
+        distributeToken.returnWei(weiVal);
         distributeToken.transferFromEscrow(msg.sender, _tokens);
     }
 

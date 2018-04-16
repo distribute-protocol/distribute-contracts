@@ -96,6 +96,9 @@ module.exports = function projectHelper (accounts) {
   }
 
   obj.mintIfNecessary = async function (_user, _numTokens) {
+    if (_numTokens === undefined) {                // use default minting amount
+      _numTokens = obj.minting.tokensToMint
+    }
     let bal = await obj.getTokenBalance(_user)
     if (_numTokens > bal) {
       obj.mint(_user, _numTokens - bal)
@@ -202,14 +205,14 @@ module.exports = function projectHelper (accounts) {
     }
 
     // seed the system with tokens and rep
-    await obj.mint(obj.user.tokenProposer)
+    await obj.mintIfNecessary(obj.user.tokenProposer)
     await obj.register(obj.user.repProposer)
 
     // ensure proposer has enough tokens
     let weiBal = await obj.getWeiPoolBal()
     let totalTokens = await obj.getTotalTokens()
     let proposerTokenCost = Math.floor((_cost / weiBal / obj.project.proposeProportion) * totalTokens)
-    obj.mintIfNecessary(obj.user.tokenProposer, proposerTokenCost)
+    await obj.mintIfNecessary(obj.user.tokenProposer, proposerTokenCost)
 
     // propose project
     let tx = await obj.contracts.TR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.tokenProposer})
@@ -231,7 +234,7 @@ module.exports = function projectHelper (accounts) {
     }
 
     // seed the system with tokens and rep
-    await obj.mint(obj.user.tokenProposer)
+    await obj.mintIfNecessary(obj.user.tokenProposer)
     await obj.register(obj.user.repProposer)
 
     // propose project

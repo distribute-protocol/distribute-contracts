@@ -269,7 +269,7 @@ contract Project {
     @return The amount of ether to deduct from the projects balance
 
     */
-    function unstakeTokens(address _staker, uint256 _tokens) external onlyTR returns (uint256) {
+    function unstakeTokens(address _staker, uint256 _tokens, address _distributeTokenAddress) external onlyTR returns (uint256) {
         require(state == 1);
         require(
             tokenBalances[_staker].sub(_tokens) < tokenBalances[_staker] &&  //check overflow
@@ -280,6 +280,7 @@ contract Project {
         tokenBalances[_staker] -= _tokens;
         tokensStaked -= _tokens;
         weiBal -= weiVal;
+        _distributeTokenAddress.transfer(weiVal);
         return weiVal;
     }
 

@@ -35,7 +35,7 @@ contract('Propose Projects', function (accounts) {
     PR = projObj.contracts.PR
 
     // fund users with tokens and reputation
-    await projObj.mint(tokenProposer, tokensToMint)   // mint 10000 tokens for token proposer
+    await projObj.mintIfNecessary(tokenProposer, tokensToMint)   // mint 10000 tokens for token proposer
     await projObj.register(repProposer)               // register 10000 reputation for rep proposer
 
     // take stock of variables after minting and registering
@@ -111,7 +111,7 @@ contract('Propose Projects', function (accounts) {
     tx = await RR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: repProposer})
 
     // token supply, token balance checks
-    rBal = await projObj.getRepBalance(repProposer)
+    rrBal = await projObj.getRepBalance(repProposer)
     weiBal = await projObj.getWeiPoolBal()
     totalTokens = await projObj.getTotalTokens()
     totalReputation = await projObj.getTotalRep()
@@ -120,7 +120,7 @@ contract('Propose Projects', function (accounts) {
     repCost = Math.floor((projectCost / weiBal) * totalReputation)
 
     assert.equal(registeredRep, totalReputation, 'total reputation supply shouldn\'t have updated')
-    assert.equal(rBal, registeredRep - proposerCost, 'DT did not set aside appropriate proportion to escrow')
+    assert.equal(rrBal, registeredRep - proposerCost, 'DT did not set aside appropriate proportion to escrow')
 
     // project contract creation, log checks
     log = tx.logs[0].args
