@@ -201,7 +201,7 @@ contract('Proposed State', (accounts) => {
     assert.equal(0, stakedRepAfter, 'projAddrR should not have any rep staked on it after tokenStaker1 stakes')
   })
 
-  it('Rep staker can stake reputation on a TR proposed project below the required reputation amount', async function () {
+  it('Reputation staker can stake reputation on a TR proposed project below the required reputation amount', async function () {
     // get reputation required to fully stake the project
     let requiredRep = await project.calculateRequiredTokens(projAddrT)
     let repToStake = requiredRep - 1
@@ -234,7 +234,7 @@ contract('Proposed State', (accounts) => {
     assert.equal(0, stakedTokensAfter, 'projAddrT should not have any tokens staked on it after repStaker1 stakes')
   })
 
-  it('Rep staker can stake reputation on a RR proposed project below the required reputation amount', async function () {
+  it('Reputation staker can stake reputation on a RR proposed project below the required reputation amount', async function () {
     // get reputation required to fully stake the project
     let requiredRep = await project.calculateRequiredTokens(projAddrR)
     let repToStake = requiredRep - 1
@@ -267,7 +267,7 @@ contract('Proposed State', (accounts) => {
     assert.equal(0, stakedTokensAfter, 'projAddrR should not have any tokens staked on it after repStaker1 stakes')
   })
 
-  it('Rep staker can unstake reputation from TR proposed project', async function () {
+  it('Reputation staker can unstake reputation from TR proposed project', async function () {
     // get reputation staked on the project
     let repToUnstake = await project.getStakedRep(projAddrT)
 
@@ -296,7 +296,7 @@ contract('Proposed State', (accounts) => {
     assert.equal(0, stakedTokensAfter, 'projAddrT should not have any rep staked on it after repStaker1 unstakes')
   })
 
-  it('Rep staker can unstake reputation from RR proposed project', async function () {
+  it('Reputation staker can unstake reputation from RR proposed project', async function () {
     // get reputation staked on the project
     let repToUnstake = await project.getStakedRep(projAddrR)
 
@@ -323,7 +323,92 @@ contract('Proposed State', (accounts) => {
     assert.equal(0, stakedRepAfter, 'projAddrR should have a total of repToStake rep staked before unstaking')
     assert.equal(0, stakedTokensBefore, 'projAddrR should not have any rep staked on it before unstaking')
     assert.equal(0, stakedTokensAfter, 'projAddrR should not have any rep staked on it after repStaker1 unstakes')
-})
+  })
+
+  it('Not staker can\'t stake tokens they don\'t have on TR proposed project', async function () {
+    await utils.mintIfNecessary(notStaker, 1)
+    errorThrown = false
+    try {
+      await TR.stakeTokens(projAddrT, 1, {from: notStaker})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('Not staker can\'t stake tokens they don\'t have on RR proposed project', async function () {
+    await utils.mintIfNecessary(notStaker, 1)
+    errorThrown = false
+    try {
+      await TR.stakeTokens(projAddrR, 1, {from: notStaker})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('Not staker can\'t stake reputation they don\'t have on TR proposed project', async function () {
+    await utils.register(notStaker)
+    errorThrown = false
+    try {
+      await RR.stakeReputation(projAddrT, 1, {from: notStaker})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('Not staker can\'t stake reputation they don\'t have on RR proposed project', async function () {
+    await utils.register(notStaker)
+    errorThrown = false
+    try {
+      await RR.stakeReputation(projAddrR, 1, {from: notStaker})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('Not staker can\'t unstake tokens they don\'t have from TR proposed project', async function () {
+    errorThrown = false
+    try {
+      await TR.unstakeTokens(projAddrT, 1, {from: notStaker})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('Not staker can\'t unstake tokens they don\'t have from RR proposed project', async function () {
+    errorThrown = false
+    try {
+      await TR.unstakeTokens(projAddrR, 1, {from: notStaker})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('Not staker can\'t unstake reputation they don\'t have from TR proposed project', async function () {
+    errorThrown = false
+    try {
+      await RR.unstakeReputation(projAddrT, 1, {from: notStaker})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
+  it('Not staker can\'t unstake reputation they don\'t have from RR proposed project', async function () {
+    errorThrown = false
+    try {
+      await RR.unstakeReputation(projAddrR, 1, {from: notStaker})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
+  })
+
 
   it('checkStaked() does not change TR proposed project to staked if not fully staked', async function () {
     // take stock of variables before calling checkStaked
@@ -355,34 +440,8 @@ contract('Proposed State', (accounts) => {
     assert.equal(stateAfter, 1, 'state should not have changed')
   })
 
-  it('Non-staker can\'t unstake tokens', async function () {
-    errorThrown = false
-    try {
-      // await TR.unstakeTokens(projectAddress, 1, {from: nonStaker})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
 
-  it('Non-staker can\'t unstake reputation', async function () {
-
-  })
-
-  it('User can\'t stake tokens they don\'t have', async function () {
-    errorThrown = false
-    try {
-      // await TR.stakeTokens(projectAddress, 1, {from: nonStaker})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
-
-  it('User can\'t stake reputation they don\'t have', async function () {
-  })
-
-  it('Refund proposer can\'t be called from token registry while still in propose period', async function () {
+  it('Refund proposer can\'t be called on TR proposed project while still in propose period', async function () {
     errorThrown = false
     try {
       // await TR.refundProposer(projectAddress, {from: proposer})
@@ -392,14 +451,34 @@ contract('Proposed State', (accounts) => {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('Refund proposer can\'t be called from reputation registry while still in propose period', async function () {
+  it('Refund proposer can\'t be called on RR proposed project while still in propose period', async function () {
+    errorThrown = false
+    try {
+      // await TR.refundProposer(projectAddress, {from: proposer})
+    } catch (e) {
+      errorThrown = true
+    }
+    assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('Refund staker can\'t be called from token registry while still in propose period', async function () {
+  it('Refund token staker can\'t be called on TR proposed project while still in propose period', async function () {
   })
 
-  it('Refund staker can\'t be called from reputation registry while still in propose period', async function () {
+  it('Refund token staker can\'t be called on RR proposed project while still in propose period', async function () {
   })
+
+  it('Refund reputation staker can\'t be called on TR proposed project while still in propose period', async function () {
+  })
+
+  it('Refund reputation staker can\'t be called on RR proposed project while still in propose period', async function () {
+  })
+
+
+
+
+
+
+
 
   it('User can stake extra tokens on a proposed project but only the required amount of wei and tokens is sent', async function () {
   })
