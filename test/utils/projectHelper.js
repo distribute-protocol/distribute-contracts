@@ -173,6 +173,12 @@ module.exports = function projectHelper (accounts) {
     return requiredTokens
   }
 
+  obj.project.getRequiredReputation = async function (_projAddr) {
+    let PROJ = await Project.at(_projAddr)
+    let requiredRep = await PROJ.reputationCost()
+    return requiredRep.toNumber()
+  }
+
   obj.project.getStakedTokens = async function (_projAddr) {
     let PROJ = await Project.at(_projAddr)
     let stakedTokens = await PROJ.tokensStaked()

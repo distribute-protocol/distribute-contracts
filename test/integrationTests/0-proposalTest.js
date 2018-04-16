@@ -1,6 +1,5 @@
 const Project = artifacts.require('Project')
 
-const assert = require('assert')
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 
