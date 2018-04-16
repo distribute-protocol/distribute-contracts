@@ -132,6 +132,7 @@ contract('Proposed State', (accounts) => {
   })
 
   it('Token staker can unstake tokens from TR proposed project', async function () {
+    // get number of tokens to unstake
     let tokensToUnstake = await project.getUserStakedTokens(tokenStaker1, projAddrT)
 
     // take stock of variables before unstaking
@@ -166,6 +167,7 @@ contract('Proposed State', (accounts) => {
   })
 
   it('Token staker can unstake tokens from RR proposed project', async function () {
+    // get number of tokens to unstake
     let tokensToUnstake = await project.getUserStakedTokens(tokenStaker1, projAddrR)
 
     // take stock of variables before unstaking
@@ -199,6 +201,130 @@ contract('Proposed State', (accounts) => {
     assert.equal(0, stakedRepAfter, 'projAddrR should not have any rep staked on it after tokenStaker1 stakes')
   })
 
+  it('Rep staker can stake reputation on a TR proposed project below the required reputation amount', async function () {
+    // get reputation required to fully stake the project
+    let requiredRep = await project.calculateRequiredTokens(projAddrT)
+    let repToStake = requiredRep - 1
+
+    // take stock of variables before staking
+    let rsBalBefore = await utils.getRepBalance(repStaker1)
+    let rsStakedRepBefore = await project.getUserStakedRep(repStaker1, projAddrT)
+    let stakedTokensBefore = await project.getStakedTokens(projAddrT)
+    let stakedRepBefore = await project.getStakedRep(projAddrT)
+
+    // assert that repStaker1 has enough reputation for this
+    assert.isAtLeast(rsBalBefore, repToStake, 'repStaker1 doesn\'t have enough reputation to stake this much on the project')
+
+    // repStaker1 stakes all but one of the required reputation
+    await RR.stakeReputation(projAddrT, repToStake, {from: repStaker1})
+
+    // take stock of variables after staking
+    let rsBalAfter = await utils.getRepBalance(repStaker1)
+    let rsStakedRepAfter = await project.getUserStakedRep(repStaker1, projAddrT)
+    let stakedTokensAfter = await project.getStakedTokens(projAddrT)
+    let stakedRepAfter = await project.getStakedRep(projAddrT)
+
+    // checks
+    assert.equal(rsBalBefore, rsBalAfter + repToStake, 'repStaker1\'s balance updated incorrectly')
+    assert.equal(0, rsStakedRepBefore, 'repStaker1 should not have any rep staked on projAddrT before staking')
+    assert.equal(0, stakedRepBefore, 'projAddrT should not have any rep staked on it before repStaker1 stakes')
+    assert.equal(repToStake, rsStakedRepAfter, 'repStaker1 should have repToStake amount of rep staked on projAddrT')
+    assert.equal(repToStake, stakedRepAfter, 'projAddrT should have a total of repToStake rep staked before staking')
+    assert.equal(0, stakedTokensBefore, 'projAddrT should not have any tokens staked on it before staking')
+    assert.equal(0, stakedTokensAfter, 'projAddrT should not have any tokens staked on it after repStaker1 stakes')
+  })
+
+  it('Rep staker can stake reputation on a RR proposed project below the required reputation amount', async function () {
+    // get reputation required to fully stake the project
+    let requiredRep = await project.calculateRequiredTokens(projAddrR)
+    let repToStake = requiredRep - 1
+
+    // take stock of variables before staking
+    let rsBalBefore = await utils.getRepBalance(repStaker1)
+    let rsStakedRepBefore = await project.getUserStakedRep(repStaker1, projAddrR)
+    let stakedTokensBefore = await project.getStakedTokens(projAddrR)
+    let stakedRepBefore = await project.getStakedRep(projAddrR)
+
+    // assert that repStaker1 has enough reputation for this
+    assert.isAtLeast(rsBalBefore, repToStake, 'repStaker1 doesn\'t have enough reputation to stake this much on the project')
+
+    // repStaker1 stakes all but one of the required reputation
+    await RR.stakeReputation(projAddrR, repToStake, {from: repStaker1})
+
+    // take stock of variables after staking
+    let rsBalAfter = await utils.getRepBalance(repStaker1)
+    let rsStakedRepAfter = await project.getUserStakedRep(repStaker1, projAddrR)
+    let stakedTokensAfter = await project.getStakedTokens(projAddrR)
+    let stakedRepAfter = await project.getStakedRep(projAddrR)
+
+    // checks
+    assert.equal(rsBalBefore, rsBalAfter + repToStake, 'repStaker1\'s balance updated incorrectly')
+    assert.equal(0, rsStakedRepBefore, 'repStaker1 should not have any rep staked on projAddrR before staking')
+    assert.equal(0, stakedRepBefore, 'projAddrR should not have any rep staked on it before repStaker1 stakes')
+    assert.equal(repToStake, rsStakedRepAfter, 'repStaker1 should have repToStake amount of rep staked on projAddrR')
+    assert.equal(repToStake, stakedRepAfter, 'projAddrR should have a total of repToStake rep staked before staking')
+    assert.equal(0, stakedTokensBefore, 'projAddrR should not have any tokens staked on it before staking')
+    assert.equal(0, stakedTokensAfter, 'projAddrR should not have any tokens staked on it after repStaker1 stakes')
+  })
+
+  it('Rep staker can unstake reputation from TR proposed project', async function () {
+    // get reputation staked on the project
+    let repToUnstake = await project.getStakedRep(projAddrT)
+
+    // take stock of variables before unstaking
+    let rsBalBefore = await utils.getRepBalance(repStaker1)
+    let rsStakedRepBefore = await project.getUserStakedRep(repStaker1, projAddrT)
+    let stakedTokensBefore = await project.getStakedTokens(projAddrT)
+    let stakedRepBefore = await project.getStakedRep(projAddrT)
+
+    // repStaker1 unstakes all of the reputation they had staked
+    await RR.unstakeReputation(projAddrT, repToUnstake, {from: repStaker1})
+
+    // take stock of variables after unstaking
+    let rsBalAfter = await utils.getRepBalance(repStaker1)
+    let rsStakedRepAfter = await project.getUserStakedRep(repStaker1, projAddrT)
+    let stakedTokensAfter = await project.getStakedTokens(projAddrT)
+    let stakedRepAfter = await project.getStakedRep(projAddrT)
+
+    // checks
+    assert.equal(rsBalBefore + repToUnstake, rsBalAfter, 'repStaker1\'s balance updated incorrectly')
+    assert.equal(repToUnstake, rsStakedRepBefore, 'repStaker1 should not have any rep staked on projAddrT before unstaking')
+    assert.equal(repToUnstake, stakedRepBefore, 'projAddrT should not have any rep staked on it before repStaker1 unstakes')
+    assert.equal(0, rsStakedRepAfter, 'repStaker1 should have repToStake amount of rep staked on projAddrT')
+    assert.equal(0, stakedRepAfter, 'projAddrT should have a total of repToStake rep staked before unstaking')
+    assert.equal(0, stakedTokensBefore, 'projAddrT should not have any rep staked on it before unstaking')
+    assert.equal(0, stakedTokensAfter, 'projAddrT should not have any rep staked on it after repStaker1 unstakes')
+  })
+
+  it('Rep staker can unstake reputation from RR proposed project', async function () {
+    // get reputation staked on the project
+    let repToUnstake = await project.getStakedRep(projAddrR)
+
+    // take stock of variables before unstaking
+    let rsBalBefore = await utils.getRepBalance(repStaker1)
+    let rsStakedRepBefore = await project.getUserStakedRep(repStaker1, projAddrR)
+    let stakedTokensBefore = await project.getStakedTokens(projAddrR)
+    let stakedRepBefore = await project.getStakedRep(projAddrR)
+
+    // repStaker1 unstakes all of the reputation they had staked
+    await RR.unstakeReputation(projAddrR, repToUnstake, {from: repStaker1})
+
+    // take stock of variables after unstaking
+    let rsBalAfter = await utils.getRepBalance(repStaker1)
+    let rsStakedRepAfter = await project.getUserStakedRep(repStaker1, projAddrR)
+    let stakedTokensAfter = await project.getStakedTokens(projAddrR)
+    let stakedRepAfter = await project.getStakedRep(projAddrR)
+
+    // checks
+    assert.equal(rsBalBefore + repToUnstake, rsBalAfter, 'repStaker1\'s balance updated incorrectly')
+    assert.equal(repToUnstake, rsStakedRepBefore, 'repStaker1 should not have any rep staked on projAddrR before unstaking')
+    assert.equal(repToUnstake, stakedRepBefore, 'projAddrR should not have any rep staked on it before repStaker1 unstakes')
+    assert.equal(0, rsStakedRepAfter, 'repStaker1 should have repToStake amount of rep staked on projAddrR')
+    assert.equal(0, stakedRepAfter, 'projAddrR should have a total of repToStake rep staked before unstaking')
+    assert.equal(0, stakedTokensBefore, 'projAddrR should not have any rep staked on it before unstaking')
+    assert.equal(0, stakedTokensAfter, 'projAddrR should not have any rep staked on it after repStaker1 unstakes')
+})
+
   it('checkStaked() does not change TR proposed project to staked if not fully staked', async function () {
     // take stock of variables before calling checkStaked
     let stateBefore = await project.getState(projAddrT)
@@ -228,76 +354,6 @@ contract('Proposed State', (accounts) => {
     assert.equal(stateBefore, 1, 'state before should be 1')
     assert.equal(stateAfter, 1, 'state should not have changed')
   })
-
-  it('Rep staker can stake reputation on a TR proposed project below the required reputation amount', async function () {
-    // get reputation required to fully stake the project
-    let requiredRep = await project.calculateRequiredTokens(projAddrT)
-    let repToStake = requiredRep - 1
-
-    // take stock of variables before staking
-    let rsBalBefore = await utils.getRepBalance(repStaker1)
-    let rsStakedRepBefore = await project.getUserStakedRep(repStaker1, projAddrT)
-    let stakedTokensBefore = await project.getStakedTokens(projAddrT)
-    let stakedRepBefore = await project.getStakedRep(projAddrT)
-
-    // assert that repStaker1 has enough rep for this
-    assert.isAtLeast(rsBalBefore, repToStake, 'repStaker1 doesn\'t have enough reputation to stake this much on the project')
-
-    // tokenStaker1 stakes all but one of the required tokens
-    await RR.stakeReputation(projAddrT, repToStake, {from: repStaker1})
-
-    // take stock of tokenStaker1's token balance after staking
-    let rsBalAfter = await utils.getRepBalance(repStaker1)
-    let rsStakedRepAfter = await project.getUserStakedRep(repStaker1, projAddrT)
-    let stakedTokensAfter = await project.getStakedTokens(projAddrT)
-    let stakedRepAfter = await project.getStakedRep(projAddrT)
-
-    // checks
-    assert.equal(rsBalBefore, rsBalAfter + repToStake, 'repStaker1\'s balance updated incorrectly')
-    assert.equal(0, rsStakedRepBefore, 'repStaker1 should not have any rep staked on projAddrT before staking')
-    assert.equal(0, stakedRepBefore, 'projAddrT should not have any rep staked on it before repStaker1 stakes')
-    assert.equal(repToStake, rsStakedRepAfter, 'repStaker1 should have repToStake amount of rep staked on projAddrT')
-    assert.equal(repToStake, stakedRepAfter, 'projAddrT should have a total of repToStake rep staked before staking')
-    assert.equal(0, stakedTokensBefore, 'projAddrT should not have any tokens staked on it before staking')
-    assert.equal(0, stakedTokensAfter, 'projAddrT should not have any tokens staked on it after repStaker1 stakes')
-  })
-
-  it('Rep staker can stake reputation on a RR proposed project below the required reputation amount', async function () {
-    // get reputation required to fully stake the project
-    let requiredRep = await project.calculateRequiredTokens(projAddrR)
-    let repToStake = requiredRep - 1
-
-    // take stock of variables before staking
-    let rsBalBefore = await utils.getRepBalance(repStaker1)
-    let rsStakedRepBefore = await project.getUserStakedRep(repStaker1, projAddrR)
-    let stakedTokensBefore = await project.getStakedTokens(projAddrR)
-    let stakedRepBefore = await project.getStakedRep(projAddrR)
-
-    // assert that repStaker1 has enough rep for this
-    assert.isAtLeast(rsBalBefore, repToStake, 'repStaker1 doesn\'t have enough reputation to stake this much on the project')
-
-    // tokenStaker1 stakes all but one of the required tokens
-    await RR.stakeReputation(projAddrR, repToStake, {from: repStaker1})
-
-    // take stock of tokenStaker1's token balance after staking
-    let rsBalAfter = await utils.getRepBalance(repStaker1)
-    let rsStakedRepAfter = await project.getUserStakedRep(repStaker1, projAddrR)
-    let stakedTokensAfter = await project.getStakedTokens(projAddrR)
-    let stakedRepAfter = await project.getStakedRep(projAddrR)
-
-    // checks
-    assert.equal(rsBalBefore, rsBalAfter + repToStake, 'repStaker1\'s balance updated incorrectly')
-    assert.equal(0, rsStakedRepBefore, 'repStaker1 should not have any rep staked on projAddrR before staking')
-    assert.equal(0, stakedRepBefore, 'projAddrR should not have any rep staked on it before repStaker1 stakes')
-    assert.equal(repToStake, rsStakedRepAfter, 'repStaker1 should have repToStake amount of rep staked on projAddrR')
-    assert.equal(repToStake, stakedRepAfter, 'projAddrR should have a total of repToStake rep staked before staking')
-    assert.equal(0, stakedTokensBefore, 'projAddrR should not have any tokens staked on it before staking')
-    assert.equal(0, stakedTokensAfter, 'projAddrR should not have any tokens staked on it after repStaker1 stakes')
-  })
-
-  it('reputation staker can unstake reputation', async function () {
-  })
-
 
   it('Non-staker can\'t unstake tokens', async function () {
     errorThrown = false
