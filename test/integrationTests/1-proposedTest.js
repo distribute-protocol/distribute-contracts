@@ -561,16 +561,32 @@ contract('Proposed State', (accounts) => {
   })
 
 
+  // unstake after the following test
   it('Token staker can stake extra tokens on TR proposed project but only the required amount of wei and tokens is sent', async function () {
   })
 
+  // unstake after the following test
   it('Token staker can stake extra tokens on RR proposed project but only the required amount of wei and tokens is sent', async function () {
   })
 
+  // unstake after the following test
   it('Reputation staker can stake extra reputation on TR proposed project but only the required amount of reputation is sent', async function () {
   })
 
+  // unstake after the following test
   it('Reputation staker can stake extra reputation on RR proposed project but only the required amount of reputation is sent', async function () {
+  })
+
+  it('Multiple token stakers can stake TR proposed project', async function () {
+  })
+
+  it('Multiple token stakers can stake RR proposed project', async function () {
+  })
+
+  it('Multiple reputation stakers can stake TR proposed project', async function () {
+  })
+
+  it('Multiple reputation stakers can stake RR proposed project', async function () {
   })
 
   it('Fully staked TR proposed project automatically transitions into staked period', async function () {
@@ -582,43 +598,19 @@ contract('Proposed State', (accounts) => {
   })
 
   it('Token staker can no longer call unstake token on TR proposed project once in the staked period', async function () {
-    errorThrown = false
-    try {
-      // await TR.unstakeTokens(1, {from: staker})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+
   })
 
   it('Token staker can no longer call unstake token on RR proposed project once in the staked period', async function () {
-    errorThrown = false
-    try {
-      // await TR.unstakeTokens(1, {from: staker})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+
   })
 
   it('Reputation staker can no longer call unstake reputation on TR proposed project once in the staked period', async function () {
-    errorThrown = false
-    try {
-      // await TR.unstakeTokens(1, {from: staker})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+
   })
 
   it('Reputation staker can no longer call unstake reputation on RR proposed project once in the staked period', async function () {
-    errorThrown = false
-    try {
-      // await TR.unstakeTokens(1, {from: staker})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+
   })
 
   it('Refund proposer can be called on TR proposed project after it is fully staked', async function () {
@@ -630,62 +622,52 @@ contract('Proposed State', (accounts) => {
   })
 
   it('Non-proposer can\'t call refund proposer from token registry', async function () {
-    errorThrown = false
-    try {
-      // await TR.refundProposer(projectAddress, {from: nonProposer})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+
   })
 
   it('Non-proposer can\'t call refund proposer from reputation registry', async function () {
+
   })
 
   it('Proposer can\'t call refund proposer multiple times from token registry', async function () {
-    errorThrown = false
-    try {
-      // await TR.refundProposer(projectAddress, {from: proposer})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+
   })
 
   it('Proposer can\'t call refund proposer multiple times from reputation registry', async function () {
+
   })
 
   it('can\'t propose a project from token registry whose staking deadline has passed', async function () {
-    errorThrown = false
-    try {
-      // await TR.proposeProject(1, stakingPeriodFail, {from: proposer})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+
   })
 
   it('can\'t propose a project from reputation registry whose staking deadline has passed', async function () {
+
   })
 
   it('Refund staker can be called from token registry once project is staked', async function () {
+
   })
 
   it('Refund staker can be called from reputation registry once project is staked', async function () {
+
   })
 
   // fast forward 1 week
 
   it('proposed project from token registry becomes expired if not staked', async function () {
+
   })
 
   it('proposed project from reputation registry becomes expired if not staked', async function () {
+
   })
 
   it('proposer can\'t call refund proposer for expired project from token registry', async function () {
+
   })
 
   it('proposer can\'t call refund proposer for expired project from reputation registry', async function () {
-  })
 
+  })
 })
