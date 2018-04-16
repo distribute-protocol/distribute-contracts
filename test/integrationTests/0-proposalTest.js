@@ -13,6 +13,7 @@ contract('Propose Projects', function (accounts) {
   let {tokenProposer, repProposer, notProposer} = projObj.user
   let {tokensToMint} = projObj.minting
   let {registeredRep} = projObj.reputation
+  let {utils} = projObj
   let {stakingPeriod, expiredStakingPeriod, projectCost, ipfsHash, incorrectIpfsHash, proposeProportion} = projObj.project
 
   // local test variables
@@ -35,21 +36,21 @@ contract('Propose Projects', function (accounts) {
     PR = projObj.contracts.PR
 
     // fund users with tokens and reputation
-    await projObj.mintIfNecessary(tokenProposer, tokensToMint)   // mint 10000 tokens for token proposer
-    await projObj.register(repProposer)               // register 10000 reputation for rep proposer
+    await utils.mintIfNecessary(tokenProposer, tokensToMint)   // mint 10000 tokens for token proposer
+    await utils.register(repProposer)               // register 10000 reputation for rep proposer
 
     // take stock of variables after minting and registering
-    ttBal = await projObj.getTokenBalance(tokenProposer)
-    rtBal = await projObj.getTokenBalance(repProposer)
-    ntBal = await projObj.getTokenBalance(notProposer)
+    ttBal = await utils.getTokenBalance(tokenProposer)
+    rtBal = await utils.getTokenBalance(repProposer)
+    ntBal = await utils.getTokenBalance(notProposer)
 
-    trBal = await projObj.getRepBalance(tokenProposer)
-    rrBal = await projObj.getRepBalance(repProposer)
-    nrBal = await projObj.getRepBalance(notProposer)
+    trBal = await utils.getRepBalance(tokenProposer)
+    rrBal = await utils.getRepBalance(repProposer)
+    nrBal = await utils.getRepBalance(notProposer)
 
-    totalTokens = await projObj.getTotalTokens()
-    totalReputation = await projObj.getTotalRep()
-    repHolders = await projObj.getRepHolders()
+    totalTokens = await utils.getTotalTokens()
+    totalReputation = await utils.getTotalRep()
+    repHolders = await utils.getRepHolders()
 
     // checks
     assert.equal(0, rtBal + ntBal, 'rep proposer or not proposer somehow have tokens')
@@ -67,10 +68,10 @@ contract('Propose Projects', function (accounts) {
     tx = await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: tokenProposer})
 
     // token supply, token balance checks
-    ttBal = await projObj.getTokenBalance(tokenProposer)
-    weiBal = await projObj.getWeiPoolBal()
-    totalTokens = await projObj.getTotalTokens()
-    totalReputation = await projObj.getTotalRep()
+    ttBal = await utils.getTokenBalance(tokenProposer)
+    weiBal = await utils.getWeiPoolBal()
+    totalTokens = await utils.getTotalTokens()
+    totalReputation = await utils.getTotalRep()
 
     proposerCost = Math.floor((projectCost / weiBal / proposeProportion) * totalTokens)
     repCost = Math.floor((projectCost / weiBal) * totalReputation)
@@ -111,10 +112,10 @@ contract('Propose Projects', function (accounts) {
     tx = await RR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: repProposer})
 
     // token supply, token balance checks
-    rrBal = await projObj.getRepBalance(repProposer)
-    weiBal = await projObj.getWeiPoolBal()
-    totalTokens = await projObj.getTotalTokens()
-    totalReputation = await projObj.getTotalRep()
+    rrBal = await utils.getRepBalance(repProposer)
+    weiBal = await utils.getWeiPoolBal()
+    totalTokens = await utils.getTotalTokens()
+    totalReputation = await utils.getTotalRep()
 
     proposerCost = Math.floor((projectCost / weiBal / proposeProportion) * totalReputation)
     repCost = Math.floor((projectCost / weiBal) * totalReputation)
