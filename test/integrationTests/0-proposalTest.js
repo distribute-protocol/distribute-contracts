@@ -7,7 +7,7 @@ contract('Propose Projects', function (accounts) {
   // set up project helper
   let projObj = projectHelper(accounts)
 
-  // get projectHelper variables
+  // get project helper variables
   let TR, RR, PR
   let {tokenProposer, repProposer, notProposer} = projObj.user
   let {tokensToMint} = projObj.minting
