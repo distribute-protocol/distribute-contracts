@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "bluebird": "^3.5.1",
     "eslint-config-airbnb": "^16.1.0",
     "ethereumjs-abi": "^0.6.5",
     "scrypt": "^6.0.3",
@@ -11,6 +10,7 @@
     "web3-utils": "^1.0.0-beta.34"
   },
   "devDependencies": {
+    "bluebird": "^3.5.1",
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^12.1.0",
     "eslint-config-standard": "^11.0.0",
