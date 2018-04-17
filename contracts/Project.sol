@@ -254,7 +254,9 @@ contract Project {
     */
     function stakeTokens(address _staker, uint256 _tokens, uint256 _weiValue) external onlyTR {
         require(state == 1);
-
+        require(
+            tokenBalances[_staker].add(_tokens) > tokenBalances[_staker]    // check overflow
+        );
         tokenBalances[_staker] += _tokens;
         tokensStaked += _tokens;
         weiBal += _weiValue;

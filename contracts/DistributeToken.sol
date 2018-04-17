@@ -180,7 +180,6 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     */
     function transferWeiTo(address _address, uint256 _weiValue) external onlyTRorRR {
         require(_weiValue <= weiBal);
-
         weiBal -= _weiValue;
         _address.transfer(_weiValue);
     }

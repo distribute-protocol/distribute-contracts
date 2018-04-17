@@ -145,6 +145,8 @@ contract TokenRegistry {
         require(distributeToken.balanceOf(msg.sender) >= _tokens);
         Project project = Project(_projectAddress);
         // require(project.state() == 1);   ------> this now happens in project.stakeTokens()
+
+        // calculate amount of wei the project still needs
         uint256 weiRemaining = project.weiCost() - project.weiBal();
         require(weiRemaining > 0);
 
@@ -155,9 +157,11 @@ contract TokenRegistry {
             ? weiRemaining
             : weiVal;       //how much ether to send on change
         uint256 tokens = flag
-            ? ((weiRemaining/currentPrice) + 1)
+            ? ((weiRemaining/currentPrice) + 1)     // round up to prevent loophole where user can stake without losing tokens
             : _tokens;
+        // updating of P weiBal happens via the next line
         project.stakeTokens(msg.sender, tokens, weiChange);
+        // the transfer of wei and the updating of DT weiBal happens via the next line
         distributeToken.transferWeiTo(_projectAddress, weiChange);
         distributeToken.transferToEscrow(msg.sender, tokens);
         projectRegistry.checkStaked(_projectAddress);
@@ -172,6 +176,8 @@ contract TokenRegistry {
     function unstakeTokens(address _projectAddress, uint256 _tokens) external {
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 weiVal = Project(_projectAddress).unstakeTokens(msg.sender, _tokens, address(distributeToken));
+        // the actual wei is sent back to DT via Project.unstakeTokens()
+        // the weiBal is updated via the next line
         distributeToken.returnWei(weiVal);
         distributeToken.transferFromEscrow(msg.sender, _tokens);
     }
