@@ -209,6 +209,17 @@ module.exports = function projectHelper (accounts) {
     return propStake.toNumber()
   }
 
+  obj.project.getNextDeadline = async function (_projAddr) {
+    let PROJ = await Project.at(_projAddr)
+    let nextDeadline = await PROJ.nextDeadline()
+    return nextDeadline.toNumber()
+  }
+
+  obj.project.getStakedStatePeriod = async function (_projAddr) {
+    let PROJ = await Project.at(_projAddr)
+    let stakedStatePeriod = await PROJ.stakedStatePeriod()
+    return stakedStatePeriod.toNumber()
+  }
   // project return functions
   // return project (address) proposed by token holder
   obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash) {

@@ -139,12 +139,12 @@ contract TokenRegistry {
     @param _projectAddress Address of the project
     @param _tokens Amount of tokens to stake
     */
-    // ATTENTION: Will likely revert at the end...look at best practice, should we revert at beginning or in the context of checkStaked
     function stakeTokens(address _projectAddress, uint256 _tokens) external {
         require(projectRegistry.projects(_projectAddress) == true);
         require(distributeToken.balanceOf(msg.sender) >= _tokens);
         Project project = Project(_projectAddress);
-        // require(project.state() == 1);   ------> this now happens in project.stakeTokens()
+        // handles edge case where someone attempts to stake past the staking deadline
+        projectRegistry.checkStaked(_projectAddress);
 
         // calculate amount of wei the project still needs
         uint256 weiRemaining = project.weiCost() - project.weiBal();
@@ -175,6 +175,9 @@ contract TokenRegistry {
     */
     function unstakeTokens(address _projectAddress, uint256 _tokens) external {
         require(projectRegistry.projects(_projectAddress) == true);
+        // handles edge case where someone attempts to unstake past the staking deadline
+        projectRegistry.checkStaked(_projectAddress);
+        
         uint256 weiVal = Project(_projectAddress).unstakeTokens(msg.sender, _tokens, address(distributeToken));
         // the actual wei is sent back to DT via Project.unstakeTokens()
         // the weiBal is updated via the next line

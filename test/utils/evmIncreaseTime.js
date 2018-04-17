@@ -4,11 +4,11 @@ web3.version = Promise.promisifyAll(web3.version)
 web3.eth = Promise.promisifyAll(web3.eth)
 
 function increaseTime (seconds) {
-  return new Promise(function(resolve, reject){
+  return new Promise(function (resolve, reject) {
     web3.currentProvider.sendAsync(
       {
-        jsonrpc: "2.0",
-        method: "evm_increaseTime",
+        jsonrpc: '2.0',
+        method: 'evm_increaseTime',
         params: [seconds],
         id: 0
       },
@@ -32,9 +32,9 @@ async function waitTime (seconds) {
 
 module.exports = async function (seconds) {
   const netver = await web3.version.getNetworkAsync()
-  if (netver !== "234") {
-    return await increaseTime(seconds)
+  if (netver !== '234') {
+    return increaseTime(seconds)
   } else {
-    return await waitTime(seconds)
+    return waitTime(seconds)
   }
 }

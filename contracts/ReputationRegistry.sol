@@ -177,6 +177,9 @@ contract ReputationRegistry{
         require(projectRegistry.projects(_projectAddress) == true);
         require(balances[msg.sender] >= _reputation && _reputation > 0);                    //make sure project exists & RH has tokens to stake
         Project project = Project(_projectAddress);
+        // handles edge case where someone attempts to stake past the staking deadline
+        projectRegistry.checkStaked(_projectAddress);
+
         uint256 repRemaining = project.reputationCost() - project.reputationStaked();
         uint256 reputationVal = _reputation < repRemaining ? _reputation : repRemaining;
         balances[msg.sender] -= reputationVal;
@@ -193,6 +196,9 @@ contract ReputationRegistry{
     function unstakeReputation(address _projectAddress, uint256 _reputation) external {
         require(projectRegistry.projects(_projectAddress) == true);
         require(_reputation > 0);
+        // handles edge case where someone attempts to stake past the staking deadline
+        projectRegistry.checkStaked(_projectAddress);
+
         balances[msg.sender] += _reputation;
         Project(_projectAddress).unstakeReputation(msg.sender, _reputation);
     }

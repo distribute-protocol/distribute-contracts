@@ -2,7 +2,7 @@ const Project = artifacts.require('Project')
 
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
-const evmIncreaseTime = require('../utils/evmIncreaseTime')
+const evm_increaseTime = require('../utils/evmIncreaseTime')
 
 contract('Proposed State', (accounts) => {
   // set up project helper
@@ -10,10 +10,10 @@ contract('Proposed State', (accounts) => {
 
   // get project helper variables
   let TR, RR, PR
-  let {tokenProposer, repProposer, notProposer} = projObj.user
-  let {tokenStaker1, tokenStaker2} = projObj.user
-  let {repStaker1, repStaker2, notStaker, notProject} = projObj.user
-  let {project, utils, returnProject} = projObj
+  let {user, project, utils, returnProject} = projObj
+  let {tokenProposer, repProposer, notProposer} = user
+  let {tokenStaker1, tokenStaker2} = user
+  let {repStaker1, repStaker2, notStaker, notProject} = user
 
   // local test variables
   let projAddrT1, projAddrT2, projAddrT3, projAddrT4
@@ -1086,6 +1086,7 @@ contract('Proposed State', (accounts) => {
 
       // checks
       assert.equal(state, 2, 'state before should be 2')
+      // need a nextDeadline update check
     })
 
     it('Fully staked RR proposed project automatically transitions into staked period', async function () {
@@ -1094,6 +1095,8 @@ contract('Proposed State', (accounts) => {
 
       // checks
       assert.equal(state, 2, 'state before should be 2')
+      // need a nextDeadline update check
+
     })
   })
 
@@ -1186,7 +1189,7 @@ contract('Proposed State', (accounts) => {
     it('Not proposer can\'t call refund proposer from reputation registry', async function () {
       errorThrown = false
       try {
-        await TR.refundProposer(projAddrR2, {from: notProposer})
+        await RR.refundProposer(projAddrR2, {from: notProposer})
       } catch (e) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
@@ -1221,46 +1224,183 @@ contract('Proposed State', (accounts) => {
     })
 
     it('Refund proposer can be called on RR proposed project after it is fully staked', async function () {
+      // take stock of variables
+      let weiCost = await project.getWeiCost(projAddrR2)
 
+      let rpBalBefore = await utils.getRepBalance(repProposer)
+      let weiPoolBefore = await utils.getWeiPoolBal()
+      let proposerStakeBefore = await project.getProposerStake(projAddrR2)
+
+      // call refund proposer
+      await RR.refundProposer(projAddrR2, {from: repProposer})
+
+      // take stock of variables
+      let rpBalAfter = await utils.getRepBalance(repProposer)
+      let weiPoolAfter = await utils.getWeiPoolBal()
+      let proposerStakeAfter = await project.getProposerStake(projAddrR2)
+
+      // checks
+      assert.equal(rpBalBefore + proposerStakeBefore, rpBalAfter, 'repProposer balance updated incorrectly')
+      assert.equal(weiPoolBefore, weiPoolAfter + Math.floor(weiCost / 100), 'incorrect wei reward returned')
+      assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
     })
 
     it('Proposer can\'t call refund proposer multiple times from token registry', async function () {
-
+      errorThrown = false
+      try {
+        await TR.refundProposer(projAddrR2, {from: tokenProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('Proposer can\'t call refund proposer multiple times from reputation registry', async function () {
-
+      errorThrown = false
+      try {
+        await RR.refundProposer(projAddrR2, {from: notProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
   describe('refund staker on staked projects', () => {
-    it('Refund staker can\'t be called from token registry once project is staked', async function () {
+    it('Refund token staker can\'t be called on TR proposed project once it is staked', async function () {
+      // take stock of variables
+      let tsBal = await project.getUserStakedTokens(tokenStaker1, projAddrT2)
 
+      // assert that tokenStaker1 has tokens staked on projAddrT2
+      assert.isAtLeast(tsBal, 1, 'tokenStaker1 has no tokens staked on projAddrT2')
+
+      // check for error
+      errorThrown = false
+      try {
+        await TR.refundStaker(projAddrT2, {from: tokenStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Refund staker can\'t be called from reputation registry once project is staked', async function () {
+    it('Refund token staker can\'t be called on RR proposed project once it is staked', async function () {
+      // take stock of variables
+      let tsBal = await project.getUserStakedTokens(tokenStaker1, projAddrR2)
 
+      // assert that tokenStaker1 has tokens staked on projAddrR2
+      assert.isAtLeast(tsBal, 1, 'tokenStaker1 has no tokens staked on projAddrR2')
+
+      // check for error
+      errorThrown = false
+      try {
+        await TR.refundStaker(projAddrR2, {from: tokenStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Refund reputation staker can\'t be called on TR proposed project once it is staked', async function () {
+      // take stock of variables
+      let rsBal = await project.getUserStakedRep(repStaker1, projAddrT2)
+
+      // assert that tokenStaker1 has tokens staked on projAddrT2
+      assert.isAtLeast(rsBal, 1, 'repStaker1 has no repsutation staked on projAddrT2')
+
+      // check for error
+      errorThrown = false
+      try {
+        await RR.refundStaker(projAddrT2, {from: repStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Refund reputation staker can\'t be called on RR proposed project once it is staked', async function () {
+      // take stock of variables
+      let rsBal = await project.getUserStakedRep(repStaker1, projAddrR2)
+
+      // assert that tokenStaker1 has tokens staked on projAddrR2
+      assert.isAtLeast(rsBal, 1, 'repStaker1 has no repsutation staked on projAddrR2')
+
+      // check for error
+      errorThrown = false
+      try {
+        await RR.refundStaker(projAddrR2, {from: repStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
-  // fast forward 1 week
-  describe('time out state changes', () => {
-    it('proposed project from token registry becomes expired if not staked', async function () {
 
+  describe('time out state changes', () => {
+    before(async function () {
+      // fast forward time
+      evm_increaseTime(604800 + 86400)    // fast forward time 1 week and 1 day
     })
 
-    it('proposed project from reputation registry becomes expired if not staked', async function () {
+    it('TR proposed project becomes expired if not staked at staking deadline', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrT4)
 
+      // call checkStaked()
+      await PR.checkStaked(projAddrT4)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrT4)
+
+      // checks
+      assert.equal(stateBefore, 1, 'state before should be 1')
+      assert.equal(stateAfter, 8, 'state after should be 8')
+    })
+
+    it('RR proposed project becomes expired if not staked at staking deadline', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrR4)
+
+      // call checkStaked()
+      await PR.checkStaked(projAddrR4)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrR4)
+
+      // checks
+      assert.equal(stateBefore, 1, 'state before should be 1')
+      assert.equal(stateAfter, 8, 'state after should be 8')
     })
   })
 
   describe('refund proposer on expired projects', () => {
-    it('proposer can\'t call refund proposer for expired project from token registry', async function () {
-
+    it('proposer can\'t call refund proposer for expired TR proposed project', async function () {
+      errorThrown = false
+      try {
+        await TR.refundProposer(projAddrT4, {from: tokenProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('proposer can\'t call refund proposer for expired project from reputation registry', async function () {
-
+    it('proposer can\'t call refund proposer for expired RR proposed project', async function () {
+      errorThrown = false
+      try {
+        await RR.refundProposer(projAddrT4, {from: repProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 })
