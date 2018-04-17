@@ -4,12 +4,8 @@ node_js:
 cache:
   directories:
     - node_modules
-"install": [
-    "npm install -g truffle",
-    "npm install -g truffle-expect",
-    "npm install -g truffle-config",
-    "npm install -g ethereumjs-testrpc",
-    "npm install -g web3"
-  ],
 script:
-  - npm run test
+- ganache-cli -p 7545 > /dev/null &
+- sleep 5
+- truffle migrate
+- truffle test
