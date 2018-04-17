@@ -10,7 +10,7 @@ contract('Proposed State', (accounts) => {
 
   // get project helper variables
   let TR, RR, PR
-  let {tokenProposer, repProposer} = projObj.user
+  let {tokenProposer, repProposer, notProposer} = projObj.user
   let {tokenStaker1, tokenStaker2} = projObj.user
   let {repStaker1, repStaker2, notStaker, notProject} = projObj.user
   let {project, utils, returnProject} = projObj
@@ -1081,46 +1081,146 @@ contract('Proposed State', (accounts) => {
 
   describe('state changes on fully staked proposed projects', () => {
     it('Fully staked TR proposed project automatically transitions into staked period', async function () {
+      // take stock of variables
+      let state = await project.getState(projAddrT2)
 
+      // checks
+      assert.equal(state, 2, 'state before should be 2')
     })
 
     it('Fully staked RR proposed project automatically transitions into staked period', async function () {
+      // take stock of variables
+      let state = await project.getState(projAddrR2)
 
+      // checks
+      assert.equal(state, 2, 'state before should be 2')
     })
   })
 
   describe('staking on staked projects', () => {
     it('Token staker can no longer call unstake token on TR proposed project once in the staked period', async function () {
+      // take stock of variables
+      let tsBal = await project.getUserStakedTokens(tokenStaker1, projAddrT2)
 
+      // assert that tokenStaker1 has tokens staked on the project
+      assert.isAtLeast(tsBal, 1, 'tokenStaker1 has no tokens staked on projAddrT2')
+
+      // check for error
+      errorThrown = false
+      try {
+        await TR.unstakeTokens(projAddrT2, 1, {from: tokenStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('Token staker can no longer call unstake token on RR proposed project once in the staked period', async function () {
+      // take stock of variables
+      let tsBal = await project.getUserStakedTokens(tokenStaker1, projAddrR2)
 
+      // assert that tokenStaker1 has tokens staked on the project
+      assert.isAtLeast(tsBal, 1, 'tokenStaker1 has no tokens staked on projAddrR2')
+
+      // check for error
+      errorThrown = false
+      try {
+        await TR.unstakeTokens(projAddrR2, 1, {from: tokenStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('Reputation staker can no longer call unstake reputation on TR proposed project once in the staked period', async function () {
+      // take stock of variables
+      let rsBal = await project.getUserStakedRep(repStaker1, projAddrT2)
 
+      // assert that repStaker1 has reputation staked on the project
+      assert.isAtLeast(rsBal, 1, 'repStaker1 has no reputation staked on projAddrT')
+
+      // check for error
+      errorThrown = false
+      try {
+        await RR.unstakeReputation(projAddrT2, 1, {from: repStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('Reputation staker can no longer call unstake reputation on RR proposed project once in the staked period', async function () {
+      // take stock of variables
+      let rsBal = await project.getUserStakedRep(repStaker1, projAddrR2)
 
+      // assert that repStaker1 has reputation staked on the project
+      assert.isAtLeast(rsBal, 1, 'repStaker1 has no reputation staked on projAddrR2')
+
+      // check for error
+      errorThrown = false
+      try {
+        await RR.unstakeReputation(projAddrR2, 1, {from: repStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
   describe('refund proposer on staked projects', () => {
-    it('Refund proposer can be called on TR proposed project after it is fully staked', async function () {
+    it('Not proposer can\'t call refund proposer from token registry', async function () {
+      errorThrown = false
+      try {
+        await TR.refundProposer(projAddrT2, {from: notProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
 
+    it('Not proposer can\'t call refund proposer from reputation registry', async function () {
+      errorThrown = false
+      try {
+        await TR.refundProposer(projAddrR2, {from: notProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    // these two tests must come after not proposer refund proposer tests
+    it('Refund proposer can be called on TR proposed project after it is fully staked', async function () {
+      // take stock of variables
+      let weiCost = await project.getWeiCost(projAddrT2)
+
+      let tpBalBefore = await utils.getTokenBalance(tokenProposer)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let weiPoolBefore = await utils.getWeiPoolBal()
+      let proposerStakeBefore = await project.getProposerStake(projAddrT2)
+
+      // call refund proposer
+      await TR.refundProposer(projAddrT2, {from: tokenProposer})
+
+      // take stock of variables
+      let tpBalAfter = await utils.getTokenBalance(tokenProposer)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let weiPoolAfter = await utils.getWeiPoolBal()
+      let proposerStakeAfter = await project.getProposerStake(projAddrT2)
+
+      // checks
+      assert.equal(tpBalBefore + proposerStakeBefore, tpBalAfter, 'tokenProposer balance updated incorrectly')
+      assert.equal(TRBalBefore, TRBalAfter + proposerStakeBefore, 'TR balance updated incorrectly')
+      assert.equal(weiPoolBefore, weiPoolAfter + Math.floor(weiCost / 100), 'incorrect wei reward returned')
+      assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
     })
 
     it('Refund proposer can be called on RR proposed project after it is fully staked', async function () {
-
-    })
-
-    it('Non-proposer can\'t call refund proposer from token registry', async function () {
-
-    })
-
-    it('Non-proposer can\'t call refund proposer from reputation registry', async function () {
 
     })
 

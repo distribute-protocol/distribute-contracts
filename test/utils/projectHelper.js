@@ -203,6 +203,12 @@ module.exports = function projectHelper (accounts) {
     return stakedRep.toNumber()
   }
 
+  obj.project.getProposerStake = async function (_projAddr) {
+    let PROJ = await Project.at(_projAddr)
+    let propStake = await PROJ.proposerStake()
+    return propStake.toNumber()
+  }
+
   // project return functions
   // return project (address) proposed by token holder
   obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash) {
