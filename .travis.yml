@@ -1,5 +1,19 @@
 language: node_js
 node_js:
  - "node"
+cache:
+  directories:
+    - node_modules
+"install": [
+    "npm install -g truffle",
+    "npm install -g truffle-expect",
+    "npm install -g truffle-config",
+    "npm install -g ethereumjs-testrpc",
+    "npm install -g web3"
+  ],
+  "before_script": [
+    "cd smart-contract/lottery",
+    "testrpc > testrpc.log &"
+  ],
 script:
   - npm run test
