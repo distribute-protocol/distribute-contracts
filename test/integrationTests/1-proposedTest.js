@@ -10,21 +10,14 @@ contract('Proposed State', (accounts) => {
 
   // get project helper variables
   let TR, RR, PR
-  let {tokenProposer, repProposer, notProposer} = projObj.user
+  let {tokenProposer, repProposer} = projObj.user
   let {tokenStaker1, tokenStaker2} = projObj.user
   let {repStaker1, repStaker2, notStaker, notProject} = projObj.user
-  let {tokensToMint} = projObj.minting
-  let {registeredRep} = projObj.reputation
   let {project, utils, returnProject} = projObj
 
   // local test variables
-  let PROJ_T, PROJ_R, PROJ_TX, PROJ_RX
-  let projAddrT, projAddrR, projAddrTx, projAddrRx
-  let totalTokens, totalReputation
-  let tBal, rBal, nBal
-  let proposerCost, repCost
-  let weiBal
-  let tx, log
+  let projAddrT, projAddrR
+  let projAddrTx, projAddrRx
   let errorThrown
 
   before(async function () {
@@ -37,14 +30,10 @@ contract('Proposed State', (accounts) => {
     // propose projects that should succeed
     projAddrT = await returnProject.proposed_T()     // to check staking, refund proposer
     projAddrR = await returnProject.proposed_R()     // to check staking, refund proposer
-    PROJ_T = await Project.at(projAddrT)
-    PROJ_R = await Project.at(projAddrR)
 
     // propose projects that should fail
     projAddrTx = await returnProject.proposed_T()     // to check expiration
     projAddrRx = await returnProject.proposed_R()     // to check expiration
-    PROJ_TX = await Project.at(projAddrTx)
-    PROJ_RX = await Project.at(projAddrRx)
 
     // fund token stakers
     await utils.mintIfNecessary(tokenStaker1)
@@ -333,6 +322,7 @@ contract('Proposed State', (accounts) => {
     try {
       await TR.stakeTokens(projAddrT, 1, {from: notStaker})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -343,6 +333,7 @@ contract('Proposed State', (accounts) => {
     try {
       await TR.stakeTokens(projAddrR, 1, {from: notStaker})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -353,6 +344,7 @@ contract('Proposed State', (accounts) => {
     try {
       await RR.stakeReputation(projAddrT, 1, {from: notStaker})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -363,6 +355,7 @@ contract('Proposed State', (accounts) => {
     try {
       await RR.stakeReputation(projAddrR, 1, {from: notStaker})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -373,6 +366,7 @@ contract('Proposed State', (accounts) => {
     try {
       await TR.unstakeTokens(projAddrT, 1, {from: notStaker})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -383,6 +377,7 @@ contract('Proposed State', (accounts) => {
     try {
       await TR.unstakeTokens(projAddrR, 1, {from: notStaker})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -393,6 +388,7 @@ contract('Proposed State', (accounts) => {
     try {
       await RR.unstakeReputation(projAddrT, 1, {from: notStaker})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -403,6 +399,7 @@ contract('Proposed State', (accounts) => {
     try {
       await RR.unstakeReputation(projAddrR, 1, {from: notStaker})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -417,6 +414,7 @@ contract('Proposed State', (accounts) => {
     try {
       await TR.stakeTokens(notProject, 1, {from: tokenStaker1})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -430,7 +428,8 @@ contract('Proposed State', (accounts) => {
     errorThrown = false
     try {
       await RR.stakeReputation(notProject, 1, {from: repStaker1})
-    } catch(e) {
+    } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -473,6 +472,7 @@ contract('Proposed State', (accounts) => {
     try {
       await TR.refundProposer(projAddrT, {from: tokenProposer})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -483,6 +483,8 @@ contract('Proposed State', (accounts) => {
     try {
       await RR.refundProposer(projAddrR, {from: repProposer})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -498,6 +500,7 @@ contract('Proposed State', (accounts) => {
     try {
       await TR.refundStaker(projAddrT, {from: tokenStaker1})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -516,6 +519,7 @@ contract('Proposed State', (accounts) => {
     try {
       await TR.refundStaker(projAddrR, {from: tokenStaker1})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -534,6 +538,7 @@ contract('Proposed State', (accounts) => {
     try {
       await RR.refundStaker(projAddrT, {from: repStaker1})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -552,6 +557,7 @@ contract('Proposed State', (accounts) => {
     try {
       await RR.refundStaker(projAddrR, {from: repStaker1})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')

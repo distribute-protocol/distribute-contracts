@@ -153,8 +153,9 @@ contract('Propose Projects', function (accounts) {
   it('Proposer with tokens can\'t propose project from TR with staking period that\'s passed', async function () {
     errorThrown = false
     try {
-      await TR.proposeProject(projectCost, expiredStakingPeriod, {from: tokenProposer})
+      await TR.proposeProject(projectCost, expiredStakingPeriod, ipfsHash, {from: tokenProposer})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -165,6 +166,7 @@ contract('Propose Projects', function (accounts) {
     try {
       await RR.proposeProject(projectCost, expiredStakingPeriod, ipfsHash, {from: repProposer})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -175,6 +177,7 @@ contract('Propose Projects', function (accounts) {
     try {
       await TR.proposeProject(projectCost, stakingPeriod, incorrectIpfsHash, {from: tokenProposer})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -185,6 +188,7 @@ contract('Propose Projects', function (accounts) {
     try {
       await RR.proposeProject(projectCost, stakingPeriod, incorrectIpfsHash, {from: repProposer})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -195,6 +199,7 @@ contract('Propose Projects', function (accounts) {
     try {
       await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: notProposer})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
@@ -205,6 +210,7 @@ contract('Propose Projects', function (accounts) {
     try {
       await RR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: notProposer})
     } catch (e) {
+      assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
