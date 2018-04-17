@@ -1,11 +1,6 @@
-const Promise = require('bluebird')
-// let abi = require('ethereumjs-abi');
-let Web3Utils = require('web3-utils')
+/* global web3 */
 
-// function KeccakHashes (types, bytesarray) {
-//   let hash = Web3Utils.soliditySha3(types, bytesarray).toString('hex')
-//   return hash
-// }
+const Web3Utils = require('web3-utils')
 
 const KeccakHashes = (types, bytesarray) => {
   // {t: 'string', v: 'Hello!%'}, {t: 'int8', v:-23}, {t: 'address', v: '0x85F43D8a49eeB85d32Cf465507DD71d507100C1d'}

@@ -1,20 +1,31 @@
 {
   "dependencies": {
-    "assert": "^1.4.1",
     "bluebird": "^3.5.1",
+    "eslint-config-airbnb": "^16.1.0",
     "ethereumjs-abi": "^0.6.5",
     "scrypt": "^6.0.3",
     "solc-js": "^0.4.20-browser.1",
+    "truffle": "^4.1.6",
     "truffle-hdwallet-provider": "^0.0.3",
-    "web3": "^0.20.6"
+    "web3": "^0.20.6",
+    "web3-utils": "^1.0.0-beta.34"
   },
   "devDependencies": {
-    "solidity-coverage": "^0.4.15",
-    "web3-utils": "^1.0.0-beta.34"
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-config-standard": "^11.0.0",
+    "eslint-plugin-import": "^2.11.0",
+    "eslint-plugin-node": "^6.0.1",
+    "eslint-plugin-promise": "^3.7.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "ganache-cli": "^6.1.0",
+    "solidity-coverage": "^0.4.15"
   },
   "scripts": {
     "test": "truffle test",
     "coverage": "./node_modules/.bin/solidity-coverage",
-    "mythril": "myth -o markdown --truffle > report.md"
+    "mythril": "myth -o markdown --truffle > report.md",
+    "lint": "/node_modules/.bin/eslint",
+    "fix": "/node_modules/.bin/eslint --fix"
   }
 }

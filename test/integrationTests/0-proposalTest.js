@@ -1,3 +1,5 @@
+/* eslint-env mocha */
+/* global assert contract artifacts */
 const Project = artifacts.require('Project')
 
 const projectHelper = require('../utils/projectHelper')
@@ -35,8 +37,8 @@ contract('Propose Projects', function (accounts) {
     PR = projObj.contracts.PR
 
     // fund users with tokens and reputation
-    await utils.mintIfNecessary(tokenProposer, tokensToMint)   // mint 10000 tokens for token proposer
-    await utils.register(repProposer)               // register 10000 reputation for rep proposer
+    await utils.mintIfNecessary(tokenProposer, tokensToMint) // mint 10000 tokens for token proposer
+    await utils.register(repProposer) // register 10000 reputation for rep proposer
 
     // take stock of variables after minting and registering
     ttBal = await utils.getTokenBalance(tokenProposer)
@@ -59,7 +61,6 @@ contract('Propose Projects', function (accounts) {
     assert.equal(tokensToMint, totalTokens, 'total token supply did not update correctly')
     assert.equal(registeredRep, totalReputation, 'total reputation supply did not update correctly')
     assert.equal(1, repHolders, 'there should be 1 rep holder after registering repProposer')
-
   })
 
   it('Proposer can propose project with tokens', async function () {

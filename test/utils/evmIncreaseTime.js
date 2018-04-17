@@ -1,3 +1,4 @@
+/* global web3 */
 const delay = require('./delay')
 const Promise = require('bluebird')
 web3.version = Promise.promisifyAll(web3.version)

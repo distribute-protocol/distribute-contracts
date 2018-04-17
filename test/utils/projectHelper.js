@@ -1,3 +1,4 @@
+/* global artifacts web3 */
 const TokenRegistry = artifacts.require('TokenRegistry')
 const ReputationRegistry = artifacts.require('ReputationRegistry')
 const DistributeToken = artifacts.require('DistributeToken')
@@ -5,7 +6,7 @@ const ProjectRegistry = artifacts.require('ProjectRegistry')
 const ProjectLibrary = artifacts.require('ProjectLibrary')
 const Project = artifacts.require('Project')
 
-const evmIncreaseTime = require('./evmIncreaseTime')
+// const evmIncreaseTime = require('./evmIncreaseTime')
 
 module.exports = function projectHelper (accounts) {
   let obj = {}
@@ -59,12 +60,12 @@ module.exports = function projectHelper (accounts) {
   obj.reputation.registeredRep = 10000
 
   // mutable project details
-  obj.project.now = new Date().getTime() / 1000                             // in seconds
-  obj.project.stakingPeriod = Math.floor(obj.project.now + 604800)          // blockchain understands seconds                    // one week from now
-  obj.project.expiredStakingPeriod = 10                                     // January 1st, 1970
+  obj.project.now = new Date().getTime() / 1000 // in seconds
+  obj.project.stakingPeriod = Math.floor(obj.project.now + 604800) // blockchain understands seconds                    // one week from now
+  obj.project.expiredStakingPeriod = 10 // January 1st, 1970
   obj.project.projectCost = parseInt(web3.toWei(0.5, 'ether'))
-  obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala'   // length == 46
-  obj.project.incorrectIpfsHash = 'whyiseveryspokeleadawhiteman'            // length != 46
+  obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala' // length == 46
+  obj.project.incorrectIpfsHash = 'whyiseveryspokeleadawhiteman' // length != 46
 
   // immutable project details
   obj.project.proposeProportion = 20
@@ -81,7 +82,7 @@ module.exports = function projectHelper (accounts) {
 
   // helper functions
   obj.utils.mint = async function (_user, _numTokens) {
-    if (_numTokens === undefined) {                // use default minting amount
+    if (_numTokens === undefined) { // use default minting amount
       _numTokens = obj.minting.tokensToMint
     }
     let mintingCost = await obj.contracts.DT.weiRequired(_numTokens, {from: _user})
@@ -97,7 +98,7 @@ module.exports = function projectHelper (accounts) {
   }
 
   obj.utils.mintIfNecessary = async function (_user, _numTokens) {
-    if (_numTokens === undefined) {                // use default minting amount
+    if (_numTokens === undefined) { // use default minting amount
       _numTokens = obj.minting.tokensToMint
     }
     let bal = await obj.utils.getTokenBalance(_user)
@@ -225,13 +226,13 @@ module.exports = function projectHelper (accounts) {
   obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash) {
     // input parameter checks
     if (_cost === undefined) {
-      _cost = obj.project.projectCost             // use default project cost
+      _cost = obj.project.projectCost // use default project cost
     }
     if (_stakingPeriod === undefined) {
-      _stakingPeriod = obj.project.stakingPeriod  // use default staking period
+      _stakingPeriod = obj.project.stakingPeriod // use default staking period
     }
     if (_ipfsHash === undefined) {
-      _ipfsHash = obj.project.ipfsHash            // use default staking period
+      _ipfsHash = obj.project.ipfsHash // use default staking period
     }
 
     // seed the system with tokens and rep
@@ -247,20 +248,20 @@ module.exports = function projectHelper (accounts) {
     // propose project
     let tx = await obj.contracts.TR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.tokenProposer})
     let log = tx.logs[0].args
-    return log.projectAddress.toString()         // return project address
+    return log.projectAddress.toString() // return project address
   }
 
   // return project (address) proposed by reputation holder
   obj.returnProject.proposed_R = async function (_cost, _stakingPeriod, _ipfsHash) {
     // input parameter checks
     if (_cost === undefined) {
-      _cost = obj.project.projectCost             // use default project cost
+      _cost = obj.project.projectCost // use default project cost
     }
     if (_stakingPeriod === undefined) {
-      _stakingPeriod = obj.project.stakingPeriod  // use default staking period
+      _stakingPeriod = obj.project.stakingPeriod // use default staking period
     }
     if (_ipfsHash === undefined) {
-      _ipfsHash = obj.project.ipfsHash            // use default staking period
+      _ipfsHash = obj.project.ipfsHash // use default staking period
     }
 
     // seed the system with tokens and rep
@@ -275,12 +276,12 @@ module.exports = function projectHelper (accounts) {
 
   // return project (address) proposed by token holder and staked by 2 of each
   obj.returnProject.staked_TR = async function (_cost, _stakingPeriod, _ipfsHash) {
-    let projAddr = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
+    // let projAddr = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
   }
 
   // return project (address) proposed by reputation holder and staked by 2 of each
   obj.returnProject.staked_RT = async function (_cost, _stakingPeriod, _ipfsHash) {
-    let projAddr = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
+    // let projAddr = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
   }
 
   return obj

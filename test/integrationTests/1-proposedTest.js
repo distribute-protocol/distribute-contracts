@@ -1,8 +1,8 @@
-const Project = artifacts.require('Project')
-
+/* eslint-env mocha */
+/* global assert contract */
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
-const evm_increaseTime = require('../utils/evmIncreaseTime')
+const evmIncreaseTime = require('../utils/evmIncreaseTime')
 
 contract('Proposed State', (accounts) => {
   // set up project helper
@@ -68,7 +68,7 @@ contract('Proposed State', (accounts) => {
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
       let weiBalBefore = await project.getWeiBal(projAddrT1)
-      let weiPoolBefore = await utils.getWeiPoolBal()
+      // let weiPoolBefore = await utils.getWeiPoolBal()
       let tsStakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrT1)
       let stakedRepBefore = await project.getStakedRep(projAddrT1)
@@ -83,7 +83,7 @@ contract('Proposed State', (accounts) => {
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
       let weiBalAfter = await project.getWeiBal(projAddrT1)
-      let weiPoolAfter = await utils.getWeiPoolBal()
+      // let weiPoolAfter = await utils.getWeiPoolBal()
       let tsStakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
       let stakedTokensAfter = await project.getStakedTokens(projAddrT1)
       let stakedRepAfter = await project.getStakedRep(projAddrT1)
@@ -112,7 +112,7 @@ contract('Proposed State', (accounts) => {
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
       let weiBalBefore = await project.getWeiBal(projAddrR1)
-      let weiPoolBefore = await utils.getWeiPoolBal()
+      // let weiPoolBefore = await utils.getWeiPoolBal()
       let tsStakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrR1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrR1)
       let stakedRepBefore = await project.getStakedRep(projAddrR1)
@@ -127,7 +127,7 @@ contract('Proposed State', (accounts) => {
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
       let weiBalAfter = await project.getWeiBal(projAddrR1)
-      let weiPoolAfter = await utils.getWeiPoolBal()
+      // let weiPoolAfter = await utils.getWeiPoolBal()
       let tsStakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR1)
       let stakedTokensAfter = await project.getStakedTokens(projAddrR1)
       let stakedRepAfter = await project.getStakedRep(projAddrR1)
@@ -152,8 +152,8 @@ contract('Proposed State', (accounts) => {
       // take stock of variables
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let weiPoolBefore = await utils.getWeiPoolBal()
-      let weiBalBefore = await project.getWeiBal(projAddrT1)
+      // let weiPoolBefore = await utils.getWeiPoolBal()
+      // let weiBalBefore = await project.getWeiBal(projAddrT1)
       let tsStakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrT1)
       let stakedRepBefore = await project.getStakedRep(projAddrT1)
@@ -164,7 +164,7 @@ contract('Proposed State', (accounts) => {
       // take stock of variables
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let weiPoolAfter = await utils.getWeiPoolBal()
+      // let weiPoolAfter = await utils.getWeiPoolBal()
       let weiBalAfter = await project.getWeiBal(projAddrT1)
       let tsStakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
       let stakedTokensAfter = await project.getStakedTokens(projAddrT1)
@@ -190,8 +190,8 @@ contract('Proposed State', (accounts) => {
       // take stock of variables
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let weiPoolBefore = await utils.getWeiPoolBal()
-      let weiBalBefore = await project.getWeiBal(projAddrR1)
+      // let weiPoolBefore = await utils.getWeiPoolBal()
+      // let weiBalBefore = await project.getWeiBal(projAddrR1)
       let tsStakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrR1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrR1)
       let stakedRepBefore = await project.getStakedRep(projAddrR1)
@@ -202,7 +202,7 @@ contract('Proposed State', (accounts) => {
       // take stock of variables
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let weiPoolAfter = await utils.getWeiPoolBal()
+      // let weiPoolAfter = await utils.getWeiPoolBal()
       let weiBalAfter = await project.getWeiBal(projAddrR1)
       let tsStakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR1)
       let stakedTokensAfter = await project.getStakedTokens(projAddrR1)
@@ -549,7 +549,7 @@ contract('Proposed State', (accounts) => {
       let ts2BalBefore = await utils.getTokenBalance(tokenStaker2)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
       let weiBalBefore = await project.getWeiBal(projAddrT3)
-      let weiPoolBefore = await utils.getWeiPoolBal()
+      // let weiPoolBefore = await utils.getWeiPoolBal()
       let ts1StakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT3)
       let ts2StakedTokensBefore = await project.getUserStakedTokens(tokenStaker2, projAddrT3)
       let stakedTokensBefore = await project.getStakedTokens(projAddrT3)
@@ -566,7 +566,7 @@ contract('Proposed State', (accounts) => {
       let ts2BalMiddle = await utils.getTokenBalance(tokenStaker2)
       let TRBalMiddle = await utils.getTokenBalance(TR.address)
       let weiBalMiddle = await project.getWeiBal(projAddrT3)
-      let weiPoolMiddle = await utils.getWeiPoolBal()
+      // let weiPoolMiddle = await utils.getWeiPoolBal()
       let ts1StakedTokensMiddle = await project.getUserStakedTokens(tokenStaker1, projAddrT3)
       let ts2StakedTokensMiddle = await project.getUserStakedTokens(tokenStaker2, projAddrT3)
       let stakedTokensMiddle = await project.getStakedTokens(projAddrT3)
@@ -605,7 +605,7 @@ contract('Proposed State', (accounts) => {
       let ts2BalAfter = await utils.getTokenBalance(tokenStaker2)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
       let weiBalAfter = await project.getWeiBal(projAddrT3)
-      let weiPoolAfter = await utils.getWeiPoolBal()
+      // let weiPoolAfter = await utils.getWeiPoolBal()
       let ts1StakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrT3)
       let ts2StakedTokensAfter = await project.getUserStakedTokens(tokenStaker2, projAddrT3)
       let stakedTokensAfter = await project.getStakedTokens(projAddrT3)
@@ -639,7 +639,7 @@ contract('Proposed State', (accounts) => {
       let ts2BalBefore = await utils.getTokenBalance(tokenStaker2)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
       let weiBalBefore = await project.getWeiBal(projAddrR3)
-      let weiPoolBefore = await utils.getWeiPoolBal()
+      // let weiPoolBefore = await utils.getWeiPoolBal()
       let ts1StakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrR3)
       let ts2StakedTokensBefore = await project.getUserStakedTokens(tokenStaker2, projAddrR3)
       let stakedTokensBefore = await project.getStakedTokens(projAddrR3)
@@ -656,7 +656,7 @@ contract('Proposed State', (accounts) => {
       let ts2BalMiddle = await utils.getTokenBalance(tokenStaker2)
       let TRBalMiddle = await utils.getTokenBalance(TR.address)
       let weiBalMiddle = await project.getWeiBal(projAddrR3)
-      let weiPoolMiddle = await utils.getWeiPoolBal()
+      // let weiPoolMiddle = await utils.getWeiPoolBal()
       let ts1StakedTokensMiddle = await project.getUserStakedTokens(tokenStaker1, projAddrR3)
       let ts2StakedTokensMiddle = await project.getUserStakedTokens(tokenStaker2, projAddrR3)
       let stakedTokensMiddle = await project.getStakedTokens(projAddrR3)
@@ -695,7 +695,7 @@ contract('Proposed State', (accounts) => {
       let ts2BalAfter = await utils.getTokenBalance(tokenStaker2)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
       let weiBalAfter = await project.getWeiBal(projAddrR3)
-      let weiPoolAfter = await utils.getWeiPoolBal()
+      // let weiPoolAfter = await utils.getWeiPoolBal()
       let ts1StakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR3)
       let ts2StakedTokensAfter = await project.getUserStakedTokens(tokenStaker2, projAddrR3)
       let stakedTokensAfter = await project.getStakedTokens(projAddrR3)
@@ -716,7 +716,7 @@ contract('Proposed State', (accounts) => {
     it('Multiple reputation stakers can stake TR proposed project', async function () {
       // get reputation required to fully stake the project
       let requiredRep1 = await project.getRequiredReputation(projAddrT3)
-      let repToStake1 = Math.floor(requiredRep1 / 30)                     // running out of reputation
+      let repToStake1 = Math.floor(requiredRep1 / 30) // running out of reputation
 
       // take stock of variables
       let rs1BalBefore = await utils.getRepBalance(repStaker1)
@@ -759,7 +759,7 @@ contract('Proposed State', (accounts) => {
 
       // get tokens required to fully stake the project
       let requiredRep2 = await project.getRequiredReputation(projAddrT3)
-      let repToStake2 = Math.floor(requiredRep2 / 30)                     // running out of reputation
+      let repToStake2 = Math.floor(requiredRep2 / 30) // running out of reputation
 
       // assert that repStaker1 has enough reputation for this
       assert.isAtLeast(rs2BalBefore, repToStake2, 'repStaker2 doesn\'t have enough reputation to stake this much on projAddrT3')
@@ -791,7 +791,7 @@ contract('Proposed State', (accounts) => {
     it('Multiple reputation stakers can stake RR proposed project', async function () {
       // get reputation required to fully stake the project
       let requiredRep1 = await project.getRequiredReputation(projAddrR3)
-      let repToStake1 = Math.floor(requiredRep1 / 30)                     // running out of reputation
+      let repToStake1 = Math.floor(requiredRep1 / 30) // running out of reputation
 
       // take stock of variables
       let rs1BalBefore = await utils.getRepBalance(repStaker1)
@@ -834,7 +834,7 @@ contract('Proposed State', (accounts) => {
 
       // get tokens required to fully stake the project
       let requiredRep2 = await project.getRequiredReputation(projAddrR3)
-      let repToStake2 = Math.floor(requiredRep2 / 30)                     // running out of reputation
+      let repToStake2 = Math.floor(requiredRep2 / 30) // running out of reputation
 
       // assert that repStaker1 has enough reputation for this
       assert.isAtLeast(rs2BalBefore, repToStake2, 'repStaker2 doesn\'t have enough reputation to stake this much on projAddrR3')
@@ -1124,7 +1124,6 @@ contract('Proposed State', (accounts) => {
       // checks
       assert.equal(state, 2, 'state before should be 2')
       // need a nextDeadline update check
-
     })
   })
 
@@ -1370,11 +1369,10 @@ contract('Proposed State', (accounts) => {
     })
   })
 
-
   describe('time out state changes', () => {
     before(async function () {
       // fast forward time
-      evm_increaseTime(604800)    // fast forward time 1 week
+      evmIncreaseTime(604800) // fast forward time 1 week
     })
 
     it('TR proposed project becomes expired if not staked at staking deadline', async function () {
