@@ -1,4 +1,4 @@
-# Distribute
+# Distribute [![Build Status](https://travis-ci.org/jessicagmarshall/Distribute.svg?branch=master)](https://travis-ci.org/jessicagmarshall/Distribute)
 
 #### An experiment in using smart contract-enabled token economies to decentralize the governance, maintenance, and financial support of public utilities, communal infrastructure, and common pool resources.
 
