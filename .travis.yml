@@ -11,9 +11,5 @@ cache:
     "npm install -g ethereumjs-testrpc",
     "npm install -g web3"
   ],
-  "before_script": [
-    "cd smart-contract/lottery",
-    "testrpc > testrpc.log &"
-  ],
 script:
   - npm run test
