@@ -32,11 +32,11 @@ contract('Proposed State', (accounts) => {
     projAddrT1 = await returnProject.proposed_T()
     projAddrR1 = await returnProject.proposed_R()
 
-    // to check staking extra above required amount
+    // to check staking extra above required amount & state change to staked
     projAddrT2 = await returnProject.proposed_T()
     projAddrR2 = await returnProject.proposed_R()
 
-    // to check staking by multiple stakers & state change to staked
+    // to check staking by multiple stakers
     projAddrT3 = await returnProject.proposed_T()
     projAddrR3 = await returnProject.proposed_R()
 
@@ -62,7 +62,7 @@ contract('Proposed State', (accounts) => {
       let requiredTokens = await project.calculateRequiredTokens(projAddrT1)
       let tokensToStake = requiredTokens - 1
 
-      // take stock of variables before staking
+      // take stock of variables
       let currentPrice = await utils.getCurrentPrice()
 
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
@@ -78,7 +78,7 @@ contract('Proposed State', (accounts) => {
       // tokenStaker1 stakes all but one of the required tokens
       await TR.stakeTokens(projAddrT1, tokensToStake, {from: tokenStaker1})
 
-      // take stock of tokenStaker1's token balance after staking
+      // take stock of variables
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let weiBalAfter = await project.getWeiBal(projAddrT1)
       let weiPoolAfter = await utils.getWeiPoolBal()
@@ -103,7 +103,7 @@ contract('Proposed State', (accounts) => {
       let requiredTokens = await project.calculateRequiredTokens(projAddrR1)
       let tokensToStake = requiredTokens - 1
 
-      // take stock of variables before staking
+      // take stock of variables
       let currentPrice = await utils.getCurrentPrice()
 
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
@@ -119,7 +119,7 @@ contract('Proposed State', (accounts) => {
       // tokenStaker1 stakes all but one of the required tokens
       await TR.stakeTokens(projAddrR1, tokensToStake, {from: tokenStaker1})
 
-      // take stock of tokenStaker1's token balance after staking
+      // take stock of variables
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let weiBalAfter = await project.getWeiBal(projAddrR1)
       let weiPoolAfter = await utils.getWeiPoolBal()
@@ -143,7 +143,7 @@ contract('Proposed State', (accounts) => {
       // get number of tokens to unstake
       let tokensToUnstake = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
 
-      // take stock of variables before unstaking
+      // take stock of variables
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let weiPoolBefore = await utils.getWeiPoolBal()
       let weiBalBefore = await project.getWeiBal(projAddrT1)
@@ -154,7 +154,7 @@ contract('Proposed State', (accounts) => {
       // tokenStaker1 unstakes all
       await TR.unstakeTokens(projAddrT1, tokensToUnstake, {from: tokenStaker1})
 
-      // take stock of tokenStaker1's token balance after staking
+      // take stock of variables
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let weiPoolAfter = await utils.getWeiPoolBal()
       let weiBalAfter = await project.getWeiBal(projAddrT1)
@@ -178,7 +178,7 @@ contract('Proposed State', (accounts) => {
       // get number of tokens to unstake
       let tokensToUnstake = await project.getUserStakedTokens(tokenStaker1, projAddrR1)
 
-      // take stock of variables before unstaking
+      // take stock of variables
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let weiPoolBefore = await utils.getWeiPoolBal()
       let weiBalBefore = await project.getWeiBal(projAddrR1)
@@ -189,7 +189,7 @@ contract('Proposed State', (accounts) => {
       // tokenStaker1 unstakes all
       await TR.unstakeTokens(projAddrR1, tokensToUnstake, {from: tokenStaker1})
 
-      // take stock of tokenStaker1's token balance after staking
+      // take stock of variables
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let weiPoolAfter = await utils.getWeiPoolBal()
       let weiBalAfter = await project.getWeiBal(projAddrR1)
@@ -214,7 +214,7 @@ contract('Proposed State', (accounts) => {
       let requiredRep = await project.calculateRequiredTokens(projAddrT1)
       let repToStake = requiredRep - 1
 
-      // take stock of variables before staking
+      // take stock of variables
       let rsBalBefore = await utils.getRepBalance(repStaker1)
       let rsStakedRepBefore = await project.getUserStakedRep(repStaker1, projAddrT1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrT1)
@@ -228,7 +228,7 @@ contract('Proposed State', (accounts) => {
       // repStaker1 stakes all but one of the required reputation
       await RR.stakeReputation(projAddrT1, repToStake, {from: repStaker1})
 
-      // take stock of variables after staking
+      // take stock of variables
       let rsBalAfter = await utils.getRepBalance(repStaker1)
       let rsStakedRepAfter = await project.getUserStakedRep(repStaker1, projAddrT1)
       let stakedTokensAfter = await project.getStakedTokens(projAddrT1)
@@ -253,7 +253,7 @@ contract('Proposed State', (accounts) => {
       let requiredRep = await project.calculateRequiredTokens(projAddrR1)
       let repToStake = requiredRep - 1
 
-      // take stock of variables before staking
+      // take stock of variables
       let rsBalBefore = await utils.getRepBalance(repStaker1)
       let rsStakedRepBefore = await project.getUserStakedRep(repStaker1, projAddrR1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrR1)
@@ -267,7 +267,7 @@ contract('Proposed State', (accounts) => {
       // repStaker1 stakes all but one of the required reputation
       await RR.stakeReputation(projAddrR1, repToStake, {from: repStaker1})
 
-      // take stock of variables after staking
+      // take stock of variables
       let rsBalAfter = await utils.getRepBalance(repStaker1)
       let rsStakedRepAfter = await project.getUserStakedRep(repStaker1, projAddrR1)
       let stakedTokensAfter = await project.getStakedTokens(projAddrR1)
@@ -291,7 +291,7 @@ contract('Proposed State', (accounts) => {
       // get reputation staked on the project
       let repToUnstake = await project.getStakedRep(projAddrT1)
 
-      // take stock of variables before unstaking
+      // take stock of variables
       let rsBalBefore = await utils.getRepBalance(repStaker1)
       let rsStakedRepBefore = await project.getUserStakedRep(repStaker1, projAddrT1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrT1)
@@ -302,7 +302,7 @@ contract('Proposed State', (accounts) => {
       // repStaker1 unstakes all of the reputation they had staked
       await RR.unstakeReputation(projAddrT1, repToUnstake, {from: repStaker1})
 
-      // take stock of variables after unstaking
+      // take stock of variables
       let rsBalAfter = await utils.getRepBalance(repStaker1)
       let rsStakedRepAfter = await project.getUserStakedRep(repStaker1, projAddrT1)
       let stakedTokensAfter = await project.getStakedTokens(projAddrT1)
@@ -326,7 +326,7 @@ contract('Proposed State', (accounts) => {
       // get reputation staked on the project
       let repToUnstake = await project.getStakedRep(projAddrR1)
 
-      // take stock of variables before unstaking
+      // take stock of variables
       let rsBalBefore = await utils.getRepBalance(repStaker1)
       let rsStakedRepBefore = await project.getUserStakedRep(repStaker1, projAddrR1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrR1)
@@ -337,7 +337,7 @@ contract('Proposed State', (accounts) => {
       // repStaker1 unstakes all of the reputation they had staked
       await RR.unstakeReputation(projAddrR1, repToUnstake, {from: repStaker1})
 
-      // take stock of variables after unstaking
+      // take stock of variables
       let rsBalAfter = await utils.getRepBalance(repStaker1)
       let rsStakedRepAfter = await project.getUserStakedRep(repStaker1, projAddrR1)
       let stakedTokensAfter = await project.getStakedTokens(projAddrR1)
@@ -362,7 +362,7 @@ contract('Proposed State', (accounts) => {
       let requiredTokens = await project.calculateRequiredTokens(projAddrT2)
       let tokensToStake = requiredTokens + 1
 
-      // take stock of variables before staking
+      // take stock of variables
       let weiCost = await project.getWeiCost(projAddrT2)
 
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
@@ -378,7 +378,7 @@ contract('Proposed State', (accounts) => {
       // tokenStaker1 stakes all but one of the required tokens
       await TR.stakeTokens(projAddrT2, tokensToStake, {from: tokenStaker1})
 
-      // take stock of tokenStaker1's token balance after staking
+      // take stock of variables
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let weiBalAfter = await project.getWeiBal(projAddrT2)
       let weiPoolAfter = await utils.getWeiPoolBal()
@@ -403,7 +403,7 @@ contract('Proposed State', (accounts) => {
       let requiredTokens = await project.calculateRequiredTokens(projAddrR2)
       let tokensToStake = requiredTokens + 1
 
-      // take stock of variables before staking
+      // take stock of variables
       let weiCost = await project.getWeiCost(projAddrR2)
 
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
@@ -419,7 +419,7 @@ contract('Proposed State', (accounts) => {
       // tokenStaker1 stakes all but one of the required tokens
       await TR.stakeTokens(projAddrR2, tokensToStake, {from: tokenStaker1})
 
-      // take stock of tokenStaker1's token balance after staking
+      // take stock of variables
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let weiBalAfter = await project.getWeiBal(projAddrR2)
       let weiPoolAfter = await utils.getWeiPoolBal()
@@ -444,7 +444,7 @@ contract('Proposed State', (accounts) => {
       let requiredRep = await project.getRequiredReputation(projAddrT2)
       let repToStake = requiredRep + 1
 
-      // take stock of variables before staking
+      // take stock of variables
       let rsBalBefore = await utils.getRepBalance(repStaker1)
       let weiBalBefore = await project.getWeiBal(projAddrT2)
       let weiPoolBefore = await utils.getWeiPoolBal()
@@ -458,7 +458,7 @@ contract('Proposed State', (accounts) => {
       // tokenStaker1 stakes all but one of the required tokens
       await RR.stakeReputation(projAddrT2, repToStake, {from: repStaker1})
 
-      // take stock of tokenStaker1's token balance after staking
+      // take stock of variables
       let rsBalAfter = await utils.getRepBalance(repStaker1)
       let weiBalAfter = await project.getWeiBal(projAddrT2)
       let weiPoolAfter = await utils.getWeiPoolBal()
@@ -482,7 +482,7 @@ contract('Proposed State', (accounts) => {
       let requiredRep = await project.getRequiredReputation(projAddrR2)
       let repToStake = requiredRep + 1
 
-      // take stock of variables before staking
+      // take stock of variables
       let rsBalBefore = await utils.getRepBalance(repStaker1)
       let weiBalBefore = await project.getWeiBal(projAddrR2)
       let weiPoolBefore = await utils.getWeiPoolBal()
@@ -496,7 +496,7 @@ contract('Proposed State', (accounts) => {
       // tokenStaker1 stakes all but one of the required tokens
       await RR.stakeReputation(projAddrR2, repToStake, {from: repStaker1})
 
-      // take stock of tokenStaker1's token balance after staking
+      // take stock of variables
       let rsBalAfter = await utils.getRepBalance(repStaker1)
       let weiBalAfter = await project.getWeiBal(projAddrR2)
       let weiPoolAfter = await utils.getWeiPoolBal()
@@ -516,15 +516,323 @@ contract('Proposed State', (accounts) => {
     })
 
     it('Multiple token stakers can stake TR proposed project', async function () {
+      // refuel token stakers
+      await utils.mintIfNecessary(tokenStaker1)
+      await utils.mintIfNecessary(tokenStaker2)
+
+      // get tokens required to fully stake the project
+      let requiredTokens1 = await project.calculateRequiredTokens(projAddrT3)
+      let tokensToStake1 = Math.floor(requiredTokens1 / 2)
+
+      // take stock of variables
+      let currentPrice = await utils.getCurrentPrice()
+
+      let ts1BalBefore = await utils.getTokenBalance(tokenStaker1)
+      let ts2BalBefore = await utils.getTokenBalance(tokenStaker2)
+      let weiBalBefore = await project.getWeiBal(projAddrT3)
+      let weiPoolBefore = await utils.getWeiPoolBal()
+      let ts1StakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT3)
+      let ts2StakedTokensBefore = await project.getUserStakedTokens(tokenStaker2, projAddrT3)
+      let stakedTokensBefore = await project.getStakedTokens(projAddrT3)
+      let stakedRepBefore = await project.getStakedRep(projAddrT3)
+
+      // assert that tokenStaker1 has enough tokens for this
+      assert.isAtLeast(ts1BalBefore, tokensToStake1, 'tokenStaker1 doesn\'t have enough tokens to stake this much on projAddrT3')
+
+      // tokenStaker1 stakes all but one of the required tokens
+      await TR.stakeTokens(projAddrT3, tokensToStake1, {from: tokenStaker1})
+
+      // take stock of variables
+      let ts1BalMiddle = await utils.getTokenBalance(tokenStaker1)
+      let ts2BalMiddle = await utils.getTokenBalance(tokenStaker2)
+      let weiBalMiddle = await project.getWeiBal(projAddrT3)
+      let weiPoolMiddle = await utils.getWeiPoolBal()
+      let ts1StakedTokensMiddle = await project.getUserStakedTokens(tokenStaker1, projAddrT3)
+      let ts2StakedTokensMiddle = await project.getUserStakedTokens(tokenStaker2, projAddrT3)
+      let stakedTokensMiddle = await project.getStakedTokens(projAddrT3)
+      let stakedRepMiddle = await project.getStakedRep(projAddrT3)
+
+      // checks
+      assert.equal(ts1BalBefore - tokensToStake1, ts1BalMiddle, 'tokenStaker1\'s balance updated incorrectly')
+      assert.equal(ts2BalBefore, ts2BalMiddle, 'tokenStaker2\'s balance shouldn\'t change')
+      assert.equal(weiBalMiddle - weiBalBefore, currentPrice * tokensToStake1, 'incorrect weiBalMiddle')
+      // assert.equal(weiPoolBefore - weiPoolAfter, currentPrice * tokensToStake1, 'incorrect weiPoolAfter') --> THIS HAS A WEIRD 50 WEI OFFSET. FIX THIS!
+      assert.equal(0, ts1StakedTokensBefore, 'tokenStaker1 should not have any tokens staked on projAddrT3 before staking')
+      assert.equal(0, ts2StakedTokensBefore, 'tokenStaker2 should not have any tokens staked on projAddrT3 before staking')
+      assert.equal(0, stakedTokensBefore, 'projAddrT3 should not have any tokens staked on it before tokenStaker1 stakes')
+      assert.equal(tokensToStake1, ts1StakedTokensMiddle, 'tokenStaker1 should have tokensToStake1 amount of tokens staked on projAddrT3')
+      assert.equal(0, ts2StakedTokensMiddle, 'tokenStaker2 should have no tokens staked on projAddrT3 after tokenStaker 1 stakes')
+      assert.equal(tokensToStake1, stakedTokensMiddle, 'projAddrT3 should have a total of tokensToStake1 tokens staked after tokenStaker1 stakes')
+      assert.equal(0, stakedRepBefore, 'projAddrT3 should not have any rep staked on it before tokenStaker1 stakes')
+      assert.equal(0, stakedRepMiddle, 'projAddrT3 should not have any rep staked on it after tokenStaker1 stakes')
+
+      // get tokens required to fully stake the project
+      let requiredTokens2 = await project.calculateRequiredTokens(projAddrT3)
+      let tokensToStake2 = requiredTokens2 - 1
+
+      // take stock of variables
+      currentPrice = await utils.getCurrentPrice()
+
+      // assert that tokenStaker1 has enough tokens for this
+      assert.isAtLeast(ts1BalBefore, tokensToStake2, 'tokenStaker2 doesn\'t have enough tokens to stake this much on projAddrT3')
+
+      // tokenStaker1 stakes all but one of the required tokens
+      await TR.stakeTokens(projAddrT3, tokensToStake2, {from: tokenStaker2})
+
+      // take stock of variables
+      let ts1BalAfter = await utils.getTokenBalance(tokenStaker1)
+      let ts2BalAfter = await utils.getTokenBalance(tokenStaker2)
+      let weiBalAfter = await project.getWeiBal(projAddrT3)
+      let weiPoolAfter = await utils.getWeiPoolBal()
+      let ts1StakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrT3)
+      let ts2StakedTokensAfter = await project.getUserStakedTokens(tokenStaker2, projAddrT3)
+      let stakedTokensAfter = await project.getStakedTokens(projAddrT3)
+      let stakedRepAfter = await project.getStakedRep(projAddrT3)
+
+      // checks
+      assert.equal(ts1BalMiddle, ts1BalAfter, 'tokenStaker1\'s balance shouldn\'t change')
+      assert.equal(ts2BalMiddle - tokensToStake2, ts2BalAfter, 'tokenStaker2\'s balance updated incorrectly')
+      assert.equal(weiBalAfter - weiBalMiddle, currentPrice * tokensToStake2, 'incorrect weiBalAfter')
+      // assert.equal(weiPoolBefore - weiPoolAfter, currentPrice * tokensToStake1, 'incorrect weiPoolAfter') --> THIS HAS A WEIRD 50 WEI OFFSET. FIX THIS!
+      assert.equal(tokensToStake1, ts1StakedTokensAfter, 'tokenStaker1 should have tokensToStake1 tokens staked on projAddrT3 after staking')
+      assert.equal(tokensToStake2, ts2StakedTokensAfter, 'tokenStaker2 should have tokensToStake2 tokens staked on projAddrT3 after staking')
+      assert.equal(tokensToStake1 + tokensToStake2, stakedTokensAfter, 'projAddrT3 should have tokensToStake1 + tokensToStake2 tokens staked on it after tokenStaker1 and tokenStaker2 stakes')
+      assert.equal(0, stakedRepAfter, 'projAddrT3 should not have any rep staked on it after tokenStaker1 and tokenStaker2 stakes')
     })
 
     it('Multiple token stakers can stake RR proposed project', async function () {
+      // refuel token stakers
+      await utils.mintIfNecessary(tokenStaker1)
+      await utils.mintIfNecessary(tokenStaker2)
+
+      // get tokens required to fully stake the project
+      let requiredTokens1 = await project.calculateRequiredTokens(projAddrR3)
+      let tokensToStake1 = Math.floor(requiredTokens1 / 2)
+
+      // take stock of variables
+      let currentPrice = await utils.getCurrentPrice()
+
+      let ts1BalBefore = await utils.getTokenBalance(tokenStaker1)
+      let ts2BalBefore = await utils.getTokenBalance(tokenStaker2)
+      let weiBalBefore = await project.getWeiBal(projAddrR3)
+      let weiPoolBefore = await utils.getWeiPoolBal()
+      let ts1StakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrR3)
+      let ts2StakedTokensBefore = await project.getUserStakedTokens(tokenStaker2, projAddrR3)
+      let stakedTokensBefore = await project.getStakedTokens(projAddrR3)
+      let stakedRepBefore = await project.getStakedRep(projAddrR3)
+
+      // assert that tokenStaker1 has enough tokens for this
+      assert.isAtLeast(ts1BalBefore, tokensToStake1, 'tokenStaker1 doesn\'t have enough tokens to stake this much on projAddrR3')
+
+      // tokenStaker1 stakes half the required tokens
+      await TR.stakeTokens(projAddrR3, tokensToStake1, {from: tokenStaker1})
+
+      // take stock of variables
+      let ts1BalMiddle = await utils.getTokenBalance(tokenStaker1)
+      let ts2BalMiddle = await utils.getTokenBalance(tokenStaker2)
+      let weiBalMiddle = await project.getWeiBal(projAddrR3)
+      let weiPoolMiddle = await utils.getWeiPoolBal()
+      let ts1StakedTokensMiddle = await project.getUserStakedTokens(tokenStaker1, projAddrR3)
+      let ts2StakedTokensMiddle = await project.getUserStakedTokens(tokenStaker2, projAddrR3)
+      let stakedTokensMiddle = await project.getStakedTokens(projAddrR3)
+      let stakedRepMiddle = await project.getStakedRep(projAddrR3)
+
+      // checks
+      assert.equal(ts1BalBefore - tokensToStake1, ts1BalMiddle, 'tokenStaker1\'s balance updated incorrectly')
+      assert.equal(ts2BalBefore, ts2BalMiddle, 'tokenStaker2\'s balance shouldn\'t change')
+      assert.equal(weiBalMiddle - weiBalBefore, currentPrice * tokensToStake1, 'incorrect weiBalMiddle')
+      // assert.equal(weiPoolBefore - weiPoolAfter, currentPrice * tokensToStake1, 'incorrect weiPoolAfter') --> THIS HAS A WEIRD 50 WEI OFFSET. FIX THIS!
+      assert.equal(0, ts1StakedTokensBefore, 'tokenStaker1 should not have any tokens staked on projAddrR3 before staking')
+      assert.equal(0, ts2StakedTokensBefore, 'tokenStaker2 should not have any tokens staked on projAddrR3 before staking')
+      assert.equal(0, stakedTokensBefore, 'projAddrR3 should not have any tokens staked on it before tokenStaker1 stakes')
+      assert.equal(tokensToStake1, ts1StakedTokensMiddle, 'tokenStaker1 should have tokensToStake1 amount of tokens staked on projAddrR3')
+      assert.equal(0, ts2StakedTokensMiddle, 'tokenStaker2 should have no tokens staked on projAddrR3 after tokenStaker 1 stakes')
+      assert.equal(tokensToStake1, stakedTokensMiddle, 'projAddrR3 should have a total of tokensToStake1 tokens staked after tokenStaker1 stakes')
+      assert.equal(0, stakedRepBefore, 'projAddrR3 should not have any rep staked on it before tokenStaker1 stakes')
+      assert.equal(0, stakedRepMiddle, 'projAddrR3 should not have any rep staked on it after tokenStaker1 stakes')
+
+      // get tokens required to fully stake the project
+      let requiredTokens2 = await project.calculateRequiredTokens(projAddrR3)
+      let tokensToStake2 = requiredTokens2 - 1
+
+      // take stock of variables
+      currentPrice = await utils.getCurrentPrice()
+
+      // assert that tokenStaker2 has enough tokens for this
+      assert.isAtLeast(ts2BalBefore, tokensToStake2, 'tokenStaker2 doesn\'t have enough tokens to stake this much on projAddrR3')
+
+      // tokenStaker2 stakes all but one of the required tokens
+      await TR.stakeTokens(projAddrR3, tokensToStake2, {from: tokenStaker2})
+
+      // take stock of variables
+      let ts1BalAfter = await utils.getTokenBalance(tokenStaker1)
+      let ts2BalAfter = await utils.getTokenBalance(tokenStaker2)
+      let weiBalAfter = await project.getWeiBal(projAddrR3)
+      let weiPoolAfter = await utils.getWeiPoolBal()
+      let ts1StakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR3)
+      let ts2StakedTokensAfter = await project.getUserStakedTokens(tokenStaker2, projAddrR3)
+      let stakedTokensAfter = await project.getStakedTokens(projAddrR3)
+      let stakedRepAfter = await project.getStakedRep(projAddrR3)
+
+      // checks
+      assert.equal(ts1BalMiddle, ts1BalAfter, 'tokenStaker1\'s balance shouldn\'t change')
+      assert.equal(ts2BalMiddle - tokensToStake2, ts2BalAfter, 'tokenStaker2\'s balance updated incorrectly')
+      assert.equal(weiBalAfter - weiBalMiddle, currentPrice * tokensToStake2, 'incorrect weiBalAfter')
+      // assert.equal(weiPoolBefore - weiPoolAfter, currentPrice * tokensToStake1, 'incorrect weiPoolAfter') --> THIS HAS A WEIRD 50 WEI OFFSET. FIX THIS!
+      assert.equal(tokensToStake1, ts1StakedTokensAfter, 'tokenStaker1 should have tokensToStake1 tokens staked on projAddrR3 after staking')
+      assert.equal(tokensToStake2, ts2StakedTokensAfter, 'tokenStaker2 should have tokensToStake2 tokens staked on projAddrR3 after staking')
+      assert.equal(tokensToStake1 + tokensToStake2, stakedTokensAfter, 'projAddrR3 should have tokensToStake1 + tokensToStake2 tokens staked on it after tokenStaker1 and tokenStaker2 stakes')
+      assert.equal(0, stakedRepAfter, 'projAddrR3 should not have any rep staked on it after tokenStaker1 and tokenStaker2 stakes')
     })
 
     it('Multiple reputation stakers can stake TR proposed project', async function () {
+      // get reputation required to fully stake the project
+      let requiredRep1 = await project.getRequiredReputation(projAddrT3)
+      let repToStake1 = Math.floor(requiredRep1 / 30)                     // running out of reputation
+
+      // take stock of variables
+      let rs1BalBefore = await utils.getRepBalance(repStaker1)
+      let rs2BalBefore = await utils.getRepBalance(repStaker2)
+      let weiBalBefore = await project.getWeiBal(projAddrT3)
+      let weiPoolBefore = await utils.getWeiPoolBal()
+      let rs1StakedRepBefore = await project.getUserStakedRep(repStaker1, projAddrT3)
+      let rs2StakedRepBefore = await project.getUserStakedRep(repStaker2, projAddrT3)
+      let stakedTokensBefore = await project.getStakedTokens(projAddrT3)
+      let stakedRepBefore = await project.getStakedRep(projAddrT3)
+
+      // assert that repStaker1 has enough reputation for this
+      assert.isAtLeast(rs1BalBefore, repToStake1, 'repStaker1 doesn\'t have enough reputation to stake this much on projAddrT3')
+
+      // repStaker1 stakes half the required reputation
+      await RR.stakeReputation(projAddrT3, repToStake1, {from: repStaker1})
+
+      // take stock of variables
+      let rs1BalMiddle = await utils.getRepBalance(repStaker1)
+      let rs2BalMiddle = await utils.getRepBalance(repStaker2)
+      let weiBalMiddle = await project.getWeiBal(projAddrT3)
+      let weiPoolMiddle = await utils.getWeiPoolBal()
+      let rs1StakedRepMiddle = await project.getUserStakedRep(repStaker1, projAddrT3)
+      let rs2StakedRepMiddle = await project.getUserStakedRep(repStaker2, projAddrT3)
+      let stakedTokensMiddle = await project.getStakedTokens(projAddrT3)
+      let stakedRepMiddle = await project.getStakedRep(projAddrT3)
+
+      // checks
+      assert.equal(rs1BalBefore - repToStake1, rs1BalMiddle, 'repStaker1\'s balance updated incorrectly')
+      assert.equal(rs2BalBefore, rs2BalMiddle, 'repStaker2\'s balance shouldn\'t change')
+      assert.equal(weiBalMiddle, weiBalBefore, 'weiBal shouldn\'t change')
+      assert.equal(weiPoolMiddle, weiPoolBefore, 'weiPool shouldn\'t change')
+      assert.equal(0, rs1StakedRepBefore, 'repStaker1 should not have any reputation staked on projAddrT3 before staking')
+      assert.equal(0, rs2StakedRepBefore, 'repStaker2 should not have any reputation staked on projAddrT3 before staking')
+      assert.equal(0, stakedRepBefore, 'projAddrT3 should not have any reputation staked on it before repStaker1 stakes')
+      assert.equal(repToStake1, rs1StakedRepMiddle, 'repStaker1 should have repToStake1 amount of reputation staked on projAddrT3')
+      assert.equal(0, rs2StakedRepMiddle, 'repStaker2 should have no reputation staked on projAddrT3 after repStaker1 stakes')
+      assert.equal(repToStake1, stakedRepMiddle, 'projAddrT3 should have a total of repToStake1 tokens staked after repStaker1 stakes')
+      assert.equal(stakedTokensMiddle, stakedTokensBefore, 'staked tokens should not change')
+
+      // get tokens required to fully stake the project
+      let requiredRep2 = await project.getRequiredReputation(projAddrT3)
+      let repToStake2 = Math.floor(requiredRep2 / 30)                     // running out of reputation
+
+      // assert that repStaker1 has enough reputation for this
+      assert.isAtLeast(rs2BalBefore, repToStake2, 'repStaker2 doesn\'t have enough reputation to stake this much on projAddrT3')
+
+      // repStaker2 stakes all but one of the required reputation
+      await RR.stakeReputation(projAddrT3, repToStake2, {from: repStaker2})
+
+      // take stock of variables
+      let rs1BalAfter = await utils.getRepBalance(repStaker1)
+      let rs2BalAfter = await utils.getRepBalance(repStaker2)
+      let weiBalAfter = await project.getWeiBal(projAddrT3)
+      let weiPoolAfter = await utils.getWeiPoolBal()
+      let rs1StakedRepAfter = await project.getUserStakedRep(repStaker1, projAddrT3)
+      let rs2StakedRepAfter = await project.getUserStakedRep(repStaker2, projAddrT3)
+      let stakedTokensAfter = await project.getStakedTokens(projAddrT3)
+      let stakedRepAfter = await project.getStakedRep(projAddrT3)
+
+      // checks
+      assert.equal(rs1BalMiddle, rs1BalAfter, 'repStaker1\'s balance shouldn\'t change')
+      assert.equal(rs2BalMiddle - repToStake2, rs2BalAfter, 'repStaker2\'s balance updated incorrectly')
+      assert.equal(weiBalAfter, weiBalMiddle, 'weiBal should\'nt change')
+      assert.equal(weiPoolAfter, weiPoolMiddle, 'weiPool shouldn\'t change')
+      assert.equal(repToStake1, rs1StakedRepAfter, 'repStaker1 should have repToStake1 reputation staked on projAddrT3 after staking')
+      assert.equal(repToStake2, rs2StakedRepAfter, 'repStaker2 should have repToStake2 reputation staked on projAddrT3 after staking')
+      assert.equal(repToStake1 + repToStake2, stakedRepAfter, 'projAddrT3 should have repToStake1 + repToStake2 tokens staked on it after tokenStaker1 and tokenStaker2 stakes')
+      assert.equal(stakedTokensAfter, stakedTokensMiddle, 'staked tokens should not change')
     })
 
     it('Multiple reputation stakers can stake RR proposed project', async function () {
+      // get reputation required to fully stake the project
+      let requiredRep1 = await project.getRequiredReputation(projAddrR3)
+      let repToStake1 = Math.floor(requiredRep1 / 30)                     // running out of reputation
+
+      // take stock of variables
+      let rs1BalBefore = await utils.getRepBalance(repStaker1)
+      let rs2BalBefore = await utils.getRepBalance(repStaker2)
+      let weiBalBefore = await project.getWeiBal(projAddrR3)
+      let weiPoolBefore = await utils.getWeiPoolBal()
+      let rs1StakedRepBefore = await project.getUserStakedRep(repStaker1, projAddrR3)
+      let rs2StakedRepBefore = await project.getUserStakedRep(repStaker2, projAddrR3)
+      let stakedTokensBefore = await project.getStakedTokens(projAddrR3)
+      let stakedRepBefore = await project.getStakedRep(projAddrR3)
+
+      // assert that repStaker1 has enough reputation for this
+      assert.isAtLeast(rs1BalBefore, repToStake1, 'repStaker1 doesn\'t have enough reputation to stake this much on projAddrR3')
+
+      // repStaker1 stakes half the required reputation
+      await RR.stakeReputation(projAddrR3, repToStake1, {from: repStaker1})
+
+      // take stock of variables
+      let rs1BalMiddle = await utils.getRepBalance(repStaker1)
+      let rs2BalMiddle = await utils.getRepBalance(repStaker2)
+      let weiBalMiddle = await project.getWeiBal(projAddrR3)
+      let weiPoolMiddle = await utils.getWeiPoolBal()
+      let rs1StakedRepMiddle = await project.getUserStakedRep(repStaker1, projAddrR3)
+      let rs2StakedRepMiddle = await project.getUserStakedRep(repStaker2, projAddrR3)
+      let stakedTokensMiddle = await project.getStakedTokens(projAddrR3)
+      let stakedRepMiddle = await project.getStakedRep(projAddrR3)
+
+      // checks
+      assert.equal(rs1BalBefore - repToStake1, rs1BalMiddle, 'repStaker1\'s balance updated incorrectly')
+      assert.equal(rs2BalBefore, rs2BalMiddle, 'repStaker2\'s balance shouldn\'t change')
+      assert.equal(weiBalMiddle, weiBalBefore, 'weiBal shouldn\'t change')
+      assert.equal(weiPoolMiddle, weiPoolBefore, 'weiPool shouldn\'t change')
+      assert.equal(0, rs1StakedRepBefore, 'repStaker1 should not have any reputation staked on projAddrR3 before staking')
+      assert.equal(0, rs2StakedRepBefore, 'repStaker2 should not have any reputation staked on projAddrR3 before staking')
+      assert.equal(0, stakedRepBefore, 'projAddrR3 should not have any reputation staked on it before repStaker1 stakes')
+      assert.equal(repToStake1, rs1StakedRepMiddle, 'repStaker1 should have repToStake1 amount of reputation staked on projAddrR3')
+      assert.equal(0, rs2StakedRepMiddle, 'repStaker2 should have no reputation staked on projAddrR3 after repStaker1 stakes')
+      assert.equal(repToStake1, stakedRepMiddle, 'projAddrR3 should have a total of repToStake1 tokens staked after repStaker1 stakes')
+      assert.equal(stakedTokensMiddle, stakedTokensBefore, 'staked tokens should not change')
+
+      // get tokens required to fully stake the project
+      let requiredRep2 = await project.getRequiredReputation(projAddrR3)
+      let repToStake2 = Math.floor(requiredRep2 / 30)                     // running out of reputation
+
+      // assert that repStaker1 has enough reputation for this
+      assert.isAtLeast(rs2BalBefore, repToStake2, 'repStaker2 doesn\'t have enough reputation to stake this much on projAddrR3')
+
+      // repStaker2 stakes all but one of the required reputation
+      await RR.stakeReputation(projAddrR3, repToStake2, {from: repStaker2})
+
+      // take stock of variables
+      let rs1BalAfter = await utils.getRepBalance(repStaker1)
+      let rs2BalAfter = await utils.getRepBalance(repStaker2)
+      let weiBalAfter = await project.getWeiBal(projAddrR3)
+      let weiPoolAfter = await utils.getWeiPoolBal()
+      let rs1StakedRepAfter = await project.getUserStakedRep(repStaker1, projAddrR3)
+      let rs2StakedRepAfter = await project.getUserStakedRep(repStaker2, projAddrR3)
+      let stakedTokensAfter = await project.getStakedTokens(projAddrR3)
+      let stakedRepAfter = await project.getStakedRep(projAddrR3)
+
+      // checks
+      assert.equal(rs1BalMiddle, rs1BalAfter, 'repStaker1\'s balance shouldn\'t change')
+      assert.equal(rs2BalMiddle - repToStake2, rs2BalAfter, 'repStaker2\'s balance updated incorrectly')
+      assert.equal(weiBalAfter, weiBalMiddle, 'weiBal should\'nt change')
+      assert.equal(weiPoolAfter, weiPoolMiddle, 'weiPool shouldn\'t change')
+      assert.equal(repToStake1, rs1StakedRepAfter, 'repStaker1 should have repToStake1 reputation staked on projAddrR3 after staking')
+      assert.equal(repToStake2, rs2StakedRepAfter, 'repStaker2 should have repToStake2 reputation staked on projAddrR3 after staking')
+      assert.equal(repToStake1 + repToStake2, stakedRepAfter, 'projAddrR3 should have repToStake1 + repToStake2 tokens staked on it after tokenStaker1 and tokenStaker2 stakes')
+      assert.equal(stakedTokensAfter, stakedTokensMiddle, 'staked tokens should not change')
     })
 
     it('Not staker can\'t stake tokens they don\'t have on TR proposed project', async function () {
@@ -741,13 +1049,13 @@ contract('Proposed State', (accounts) => {
 
   describe('state changes on understaked proposed projects', () => {
     it('checkStaked() does not change TR proposed project to staked if not fully staked', async function () {
-      // take stock of variables before calling checkStaked
+      // take stock of variables
       let stateBefore = await project.getState(projAddrT4)
 
       // attempt to checkStaked
       await PR.checkStaked(projAddrT4)
 
-      // take stock of variables after calling checkStaked
+      // take stock of variables
       let stateAfter = await project.getState(projAddrT4)
 
       // checks
@@ -756,13 +1064,13 @@ contract('Proposed State', (accounts) => {
     })
 
     it('checkStaked() does not change RR proposed project to staked if not fully staked', async function () {
-      // take stock of variables before calling checkStaked
+      // take stock of variables
       let stateBefore = await project.getState(projAddrR4)
 
       // attempt to checkStaked
       await PR.checkStaked(projAddrR4)
 
-      // take stock of variables after calling checkStaked
+      // take stock of variables
       let stateAfter = await project.getState(projAddrR4)
 
       // checks
