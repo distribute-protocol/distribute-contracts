@@ -1,5 +1,6 @@
 /* eslint-env mocha */
 /* global assert contract */
+
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
@@ -9,11 +10,12 @@ contract('Proposed State', (accounts) => {
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let TR, RR, PR
+  let TR, RR, PR, DT
   let {user, project, utils, returnProject} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {tokenStaker1, tokenStaker2} = user
-  let {repStaker1, repStaker2, notStaker, notProject} = user
+  let {repStaker1, repStaker2} = user
+  let {notStaker, notProject} = user
 
   // local test variables
   let projAddrT1, projAddrT2, projAddrT3, projAddrT4
@@ -26,6 +28,7 @@ contract('Proposed State', (accounts) => {
     TR = projObj.contracts.TR
     RR = projObj.contracts.RR
     PR = projObj.contracts.PR
+    DT = projObj.contracts.DT
 
     // propose projects
     // to check staking below required amount, unstaking
@@ -68,7 +71,7 @@ contract('Proposed State', (accounts) => {
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
       let weiBalBefore = await project.getWeiBal(projAddrT1)
-      // let weiPoolBefore = await utils.getWeiPoolBal()
+      let weiPoolBefore = await utils.getWeiPoolBal()
       let tsStakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrT1)
       let stakedRepBefore = await project.getStakedRep(projAddrT1)
@@ -76,17 +79,31 @@ contract('Proposed State', (accounts) => {
       // assert that tokenStaker1 has enough tokens for this
       assert.isAtLeast(tsBalBefore, tokensToStake, 'tokenStaker1 doesn\'t have enough tokens to stake this much on projAddrT1')
 
+      // HERE FOR DEBUGGING
+      let DTBalBefore = web3.eth.getBalance(DT.address)
+      let ProjBalBefore = web3.eth.getBalance(projAddrT1)
+
       // tokenStaker1 stakes all but one of the required tokens
       await TR.stakeTokens(projAddrT1, tokensToStake, {from: tokenStaker1})
+
+      // HERE FOR DEBUGGING
+      let DTBalAfter = web3.eth.getBalance(DT.address)
+      let ProjBalAfter = web3.eth.getBalance(projAddrT1)
 
       // take stock of variables
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
       let weiBalAfter = await project.getWeiBal(projAddrT1)
-      // let weiPoolAfter = await utils.getWeiPoolBal()
+      let weiPoolAfter = await utils.getWeiPoolBal()
       let tsStakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
       let stakedTokensAfter = await project.getStakedTokens(projAddrT1)
       let stakedRepAfter = await project.getStakedRep(projAddrT1)
+
+      // HERE FOR DEBUGGING
+      // console.log('DT before, after', DTBalBefore.toNumber(), DTBalAfter.toNumber(), DTBalBefore.toNumber() - DTBalAfter.toNumber())
+      // console.log('weiPool before, after', weiPoolBefore, weiPoolAfter, weiPoolBefore - weiPoolAfter)
+      // console.log('PROJ before, after', ProjBalBefore.toNumber(), ProjBalAfter.toNumber(), ProjBalAfter.toNumber() - ProjBalBefore.toNumber())
+      // console.log('weiBal before, after', weiBalBefore, weiBalAfter, weiBalBefore - weiBalAfter)
 
       // checks
       assert.equal(tsBalBefore, tsBalAfter + tokensToStake, 'tokenStaker1\'s balance updated incorrectly')
@@ -757,7 +774,7 @@ contract('Proposed State', (accounts) => {
       assert.equal(repToStake1, stakedRepMiddle, 'projAddrT3 should have a total of repToStake1 tokens staked after repStaker1 stakes')
       assert.equal(stakedTokensMiddle, stakedTokensBefore, 'staked tokens should not change')
 
-      // get tokens required to fully stake the project
+      // get reputation required to fully stake the project
       let requiredRep2 = await project.getRequiredReputation(projAddrT3)
       let repToStake2 = Math.floor(requiredRep2 / 30) // running out of reputation
 
@@ -832,7 +849,7 @@ contract('Proposed State', (accounts) => {
       assert.equal(repToStake1, stakedRepMiddle, 'projAddrR3 should have a total of repToStake1 tokens staked after repStaker1 stakes')
       assert.equal(stakedTokensMiddle, stakedTokensBefore, 'staked tokens should not change')
 
-      // get tokens required to fully stake the project
+      // get reputation required to fully stake the project
       let requiredRep2 = await project.getRequiredReputation(projAddrR3)
       let repToStake2 = Math.floor(requiredRep2 / 30) // running out of reputation
 
@@ -1373,6 +1390,7 @@ contract('Proposed State', (accounts) => {
     before(async function () {
       // fast forward time
       evmIncreaseTime(604800) // fast forward time 1 week
+      projObj.time.fastForward +=1
     })
 
     it('TR proposed project becomes expired if not staked at staking deadline', async function () {

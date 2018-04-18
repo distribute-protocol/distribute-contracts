@@ -1,5 +1,6 @@
 /* eslint-env mocha */
 /* global assert contract artifacts */
+
 const Project = artifacts.require('Project')
 
 const projectHelper = require('../utils/projectHelper')

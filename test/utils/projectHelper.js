@@ -1,4 +1,5 @@
 /* global artifacts web3 */
+
 const TokenRegistry = artifacts.require('TokenRegistry')
 const ReputationRegistry = artifacts.require('ReputationRegistry')
 const DistributeToken = artifacts.require('DistributeToken')
@@ -13,10 +14,12 @@ module.exports = function projectHelper (accounts) {
   obj.user = {}
   obj.minting = {}
   obj.reputation = {}
+  obj.time = {}
   obj.project = {}
   obj.contracts = {}
   obj.utils = {}
   obj.returnProject = {}
+  obj.returnProjectHelper = {}
 
   // set up user identities
   // accounts[0] - no identity, default user for non-specified contract calls
@@ -60,8 +63,11 @@ module.exports = function projectHelper (accounts) {
   obj.reputation.registeredRep = 10000
 
   // mutable project details
-  obj.project.now = new Date().getTime() / 1000 // in seconds
-  obj.project.stakingPeriod = Math.floor(obj.project.now + 604800) // blockchain understands seconds                    // one week from now
+  // note that now & stakingPeriod are absolute and don't reflect evmIncreaseTime() calls
+  // this will be accounted for manually in each integration test and clearly denoted
+  obj.project.now = Math.floor(new Date().getTime() / 1000) // in seconds
+  obj.project.stakingPeriod = obj.project.now + 604800 // blockchain understands seconds                    // one week from now
+
   obj.project.expiredStakingPeriod = 10 // January 1st, 1970
   obj.project.projectCost = parseInt(web3.toWei(0.5, 'ether'))
   obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala' // length == 46
@@ -221,6 +227,7 @@ module.exports = function projectHelper (accounts) {
     let stakedStatePeriod = await PROJ.stakedStatePeriod()
     return stakedStatePeriod.toNumber()
   }
+
   // project return functions
   // return project (address) proposed by token holder
   obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash) {
@@ -274,14 +281,94 @@ module.exports = function projectHelper (accounts) {
     return log.projectAddress.toString()
   }
 
-  // return project (address) proposed by token holder and staked by 2 of each
-  obj.returnProject.staked_TR = async function (_cost, _stakingPeriod, _ipfsHash) {
-    // let projAddr = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
+  // return staked project (address) proposed by token holder
+  // make sure to reflect fast forwarded time in _stakingPeriod
+  obj.returnProject.staked_T = async function (_cost, _stakingPeriod, _ipfsHash) {
+    // get proposed project
+    let _projAddr = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
+
+    // stake tokens & reputation
+    await obj.returnProjectHelper.stakeTokens(_projAddr)
+    await obj.returnProjectHelper.stakeReputation(_projAddr)
+
+    // check that the project is in state 2
+    let state = await obj.project.getState(_projAddr)
+    assert.equal(state, 2, 'project is not in staked state')
+
+    return _projAddr
   }
 
-  // return project (address) proposed by reputation holder and staked by 2 of each
-  obj.returnProject.staked_RT = async function (_cost, _stakingPeriod, _ipfsHash) {
-    // let projAddr = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
+  // return staked project (address) proposed by reputation holder
+  // make sure to reflect fast forwarded time in _stakingPeriod
+  obj.returnProject.staked_R = async function (_cost, _stakingPeriod, _ipfsHash) {
+    // get proposed project
+    let _projAddr = await obj.returnProject.proposed_R(_cost, _stakingPeriod, _ipfsHash)
+
+    // stake tokens & reputation
+    await obj.returnProjectHelper.stakeTokens(_projAddr)
+    await obj.returnProjectHelper.stakeReputation(_projAddr)
+
+    // check that the project is in state 2
+    let state = await obj.project.getState(_projAddr)
+    assert.equal(state, 2, 'project is not in staked state')
+
+    return _projAddr
+  }
+
+  // fully stake project with tokens via two stakers
+  obj.returnProjectHelper.stakeTokens = async function (_projAddr) {
+    // fuel token stakers
+    await obj.utils.mintIfNecessary(obj.user.tokenStaker1)
+    await obj.utils.mintIfNecessary(obj.user.tokenStaker2)
+
+    // get tokens required to fully stake the project and stake half of them
+    let requiredTokens = await obj.project.calculateRequiredTokens(_projAddr)
+    let tokensToStake = Math.floor(requiredTokens / 2)
+
+    // assert that repStaker1 has the reputation to stake
+    let tsBal = await obj.utils.getTokenBalance(obj.user.tokenStaker1)
+    assert.isAtLeast(tsBal, tokensToStake, 'tokenStaker1 doesn\'t have enough tokens to stake')
+
+    // stake
+    await obj.contracts.TR.stakeTokens(_projAddr, tokensToStake, {from: obj.user.tokenStaker1})
+
+    // get tokens left to fully stake the project and stake them
+    requiredTokens = await obj.project.calculateRequiredTokens(_projAddr)
+
+    // assert that repStaker1 has the reputation to stake
+    tsBal = await obj.utils.getTokenBalance(obj.user.tokenStaker2)
+    assert.isAtLeast(tsBal, requiredTokens, 'tokenStaker2 doesn\'t have enough tokens to stake')
+
+    // stake
+    await obj.contracts.TR.stakeTokens(_projAddr, requiredTokens, {from: obj.user.tokenStaker2})
+  }
+
+  // fully stake project with reputation via two stakers
+  obj.returnProjectHelper.stakeReputation = async function (_projAddr) {
+    // register reputation stakers
+    await obj.utils.register(obj.user.repStaker1)
+    await obj.utils.register(obj.user.repStaker2)
+
+    // get reputation required to fully stake the project and stake half of it
+    let requiredRep = await obj.project.getRequiredReputation(_projAddr)
+    let repToStake = Math.floor(requiredRep / 2)
+
+    // assert that repStaker1 has the reputation to stake
+    let rsBal = await obj.utils.getRepBalance(obj.user.repStaker1)
+    assert.isAtLeast(rsBal, repToStake, 'repStaker1 doesn\'t have enough rep to stake')
+
+    // stake
+    await obj.contracts.RR.stakeReputation(_projAddr, repToStake, {from: obj.user.repStaker1})
+
+    // get reputation left to fully stake the project and stake it
+    requiredRep = await obj.project.getRequiredReputation(_projAddr)
+
+    // assert that repStaker1 has the reputation to stake
+    rsBal = await obj.utils.getRepBalance(obj.user.repStaker2)
+    assert.isAtLeast(rsBal, requiredRep, 'repStaker2 doesn\'t have enough rep to stake')
+
+    // stake
+    await obj.contracts.RR.stakeReputation(_projAddr, requiredRep, {from: obj.user.repStaker2})
   }
 
   return obj
