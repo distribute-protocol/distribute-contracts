@@ -9,3 +9,5 @@ The desired outcome of Distribute is a multifaceted incentive structure that mak
 3. direct decision making power in the public utility is decoupled from financial investment;
 4. the infrastructure itself is created, maintained, and operated by those who directly benefit from it;
 5. multiple utilities may interlock in the future to create a synergistic system of many distributed utilities and communal infrastructure projects.
+
+Check out the [whitepaper](https://drive.google.com/drive/u/1/my-drive).

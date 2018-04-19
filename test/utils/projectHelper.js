@@ -69,7 +69,7 @@ module.exports = function projectHelper (accounts) {
   obj.project.stakingPeriod = obj.project.now + 604800 // blockchain understands seconds                    // one week from now
 
   obj.project.expiredStakingPeriod = 10 // January 1st, 1970
-  obj.project.projectCost = parseInt(web3.toWei(0.5, 'ether'))
+  obj.project.projectCost = parseInt(web3.toWei(0.25, 'ether'))
   obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala' // length == 46
   obj.project.incorrectIpfsHash = 'whyiseveryspokeleadawhiteman' // length != 46
 
@@ -226,6 +226,18 @@ module.exports = function projectHelper (accounts) {
     let PROJ = await Project.at(_projAddr)
     let stakedStatePeriod = await PROJ.stakedStatePeriod()
     return stakedStatePeriod.toNumber()
+  }
+
+  obj.project.calculateWeightOfAddress = async function (_user, _projAddr) {
+    let stakedRep = await obj.project.getUserStakedRep(_user, _projAddr)
+    let totalRep = await obj.project.getStakedRep(_projAddr)
+    let repWeighting =  Math.round(stakedRep * 100 / totalRep) // emulate Divison.percent() precision of 2
+
+    let stakedTokens = await obj.project.getUserStakedTokens(_user, _projAddr)
+    let totalTokens = await obj.project.getStakedTokens(_projAddr)
+    let tokenWeighting = Math.round(stakedTokens * 100 / totalTokens) // emulate Divison.percent() precision of 2
+
+    return Math.floor((repWeighting + tokenWeighting) / 2)
   }
 
   // project return functions

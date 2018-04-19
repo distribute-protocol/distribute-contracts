@@ -4,7 +4,8 @@
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
-const KeccakHashes = require('../utils/KeccakHashes')
+const keccakHashes = require('../utils/keccakHashes')
+const taskDetails = require('../utils/taskDetails')
 
 contract('Staked State', (accounts) => {
   // set up project helper
@@ -18,13 +19,18 @@ contract('Staked State', (accounts) => {
   let {notStaker, notProject} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
 
+  // set up task details & hashing functions
+  let {taskSet1, taskSet2} = taskDetails
+  let {hashTasks, hashTasksArray} = keccakHashes
+
   // local test variables
   let projAddrT1, projAddrT2
   let projAddrR1, projAddrR2
   let errorThrown
+  let ts1WeightT, ts2WeightT, ts1WeightR, ts2WeightR
+  let rs1WeightT, rs2WeightT, rs1WeightR, rs2WeightR
 
-  // ganache 1 week ahead at this point from previous test's evmIncreaseTime()
-  let fastForwards = 1
+  let fastForwards = 1   // ganache 1 week ahead at this point from previous test's evmIncreaseTime()
 
   before(async function () {
     // get contracts
@@ -41,22 +47,153 @@ contract('Staked State', (accounts) => {
     // to check failed transition to failed period
     // projAddrT2 = await returnProject.staked_T(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
     // projAddrR2 = await returnProject.staked_R(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
+
+    // // get projAddrT1 staker weightings
+    // ts1WeightT = await project.calculateWeightOfAddress(tokenStaker1, projAddrT1)
+    // ts2WeightT = await project.calculateWeightOfAddress(tokenStaker2, projAddrT1)
+    // rs1WeightT = await project.calculateWeightOfAddress(repStaker1, projAddrT1)
+    // rs2WeightT = await project.calculateWeightOfAddress(repStaker2, projAddrT1)
+    //
+    // // get projAddrR1 staker weightings
+    // ts1WeightR = await project.calculateWeightOfAddress(tokenStaker1, projAddrR1)
+    // ts2WeightR = await project.calculateWeightOfAddress(tokenStaker2, projAddrR1)
+    // rs1WeightR = await project.calculateWeightOfAddress(repStaker1, projAddrR1)
+    // rs2WeightR = await project.calculateWeightOfAddress(repStaker2, projAddrR1)
+
+    // FOR DEBUGGING
+    // console.log(ts1WeightT, ts2WeightT, rs1WeightT, rs2WeightT)
+    // console.log(ts1WeightR, ts2WeightR, rs1WeightR, rs2WeightR)
   })
 
-  it('math works', async function () {
-    assert.equal(1, 1, 'math broke')
+  describe('adding task hashes to staked projects', () => {
+    it('Token staker can submit a task hash to TR staked project', async function () {
+      // take stock of variables before
+      let topTaskHashBefore = await PR.stakedProjects(projAddrT1)
+
+      // token staker submits
+      await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: tokenStaker1})
+
+      // take stock of variables after
+      let topTaskHashAfter = await PR.stakedProjects(projAddrT1)
+
+      //checks
+      assert.equal(topTaskHashBefore, 0, 'there should be nothing in stakedProjects before anyone adds a task hash')
+      assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash')
+    })
+
+    it('Token staker can submit a task hash to RR staked project', async function () {
+      // take stock of variables before
+      let topTaskHashBefore = await PR.stakedProjects(projAddrR1)
+
+      // token staker submits
+      await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: tokenStaker1})
+
+      // take stock of variables after
+      let topTaskHashAfter = await PR.stakedProjects(projAddrR1)
+
+      //checks
+      assert.equal(topTaskHashBefore, 0, 'there should be nothing in stakedProjects before anyone adds a task hash')
+      assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash')
+    })
+
+    it('Reputation staker can submit same task hash to TR staked project', async function () {
+      // take stock of variables before
+      let topTaskHashBefore = await PR.stakedProjects(projAddrT1)
+
+      // token staker submits
+      await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: repStaker1})
+
+      // take stock of variables after
+      let topTaskHashAfter = await PR.stakedProjects(projAddrT1)
+
+      //checks
+      assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash')
+      assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash')
+    })
+
+    it('Reputation staker can submit same task hash to RR staked project', async function () {
+      // take stock of variables before
+      let topTaskHashBefore = await PR.stakedProjects(projAddrR1)
+
+      // token staker submits
+      await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: repStaker1})
+
+      // take stock of variables after
+      let topTaskHashAfter = await PR.stakedProjects(projAddrR1)
+
+      //checks
+      assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash')
+      assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash')
+    })
+
+    it('Reputation staker can submit different task hash to TR staked project', async function () {
+      // take stock of variables before
+      let topTaskHashBefore = await PR.stakedProjects(projAddrT1)
+
+      // token staker submits
+      await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet2), {from: repStaker1})
+
+      // take stock of variables after
+      let topTaskHashAfter = await PR.stakedProjects(projAddrT1)
+
+      //checks
+      assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash')
+      assert.equal(topTaskHashAfter, hashTasksArray(taskSet2), 'incorrect top task hash')
+    })
+
+    it('Reputation staker can submit different task hash to RR staked project', async function () {
+      // take stock of variables before
+      let topTaskHashBefore = await PR.stakedProjects(projAddrR1)
+
+      // token staker submits
+      await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet2), {from: repStaker1})
+
+      // take stock of variables after
+      let topTaskHashAfter = await PR.stakedProjects(projAddrR1)
+
+      //checks
+      assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash')
+      assert.equal(topTaskHashAfter, hashTasksArray(taskSet2), 'incorrect top task hash')
+    })
+
+    it('Not staker can\'t submit a task hash to TR staked project', async function () {
+      errorThrown = false
+      try {
+        await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: notStaker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Not staker can\'t submit a task hash to RR staked project', async function () {
+      errorThrown = false
+      try {
+        await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: notStaker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
 
- //  it('non-staker can\'t submit a task hash', async function () {
- //    errorThrown = false
- //    try {
- //      await PR.addTaskHash(projectAddress, hashTasksArray(data1), {from: nonStaker})
- //    } catch (e) {
- //      errorThrown = true
- //    }
- //    assertThrown(errorThrown, 'An error should have been thrown')
- //  })
- //
+  describe('adding task hashes to nonexistant projects', () => {
+
+  })
+
+  describe('submitting hash lists to staked projects', () => {
+
+  })
+
+  describe('state changes on staked projects with task hash submissions', () => {
+
+  })
+
+  describe('time out state changes', () => {
+
+  })
+
+
  //  it('token staker can submit a task hash', async function () {
  //    let stakedProjectsBefore = await PR.stakedProjects.call(projectAddress)
  //    await PR.addTaskHash(projectAddress, hashTasksArray(data1), {from: staker1})

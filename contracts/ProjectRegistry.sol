@@ -247,12 +247,11 @@ contract ProjectRegistry {
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
         require(_projectAddress.isStaker(msg.sender) == true);
-
         checkActive(_projectAddress);
-        if (project.state() == 2) {
-            uint256 stakerWeight = _projectAddress.calculateWeightOfAddress(msg.sender);
-            stakedTaskHash(_projectAddress, msg.sender, _taskHash, stakerWeight);
-        }
+        require(project.state() == 2);
+
+        uint256 stakerWeight = _projectAddress.calculateWeightOfAddress(msg.sender);
+        stakedTaskHash(_projectAddress, msg.sender, _taskHash, stakerWeight);
     }
 
     /**
