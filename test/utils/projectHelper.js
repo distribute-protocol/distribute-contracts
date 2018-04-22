@@ -139,9 +139,13 @@ module.exports = function projectHelper (accounts) {
     return total.toNumber()
   }
 
-  obj.utils.getWeiPoolBal = async function () {
+  obj.utils.getWeiPoolBal = async function (_unadulterated) {
     let weiBal = await obj.contracts.DT.weiBal()
-    return weiBal.toNumber()
+    if(_unadulterated === true) {
+      return weiBal
+    } else {
+      return weiBal.toNumber()
+    }
   }
 
   obj.utils.getCurrentPrice = async function () {
@@ -161,10 +165,14 @@ module.exports = function projectHelper (accounts) {
     return weiCost.toNumber()
   }
 
-  obj.project.getWeiBal = async function (_projAddr) {
+  obj.project.getWeiBal = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let weiBal = await PROJ.weiBal()
-    return weiBal.toNumber()
+    if(_unadulterated === true) {
+      return weiBal
+    } else {
+      return weiBal.toNumber()
+    }
   }
 
   obj.project.getWeiRemaining = async function (_projAddr) {

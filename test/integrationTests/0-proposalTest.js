@@ -152,7 +152,7 @@ contract('Propose Projects', function (accounts) {
       assert.equal(proposerCost, _proposerStake, 'PR stored incorrect proposer stake')
       assert.equal(ipfsHash, _ipfsHash, 'PR stored incorrect ipfs hash')
     })
-})
+  })
 
   describe('propose project unsuccessfully', () => {
     it('Proposer with tokens can\'t propose project from TR with staking period that\'s passed', async function () {
