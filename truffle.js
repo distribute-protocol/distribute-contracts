@@ -1,4 +1,4 @@
-// const HDWalletProvider = require('truffle-hdwallet-provider')
+const HDWalletProvider = require('truffle-hdwallet-provider')
 const fs = require('fs')
 
 // first read in the secrets.json to get our mnemonic
@@ -12,24 +12,16 @@ if (fs.existsSync('secrets.json')) {
   mnemonic = ''
 }
 
-// var infuraApikey = '11XiCuI1EjsowYvplZ24'
-
 module.exports = {
   networks: {
     development: {
       host: 'localhost',
       port: 7545,
       network_id: '*'
-      // gas: 6412500,
-      // gasPrice: 20000000000
+    },
+    rinkeby: {
+      provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/'),
+      network_id: '*'
     }
-    // ropsten: {
-    //   provider: new HDWalletProvider(mnemonic, 'https://ropsten.infura.io'),
-    //   network_id: '3'
-    // },
-    // rinkeby: {
-    //   provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/'),
-    //   network_id: '*'
-    // }
   }
 }

@@ -76,7 +76,7 @@ contract('Proposed State', (accounts) => {
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
       let weiBalBefore = await project.getWeiBal(projAddrT1)
-      let weiPoolBefore = await utils.getWeiPoolBal()
+      let weiPoolBefore = await utils.getWeiPoolBal(true)
       let tsStakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrT1)
       let stakedRepBefore = await project.getStakedRep(projAddrT1)
@@ -99,22 +99,19 @@ contract('Proposed State', (accounts) => {
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
       let weiBalAfter = await project.getWeiBal(projAddrT1)
-      let weiPoolAfter = await utils.getWeiPoolBal()
+      let weiPoolAfter = await utils.getWeiPoolBal(true)
       let tsStakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
       let stakedTokensAfter = await project.getStakedTokens(projAddrT1)
       let stakedRepAfter = await project.getStakedRep(projAddrT1)
 
-      // HERE FOR DEBUGGING
-      // console.log('DT before, after', DTBalBefore.toNumber(), DTBalAfter.toNumber(), DTBalBefore.toNumber() - DTBalAfter.toNumber())
-      // console.log('weiPool before, after', weiPoolBefore, weiPoolAfter, weiPoolBefore - weiPoolAfter)
-      // console.log('PROJ before, after', ProjBalBefore.toNumber(), ProjBalAfter.toNumber(), ProjBalAfter.toNumber() - ProjBalBefore.toNumber())
-      // console.log('weiBal before, after', weiBalBefore, weiBalAfter, weiBalBefore - weiBalAfter)
+      // handle big number subtraction
+      let weiPoolDifference = weiPoolBefore.minus(weiPoolAfter).toNumber()
 
       // checks
       assert.equal(tsBalBefore, tsBalAfter + tokensToStake, 'tokenStaker1\'s balance updated incorrectly')
       assert.equal(TRBalBefore + tokensToStake, TRBalAfter, 'TR\'s balance updated incorrectly')
       assert.equal(weiBalAfter - weiBalBefore, currentPrice * tokensToStake, 'incorrect weiBalAfter')
-      // assert.equal(weiPoolBefore - weiPoolAfter, currentPrice * tokensToStake, 'incorrect weiPoolAfter') --> THIS HAS A WEIRD 50 WEI OFFSET. FIX THIS!
+      assert.equal(weiPoolDifference, currentPrice * tokensToStake, 'incorrect weiPoolAfter')
       assert.equal(0, tsStakedTokensBefore, 'tokenStaker1 should not have any tokens staked on projAddrT1 before staking')
       assert.equal(0, stakedTokensBefore, 'projAddrT1 should not have any tokens staked on it before tokenStaker1 stakes')
       assert.equal(tokensToStake, tsStakedTokensAfter, 'tokenStaker1 should have tokensToStake amount of tokens staked on projAddrT1')
@@ -134,7 +131,7 @@ contract('Proposed State', (accounts) => {
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
       let weiBalBefore = await project.getWeiBal(projAddrR1)
-      // let weiPoolBefore = await utils.getWeiPoolBal()
+      let weiPoolBefore = await utils.getWeiPoolBal(true)
       let tsStakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrR1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrR1)
       let stakedRepBefore = await project.getStakedRep(projAddrR1)
@@ -149,16 +146,19 @@ contract('Proposed State', (accounts) => {
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
       let weiBalAfter = await project.getWeiBal(projAddrR1)
-      // let weiPoolAfter = await utils.getWeiPoolBal()
+      let weiPoolAfter = await utils.getWeiPoolBal(true)
       let tsStakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR1)
       let stakedTokensAfter = await project.getStakedTokens(projAddrR1)
       let stakedRepAfter = await project.getStakedRep(projAddrR1)
+
+      // handle big number subtraction
+      let weiPoolDifference = weiPoolBefore.minus(weiPoolAfter).toNumber()
 
       // checks
       assert.equal(tsBalBefore, tsBalAfter + tokensToStake, 'tokenStaker1\'s balance updated incorrectly')
       assert.equal(TRBalBefore + tokensToStake, TRBalAfter, 'TR\'s balance updated incorrectly')
       assert.equal(weiBalAfter - weiBalBefore, currentPrice * tokensToStake, 'incorrect weiBalAfter')
-      // assert.equal(weiPoolBefore - weiPoolAfter, currentPrice * tokensToStake, 'incorrect weiPoolAfter') --> THIS HAS A WEIRD 50 WEI OFFSET. FIX THIS!
+      assert.equal(weiPoolDifference, currentPrice * tokensToStake, 'incorrect weiPoolAfter')
       assert.equal(0, tsStakedTokensBefore, 'tokenStaker1 should not have any tokens staked on projAddrR1 before staking')
       assert.equal(0, stakedTokensBefore, 'projAddrR1 should not have any tokens staked on it before tokenStaker1 stakes')
       assert.equal(tokensToStake, tsStakedTokensAfter, 'tokenStaker1 should have tokensToStake amount of tokens staked on projAddrR1')
@@ -174,8 +174,8 @@ contract('Proposed State', (accounts) => {
       // take stock of variables
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
-      // let weiPoolBefore = await utils.getWeiPoolBal()
-      // let weiBalBefore = await project.getWeiBal(projAddrT1)
+      let weiPoolBefore = await utils.getWeiPoolBal(true)
+      let weiBalBefore = await project.getWeiBal(projAddrT1)
       let tsStakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrT1)
       let stakedRepBefore = await project.getStakedRep(projAddrT1)
@@ -186,17 +186,20 @@ contract('Proposed State', (accounts) => {
       // take stock of variables
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
-      // let weiPoolAfter = await utils.getWeiPoolBal()
+      let weiPoolAfter = await utils.getWeiPoolBal(true)
       let weiBalAfter = await project.getWeiBal(projAddrT1)
       let tsStakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
       let stakedTokensAfter = await project.getStakedTokens(projAddrT1)
       let stakedRepAfter = await project.getStakedRep(projAddrT1)
 
+      // handle big number subtraction
+      let weiPoolDifference = weiPoolAfter.minus(weiPoolBefore).toNumber()
+
       // checks
       assert.equal(tsBalBefore + tokensToUnstake, tsBalAfter, 'tokenStaker1\'s balance updated incorrectly')
       assert.equal(TRBalAfter + tokensToUnstake, TRBalBefore, 'TR\'s balance updated incorrectly')
       assert.equal(weiBalAfter, 0, 'incorrect weiBalAfter')
-      // assert.equal(weiPoolAfter - weiPoolBefore, weiBalBefore, 'incorrect weiPoolAfter')
+      assert.equal(weiPoolDifference, weiBalBefore, 'incorrect weiPoolAfter')
       assert.equal(tokensToUnstake, tsStakedTokensBefore, 'tokenStaker1 should have tokens staked on projAddrT1 before staking')
       assert.equal(tokensToUnstake, stakedTokensBefore, 'projAddrT1 should have a total of tokensToStake tokens staked before staking')
       assert.equal(0, tsStakedTokensAfter, 'tokenStaker1 should have no tokens staked on projAddrT1')
@@ -212,8 +215,8 @@ contract('Proposed State', (accounts) => {
       // take stock of variables
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
-      // let weiPoolBefore = await utils.getWeiPoolBal()
-      // let weiBalBefore = await project.getWeiBal(projAddrR1)
+      let weiPoolBefore = await utils.getWeiPoolBal(true)
+      let weiBalBefore = await project.getWeiBal(projAddrR1)
       let tsStakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrR1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrR1)
       let stakedRepBefore = await project.getStakedRep(projAddrR1)
@@ -224,17 +227,20 @@ contract('Proposed State', (accounts) => {
       // take stock of variables
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
-      // let weiPoolAfter = await utils.getWeiPoolBal()
+      let weiPoolAfter = await utils.getWeiPoolBal(true)
       let weiBalAfter = await project.getWeiBal(projAddrR1)
       let tsStakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR1)
       let stakedTokensAfter = await project.getStakedTokens(projAddrR1)
       let stakedRepAfter = await project.getStakedRep(projAddrR1)
 
+      // handle big number subtraction
+      let weiPoolDifference = weiPoolAfter.minus(weiPoolBefore).toNumber()
+
       // checks
       assert.equal(tsBalBefore + tokensToUnstake, tsBalAfter, 'tokenStaker1\'s balance updated incorrectly')
       assert.equal(TRBalAfter + tokensToUnstake, TRBalBefore, 'TR\'s balance updated incorrectly')
       assert.equal(weiBalAfter, 0, 'incorrect weiBalAfter')
-      // assert.equal(weiPoolAfter - weiPoolBefore, weiBalBefore, 'incorrect weiPoolAfter')
+      assert.equal(weiPoolAfter - weiPoolBefore, weiBalBefore, 'incorrect weiPoolAfter')
       assert.equal(tokensToUnstake, tsStakedTokensBefore, 'tokenStaker1 should have tokens staked on projAddrR1 before staking')
       assert.equal(tokensToUnstake, stakedTokensBefore, 'projAddrR1 should have a total of tokensToStake tokens staked before staking')
       assert.equal(0, tsStakedTokensAfter, 'tokenStaker1 should have no tokens staked on projAddrR1')
@@ -446,7 +452,7 @@ contract('Proposed State', (accounts) => {
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
       let weiBalBefore = await project.getWeiBal(projAddrR2)
-      let weiPoolBefore = await utils.getWeiPoolBal()
+      let weiPoolBefore = await utils.getWeiPoolBal(true)
       let tsStakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrR2)
       let stakedTokensBefore = await project.getStakedTokens(projAddrR2)
       let stakedRepBefore = await project.getStakedRep(projAddrR2)
@@ -461,16 +467,19 @@ contract('Proposed State', (accounts) => {
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
       let weiBalAfter = await project.getWeiBal(projAddrR2)
-      let weiPoolAfter = await utils.getWeiPoolBal()
+      let weiPoolAfter = await utils.getWeiPoolBal(true)
       let tsStakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR2)
       let stakedTokensAfter = await project.getStakedTokens(projAddrR2)
       let stakedRepAfter = await project.getStakedRep(projAddrR2)
+
+      // handle big number subtraction
+      let weiPoolDifference = weiPoolBefore.minus(weiPoolAfter).toNumber()
 
       // checks
       assert.equal(tsBalBefore, tsBalAfter + tokensToStake - 1, 'tokenStaker1\'s balance updated incorrectly')
       assert.equal(TRBalBefore + tokensToStake - 1, TRBalAfter, 'TR\'s balance updated incorrectly')
       assert.equal(weiBalAfter, weiCost, 'incorrect weiBalAfter')
-      assert.equal(weiPoolBefore - weiPoolAfter, weiCost - weiBalBefore, 'incorrect weiPoolAfter')
+      assert.equal(weiPoolDifference, weiCost - weiBalBefore, 'incorrect weiPoolAfter')
       assert.equal(0, tsStakedTokensBefore, 'tokenStaker1 should not have any tokens staked on projAddrR2 before staking')
       assert.equal(0, stakedTokensBefore, 'projAddrR2 should not have any tokens staked on it before tokenStaker1 stakes')
       assert.equal(tokensToStake - 1, tsStakedTokensAfter, 'tokenStaker1 should have tokensToStake - 1 amount of tokens staked on projAddrR2')
@@ -571,7 +580,7 @@ contract('Proposed State', (accounts) => {
       let ts2BalBefore = await utils.getTokenBalance(tokenStaker2)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
       let weiBalBefore = await project.getWeiBal(projAddrT3)
-      // let weiPoolBefore = await utils.getWeiPoolBal()
+      let weiPoolBefore = await utils.getWeiPoolBal(true)
       let ts1StakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT3)
       let ts2StakedTokensBefore = await project.getUserStakedTokens(tokenStaker2, projAddrT3)
       let stakedTokensBefore = await project.getStakedTokens(projAddrT3)
@@ -588,18 +597,21 @@ contract('Proposed State', (accounts) => {
       let ts2BalMiddle = await utils.getTokenBalance(tokenStaker2)
       let TRBalMiddle = await utils.getTokenBalance(TR.address)
       let weiBalMiddle = await project.getWeiBal(projAddrT3)
-      // let weiPoolMiddle = await utils.getWeiPoolBal()
+      let weiPoolMiddle = await utils.getWeiPoolBal(true)
       let ts1StakedTokensMiddle = await project.getUserStakedTokens(tokenStaker1, projAddrT3)
       let ts2StakedTokensMiddle = await project.getUserStakedTokens(tokenStaker2, projAddrT3)
       let stakedTokensMiddle = await project.getStakedTokens(projAddrT3)
       let stakedRepMiddle = await project.getStakedRep(projAddrT3)
+
+      // handle big number subtraction
+      let weiPoolDifference = weiPoolBefore.minus(weiPoolMiddle).toNumber()
 
       // checks
       assert.equal(ts1BalBefore - tokensToStake1, ts1BalMiddle, 'tokenStaker1\'s balance updated incorrectly')
       assert.equal(ts2BalBefore, ts2BalMiddle, 'tokenStaker2\'s balance shouldn\'t change')
       assert.equal(TRBalBefore + tokensToStake1, TRBalMiddle, 'TR\'s balance updated incorrectly')
       assert.equal(weiBalMiddle - weiBalBefore, currentPrice * tokensToStake1, 'incorrect weiBalMiddle')
-      // assert.equal(weiPoolBefore - weiPoolAfter, currentPrice * tokensToStake1, 'incorrect weiPoolAfter') --> THIS HAS A WEIRD 50 WEI OFFSET. FIX THIS!
+      assert.equal(weiPoolDifference, currentPrice * tokensToStake1, 'incorrect weiPoolMiddle')
       assert.equal(0, ts1StakedTokensBefore, 'tokenStaker1 should not have any tokens staked on projAddrT3 before staking')
       assert.equal(0, ts2StakedTokensBefore, 'tokenStaker2 should not have any tokens staked on projAddrT3 before staking')
       assert.equal(0, stakedTokensBefore, 'projAddrT3 should not have any tokens staked on it before tokenStaker1 stakes')
@@ -627,25 +639,27 @@ contract('Proposed State', (accounts) => {
       let ts2BalAfter = await utils.getTokenBalance(tokenStaker2)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
       let weiBalAfter = await project.getWeiBal(projAddrT3)
-      // let weiPoolAfter = await utils.getWeiPoolBal()
+      let weiPoolAfter = await utils.getWeiPoolBal(true)
       let ts1StakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrT3)
       let ts2StakedTokensAfter = await project.getUserStakedTokens(tokenStaker2, projAddrT3)
       let stakedTokensAfter = await project.getStakedTokens(projAddrT3)
       let stakedRepAfter = await project.getStakedRep(projAddrT3)
+
+      // handle big number subtraction
+      weiPoolDifference = weiPoolMiddle.minus(weiPoolAfter).toNumber()
 
       // checks
       assert.equal(ts1BalMiddle, ts1BalAfter, 'tokenStaker1\'s balance shouldn\'t change')
       assert.equal(ts2BalMiddle - tokensToStake2, ts2BalAfter, 'tokenStaker2\'s balance updated incorrectly')
       assert.equal(TRBalMiddle + tokensToStake2, TRBalAfter, 'TR\'s balance updated incorrectly')
       assert.equal(weiBalAfter - weiBalMiddle, currentPrice * tokensToStake2, 'incorrect weiBalAfter')
-      // assert.equal(weiPoolBefore - weiPoolAfter, currentPrice * tokensToStake1, 'incorrect weiPoolAfter') --> THIS HAS A WEIRD 50 WEI OFFSET. FIX THIS!
+      assert.equal(weiPoolDifference, currentPrice * tokensToStake2, 'incorrect weiPoolAfter')
       assert.equal(tokensToStake1, ts1StakedTokensAfter, 'tokenStaker1 should have tokensToStake1 tokens staked on projAddrT3 after staking')
       assert.equal(tokensToStake2, ts2StakedTokensAfter, 'tokenStaker2 should have tokensToStake2 tokens staked on projAddrT3 after staking')
       assert.equal(tokensToStake1 + tokensToStake2, stakedTokensAfter, 'projAddrT3 should have tokensToStake1 + tokensToStake2 tokens staked on it after tokenStaker1 and tokenStaker2 stakes')
       assert.equal(0, stakedRepAfter, 'projAddrT3 should not have any rep staked on it after tokenStaker1 and tokenStaker2 stakes')
     })
 
-    // this one fails a lot for some reason - incorrect weiBal after off by 20 wei
     it('Multiple token stakers can stake RR proposed project', async function () {
       // refuel token stakers
       await utils.mintIfNecessary(tokenStaker1)
@@ -661,8 +675,8 @@ contract('Proposed State', (accounts) => {
       let ts1BalBefore = await utils.getTokenBalance(tokenStaker1)
       let ts2BalBefore = await utils.getTokenBalance(tokenStaker2)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let weiBalBefore = await project.getWeiBal(projAddrR3)
-      // let weiPoolBefore = await utils.getWeiPoolBal()
+      let weiBalBefore = await project.getWeiBal(projAddrR3, true)
+      let weiPoolBefore = await utils.getWeiPoolBal(true)
       let ts1StakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrR3)
       let ts2StakedTokensBefore = await project.getUserStakedTokens(tokenStaker2, projAddrR3)
       let stakedTokensBefore = await project.getStakedTokens(projAddrR3)
@@ -678,19 +692,23 @@ contract('Proposed State', (accounts) => {
       let ts1BalMiddle = await utils.getTokenBalance(tokenStaker1)
       let ts2BalMiddle = await utils.getTokenBalance(tokenStaker2)
       let TRBalMiddle = await utils.getTokenBalance(TR.address)
-      let weiBalMiddle = await project.getWeiBal(projAddrR3)
-      // let weiPoolMiddle = await utils.getWeiPoolBal()
+      let weiBalMiddle = await project.getWeiBal(projAddrR3, true)
+      let weiPoolMiddle = await utils.getWeiPoolBal(true)
       let ts1StakedTokensMiddle = await project.getUserStakedTokens(tokenStaker1, projAddrR3)
       let ts2StakedTokensMiddle = await project.getUserStakedTokens(tokenStaker2, projAddrR3)
       let stakedTokensMiddle = await project.getStakedTokens(projAddrR3)
       let stakedRepMiddle = await project.getStakedRep(projAddrR3)
 
+      // handle big number subtraction
+      let weiBalDifference = weiBalMiddle.minus(weiBalBefore).toNumber()
+      let weiPoolDifference = weiPoolBefore.minus(weiPoolMiddle).toNumber()
+
       // checks
       assert.equal(ts1BalBefore - tokensToStake1, ts1BalMiddle, 'tokenStaker1\'s balance updated incorrectly')
       assert.equal(ts2BalBefore, ts2BalMiddle, 'tokenStaker2\'s balance shouldn\'t change')
       assert.equal(TRBalBefore + tokensToStake1, TRBalMiddle, 'TR\'s balance updated incorrectly')
-      assert.equal(weiBalMiddle - weiBalBefore, currentPrice * tokensToStake1, 'incorrect weiBalMiddle')
-      // assert.equal(weiPoolBefore - weiPoolAfter, currentPrice * tokensToStake1, 'incorrect weiPoolAfter') --> THIS HAS A WEIRD 50 WEI OFFSET. FIX THIS!
+      assert.equal(weiBalDifference, currentPrice * tokensToStake1, 'incorrect weiBalMiddle')
+      assert.equal(weiPoolDifference, currentPrice * tokensToStake1, 'incorrect weiPooMiddle')
       assert.equal(0, ts1StakedTokensBefore, 'tokenStaker1 should not have any tokens staked on projAddrR3 before staking')
       assert.equal(0, ts2StakedTokensBefore, 'tokenStaker2 should not have any tokens staked on projAddrR3 before staking')
       assert.equal(0, stakedTokensBefore, 'projAddrR3 should not have any tokens staked on it before tokenStaker1 stakes')
@@ -717,19 +735,23 @@ contract('Proposed State', (accounts) => {
       let ts1BalAfter = await utils.getTokenBalance(tokenStaker1)
       let ts2BalAfter = await utils.getTokenBalance(tokenStaker2)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let weiBalAfter = await project.getWeiBal(projAddrR3)
-      // let weiPoolAfter = await utils.getWeiPoolBal()
+      let weiBalAfter = await project.getWeiBal(projAddrR3, true)
+      let weiPoolAfter = await utils.getWeiPoolBal(true)
       let ts1StakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR3)
       let ts2StakedTokensAfter = await project.getUserStakedTokens(tokenStaker2, projAddrR3)
       let stakedTokensAfter = await project.getStakedTokens(projAddrR3)
       let stakedRepAfter = await project.getStakedRep(projAddrR3)
 
+      // handle big number subtraction
+      weiBalDifference = weiBalAfter.minus(weiBalMiddle).toNumber()
+      weiPoolDifference = weiPoolMiddle.minus(weiPoolAfter).toNumber()
+
       // checks
       assert.equal(ts1BalMiddle, ts1BalAfter, 'tokenStaker1\'s balance shouldn\'t change')
       assert.equal(ts2BalMiddle - tokensToStake2, ts2BalAfter, 'tokenStaker2\'s balance updated incorrectly')
       assert.equal(TRBalMiddle + tokensToStake2, TRBalAfter, 'TR\'s balance updated incorrectly')
-      // assert.equal(weiBalAfter - weiBalMiddle, currentPrice * tokensToStake2, 'incorrect weiBalAfter') --> THIS HAS A WEIRD 20 WEI OFFSET OCCASIONALLY, FIX THIS!
-      // assert.equal(weiPoolBefore - weiPoolAfter, currentPrice * tokensToStake1, 'incorrect weiPoolAfter') --> THIS HAS A WEIRD 50 WEI OFFSET. FIX THIS!
+      assert.equal(weiBalDifference, currentPrice * tokensToStake2, 'incorrect weiBalAfter')
+      assert.equal(weiPoolDifference, currentPrice * tokensToStake2, 'incorrect weiPoolAfter')
       assert.equal(tokensToStake1, ts1StakedTokensAfter, 'tokenStaker1 should have tokensToStake1 tokens staked on projAddrR3 after staking')
       assert.equal(tokensToStake2, ts2StakedTokensAfter, 'tokenStaker2 should have tokensToStake2 tokens staked on projAddrR3 after staking')
       assert.equal(tokensToStake1 + tokensToStake2, stakedTokensAfter, 'projAddrR3 should have tokensToStake1 + tokensToStake2 tokens staked on it after tokenStaker1 and tokenStaker2 stakes')
