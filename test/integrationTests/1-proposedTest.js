@@ -17,9 +17,6 @@ contract('Proposed State', (accounts) => {
   let {repStaker1, repStaker2} = user
   let {notStaker, notProject} = user
 
-  // HERE FOR DEBUGGING
-  let DT
-
   // local test variables
   let projAddrT1, projAddrT2, projAddrT3, projAddrT4
   let projAddrR1, projAddrR2, projAddrR3, projAddrR4
@@ -31,9 +28,6 @@ contract('Proposed State', (accounts) => {
     TR = projObj.contracts.TR
     RR = projObj.contracts.RR
     PR = projObj.contracts.PR
-
-    // HERE FOR DEBUGGING
-    DT = projObj.contracts.DT
 
     // propose projects
     // to check staking below required amount, unstaking
@@ -84,16 +78,8 @@ contract('Proposed State', (accounts) => {
       // assert that tokenStaker1 has enough tokens for this
       assert.isAtLeast(tsBalBefore, tokensToStake, 'tokenStaker1 doesn\'t have enough tokens to stake this much on projAddrT1')
 
-      // HERE FOR DEBUGGING
-      let DTBalBefore = web3.eth.getBalance(DT.address)
-      let ProjBalBefore = web3.eth.getBalance(projAddrT1)
-
       // tokenStaker1 stakes all but one of the required tokens
       await TR.stakeTokens(projAddrT1, tokensToStake, {from: tokenStaker1})
-
-      // HERE FOR DEBUGGING
-      let DTBalAfter = web3.eth.getBalance(DT.address)
-      let ProjBalAfter = web3.eth.getBalance(projAddrT1)
 
       // take stock of variables
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
@@ -240,7 +226,7 @@ contract('Proposed State', (accounts) => {
       assert.equal(tsBalBefore + tokensToUnstake, tsBalAfter, 'tokenStaker1\'s balance updated incorrectly')
       assert.equal(TRBalAfter + tokensToUnstake, TRBalBefore, 'TR\'s balance updated incorrectly')
       assert.equal(weiBalAfter, 0, 'incorrect weiBalAfter')
-      assert.equal(weiPoolAfter - weiPoolBefore, weiBalBefore, 'incorrect weiPoolAfter')
+      assert.equal(weiPoolDifference, weiBalBefore, 'incorrect weiPoolAfter')
       assert.equal(tokensToUnstake, tsStakedTokensBefore, 'tokenStaker1 should have tokens staked on projAddrR1 before staking')
       assert.equal(tokensToUnstake, stakedTokensBefore, 'projAddrR1 should have a total of tokensToStake tokens staked before staking')
       assert.equal(0, tsStakedTokensAfter, 'tokenStaker1 should have no tokens staked on projAddrR1')
@@ -1418,7 +1404,7 @@ contract('Proposed State', (accounts) => {
     before(async function () {
       // fast forward time
       evmIncreaseTime(604800) // 1 week
-      projObj.time.fastForward +=1
+      projObj.time.fastForward += 1
     })
 
     it('TR proposed project becomes expired if not staked at staking deadline', async function () {

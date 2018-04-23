@@ -1,4 +1,4 @@
-/* global artifacts web3 */
+/* global artifacts web3 assert */
 
 const TokenRegistry = artifacts.require('TokenRegistry')
 const ReputationRegistry = artifacts.require('ReputationRegistry')
@@ -141,7 +141,7 @@ module.exports = function projectHelper (accounts) {
 
   obj.utils.getWeiPoolBal = async function (_unadulterated) {
     let weiBal = await obj.contracts.DT.weiBal()
-    if(_unadulterated === true) {
+    if (_unadulterated === true) {
       return weiBal
     } else {
       return weiBal.toNumber()
@@ -168,7 +168,7 @@ module.exports = function projectHelper (accounts) {
   obj.project.getWeiBal = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let weiBal = await PROJ.weiBal()
-    if(_unadulterated === true) {
+    if (_unadulterated === true) {
       return weiBal
     } else {
       return weiBal.toNumber()
@@ -239,7 +239,7 @@ module.exports = function projectHelper (accounts) {
   obj.project.calculateWeightOfAddress = async function (_user, _projAddr) {
     let stakedRep = await obj.project.getUserStakedRep(_user, _projAddr)
     let totalRep = await obj.project.getStakedRep(_projAddr)
-    let repWeighting =  Math.round(stakedRep * 100 / totalRep) // emulate Divison.percent() precision of 2
+    let repWeighting = Math.round(stakedRep * 100 / totalRep) // emulate Divison.percent() precision of 2
 
     let stakedTokens = await obj.project.getUserStakedTokens(_user, _projAddr)
     let totalTokens = await obj.project.getStakedTokens(_projAddr)
@@ -345,7 +345,7 @@ module.exports = function projectHelper (accounts) {
     let requiredTokens = await obj.project.calculateRequiredTokens(_projAddr)
     let tokensToStake = Math.floor(requiredTokens / 2)
 
-    // assert that repStaker1 has the reputation to stake
+    // assert that tokenStaker1 has the tokens to stake
     let tsBal = await obj.utils.getTokenBalance(obj.user.tokenStaker1)
     assert.isAtLeast(tsBal, tokensToStake, 'tokenStaker1 doesn\'t have enough tokens to stake')
 
@@ -355,7 +355,7 @@ module.exports = function projectHelper (accounts) {
     // get tokens left to fully stake the project and stake them
     requiredTokens = await obj.project.calculateRequiredTokens(_projAddr)
 
-    // assert that repStaker1 has the reputation to stake
+    // assert that tokenStaker2 has the tokens to stake
     tsBal = await obj.utils.getTokenBalance(obj.user.tokenStaker2)
     assert.isAtLeast(tsBal, requiredTokens, 'tokenStaker2 doesn\'t have enough tokens to stake')
 
@@ -383,7 +383,7 @@ module.exports = function projectHelper (accounts) {
     // get reputation left to fully stake the project and stake it
     requiredRep = await obj.project.getRequiredReputation(_projAddr)
 
-    // assert that repStaker1 has the reputation to stake
+    // assert that repStaker2 has the reputation to stake
     rsBal = await obj.utils.getRepBalance(obj.user.repStaker2)
     assert.isAtLeast(rsBal, requiredRep, 'repStaker2 doesn\'t have enough rep to stake')
 
