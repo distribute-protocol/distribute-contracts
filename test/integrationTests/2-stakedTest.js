@@ -27,8 +27,6 @@ contract('Staked State', (accounts) => {
   let projAddrT1, projAddrT2
   let projAddrR1, projAddrR2
   let errorThrown
-  let ts1WeightT, ts2WeightT, ts1WeightR, ts2WeightR
-  let rs1WeightT, rs2WeightT, rs1WeightR, rs2WeightR
 
   let fastForwards = 1 // ganache 1 week ahead at this point from previous test's evmIncreaseTime()
 
@@ -46,9 +44,7 @@ contract('Staked State', (accounts) => {
 
     // to check failed transition to failed period
     projAddrT2 = await returnProject.staked_T(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
-
-    // WHY DOES THIS NEXT LINE ALWAYS FAIL?
-    // projAddrR2 = await returnProject.staked_R(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
+    projAddrR2 = await returnProject.staked_R(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
   })
 
   describe('adding task hashes to staked projects', () => {
@@ -297,14 +293,44 @@ contract('Staked State', (accounts) => {
   })
 
   describe('submit task hash on active projects', () => {
-    it('Submit task hash can\'t be called on TR staked project once it is active', async function () {
-
+    it('Add task hash can\'t be called by token staker on TR staked project once it is active', async function () {
+      errorThrown = false
+      try {
+        await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: tokenStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Submit task hash can\'t be called on RR staked project once it is active', async function () {
-
+    it('Add task hash can\'t be called by reputation staker on TR staked project once it is active', async function () {
+      errorThrown = false
+      try {
+        await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: repStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
+    it('Add task hash can\'t be called by token staker on RR staked project once it is active', async function () {
+      errorThrown = false
+      try {
+        await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: tokenStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Add task hash can\'t be called by reputation staker on RR staked project once it is active', async function () {
+      errorThrown = false
+      try {
+        await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: repStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
-
 })
