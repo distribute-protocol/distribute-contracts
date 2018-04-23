@@ -31,10 +31,8 @@ contract('Staked State', (accounts) => {
   let fastForwards = 1 // ganache 1 week ahead at this point from previous test's evmIncreaseTime()
 
   before(async function () {
-    // get contracts
+    // get contract
     await projObj.contracts.setContracts()
-    TR = projObj.contracts.TR
-    RR = projObj.contracts.RR
     PR = projObj.contracts.PR
 
     // get staked projects
@@ -226,7 +224,7 @@ contract('Staked State', (accounts) => {
   describe('state changes on staked projects with task hash submissions', () => {
     before(async function () {
       // fast forward time
-      evmIncreaseTime(604800) // 1 week
+      await evmIncreaseTime(604800) // 1 week
     })
 
     it('TR staked project becomes active if task hashes are submitted by the staking deadline', async function () {
@@ -276,20 +274,20 @@ contract('Staked State', (accounts) => {
       assert.equal(stateAfter, 7, 'state after should be 7')
     })
 
-    // it('RR staked project becomes failed if no task hashes are submitted by the staking deadline', async function () {
-    //   // take stock of variables
-    //   let stateBefore = await project.getState(projAddrR2)
-    //
-    //   // call checkStaked()
-    //   await PR.checkActive(projAddrR2)
-    //
-    //   // take stock of variables
-    //   let stateAfter = await project.getState(projAddrR2)
-    //
-    //   // checks
-    //   assert.equal(stateBefore, 2, 'state before should be 2')
-    //   assert.equal(stateAfter, 7, 'state after should be 7')
-    // })
+    it('RR staked project becomes failed if no task hashes are submitted by the staking deadline', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrR2)
+
+      // call checkStaked()
+      await PR.checkActive(projAddrR2)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrR2)
+
+      // checks
+      assert.equal(stateBefore, 2, 'state before should be 2')
+      assert.equal(stateAfter, 7, 'state after should be 7')
+    })
   })
 
   describe('submit task hash on active projects', () => {

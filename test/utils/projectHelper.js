@@ -7,7 +7,9 @@ const ProjectRegistry = artifacts.require('ProjectRegistry')
 const ProjectLibrary = artifacts.require('ProjectLibrary')
 const Project = artifacts.require('Project')
 
-// const evmIncreaseTime = require('./evmIncreaseTime')
+const evmIncreaseTime = require('./evmIncreaseTime')
+const keccakHashes = require('../utils/keccakHashes')
+const taskDetails = require('../utils/taskDetails')
 
 module.exports = function projectHelper (accounts) {
   let obj = {}
@@ -248,6 +250,12 @@ module.exports = function projectHelper (accounts) {
     return Math.floor((repWeighting + tokenWeighting) / 2)
   }
 
+  obj.project.getTasks = async function (_projAddr, _index) {
+    let PROJ = await Project.at(_projAddr)
+    let tasks = await PROJ.tasks(_index)
+    console.log(tasks)
+  }
+
   // project return functions
   // return project (address) proposed by token holder
   obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash) {
@@ -302,7 +310,6 @@ module.exports = function projectHelper (accounts) {
   }
 
   // return staked project (address) proposed by token holder
-  // make sure to reflect fast forwarded time in _stakingPeriod
   obj.returnProject.staked_T = async function (_cost, _stakingPeriod, _ipfsHash) {
     // get proposed project
     let _projAddr = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
@@ -319,7 +326,6 @@ module.exports = function projectHelper (accounts) {
   }
 
   // return staked project (address) proposed by reputation holder
-  // make sure to reflect fast forwarded time in _stakingPeriod
   obj.returnProject.staked_R = async function (_cost, _stakingPeriod, _ipfsHash) {
     // get proposed project
     let _projAddr = await obj.returnProject.proposed_R(_cost, _stakingPeriod, _ipfsHash)
@@ -333,6 +339,33 @@ module.exports = function projectHelper (accounts) {
     assert.equal(state, 2, 'project is not in staked state')
 
     return _projAddr
+  }
+
+  // return active projects (addresses) proposed by token holder and reputation holder
+  // moves ganache forward 1 week
+  obj.returnProject.active = async function (_cost, _stakingPeriod, _ipfsHash) {
+    // get staked projects
+    let _projAddrT = await obj.returnProject.staked_T(_cost, _stakingPeriod, _ipfsHash)
+    let _projAddrR = await obj.returnProject.staked_R(_cost, _stakingPeriod, _ipfsHash)
+
+    // add task hashes to both projects
+    await obj.contracts.PR.addTaskHash(_projAddrT, keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker1})
+    await obj.contracts.PR.addTaskHash(_projAddrR, keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker1})
+
+    // increase time 1 week
+    await evmIncreaseTime(604801)
+
+    // call checkActive on projects
+    await obj.contracts.PR.checkActive(_projAddrT)
+    await obj.contracts.PR.checkActive(_projAddrR)
+
+    // check that the project is in state 3
+    let stateT = await obj.project.getState(_projAddrT)
+    let stateR = await obj.project.getState(_projAddrR)
+    assert.equal(stateT, 3, 'project is not in active state')
+    assert.equal(stateR, 3, 'project is not in active state')
+
+    return [_projAddrT, _projAddrR]
   }
 
   // fully stake project with tokens via two stakers
