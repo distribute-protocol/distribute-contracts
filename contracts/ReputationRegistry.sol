@@ -179,6 +179,7 @@ contract ReputationRegistry{
         Project project = Project(_projectAddress);
         // handles edge case where someone attempts to stake past the staking deadline
         projectRegistry.checkStaked(_projectAddress);
+        require(project.state() == 1);
 
         uint256 repRemaining = project.reputationCost() - project.reputationStaked();
         uint256 reputationVal = _reputation < repRemaining ? _reputation : repRemaining;

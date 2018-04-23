@@ -297,6 +297,7 @@ contract ProjectRegistry {
     function submitHashList(address _projectAddress, bytes32[] _hashes) external {
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
+        require(project.state() == 3);
         require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
 
         project.setTaskLength(_hashes.length);

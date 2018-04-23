@@ -1404,7 +1404,6 @@ contract('Proposed State', (accounts) => {
     before(async function () {
       // fast forward time
       evmIncreaseTime(604800) // 1 week
-      projObj.time.fastForward += 1
     })
 
     it('TR proposed project becomes expired if not staked at staking deadline', async function () {

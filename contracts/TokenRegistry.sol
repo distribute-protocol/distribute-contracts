@@ -145,6 +145,7 @@ contract TokenRegistry {
         Project project = Project(_projectAddress);
         // handles edge case where someone attempts to stake past the staking deadline
         projectRegistry.checkStaked(_projectAddress);
+        require(project.state() == 1);
 
         // calculate amount of wei the project still needs
         uint256 weiRemaining = project.weiCost() - project.weiBal();
@@ -177,7 +178,7 @@ contract TokenRegistry {
         require(projectRegistry.projects(_projectAddress) == true);
         // handles edge case where someone attempts to unstake past the staking deadline
         projectRegistry.checkStaked(_projectAddress);
-        
+
         uint256 weiVal = Project(_projectAddress).unstakeTokens(msg.sender, _tokens, address(distributeToken));
         // the actual wei is sent back to DT via Project.unstakeTokens()
         // the weiBal is updated via the next line
