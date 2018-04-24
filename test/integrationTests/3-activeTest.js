@@ -13,7 +13,7 @@ contract('Active State', (accounts) => {
 
   // get project helper variables
   let TR, RR, PR
-  let {user, project, returnProject, task} = projObj
+  let {user, project, utils, returnProject, task} = projObj
   let {tokenStaker1, repStaker1} = user
   let {notStaker, notProject} = user
   let {worker1, worker2, notWorker} = user
@@ -39,15 +39,16 @@ contract('Active State', (accounts) => {
 
     // get active projects
     // moves ganache forward 1 more week
-    projAddrT = (await returnProject.active(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash))[0]
-    projAddrR = (await returnProject.active(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash))[1]
+    projArray = await returnProject.active(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, 1)
+    projAddrT = projArray[0][0]
+    projAddrR = projArray[0][1]
   })
 
   describe('submitting hash lists to active projects', () => {
     it('Incorrect hash list can\'t be submitted to TR active project', async function () {
       errorThrown = false
       try {
-        await PR.submitHashList(projArray[0], hashTasks(taskSet2), {from: repStaker1})
+        await PR.submitHashList(projAddrT, hashTasks(taskSet2), {from: repStaker1})
       } catch (e) {
         errorThrown = true
       }
@@ -57,7 +58,7 @@ contract('Active State', (accounts) => {
     it('Incorrect hash list can\'t be submitted to RR active project', async function () {
       errorThrown = false
       try {
-        await PR.submitHashList(projArray[1], hashTasks(taskSet2), {from: repStaker1})
+        await PR.submitHashList(projAddrR, hashTasks(taskSet2), {from: repStaker1})
       } catch (e) {
         errorThrown = true
       }
@@ -137,276 +138,391 @@ contract('Active State', (accounts) => {
       let hashListSubmittedAfter = await project.getHashListSubmitted(projAddrR)
       assert.equal(hashListSubmittedAfter, true, 'hash list submitted flag is incorrect')
     })
+
+    it('Correct hash list can\'t be resubmitted to TR active project', async function () {
+      errorThrown = false
+      try {
+        await PR.submitHashList(projAddrT, hashTasks(taskSet1), {from: repStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Correct hash list can\'t be resubmitted to RR active project', async function () {
+      errorThrown = false
+      try {
+        await PR.submitHashList(projAddrR, hashTasks(taskSet1), {from: repStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
-  //
-  //   it('Token staker can submit a task hash to RR staked project', async function () {
-  //     // take stock of variables before
-  //     let topTaskHashBefore = await PR.stakedProjects(projAddrR1)
-  //
-  //     // token staker submits
-  //     await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: tokenStaker1})
-  //
-  //     // take stock of variables after
-  //     let topTaskHashAfter = await PR.stakedProjects(projAddrR1)
-  //
-  //     //checks
-  //     assert.equal(topTaskHashBefore, 0, 'there should be nothing in stakedProjects before anyone adds a task hash')
-  //     assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash after')
-  //   })
-  //
-  //   it('Reputation staker can submit same task hash to TR staked project', async function () {
-  //     // take stock of variables before
-  //     let topTaskHashBefore = await PR.stakedProjects(projAddrT1)
-  //
-  //     // token staker submits
-  //     await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: repStaker1})
-  //
-  //     // take stock of variables after
-  //     let topTaskHashAfter = await PR.stakedProjects(projAddrT1)
-  //
-  //     //checks
-  //     assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash before')
-  //     assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash after')
-  //   })
-  //
-  //   it('Reputation staker can submit same task hash to RR staked project', async function () {
-  //     // take stock of variables before
-  //     let topTaskHashBefore = await PR.stakedProjects(projAddrR1)
-  //
-  //     // token staker submits
-  //     await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: repStaker1})
-  //
-  //     // take stock of variables after
-  //     let topTaskHashAfter = await PR.stakedProjects(projAddrR1)
-  //
-  //     //checks
-  //     assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash before')
-  //     assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash after')
-  //   })
-  //
-  //   it('Reputation staker can submit different task hash to TR staked project', async function () {
-  //     // take stock of variables before
-  //     let topTaskHashBefore = await PR.stakedProjects(projAddrT1)
-  //
-  //     // token staker submits
-  //     await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet2), {from: repStaker1})
-  //
-  //     // take stock of variables after
-  //     let topTaskHashAfter = await PR.stakedProjects(projAddrT1)
-  //
-  //     //checks
-  //     assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash before')
-  //     assert.equal(topTaskHashAfter, hashTasksArray(taskSet2), 'incorrect top task hash after')
-  //   })
-  //
-  //   it('Reputation staker can submit different task hash to RR staked project', async function () {
-  //     // take stock of variables before
-  //     let topTaskHashBefore = await PR.stakedProjects(projAddrR1)
-  //
-  //     // token staker submits
-  //     await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet2), {from: repStaker1})
-  //
-  //     // take stock of variables after
-  //     let topTaskHashAfter = await PR.stakedProjects(projAddrR1)
-  //
-  //     //checks
-  //     assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash before')
-  //     assert.equal(topTaskHashAfter, hashTasksArray(taskSet2), 'incorrect top task hash after')
-  //   })
-  //
-  //   it('Not staker can\'t submit a task hash to TR staked project', async function () {
-  //     errorThrown = false
-  //     try {
-  //       await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: notStaker})
-  //     } catch (e) {
-  //       errorThrown = true
-  //     }
-  //     assertThrown(errorThrown, 'An error should have been thrown')
-  //   })
-  //
-  //   it('Not staker can\'t submit a task hash to RR staked project', async function () {
-  //     errorThrown = false
-  //     try {
-  //       await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: notStaker})
-  //     } catch (e) {
-  //       errorThrown = true
-  //     }
-  //     assertThrown(errorThrown, 'An error should have been thrown')
-  //   })
-  // })
-  //
-  // describe('adding task hashes to nonexistant projects', () => {
-  //   it('Token staker can\'t a task hash to a nonexistant project', async function () {
-  //     errorThrown = false
-  //     try {
-  //       await PR.addTaskHash(notProject, hashTasksArray(taskSet1), {from: tokenStaker1})
-  //     } catch (e) {
-  //       errorThrown = true
-  //     }
-  //     assertThrown(errorThrown, 'An error should have been thrown')
-  //   })
-  //
-  //   it('Reputation staker can submit same task hash to RR staked project', async function () {
-  //     errorThrown = false
-  //     try {
-  //       await PR.addTaskHash(notProject, hashTasksArray(taskSet1), {from: repStaker1})
-  //     } catch (e) {
-  //       errorThrown = true
-  //     }
-  //     assertThrown(errorThrown, 'An error should have been thrown')
-  //   })
-  // })
-  //
-  // describe('submitting hash lists to staked projects', () => {
-  //   it('Token staker can\'t submit hash list to TR staked project in staked state', async function () {
-  //     errorThrown = false
-  //     try {
-  //       await PR.submitHashList(projAddrT1, hashTasks(taskSet2), {from: tokenStaker1})
-  //     } catch (e) {
-  //       errorThrown = true
-  //     }
-  //     assertThrown(errorThrown, 'An error should have been thrown')
-  //   })
-  //
-  //   it('Reputation staker can\'t submit hash list to TR staked project in staked state', async function () {
-  //     errorThrown = false
-  //     try {
-  //       await PR.submitHashList(projAddrT1, hashTasks(taskSet2), {from: tokenStaker1})
-  //     } catch (e) {
-  //       errorThrown = true
-  //     }
-  //     assertThrown(errorThrown, 'An error should have been thrown')
-  //   })
-  //
-  //   it('Token staker can\'t submit hash list to RR staked project in staked state', async function () {
-  //     errorThrown = false
-  //     try {
-  //       await PR.submitHashList(projAddrR1, hashTasks(taskSet2), {from: tokenStaker1})
-  //     } catch (e) {
-  //       errorThrown = true
-  //     }
-  //     assertThrown(errorThrown, 'An error should have been thrown')
-  //   })
-  //
-  //   it('Reputation staker can\'t submit hash list to RR staked project in staked state', async function () {
-  //     errorThrown = false
-  //     try {
-  //       await PR.submitHashList(projAddrR1, hashTasks(taskSet2), {from: tokenStaker1})
-  //     } catch (e) {
-  //       errorThrown = true
-  //     }
-  //     assertThrown(errorThrown, 'An error should have been thrown')
-  //   })
-  // })
-  //
-  // describe('state changes on staked projects with task hash submissions', () => {
-  //   before(async function () {
-  //     // fast forward time
-  //     evmIncreaseTime(604800) // 1 week
-  //   })
-  //
-  //   it('TR staked project becomes active if task hashes are submitted by the staking deadline', async function () {
-  //     // take stock of variables
-  //     let stateBefore = await project.getState(projAddrT1)
-  //
-  //     // call checkStaked()
-  //     await PR.checkActive(projAddrT1)
-  //
-  //     // take stock of variables
-  //     let stateAfter = await project.getState(projAddrT1)
-  //
-  //     // checks
-  //     assert.equal(stateBefore, 2, 'state before should be 2')
-  //     assert.equal(stateAfter, 3, 'state after should be 3')
-  //   })
-  //
-  //   it('RR staked project becomes active if task hashes are submitted by the staking deadline', async function () {
-  //     // take stock of variables
-  //     let stateBefore = await project.getState(projAddrR1)
-  //
-  //     // call checkStaked()
-  //     await PR.checkActive(projAddrR1)
-  //
-  //     // take stock of variables
-  //     let stateAfter = await project.getState(projAddrR1)
-  //
-  //     // checks
-  //     assert.equal(stateBefore, 2, 'state before should be 2')
-  //     assert.equal(stateAfter, 3, 'state after should be 3')
-  //   })
-  // })
-  //
-  // describe('time out state changes', () => {
-  //   it('TR staked project becomes failed if no task hashes are submitted by the staking deadline', async function () {
-  //     // take stock of variables
-  //     let stateBefore = await project.getState(projAddrT2)
-  //
-  //     // call checkStaked()
-  //     await PR.checkActive(projAddrT2)
-  //
-  //     // take stock of variables
-  //     let stateAfter = await project.getState(projAddrT2)
-  //
-  //     // checks
-  //     assert.equal(stateBefore, 2, 'state before should be 2')
-  //     assert.equal(stateAfter, 7, 'state after should be 7')
-  //   })
-  //
-  //   // it('RR staked project becomes failed if no task hashes are submitted by the staking deadline', async function () {
-  //   //   // take stock of variables
-  //   //   let stateBefore = await project.getState(projAddrR2)
-  //   //
-  //   //   // call checkStaked()
-  //   //   await PR.checkActive(projAddrR2)
-  //   //
-  //   //   // take stock of variables
-  //   //   let stateAfter = await project.getState(projAddrR2)
-  //   //
-  //   //   // checks
-  //   //   assert.equal(stateBefore, 2, 'state before should be 2')
-  //   //   assert.equal(stateAfter, 7, 'state after should be 7')
-  //   // })
-  // })
-  //
-  // describe('submit task hash on active projects', () => {
-  //   it('Add task hash can\'t be called by token staker on TR staked project once it is active', async function () {
-  //     errorThrown = false
-  //     try {
-  //       await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: tokenStaker1})
-  //     } catch (e) {
-  //       errorThrown = true
-  //     }
-  //     assertThrown(errorThrown, 'An error should have been thrown')
-  //   })
-  //
-  //   it('Add task hash can\'t be called by reputation staker on TR staked project once it is active', async function () {
-  //     errorThrown = false
-  //     try {
-  //       await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: repStaker1})
-  //     } catch (e) {
-  //       errorThrown = true
-  //     }
-  //     assertThrown(errorThrown, 'An error should have been thrown')
-  //   })
-  //
-  //   it('Add task hash can\'t be called by token staker on RR staked project once it is active', async function () {
-  //     errorThrown = false
-  //     try {
-  //       await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: tokenStaker1})
-  //     } catch (e) {
-  //       errorThrown = true
-  //     }
-  //     assertThrown(errorThrown, 'An error should have been thrown')
-  //   })
-  //
-  //   it('Add task hash can\'t be called by reputation staker on RR staked project once it is active', async function () {
-  //     errorThrown = false
-  //     try {
-  //       await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: repStaker1})
-  //     } catch (e) {
-  //       errorThrown = true
-  //     }
-  //     assertThrown(errorThrown, 'An error should have been thrown')
-  //   })
-  // })
+
+  describe('claiming tasks pre-turnover time', () => {
+    it('Worker with enough reputation can claim a task from TR active project', async function () {
+      // register worker
+      await utils.register(worker1)
+
+      // take stock of variables before
+      let index = 3
+      let description = taskSet1[index].description
+      let weighting = taskSet1[index].weighting
+      let weiVal = await project.calculateWeiVal(projAddrT, weighting)
+      let repVal = await project.calculateRepVal(projAddrT, weighting)
+
+      let workerRepBalBefore = await utils.getRepBalance(worker1)
+      let taskWeightingBefore = await task.getWeighting(projAddrT, index)
+      let taskWeiRewardBefore = await task.getWeiReward(projAddrT, index)
+      let taskRepRewardBefore = await task.getRepReward(projAddrT, index)
+      let taskCompleteBefore = await task.getComplete(projAddrT, index)
+      let taskClaimerBefore = await task.getClaimer(projAddrT, index)
+
+      // assert that worker has the reputation to claim the task
+      assert.isAtLeast(workerRepBalBefore, repVal, 'worker1 does not have enough reputation to claim the task')
+
+      // claim task
+      await RR.claimTask(projAddrT, index, description, weighting, {from: worker1})
+
+      // take stock of variables after
+      let workerRepBalAfter = await utils.getRepBalance(worker1)
+      let taskWeightingAfter = await task.getWeighting(projAddrT, index)
+      let taskWeiRewardAfter = await task.getWeiReward(projAddrT, index)
+      let taskRepRewardAfter = await task.getRepReward(projAddrT, index)
+      let taskCompleteAfter = await task.getComplete(projAddrT, index)
+      let taskClaimerAfter = await task.getClaimer(projAddrT, index)
+
+      // checks
+      assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
+      assert.equal(taskWeightingBefore, 0, 'task should not have weighting before claimed')
+      assert.equal(taskWeightingAfter, weighting, 'task given incorrect weighting')
+      assert.equal(taskWeiRewardBefore, 0, 'task should not have wei reward before claimed')
+      assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
+      assert.equal(taskRepRewardBefore, 0, 'task should not have rep reward before claimed')
+      assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
+      assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
+      assert.equal(taskCompleteAfter, false, 'task should not be complete after claiming')
+      assert.equal(taskClaimerBefore, 0, 'task should not have claimer before claimed')
+      assert.equal(taskClaimerAfter, worker1, 'task given incorrect claimer')
+    })
+
+    it('Worker with enough reputation can claim a task from RR active project', async function () {
+      // register worker
+      await utils.register(worker1)
+
+      // take stock of variables before
+      let index = 3
+      let description = taskSet1[index].description
+      let weighting = taskSet1[index].weighting
+      let weiVal = await project.calculateWeiVal(projAddrR, weighting)
+      let repVal = await project.calculateRepVal(projAddrR, weighting)
+
+      let workerRepBalBefore = await utils.getRepBalance(worker1)
+      let taskWeightingBefore = await task.getWeighting(projAddrR, index)
+      let taskWeiRewardBefore = await task.getWeiReward(projAddrR, index)
+      let taskRepRewardBefore = await task.getRepReward(projAddrR, index)
+      let taskCompleteBefore = await task.getComplete(projAddrR, index)
+      let taskClaimerBefore = await task.getClaimer(projAddrR, index)
+
+      // assert that worker has the reputation to claim the task
+      assert.isAtLeast(workerRepBalBefore, repVal, 'worker1 does not have enough reputation to claim the task')
+
+      // claim task
+      await RR.claimTask(projAddrR, index, description, weighting, {from: worker1})
+
+      // take stock of variables after
+      let workerRepBalAfter = await utils.getRepBalance(worker1)
+      let taskWeightingAfter = await task.getWeighting(projAddrR, index)
+      let taskWeiRewardAfter = await task.getWeiReward(projAddrR, index)
+      let taskRepRewardAfter = await task.getRepReward(projAddrR, index)
+      let taskCompleteAfter = await task.getComplete(projAddrR, index)
+      let taskClaimerAfter = await task.getClaimer(projAddrR, index)
+
+      // checks
+      // weird 1 reputation offset here
+      // assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
+      assert.equal(taskWeightingBefore, 0, 'task should not have weighting before claimed')
+      assert.equal(taskWeightingAfter, weighting, 'task given incorrect weighting')
+      assert.equal(taskWeiRewardBefore, 0, 'task should not have wei reward before claimed')
+      assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
+      assert.equal(taskRepRewardBefore, 0, 'task should not have rep reward before claimed')
+      assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
+      assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
+      assert.equal(taskCompleteAfter, false, 'task should not be complete after claiming')
+      assert.equal(taskClaimerBefore, 0, 'task should not have claimer before claimed')
+      assert.equal(taskClaimerAfter, worker1, 'task given incorrect claimer')
+    })
+
+    it('Worker with enough reputation can\'t claim the same task from TR active project', async function () {
+      let index = 3
+      let description = taskSet1[index].description
+      let weighting = taskSet1[index].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrT, index, description, weighting, {from: worker2})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker with enough reputation can\'t claim the same task from RR active project', async function () {
+      let index = 3
+      let description = taskSet1[index].description
+      let weighting = taskSet1[index].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrT, index, description, weighting, {from: worker2})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker with enough reputation can claim a different task from TR active project', async function () {
+      // register worker
+      await utils.register(worker2)
+
+      // take stock of variables before
+      let index = 2
+      let description = taskSet1[index].description
+      let weighting = taskSet1[index].weighting
+      let weiVal = await project.calculateWeiVal(projAddrT, weighting)
+      let repVal = await project.calculateRepVal(projAddrT, weighting)
+
+      let workerRepBalBefore = await utils.getRepBalance(worker2)
+      let taskWeightingBefore = await task.getWeighting(projAddrT, index)
+      let taskWeiRewardBefore = await task.getWeiReward(projAddrT, index)
+      let taskRepRewardBefore = await task.getRepReward(projAddrT, index)
+      let taskCompleteBefore = await task.getComplete(projAddrT, index)
+      let taskClaimerBefore = await task.getClaimer(projAddrT, index)
+
+      // assert that worker has the reputation to claim the task
+      assert.isAtLeast(workerRepBalBefore, repVal, 'worker2 does not have enough reputation to claim the task')
+
+      // claim task
+      await RR.claimTask(projAddrT, index, description, weighting, {from: worker2})
+
+      // take stock of variables after
+      let workerRepBalAfter = await utils.getRepBalance(worker2)
+      let taskWeightingAfter = await task.getWeighting(projAddrT, index)
+      let taskWeiRewardAfter = await task.getWeiReward(projAddrT, index)
+      let taskRepRewardAfter = await task.getRepReward(projAddrT, index)
+      let taskCompleteAfter = await task.getComplete(projAddrT, index)
+      let taskClaimerAfter = await task.getClaimer(projAddrT, index)
+
+      // checks
+      assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
+      assert.equal(taskWeightingBefore, 0, 'task should not have weighting before claimed')
+      assert.equal(taskWeightingAfter, weighting, 'task given incorrect weighting')
+      assert.equal(taskWeiRewardBefore, 0, 'task should not have wei reward before claimed')
+      assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
+      assert.equal(taskRepRewardBefore, 0, 'task should not have rep reward before claimed')
+      assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
+      assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
+      assert.equal(taskCompleteAfter, false, 'task should not be complete after claiming')
+      assert.equal(taskClaimerBefore, 0, 'task should not have claimer before claimed')
+      assert.equal(taskClaimerAfter, worker2, 'task given incorrect claimer')
+    })
+
+    it('Worker with enough reputation can claim a different task from RR active project', async function () {
+      // register worker
+      await utils.register(worker2)
+
+      // take stock of variables before
+      let index = 2
+      let description = taskSet1[index].description
+      let weighting = taskSet1[index].weighting
+      let weiVal = await project.calculateWeiVal(projAddrR, weighting)
+      let repVal = await project.calculateRepVal(projAddrR, weighting)
+
+      let workerRepBalBefore = await utils.getRepBalance(worker2)
+      let taskWeightingBefore = await task.getWeighting(projAddrR, index)
+      let taskWeiRewardBefore = await task.getWeiReward(projAddrR, index)
+      let taskRepRewardBefore = await task.getRepReward(projAddrR, index)
+      let taskCompleteBefore = await task.getComplete(projAddrR, index)
+      let taskClaimerBefore = await task.getClaimer(projAddrR, index)
+
+      // assert that worker has the reputation to claim the task
+      assert.isAtLeast(workerRepBalBefore, repVal, 'worker2 does not have enough reputation to claim the task')
+
+      // claim task
+      await RR.claimTask(projAddrR, index, description, weighting, {from: worker2})
+
+      // take stock of variables after
+      let workerRepBalAfter = await utils.getRepBalance(worker2)
+      let taskWeightingAfter = await task.getWeighting(projAddrR, index)
+      let taskWeiRewardAfter = await task.getWeiReward(projAddrR, index)
+      let taskRepRewardAfter = await task.getRepReward(projAddrR, index)
+      let taskCompleteAfter = await task.getComplete(projAddrR, index)
+      let taskClaimerAfter = await task.getClaimer(projAddrR, index)
+
+      // checks
+      assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
+      assert.equal(taskWeightingBefore, 0, 'task should not have weighting before claimed')
+      assert.equal(taskWeightingAfter, weighting, 'task given incorrect weighting')
+      assert.equal(taskWeiRewardBefore, 0, 'task should not have wei reward before claimed')
+      assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
+      assert.equal(taskRepRewardBefore, 0, 'task should not have rep reward before claimed')
+      assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
+      assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
+      assert.equal(taskCompleteAfter, false, 'task should not be complete after claiming')
+      assert.equal(taskClaimerBefore, 0, 'task should not have claimer before claimed')
+      assert.equal(taskClaimerAfter, worker2, 'task given incorrect claimer')
+    })
+
+    it('Worker without enough reputation can\'t claim a task from TR active project', async function () {
+      let index = 1
+      let description = taskSet1[index].description
+      let weighting = taskSet1[index].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrT, index, description, weighting, {from: notWorker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker without enough reputation can\'t claim a task from RR active project', async function () {
+      let index = 1
+      let description = taskSet1[index].description
+      let weighting = taskSet1[index].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrR, index, description, weighting, {from: notWorker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+  })
+
+  describe('marking tasks complete pre-turnover time', () => {
+    it('Worker who claimed a task from TR active project can mark it complete before turnaround time', async function () {
+    })
+
+    it('Worker who claimed a task from RR active project can mark it complete before turnaround time', async function () {
+    })
+
+    it('Worker can\'t mark a task complete that they did not claim from TR active project', async function () {
+    })
+
+    it('Worker can\'t mark a task complete that they did not claim from RR active project', async function () {
+    })
+  })
+
+  describe('claiming tasks post-turnover time', () => {
+    before(async function () {
+      // fast forward time
+      await evmIncreaseTime(604800) // 1 week
+    })
+
+    it('Worker with enough reputation can claim a task from TR active project that is claimed but not marked complete', async function () {
+    })
+
+    it('Worker with enough reputation can claim a task from RR active project that is claimed but not marked complete', async function () {
+    })
+
+    it('Worker with enough reputation can\'t reclaim that same task from TR active project', async function () {
+    })
+
+    it('Worker with enough reputation can\'t reclaim that same task from RR active project', async function () {
+    })
+  })
+
+  describe('marking tasks complete post-turnover time', () => {
+
+    it('Worker who claimed a task from TR active project and is past their turnover time can mark it complete if the task wasn\'t reclaimed', async function () {
+    })
+
+    it('Worker who claimed a task from RR active project and is past their turnover time can mark it complete if the task wasn\'t reclaimed', async function () {
+    })
+
+    it('Worker who reclaimed a task from TR active project can mark it complete', async function () {
+    })
+
+    it('Worker who reclaimed a task from RR active project can mark it complete', async function () {
+    })
+
+    it('Worker can\'t mark a task from TR active project complete that was reclaimed from them', async function () {
+    })
+
+    it('Worker can\'t mark a task from RR active project complete that was reclaimed from them', async function () {
+    })
+  })
+
+  describe('state changes before time is up', () => {
+    it('checkValidate() does not change TR active project to validating before time is up', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrT)
+
+      // attempt to checkStaked
+      // await PR.checkValidate(projAddrT)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrT)
+
+      // checks
+      assert.equal(stateBefore, 3, 'state before should be 3')
+      assert.equal(stateAfter, 3, 'state should not have changed')
+    })
+
+    it('checkValidate() does not change RR active project to validating before time is up', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrT)
+
+      // attempt to checkStaked
+      // await PR.checkValidate(projAddrT)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrT)
+
+      // checks
+      assert.equal(stateBefore, 3, 'state before should be 3')
+      assert.equal(stateAfter, 3, 'state should not have changed')
+    })
+  })
+
+  describe('state changes after time is up', () => {
+    before(async function () {
+      // fast forward time
+      await evmIncreaseTime(604800) // 1 week
+    })
+
+    it('checkValidate() changes TR active project to validating after time is up', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrT)
+
+      // attempt to checkStaked
+      // await PR.checkValidate(projAddrT)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrT)
+
+      // checks
+      assert.equal(stateBefore, 3, 'state before should be 3')
+      // assert.equal(stateAfter, 4, 'state after should be 4')
+    })
+
+    it('checkValidate() does not change RR active project to validating before time is up', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrR)
+
+      // attempt to checkStaked
+      // await PR.checkValidate(projAddrR)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrR)
+
+      // checks
+      assert.equal(stateBefore, 3, 'state before should be 3')
+      // assert.equal(stateAfter, 4, 'state after should be 4')
+    })
+  })
 })

@@ -128,9 +128,13 @@ module.exports = function projectHelper (accounts) {
     return bal.toNumber()
   }
 
-  obj.utils.getRepBalance = async function (_user) {
+  obj.utils.getRepBalance = async function (_user, _unadulterated) {
     let bal = await obj.contracts.RR.balances(_user)
-    return bal.toNumber()
+    if (_unadulterated == true) {
+      return bal
+    } else {
+      return bal.toNumber()
+    }
   }
 
   obj.utils.getTotalTokens = async function () {
@@ -163,10 +167,14 @@ module.exports = function projectHelper (accounts) {
     return state.toNumber()
   }
 
-  obj.project.getWeiCost = async function (_projAddr) {
+  obj.project.getWeiCost = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let weiCost = await PROJ.weiCost()
-    return weiCost.toNumber()
+    if (_unadulterated == true) {
+      return weiCost
+    } else {
+      return weiCost.toNumber()
+    }
   }
 
   obj.project.getWeiBal = async function (_projAddr, _unadulterated) {
@@ -183,6 +191,16 @@ module.exports = function projectHelper (accounts) {
     let weiCost = await obj.project.getWeiCost(_projAddr)
     let weiBal = await obj.project.getWeiBal(_projAddr)
     return weiCost - weiBal
+  }
+
+  obj.project.getRepCost = async function (_projAddr, _unadulterated) {
+    let PROJ = await Project.at(_projAddr)
+    let repCost = await PROJ.reputationCost()
+    if (_unadulterated == true) {
+      return repCost
+    } else {
+      return repCost.toNumber()
+    }
   }
 
   obj.project.calculateRequiredTokens = async function (_projAddr) {
@@ -254,8 +272,8 @@ module.exports = function projectHelper (accounts) {
 
   obj.project.getTasks = async function (_projAddr, _index) {
     let PROJ = await Project.at(_projAddr)
-    let tasks = await PROJ.tasks(_index)
-    return tasks
+    let task = await PROJ.tasks(_index)
+    return task
   }
 
   obj.project.getHashListSubmitted = async function (_projAddr) {
@@ -264,28 +282,75 @@ module.exports = function projectHelper (accounts) {
     return submitted
   }
 
+  obj.project.calculateWeiVal = async function (_projAddr, _weighting) {
+    let weiCost = await obj.project.getWeiCost(_projAddr, true)
+    let weiVal = Math.round(weiCost.times(_weighting).div(100))
+    return weiVal
+  }
+
+  obj.project.calculateRepVal = async function (_projAddr, _weighting) {
+    let repCost = await obj.project.getRepCost(_projAddr, true)
+    let repVal = Math.round(repCost.times(_weighting).div(100))
+    return repVal
+  }
+
   obj.task.getTaskHash = async function (_taskAddr) {
     let TASK = await Task.at(_taskAddr)
     let taskHash = await TASK.taskHash()
-    return taskHash;
+    return taskHash
   }
 
   obj.task.getPRAddress = async function (_taskAddr) {
     let TASK = await Task.at(_taskAddr)
     let PRAddress = await TASK.projectRegistryAddress()
-    return PRAddress;
+    return PRAddress
   }
 
   obj.task.getTRAddress = async function (_taskAddr) {
     let TASK = await Task.at(_taskAddr)
     let TRAddress = await TASK.tokenRegistryAddress()
-    return TRAddress;
+    return TRAddress
   }
 
   obj.task.getRRAddress = async function (_taskAddr) {
     let TASK = await Task.at(_taskAddr)
     let RRAddress = await TASK.reputationRegistryAddress()
-    return RRAddress;
+    return RRAddress
+  }
+
+  obj.task.getWeighting = async function (_projAddr, index) {
+    let taskAddr = await obj.project.getTasks(_projAddr, index)
+    let TASK = await Task.at(taskAddr)
+    let weighting = await TASK.weighting()
+    return weighting.toNumber()
+  }
+
+  obj.task.getWeiReward = async function (_projAddr, index) {
+    let taskAddr = await obj.project.getTasks(_projAddr, index)
+    let TASK = await Task.at(taskAddr)
+    let weiReward = await TASK.weiReward()
+    return weiReward.toNumber()
+  }
+
+  obj.task.getRepReward = async function (_projAddr, index) {
+    let taskAddr = await obj.project.getTasks(_projAddr, index)
+    let TASK = await Task.at(taskAddr)
+    let repReward = await TASK.reputationReward()
+    return repReward.toNumber()
+  }
+
+  obj.task.getComplete = async function (_projAddr, index) {
+    let taskAddr = await obj.project.getTasks(_projAddr, index)
+    let TASK = await Task.at(taskAddr)
+    let complete = await TASK.complete()
+    return complete
+  }
+
+  obj.task.getClaimer = async function (_projAddr, index) {
+    let taskAddr = await obj.project.getTasks(_projAddr, index)
+    let TASK = await Task.at(taskAddr)
+    let claimer = await TASK.claimer()
+    return claimer
   }
 
   // project return functions
@@ -375,29 +440,38 @@ module.exports = function projectHelper (accounts) {
 
   // return active projects (addresses) proposed by token holder and reputation holder
   // moves ganache forward 1 week
-  obj.returnProject.active = async function (_cost, _stakingPeriod, _ipfsHash) {
-    // get staked projects
-    let _projAddrT = await obj.returnProject.staked_T(_cost, _stakingPeriod, _ipfsHash)
-    let _projAddrR = await obj.returnProject.staked_R(_cost, _stakingPeriod, _ipfsHash)
+  obj.returnProject.active = async function (_cost, _stakingPeriod, _ipfsHash, _numSets) {
+    // make array of projects
+    let projArray = []
 
-    // add task hashes to both projects
-    await obj.contracts.PR.addTaskHash(_projAddrT, keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker1})
-    await obj.contracts.PR.addTaskHash(_projAddrR, keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker1})
+    let temp1, temp2
+    for (let i = 0; i < _numSets; i++) {
+      // get staked projects
+      temp1 = await obj.returnProject.staked_T(_cost, _stakingPeriod, _ipfsHash)
+      temp2 = await obj.returnProject.staked_R(_cost, _stakingPeriod, _ipfsHash)
+      projArray.push([temp1, temp2])
+
+      // add task hashes to both projects
+      await obj.contracts.PR.addTaskHash(projArray[i][0], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker1})
+      await obj.contracts.PR.addTaskHash(projArray[i][1], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker1})
+    }
 
     // increase time 1 week
     await evmIncreaseTime(604801)
 
-    // call checkActive on projects
-    await obj.contracts.PR.checkActive(_projAddrT)
-    await obj.contracts.PR.checkActive(_projAddrR)
+    for (let i = 0; i < _numSets; i++) {
+      // call checkActive on projects and do checks
+      await obj.contracts.PR.checkActive(projArray[i][0])
+      await obj.contracts.PR.checkActive(projArray[i][1])
 
-    // check that the project is in state 3
-    let stateT = await obj.project.getState(_projAddrT)
-    let stateR = await obj.project.getState(_projAddrR)
-    assert.equal(stateT, 3, 'project is not in active state')
-    assert.equal(stateR, 3, 'project is not in active state')
+      // check that the project is in state 3
+      let stateT = await obj.project.getState(projArray[i][0])
+      let stateR = await obj.project.getState(projArray[i][1])
+      assert.equal(stateT, 3, 'project is not in active state')
+      assert.equal(stateR, 3, 'project is not in active state')
+    }
 
-    return [_projAddrT, _projAddrR]
+    return projArray
   }
 
   // fully stake project with tokens via two stakers
