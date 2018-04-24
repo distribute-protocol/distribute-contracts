@@ -42,13 +42,13 @@ contract Project {
         8: Expired
     */
 
-    uint256 public stakedStatePeriod = 1 weeks;
-    uint256 public activeStatePeriod = 2 weeks;
-    uint256 public turnoverTime = 1 weeks;
-    uint256 public validateStatePeriod = 1 weeks;
-    uint256 public voteCommitPeriod = 1 weeks;
-    uint256 public voteRevealPeriod = 1 weeks;
-    uint256 public passThreshold = 100;
+    uint256 public stakedStatePeriod;
+    uint256 public activeStatePeriod;
+    uint256 public turnoverTime;
+    uint256 public validateStatePeriod;
+    uint256 public voteCommitPeriod;
+    uint256 public voteRevealPeriod;
+    uint256 public passThreshold;
 
     address public proposer;
     uint256 public proposerType;
@@ -141,6 +141,15 @@ contract Project {
         proposerType = _proposerType;
         proposerStake = _proposerStake;
         ipfsHash = _ipfsHash;
+        // Proxies don't initialize variables
+        stakedStatePeriod = 1 weeks;
+        activeStatePeriod = 2 weeks;
+        turnoverTime = 1 weeks;
+        validateStatePeriod = 1 weeks;
+        voteCommitPeriod = 1 weeks;
+        voteRevealPeriod = 1 weeks;
+        passThreshold = 100;
+
     }
 
     // =====================================================================
