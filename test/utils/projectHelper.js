@@ -6,6 +6,7 @@ const DistributeToken = artifacts.require('DistributeToken')
 const ProjectRegistry = artifacts.require('ProjectRegistry')
 const ProjectLibrary = artifacts.require('ProjectLibrary')
 const Project = artifacts.require('Project')
+const Task = artifacts.require('Task')
 
 const evmIncreaseTime = require('./evmIncreaseTime')
 const keccakHashes = require('../utils/keccakHashes')
@@ -22,6 +23,7 @@ module.exports = function projectHelper (accounts) {
   obj.utils = {}
   obj.returnProject = {}
   obj.returnProjectHelper = {}
+  obj.task = {}
 
   // set up user identities
   // accounts[0] - no identity, default user for non-specified contract calls
@@ -253,7 +255,37 @@ module.exports = function projectHelper (accounts) {
   obj.project.getTasks = async function (_projAddr, _index) {
     let PROJ = await Project.at(_projAddr)
     let tasks = await PROJ.tasks(_index)
-    console.log(tasks)
+    return tasks
+  }
+
+  obj.project.getHashListSubmitted = async function (_projAddr) {
+    let PROJ = await Project.at(_projAddr)
+    let submitted = await PROJ.hashListSubmitted()
+    return submitted
+  }
+
+  obj.task.getTaskHash = async function (_taskAddr) {
+    let TASK = await Task.at(_taskAddr)
+    let taskHash = await TASK.taskHash()
+    return taskHash;
+  }
+
+  obj.task.getPRAddress = async function (_taskAddr) {
+    let TASK = await Task.at(_taskAddr)
+    let PRAddress = await TASK.projectRegistryAddress()
+    return PRAddress;
+  }
+
+  obj.task.getTRAddress = async function (_taskAddr) {
+    let TASK = await Task.at(_taskAddr)
+    let TRAddress = await TASK.tokenRegistryAddress()
+    return TRAddress;
+  }
+
+  obj.task.getRRAddress = async function (_taskAddr) {
+    let TASK = await Task.at(_taskAddr)
+    let RRAddress = await TASK.reputationRegistryAddress()
+    return RRAddress;
   }
 
   // project return functions

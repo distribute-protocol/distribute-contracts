@@ -15,9 +15,9 @@ contract Task {
     // STATE VARIABLES
     // =====================================================================
 
-    address projectRegistryAddress;
-    address tokenRegistryAddress;
-    address reputationRegistryAddress;
+    address public projectRegistryAddress;
+    address public tokenRegistryAddress;
+    address public reputationRegistryAddress;
 
     bytes32 public taskHash;
     bool public claimable;

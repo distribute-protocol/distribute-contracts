@@ -65,10 +65,11 @@ contract Project {
     mapping (address => uint) public tokenBalances;
     mapping (address => uint) public reputationBalances;
 
-    // MAKE THIS A DLL EVENTUALLY
-    address[] public tasks;
-
+    bool public hashListSubmitted;
     uint256 public passAmount;
+
+    // MAKE THIS A DLL EVENTUALLY?
+    address[] public tasks;
 
     // =====================================================================
     // MODIFIERS
@@ -230,6 +231,7 @@ contract Project {
     function setTaskAddress(address _taskAddress, uint _index) external onlyPR {
         require(state == 3);
         tasks[_index] = _taskAddress;
+        hashListSubmitted = true;
     }
 
     /**

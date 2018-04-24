@@ -299,6 +299,7 @@ contract ProjectRegistry {
         Project project = Project(_projectAddress);
         require(project.state() == 3);
         require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
+        require(project.hashListSubmitted() == false);
 
         project.setTaskLength(_hashes.length);
         for (uint256 i = 0; i < _hashes.length; i++) {

@@ -13,7 +13,7 @@ contract('Active State', (accounts) => {
 
   // get project helper variables
   let TR, RR, PR
-  let {user, project, returnProject} = projObj
+  let {user, project, returnProject, task} = projObj
   let {tokenStaker1, repStaker1} = user
   let {notStaker, notProject} = user
   let {worker1, worker2, notWorker} = user
@@ -25,19 +25,22 @@ contract('Active State', (accounts) => {
 
   // local test variables
   let projArray
-  let projAddrT, projAddrR
   let errorThrown
+  let projAddrT, projAddrR
 
   let fastForwards = 2 // ganache 2 weeks ahead at this point from previous test's evmIncreaseTime()
 
   before(async function () {
     // get contract
     await projObj.contracts.setContracts()
+    TR = projObj.contracts.TR
+    RR = projObj.contracts.RR
     PR = projObj.contracts.PR
 
     // get active projects
     // moves ganache forward 1 more week
-    projArray = await returnProject.active(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
+    projAddrT = (await returnProject.active(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash))[0]
+    projAddrR = (await returnProject.active(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash))[1]
   })
 
   describe('submitting hash lists to active projects', () => {
@@ -62,17 +65,77 @@ contract('Active State', (accounts) => {
     })
 
     it('Correct hash list can be submitted to TR active project', async function () {
-      // take stock of variables before
-      // let projTask0Before = await project.getTasks(projAddrT, 0)
+      // getting the 0 index of the task array should fail before submitting hash list
+      errorThrown = false
+      try {
+        await project.getTasks(projAddrT, 0)
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+
+      // take stock of variable before and checks
+      let hashListSubmittedBefore = await project.getHashListSubmitted(projAddrT)
+      assert.equal(hashListSubmittedBefore, false, 'hash list submitted flag is incorrect')
 
       // submit hash list
-      await PR.submitHashList(projArray[0], hashTasks(taskSet1), {from: repStaker1})
+      await PR.submitHashList(projAddrT, hashTasks(taskSet1), {from: repStaker1})
 
-      // task stock of variables after
-      // let projTask0After = await project.getTasks(projAddrT, 0)
+      // task stock of variables after and checks
+      let projTaskAddr, taskHash, PRaddress, TRaddress, RRaddress
+      for (let i = 0; i < hashTasks(taskSet1).length; i++) {
+        projTaskAddr = await project.getTasks(projAddrT, i)
+        taskHash = await task.getTaskHash(projTaskAddr)
+        PRAddress = await task.getPRAddress(projTaskAddr)
+        TRAddress = await task.getTRAddress(projTaskAddr)
+        RRAddress = await task.getRRAddress(projTaskAddr)
 
-      // checks
+        assert.equal(projTaskAddr.length, 42, 'task addresses were stored incorrectly')
+        assert.equal(taskHash, hashTasks(taskSet1)[i], 'task hash was stored incorectly')
+        assert.equal(PRAddress, PR.address, 'PR address was stored incorrectly')
+        assert.equal(TRAddress, TR.address, 'TR address was stored incorrectly')
+        assert.equal(RRAddress, RR.address, 'RR address was stored incorrectly')
+      }
 
+      let hashListSubmittedAfter = await project.getHashListSubmitted(projAddrT)
+      assert.equal(hashListSubmittedAfter, true, 'hash list submitted flag is incorrect')
+    })
+
+    it('Correct hash list can be submitted to RR active project', async function () {
+      // getting the 0 index of the task array should fail before submitting hash list
+      errorThrown = false
+      try {
+        await project.getTasks(projAddrR, 0)
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+
+      // take stock of variable before and checks
+      let hashListSubmittedBefore = await project.getHashListSubmitted(projAddrR)
+      assert.equal(hashListSubmittedBefore, false, 'hash list submitted flag is incorrect')
+
+      // submit hash list
+      await PR.submitHashList(projAddrR, hashTasks(taskSet1), {from: repStaker1})
+
+      // task stock of variables after and checks
+      let projTaskAddr, taskHash, PRaddress, TRaddress, RRaddress
+      for (let i = 0; i < taskSet1.length; i++) {
+        projTaskAddr = await project.getTasks(projAddrR, i)
+        taskHash = await task.getTaskHash(projTaskAddr)
+        PRAddress = await task.getPRAddress(projTaskAddr)
+        TRAddress = await task.getTRAddress(projTaskAddr)
+        RRAddress = await task.getRRAddress(projTaskAddr)
+
+        assert.equal(projTaskAddr.length, 42, 'task addresses were stored incorrectly')
+        assert.equal(taskHash, hashTasks(taskSet1)[i], 'task hash was stored incorectly')
+        assert.equal(PRAddress, PR.address, 'PR address was stored incorrectly')
+        assert.equal(TRAddress, TR.address, 'TR address was stored incorrectly')
+        assert.equal(RRAddress, RR.address, 'RR address was stored incorrectly')
+      }
+
+      let hashListSubmittedAfter = await project.getHashListSubmitted(projAddrR)
+      assert.equal(hashListSubmittedAfter, true, 'hash list submitted flag is incorrect')
     })
   })
   //

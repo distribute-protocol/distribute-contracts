@@ -12,7 +12,7 @@ contract('Staked State', (accounts) => {
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let TR, RR, PR
+  let PR
   let {user, project, returnProject} = projObj
   let {tokenStaker1, tokenStaker2} = user
   let {repStaker1, repStaker2} = user
