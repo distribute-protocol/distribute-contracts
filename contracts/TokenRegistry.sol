@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity ^0.4.21;
 
 import "./ProjectRegistry.sol";
 import "./DistributeToken.sol";
