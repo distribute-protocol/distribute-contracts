@@ -15,7 +15,6 @@ contract('Active State', (accounts) => {
   let TR, RR, PR
   let {user, project, utils, returnProject, task} = projObj
   let {repStaker1} = user
-  let {notProject, notTask} = user
   let {worker1, worker2, notWorker} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
 
@@ -27,11 +26,11 @@ contract('Active State', (accounts) => {
   let projArray
   let errorThrown
   let projAddrT, projAddrR
+
   let indexNoReclaimPre = 3
   let indexNoReclaimPost = 2
   let indexReclaim = 1
   let indexThrowaway = 0
-
 
   let fastForwards = 2 // ganache 2 weeks ahead at this point from previous test's evmIncreaseTime()
 
@@ -88,13 +87,12 @@ contract('Active State', (accounts) => {
       await PR.submitHashList(projAddrT, hashTasks(taskSet1), {from: repStaker1})
 
       // task stock of variables after and checks
-      let projTaskAddr, taskHash, PRaddress, TRaddress, RRaddress
       for (let i = 0; i < hashTasks(taskSet1).length; i++) {
-        projTaskAddr = await project.getTasks(projAddrT, i)
-        taskHash = await task.getTaskHash(projTaskAddr)
-        PRAddress = await task.getPRAddress(projTaskAddr)
-        TRAddress = await task.getTRAddress(projTaskAddr)
-        RRAddress = await task.getRRAddress(projTaskAddr)
+        let projTaskAddr = await project.getTasks(projAddrT, i)
+        let taskHash = await task.getTaskHash(projTaskAddr)
+        let PRAddress = await task.getPRAddress(projTaskAddr)
+        let TRAddress = await task.getTRAddress(projTaskAddr)
+        let RRAddress = await task.getRRAddress(projTaskAddr)
 
         assert.equal(projTaskAddr.length, 42, 'task addresses were stored incorrectly')
         assert.equal(taskHash, hashTasks(taskSet1)[i], 'task hash was stored incorectly')
@@ -125,13 +123,12 @@ contract('Active State', (accounts) => {
       await PR.submitHashList(projAddrR, hashTasks(taskSet1), {from: repStaker1})
 
       // task stock of variables after and checks
-      let projTaskAddr, taskHash, PRaddress, TRaddress, RRaddress
       for (let i = 0; i < taskSet1.length; i++) {
-        projTaskAddr = await project.getTasks(projAddrR, i)
-        taskHash = await task.getTaskHash(projTaskAddr)
-        PRAddress = await task.getPRAddress(projTaskAddr)
-        TRAddress = await task.getTRAddress(projTaskAddr)
-        RRAddress = await task.getRRAddress(projTaskAddr)
+        let projTaskAddr = await project.getTasks(projAddrR, i)
+        let taskHash = await task.getTaskHash(projTaskAddr)
+        let PRAddress = await task.getPRAddress(projTaskAddr)
+        let TRAddress = await task.getTRAddress(projTaskAddr)
+        let RRAddress = await task.getRRAddress(projTaskAddr)
 
         assert.equal(projTaskAddr.length, 42, 'task addresses were stored incorrectly')
         assert.equal(taskHash, hashTasks(taskSet1)[i], 'task hash was stored incorectly')
@@ -235,10 +232,10 @@ contract('Active State', (accounts) => {
       await RR.claimTask(projAddrR, indexNoReclaimPre, description, weighting, {from: worker1})
 
       // take stock of variables after
-      let workerRepBalAfter = await utils.getRepBalance(worker1)
+      // let workerRepBalAfter = await utils.getRepBalance(worker1)
       let taskWeightingAfter = await task.getWeighting(projAddrR, indexNoReclaimPre)
       let taskWeiRewardAfter = await task.getWeiReward(projAddrR, indexNoReclaimPre)
-      let taskRepRewardAfter = await task.getRepReward(projAddrR, indexNoReclaimPre)
+      // let taskRepRewardAfter = await task.getRepReward(projAddrR, indexNoReclaimPre)
       let taskCompleteAfter = await task.getComplete(projAddrR, indexNoReclaimPre)
       let taskClaimerAfter = await task.getClaimer(projAddrR, indexNoReclaimPre)
 
@@ -566,7 +563,6 @@ contract('Active State', (accounts) => {
       }
       assertThrown(errorThrown, 'An error should have been thrown')
     })
-
   })
 
   describe('marking tasks complete pre-turnover time', () => {
@@ -679,6 +675,7 @@ contract('Active State', (accounts) => {
       assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
       assert.equal(taskWeightingBefore, taskWeightingAfter, 'should be the same')
       assert.equal(taskWeiRewardBefore, taskWeiRewardAfter, 'should be the same')
+      assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
       assert.equal(taskRepRewardBefore, taskRepRewardAfter, 'should be the same')
       assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
       assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
@@ -719,6 +716,7 @@ contract('Active State', (accounts) => {
       assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
       assert.equal(taskWeightingBefore, taskWeightingAfter, 'should be the same')
       assert.equal(taskWeiRewardBefore, taskWeiRewardAfter, 'should be the same')
+      assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
       assert.equal(taskRepRewardBefore, taskRepRewardAfter, 'should be the same')
       assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
       assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
@@ -755,7 +753,6 @@ contract('Active State', (accounts) => {
   })
 
   describe('marking tasks complete post-turnover time', () => {
-
     it('Worker who claimed a task from TR active project and is past their turnover time can mark it complete if the task wasn\'t reclaimed', async function () {
       // take stock of variables before
       let taskCompleteBefore = await task.getComplete(projAddrT, indexNoReclaimPost)

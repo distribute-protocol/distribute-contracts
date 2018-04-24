@@ -14,8 +14,8 @@ contract('Staked State', (accounts) => {
   // get project helper variables
   let PR
   let {user, project, returnProject} = projObj
-  let {tokenStaker1, tokenStaker2} = user
-  let {repStaker1, repStaker2} = user
+  let {tokenStaker1} = user
+  let {repStaker1} = user
   let {notStaker, notProject} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
 
@@ -56,7 +56,7 @@ contract('Staked State', (accounts) => {
       // take stock of variables after
       let topTaskHashAfter = await PR.stakedProjects(projAddrT1)
 
-      //checks
+      // checks
       assert.equal(topTaskHashBefore, 0, 'there should be nothing in stakedProjects before anyone adds a task hash')
       assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash')
     })
@@ -71,7 +71,7 @@ contract('Staked State', (accounts) => {
       // take stock of variables after
       let topTaskHashAfter = await PR.stakedProjects(projAddrR1)
 
-      //checks
+      // checks
       assert.equal(topTaskHashBefore, 0, 'there should be nothing in stakedProjects before anyone adds a task hash')
       assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash after')
     })
@@ -86,7 +86,7 @@ contract('Staked State', (accounts) => {
       // take stock of variables after
       let topTaskHashAfter = await PR.stakedProjects(projAddrT1)
 
-      //checks
+      // checks
       assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash before')
       assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash after')
     })
@@ -101,7 +101,7 @@ contract('Staked State', (accounts) => {
       // take stock of variables after
       let topTaskHashAfter = await PR.stakedProjects(projAddrR1)
 
-      //checks
+      // checks
       assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash before')
       assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash after')
     })
@@ -116,7 +116,7 @@ contract('Staked State', (accounts) => {
       // take stock of variables after
       let topTaskHashAfter = await PR.stakedProjects(projAddrT1)
 
-      //checks
+      // checks
       assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash before')
       assert.equal(topTaskHashAfter, hashTasksArray(taskSet2), 'incorrect top task hash after')
     })
@@ -131,7 +131,7 @@ contract('Staked State', (accounts) => {
       // take stock of variables after
       let topTaskHashAfter = await PR.stakedProjects(projAddrR1)
 
-      //checks
+      // checks
       assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash before')
       assert.equal(topTaskHashAfter, hashTasksArray(taskSet2), 'incorrect top task hash after')
     })

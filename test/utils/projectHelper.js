@@ -59,7 +59,6 @@ module.exports = function projectHelper (accounts) {
   obj.user.notVoter = accounts[8]
 
   obj.user.notProject = accounts[8]
-  obj.user.notTask = accounts[8]
 
   // mutable minting details for each user
   obj.minting.tokensToMint = 10000
@@ -75,7 +74,7 @@ module.exports = function projectHelper (accounts) {
 
   obj.project.expiredStakingPeriod = 10 // January 1st, 1970
   obj.project.projectCost = parseInt(web3.toWei(0.25, 'ether'))
-  obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala' // length == 46
+  obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala' // length === 46
   obj.project.incorrectIpfsHash = 'whyiseveryspokeleadawhiteman' // length != 46
 
   // immutable project details
@@ -131,7 +130,7 @@ module.exports = function projectHelper (accounts) {
 
   obj.utils.getRepBalance = async function (_user, _unadulterated) {
     let bal = await obj.contracts.RR.balances(_user)
-    if (_unadulterated == true) {
+    if (_unadulterated === true) {
       return bal
     } else {
       return bal.toNumber()
@@ -171,7 +170,7 @@ module.exports = function projectHelper (accounts) {
   obj.project.getWeiCost = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let weiCost = await PROJ.weiCost()
-    if (_unadulterated == true) {
+    if (_unadulterated === true) {
       return weiCost
     } else {
       return weiCost.toNumber()
@@ -197,7 +196,7 @@ module.exports = function projectHelper (accounts) {
   obj.project.getRepCost = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let repCost = await PROJ.reputationCost()
-    if (_unadulterated == true) {
+    if (_unadulterated === true) {
       return repCost
     } else {
       return repCost.toNumber()
@@ -445,11 +444,10 @@ module.exports = function projectHelper (accounts) {
     // make array of projects
     let projArray = []
 
-    let temp1, temp2
     for (let i = 0; i < _numSets; i++) {
       // get staked projects
-      temp1 = await obj.returnProject.staked_T(_cost, _stakingPeriod, _ipfsHash)
-      temp2 = await obj.returnProject.staked_R(_cost, _stakingPeriod, _ipfsHash)
+      let temp1 = await obj.returnProject.staked_T(_cost, _stakingPeriod, _ipfsHash)
+      let temp2 = await obj.returnProject.staked_R(_cost, _stakingPeriod, _ipfsHash)
       projArray.push([temp1, temp2])
 
       // add task hashes to both projects
