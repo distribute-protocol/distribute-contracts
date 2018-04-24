@@ -284,13 +284,13 @@ module.exports = function projectHelper (accounts) {
 
   obj.project.calculateWeiVal = async function (_projAddr, _weighting) {
     let weiCost = await obj.project.getWeiCost(_projAddr, true)
-    let weiVal = Math.round(weiCost.times(_weighting).div(100))
+    let weiVal = Math.round((weiCost.times(_weighting).div(100)))
     return weiVal
   }
 
   obj.project.calculateRepVal = async function (_projAddr, _weighting) {
     let repCost = await obj.project.getRepCost(_projAddr, true)
-    let repVal = Math.round(repCost.times(_weighting).div(100))
+    let repVal = Math.round((repCost.times(_weighting).div(100)))
     return repVal
   }
 
