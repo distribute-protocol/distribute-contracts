@@ -59,6 +59,7 @@ module.exports = function projectHelper (accounts) {
   obj.user.notVoter = accounts[8]
 
   obj.user.notProject = accounts[8]
+  obj.user.notTask = accounts[8]
 
   // mutable minting details for each user
   obj.minting.tokensToMint = 10000
