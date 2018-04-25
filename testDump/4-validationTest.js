@@ -1,73 +1,33 @@
-// Test functions in open state of a project
-// Before, fund a user with tokens and have them propose and fully stake 2 projects
-var assert = require('assert')
-const TokenRegistry = artifacts.require('TokenRegistry')
-const ReputationRegistry = artifacts.require('ReputationRegistry')
-const DistributeToken = artifacts.require('DistributeToken')
-const ProjectRegistry = artifacts.require('ProjectRegistry')
-const Project = artifacts.require('Project')
-const Promise = require('bluebird')
+/* eslint-env mocha */
+/* global assert contract */
+
+const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
-const keccakHashes = require('../utils/KeccakHashes')
-web3.eth = Promise.promisifyAll(web3.eth)
+const keccakHashes = require('../utils/keccakHashes')
+const taskDetails = require('../utils/taskDetails')
 
-contract('Validation State', (accounts) => {
-  let TR, PR, DT, PROJ, RR
+contract('Active State', (accounts) => {
+  // set up project helper
+  let projObj = projectHelper(accounts)
+
+  // get project helper variables
+  let TR, RR, PR
+  let {user, project, utils, returnProject, task} = projObj
+  let {repStaker1} = user
+  let {worker1, worker2, notWorker} = user
+  let {projectCost, stakingPeriod, ipfsHash} = project
+
+  // set up task details & hashing functions
+  let {taskSet1, taskSet2} = taskDetails
+  let {hashTasks} = keccakHashes
+
+  // local test variables
+  let projArray
   let errorThrown
-  // proposer only necessary in the
-  let proposer = accounts[0]
-  let staker1 = accounts[2]
-  let staker2 = accounts[3]
-  let tokenHolder = accounts[4]
-  let worker1 = accounts[5]
-  let worker2 = accounts[6]
-  let worker3 = accounts[7]
+  let projAddrT, projAddrR
 
-  let tokens = 10000
-  let stakingPeriod = 20000000000     // 10/11/2603 @ 11:33am (UTC)
-  let projectCost = web3.toWei(0.25, 'ether')
-  let proposeProportion = 20
-  // let proposeReward = 100
-
-  let proposerTokenCost
-  let proposerBalance, stakerBalance1, stakerBalance2, tokenHolderBalance
-
-  let totalTokenSupply, totalFreeSupply
-  let totalReputation, totalFreeReputation
-  let currentPrice
-
-  let projectAddress
-  let tx
-
-  let workerBalance1, workerBalance2, workerBalance3
-
-  // format of task hash is 'taskdescription;weivalue;reputationvalue,secondtask;secondweival;secondrepval,...'
-  let data = 'install a super long string thats most definitely longer than bytes32 I really hope this works yup yup yup;100000;1,install a supernode;200000;1'
-  // let data2 = 'simple project task;100000;1'
-
-  function hashTasksForAddition (data) {
-    let hashList = hashListForSubmission(data)
-    hashList.map(arr => arr.slice(2))
-    let numArgs = hashList.length
-    let args = 'bytes32'.concat(' bytes32'.repeat(numArgs - 1)).split(' ')
-    let taskHash = keccakHashes(args, hashList)
-    // console.log('0x' + taskHash)
-    return '0x' + taskHash
-  }
-
-  function hashListForSubmission (data) {
-    let tasks = data.split(',')     // split tasks up
-    let taskHashArray = []
-    let args = ['string', 'uint', 'uint']
-    // let args = ['bytes32', 'bytes32', 'bytes32']
-    for (var i = 0; i < tasks.length; i++) {
-      let thisTask = tasks[i].split(';')  // split each task into elements
-      taskHashArray.push('0x' + keccakHashes(args, thisTask))
-    }
-    // console.log(taskHashArray)
-    return taskHashArray
-  }
+  let fastForwards = 5 // ganache 5 weeks ahead at this point from previous test's evmIncreaseTime()
 
   before(async function () {
     // define variables to hold deployed contracts
@@ -75,6 +35,20 @@ contract('Validation State', (accounts) => {
     DT = await DistributeToken.deployed()
     PR = await ProjectRegistry.deployed()
     RR = await ReputationRegistry.deployed()
+
+    before(async function () {
+      // get contract
+      await projObj.contracts.setContracts()
+      TR = projObj.contracts.TR
+      RR = projObj.contracts.RR
+      PR = projObj.contracts.PR
+
+      // get active projects
+      // moves ganache forward 1 more week
+      projArray = await returnProject.active(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, 1)
+      projAddrT = projArray[0][0]
+      projAddrR = projArray[0][1]
+    })
 
     // mint 10000 tokens for proposer, stakers, and token holder
     let mintingCost = await DT.weiRequired(tokens, {from: proposer})
@@ -202,39 +176,6 @@ contract('Validation State', (accounts) => {
 
   })
 
-  it('worker can\'t claim a task once the active period is up', async function () {
-    errorThrown = false
-    try {
-      let repPrice = 1
-      let weiReward = 100
-      let index = 3
-      await RR.claimTask(projectAddress, index, 'save the world', weiReward, repPrice, {from: worker3})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
-
-  it('worker can\'t mark a task complete once the active period is up', async function () {
-
-  })
-
-  it('tasks marked complete have true complete values', async function () {
-
-  })
-
-  it('tasks not marked complete have false complete values', async function () {
-
-  })
-
-  it('tasks marked complete have nonzero weiReward and taskReward values', async function () {
-
-  })
-
-  it('tasks not marked complete have zero weiReward and taskReward values', async function () {
-
-  })
-
   it('token holder can validate task if it exists and they have enough tokens', async function () {
 
   })
@@ -266,12 +207,4 @@ contract('Validation State', (accounts) => {
   it('project changes to voting state when time is up', async function () {
 
   })
-
-// check that tasks have correct .complete, .weireward and .taskreward values
-// token holder can validate tasks if they exist && they have enough tokens
-// reputation holder can't validate tasks
-// validator can't validate twice on same tasks
-// project goes to correct state after it all ends
-// project doesn't change state before time's up
-
 })

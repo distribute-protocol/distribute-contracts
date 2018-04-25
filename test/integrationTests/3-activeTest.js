@@ -27,10 +27,12 @@ contract('Active State', (accounts) => {
   let errorThrown
   let projAddrT, projAddrR
 
-  let indexNoReclaimPre = 3
-  let indexNoReclaimPost = 2
-  let indexReclaim = 1
-  let indexThrowaway = 0
+  // define indices
+  let indexEndTest = 4 // only to be used to test task claiming in the validating state
+  let indexNoReclaimPre = 3 // to test a task the won't be reclaimed and will be marked complete pre-turnover time
+  let indexNoReclaimPost = 2 // to test a task the won't be reclaimed and will be marked complete post-turnover time
+  let indexReclaim = 1 // to test a task that will be reclaimed
+  let indexThrowaway = 0 // to test a task that will fail every time it's claimed and marked complete
 
   let fastForwards = 2 // ganache 2 weeks ahead at this point from previous test's evmIncreaseTime()
 
@@ -639,6 +641,13 @@ contract('Active State', (accounts) => {
 
   describe('claiming tasks post-turnover time', () => {
     before(async function () {
+      // have worker 2 claim indexThrowaway for post-checkValidate() tests
+      let description = taskSet1[indexThrowaway].description
+      let weighting = taskSet1[indexThrowaway].weighting
+
+      await RR.claimTask(projAddrT, indexThrowaway, description, weighting, {from: worker2})
+      await RR.claimTask(projAddrR, indexThrowaway, description, weighting, {from: worker2})
+
       // fast forward time
       await evmIncreaseTime(604800) // 1 week
     })
@@ -907,7 +916,7 @@ contract('Active State', (accounts) => {
       assert.equal(stateAfter, 4, 'state after should be 4')
     })
 
-    it('checkValidate() does not change RR active project to validating before time is up', async function () {
+    it('checkValidate() does not change RR active project to validating after time is up', async function () {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
 
@@ -920,6 +929,51 @@ contract('Active State', (accounts) => {
       // checks
       assert.equal(stateBefore, 3, 'state before should be 3')
       assert.equal(stateAfter, 4, 'state after should be 4')
+    })
+  })
+
+  describe('mark task complete on validating projects', () => {
+    it('Claim task can\'t be called on task from TR validating project', async function () {
+      let description = taskSet1[indexEndTest].description
+      let weighting = taskSet1[indexEndTest].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrT, indexEndTest, description, weighting, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Claim task can\'t be called on task from RR validating project', async function () {
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrR, indexEndTest, description, weighting, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Mark task complete can\'t be called on task from TR validating project', async function () {
+      errorThrown = false
+      try {
+        await PR.submitTaskComplete(projAddrT, indexThrowaway, {from: worker2})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Mark task complete can\'t be called on task from RR validating project', async function () {
+      errorThrown = false
+      try {
+        await PR.submitTaskComplete(projAddrR, indexThrowaway, {from: worker2})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 })
