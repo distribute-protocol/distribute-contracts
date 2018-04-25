@@ -362,10 +362,11 @@ module.exports = function projectHelper (accounts) {
   obj.task.getTotalValidate = async function (_projAddr, _index, _valVal, _unadulterated) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
+    let valBal
     if (_valVal === true) {
-      let valBal = await TASK.totalValidateAffirmative()
+      valBal = await TASK.totalValidateAffirmative()
     } else if (_valVal === false) {
-      let valBal = await TASK.totalValidateNegative()
+      valBal = await TASK.totalValidateNegative()
     }
     if (_unadulterated === true) {
       return valBal
@@ -374,15 +375,11 @@ module.exports = function projectHelper (accounts) {
     }
   }
 
-  obj.task.getValDetails = async function (_projAddr, _index, _user, _unadulterated) {
+  obj.task.getValDetails = async function (_projAddr, _index, _user) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
-    let valBal = await TASK.validators(user)
-    if (_unadulterated === true) {
-      return valBal
-    } else {
-      return valBal.toNumber()
-    }
+    let valBal = await TASK.validators(_user)
+    return valBal
   }
 
   obj.task.getOpposingVal = async function (_projAddr, _index) {
