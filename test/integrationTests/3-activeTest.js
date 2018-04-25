@@ -916,7 +916,7 @@ contract('Active State', (accounts) => {
       assert.equal(stateAfter, 4, 'state after should be 4')
     })
 
-    it('checkValidate() does not change RR active project to validating after time is up', async function () {
+    it('checkValidate() changes RR active project to validating after time is up', async function () {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
 

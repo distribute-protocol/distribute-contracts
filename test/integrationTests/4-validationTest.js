@@ -36,42 +36,185 @@ contract('Validating State', (accounts) => {
     RR = projObj.contracts.RR
     PR = projObj.contracts.PR
 
-    // get active projects
+    // get validating projects
     // moves ganache forward 1 more week
-    projArray = await returnProject.active(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, 1, taskSet1, [taskSet1 - 1])
+    projArray = await returnProject.validating(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, 1, taskSet1, [taskSet1 - 1])
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
   })
 
-  it('token holder can validate task if it exists and they have enough tokens', async function () {
+  describe('validating with tokens', () => {
+    it('Validator can validate a completed task yes from TR validating project if they have enough tokens', async function () {
 
+    })
+
+    it('Validator can validate a completed task yes from RR validating project if they have enough tokens', async function () {
+
+    })
+
+    it('Validator can validate a completed task no from TR validating project if they have enough tokens', async function () {
+
+    })
+
+    it('Validator can validate a completed task no from RR validating project if they have enough tokens', async function () {
+
+    })
+
+    it('Validator can\'t validate a completed task yes from TR validating project more than once', async function () {
+
+    })
+
+    it('Validator can\'t validate a completed task yes from RR validating project more than once', async function () {
+
+    })
+
+    it('Validator can\'t validate a completed task no from TR validating project more than once', async function () {
+
+    })
+
+    it('Validator can\'t validate a completed task no from RR validating project more than once', async function () {
+
+    })
+
+    it('Validator can\'t validate a completed task yes from TR validating project if they don\'t have enough tokens', async function () {
+
+    })
+
+    it('Validator can\'t validate a completed task yes from RR validating project if they don\'t have enough tokens', async function () {
+
+    })
+
+    it('Validator can\'t validate a completed task no from TR validating project if they don\'t have enough tokens', async function () {
+
+    })
+
+    it('Validator can\'t validate a completed task no from RR validating project if they don\'t have enough tokens', async function () {
+
+    })
+
+    it('Validator can\'t validate incomplete task yes from TR validating project with tokens', async function () {
+
+    })
+
+    it('Validator can\'t validate incomplete task yes from RR validating project with tokens', async function () {
+
+    })
+
+    it('Validator can\'t validate incomplete task no from TR validating project with tokens', async function () {
+
+    })
+
+    it('Validator can\'t validate incomplete task no from RR validating project with tokens', async function () {
+
+    })
+
+    it('Validator can\'t validate nonexistant task yes from TR validating project with tokens', async function () {
+
+    })
+
+    it('Validator can\'t validate nonexistant task yes from RR validating project with tokens', async function () {
+
+    })
+
+    it('Validator can\'t validate nonexistant task no from TR validating project with tokens', async function () {
+
+    })
+
+    it('Validator can\'t validate nonexistant task no from RR validating project with tokens', async function () {
+
+    })
   })
 
-  it('token holder cannot validate nonexistant task', async function () {
+  describe('validating with reputation', () => {
+    it('Validator can\'t validate a completed task yes from TR validating project with reputation', async function () {
 
+    })
+
+    it('Validator can\'t validate a completed task yes from RR validating project with reputation', async function () {
+
+    })
+
+    it('Validator can\'t validate a completed task no from TR validating project with reputation', async function () {
+
+    })
+
+    it('Validator can\'t validate a completed task no from RR validating project with reputation', async function () {
+
+    })
+
+    it('Validator can\'t validate an incomplete task yes from TR validating project with reputation', async function () {
+
+    })
+
+    it('Validator can\'t validate an incomplete task yes from RR validating project with reputation', async function () {
+
+    })
+
+    it('Validator can\'t validate an incomplete task no from TR validating project with reputation', async function () {
+
+    })
+
+    it('Validator can\'t validate an incomplete task no from RR validating project with reputation', async function () {
+
+    })
+
+    it('Validator can\'t validate a nonexistant task yes from TR validating project with reputation', async function () {
+
+    })
+
+    it('Validator can\'t validate a nonexistant task yes from RR validating project with reputation', async function () {
+
+    })
+
+    it('Validator can\'t validate a nonexistant task no from TR validating project with reputation', async function () {
+
+    })
+
+    it('Validator can\'t validate a nonexistant task no from RR validating project with reputation', async function () {
+
+    })
   })
 
-  it('token holder cannot validate incomplete task', async function () {
+  describe('state changes before time is up', () => {
+    it('checkVoting() does not change TR validating project to voting before time is up', async function () {
 
+    })
+
+    it('checkVoting() does not change RR validating project to voting before time is up', async function () {
+
+    })
   })
 
-  it('token holder cannot validate task with tokens they do not have', async function () {
+  describe('state changes after time is up', () => {
+    before(async function () {
+      // fast forward time
+      await evmIncreaseTime(604800) // 1 week
+    })
 
+    it('checkVoting() changes TR validating project to voting after time is up', async function () {
+
+    })
+
+    it('checkVoting() changes RR validating project to voting after time is up', async function () {
+
+    })
   })
 
-  it('reputation holder cannot validate task with reputation', async function () {
+  describe('validate voting projects', () => {
+    it('Validator can\'t validate a completed task yes from TR voting project if they have enough tokens', async function () {
 
-  })
+    })
 
-  it('validator cannot validate a task more than once', async function () {
+    it('Validator can\'t validate a completed task yes from RR voting project if they have enough tokens', async function () {
 
-  })
+    })
 
-  it('can\'t change project to voting state before time is up', async function () {
+    it('Validator can\'t validate a completed task no from TR voting project if they have enough tokens', async function () {
 
-  })
+    })
 
-  it('project changes to voting state when time is up', async function () {
+    it('Validator can\'t validate a completed task no from RR voting project if they have enough tokens', async function () {
 
+    })
   })
 })

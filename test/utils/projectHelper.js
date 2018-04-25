@@ -455,8 +455,8 @@ module.exports = function projectHelper (accounts) {
       await obj.contracts.PR.addTaskHash(projArray[i][1], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker1})
     }
 
-    // increase time 1 week
-    await evmIncreaseTime(604800)
+    // increase time 1 week + 1 ms to make sure that checkActive() doesn't bug out
+    await evmIncreaseTime(604801)
 
     for (let i = 0; i < _numSets; i++) {
       // call checkActive on projects and do checks
@@ -479,11 +479,11 @@ module.exports = function projectHelper (accounts) {
   obj.returnProject.validating = async function (_cost, _stakingPeriod, _ipfsHash, _numSets, _tasks, _numComplete) {
     // get array of active projects
     // moves ganache forward 1 week
-    let projArray = obj.returnProject.active(_cost, _stakingPeriod, _ipfsHash, _numSets)
+    let projArray = await obj.returnProject.active(_cost, _stakingPeriod, _ipfsHash, _numSets)
 
     // register workers
     await obj.utils.register(obj.user.worker1)
-    await obj.utils.register(worker2)
+    await obj.utils.register(obj.user.worker2)
 
     // make worker array
     let workerArray = [obj.user.worker1, obj.user.worker2]
@@ -503,9 +503,9 @@ module.exports = function projectHelper (accounts) {
         await obj.contracts.PR.submitTaskComplete(projArray[i][1], j, {from: workerArray[j % 2]})
       }
     }
-
-    // increase time 2 weeks
-    await evmIncreaseTime(2 * 604800)
+    
+    // increase time 2 weeks + 1 ms to make sure that checkValidating() doesn't bug out
+    await evmIncreaseTime((2 * 604800) + 1)
 
     for (let i = 0; i < _numSets; i++) {
       // call check validate for each project
@@ -513,10 +513,10 @@ module.exports = function projectHelper (accounts) {
       await obj.contracts.PR.checkValidate(projArray[i][1])
 
       // assert that project is in state 4
-      let state0 = await obj.project.getState(projArray[i][0])
-      let state1 = await obj.project.getState(projArray[i][1])
-      assert.equal(state0, 4, 'project ' + i + ',0 not in validating state')
-      assert.equal(state1, 4, 'project ' + i + ',1 not in validating state')
+      let stateT = await obj.project.getState(projArray[i][0])
+      let stateR = await obj.project.getState(projArray[i][1])
+      assert.equal(stateT, 4, 'project ' + i + ',T not in validating state')
+      assert.equal(stateR, 4, 'project ' + i + ',R not in validating state')
     }
 
     return projArray
