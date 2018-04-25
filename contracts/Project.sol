@@ -163,6 +163,10 @@ contract Project {
         return tasks.length;
     }
 
+    /* function getTaskAddress(uint256 _index) external view returns (address) {
+        return tasks[_index];
+    } */
+
     // =====================================================================
     // SETTERS
     // =====================================================================

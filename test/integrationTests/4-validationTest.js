@@ -14,7 +14,7 @@ contract('Validating State', (accounts) => {
   // get project helper variables
   let TR, RR, PR
   let {user, project, utils, returnProject, task} = projObj
-  let {repStaker1} = user
+  let {validator1, validator2, notValidator} = user
   let {worker1, worker2, notWorker} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
 
@@ -26,6 +26,14 @@ contract('Validating State', (accounts) => {
   let projArray
   let errorThrown
   let projAddrT, projAddrR
+
+  // define indices
+  let indexYes = 0
+  let indexNo = 1
+  let indexBoth = 2
+  let indexNeither = 3
+  let indexIncomplete = 4
+  let notIndex = 5
 
   let fastForwards = 5 // ganache 5 weeks ahead at this point from previous test's evmIncreaseTime()
 
@@ -41,10 +49,48 @@ contract('Validating State', (accounts) => {
     projArray = await returnProject.validating(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, 1, taskSet1, [taskSet1 - 1])
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
+
+    // fund validators
+    await utils.mintIfNecessary(validator1)
+    await utils.mintIfNecessary(validator2)
   })
 
   describe('validating with tokens', () => {
     it('Validator can validate a completed task yes from TR validating project if they have enough tokens', async function () {
+      // getting validator details before validating should fail
+      errorThrown = false
+      try {
+        await task.getValDetails(projAddrT, indexBoth, validator1)
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+
+      // take stock of variables before
+      let tokensToValidate = 100
+      // let valBalBefore = await utils.getTokenBalance(validator1)
+      // let TRBalBefore = await utils.getTokenBalance(TR.address)
+      // let taskValNegBefore = await task.getTotalValidate(projAddrT, indexBoth, false)
+      // let taskValPosBefore = await task.getTotalValidate(projAddrT, indexBoth, true)
+      // let taskOpposingValBefore = await task.getOpposingVal(projAddrT, indexBoth)
+
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      // validate task
+      await TR.validateTask(projAddrT, indexBoth, tokensToValidate, true, {from: validator1})
+
+      // task stock of variables after
+      // let valBalAfter = await utils.getTokenBalance(validator1)
+      // let TRBalAfter = await utils.getTokenBalance(TR.address)
+      // let taskValNegAfter = await task.getTotalValidate(projAddrT, indexBoth, false)
+      // let taskValPosAfter = await task.getTotalValidate(projAddrT, indexBoth, true)
+      // let taskOpposingValAfter = await task.getOpposingVal(projAddrT, indexBoth)
+
+      // let taskValBalAfter = await task.getValDetails(projAddrT, indexBoth, validator1)
+
+      // checks
+      // assert.equal()
 
     })
 
@@ -52,11 +98,19 @@ contract('Validating State', (accounts) => {
 
     })
 
-    it('Validator can validate a completed task no from TR validating project if they have enough tokens', async function () {
+    it('Different validator can validate the same completed task no from TR validating project if they have enough tokens', async function () {
 
     })
 
-    it('Validator can validate a completed task no from RR validating project if they have enough tokens', async function () {
+    it('Different validator can validate the same completed task no from RR validating project if they have enough tokens', async function () {
+
+    })
+
+    it('Same validator can validate a different completed task no from TR validating project if they have enough tokens', async function () {
+
+    })
+
+    it('Same  validator can validate a different completed task no from RR validating project if they have enough tokens', async function () {
 
     })
 

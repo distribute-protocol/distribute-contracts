@@ -225,6 +225,7 @@ contract ReputationRegistry{
     ) external {
         require(projectRegistry.projects(_projectAddress) == true);
         Project project = Project(_projectAddress);
+        require(project.hashListSubmitted() == true);
         uint reputationVal = project.reputationCost() * _weighting / 100;
         require(balances[msg.sender] >= reputationVal);
         uint weiVal = project.weiCost() * _weighting / 100;

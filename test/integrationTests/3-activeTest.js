@@ -33,6 +33,7 @@ contract('Active State', (accounts) => {
   let indexNoReclaimPost = 2 // to test a task the won't be reclaimed and will be marked complete post-turnover time
   let indexReclaim = 1 // to test a task that will be reclaimed
   let indexThrowaway = 0 // to test a task that will fail every time it's claimed and marked complete
+  let notIndex = 5 // to test a nonexistant task
 
   let fastForwards = 2 // ganache 2 weeks ahead at this point from previous test's evmIncreaseTime()
 
@@ -541,8 +542,8 @@ contract('Active State', (accounts) => {
     })
 
     it('Worker can\'t claim nonexistant task from TR active project', async function () {
-      let description = taskSet1[indexThrowaway].description
-      let weighting = taskSet1[indexThrowaway].weighting
+      let description = taskSet1[notIndex].description
+      let weighting = taskSet1[notIndex].weighting
 
       errorThrown = false
       try {
@@ -554,8 +555,8 @@ contract('Active State', (accounts) => {
     })
 
     it('Worker can\'t claim nonexistant task from RR active project', async function () {
-      let description = taskSet1[indexThrowaway].description
-      let weighting = taskSet1[indexThrowaway].weighting
+      let description = taskSet1[notIndex].description
+      let weighting = taskSet1[notIndex].weighting
 
       errorThrown = false
       try {

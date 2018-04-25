@@ -294,6 +294,12 @@ module.exports = function projectHelper (accounts) {
     return repVal
   }
 
+  obj.project.getTaskCount = async function (_projAddr) {
+    let PROJ = await Project.at(_projAddr)
+    let taskCount = await PROJ.getTaskCount()
+    return taskCount
+  }
+
   obj.task.getTaskHash = async function (_taskAddr) {
     let TASK = await Task.at(_taskAddr)
     let taskHash = await TASK.taskHash()
@@ -318,39 +324,72 @@ module.exports = function projectHelper (accounts) {
     return RRAddress
   }
 
-  obj.task.getWeighting = async function (_projAddr, index) {
-    let taskAddr = await obj.project.getTasks(_projAddr, index)
+  obj.task.getWeighting = async function (_projAddr, _index) {
+    let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
     let weighting = await TASK.weighting()
     return weighting.toNumber()
   }
 
-  obj.task.getWeiReward = async function (_projAddr, index) {
-    let taskAddr = await obj.project.getTasks(_projAddr, index)
+  obj.task.getWeiReward = async function (_projAddr, _index) {
+    let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
     let weiReward = await TASK.weiReward()
     return weiReward.toNumber()
   }
 
-  obj.task.getRepReward = async function (_projAddr, index) {
-    let taskAddr = await obj.project.getTasks(_projAddr, index)
+  obj.task.getRepReward = async function (_projAddr, _index) {
+    let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
     let repReward = await TASK.reputationReward()
     return repReward.toNumber()
   }
 
-  obj.task.getComplete = async function (_projAddr, index) {
-    let taskAddr = await obj.project.getTasks(_projAddr, index)
+  obj.task.getComplete = async function (_projAddr, _index) {
+    let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
     let complete = await TASK.complete()
     return complete
   }
 
-  obj.task.getClaimer = async function (_projAddr, index) {
-    let taskAddr = await obj.project.getTasks(_projAddr, index)
+  obj.task.getClaimer = async function (_projAddr, _index) {
+    let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
     let claimer = await TASK.claimer()
     return claimer
+  }
+
+  obj.task.getTotalValidate = async function (_projAddr, _index, _valVal, _unadulterated) {
+    let taskAddr = await obj.project.getTasks(_projAddr, _index)
+    let TASK = await Task.at(taskAddr)
+    if (_valVal === true) {
+      let valBal = await TASK.totalValidateAffirmative()
+    } else if (_valVal === false) {
+      let valBal = await TASK.totalValidateNegative()
+    }
+    if (_unadulterated === true) {
+      return valBal
+    } else {
+      return valBal.toNumber()
+    }
+  }
+
+  obj.task.getValDetails = async function (_projAddr, _index, _user, _unadulterated) {
+    let taskAddr = await obj.project.getTasks(_projAddr, _index)
+    let TASK = await Task.at(taskAddr)
+    let valBal = await TASK.validators(user)
+    if (_unadulterated === true) {
+      return valBal
+    } else {
+      return valBal.toNumber()
+    }
+  }
+
+  obj.task.getOpposingVal = async function (_projAddr, _index) {
+    let taskAddr = await obj.project.getTasks(_projAddr, _index)
+    let TASK = await Task.at(taskAddr)
+    let oppVal = await TASK.opposingValidator()
+    return oppVal
   }
 
   // project return functions
@@ -489,6 +528,10 @@ module.exports = function projectHelper (accounts) {
     let workerArray = [obj.user.worker1, obj.user.worker2]
 
     for (let i = 0; i < _numSets; i++) {
+      // submit hash list
+      await obj.contracts.PR.submitHashList(projArray[i][0], keccakHashes.hashTasks(taskDetails.taskSet1), {from: obj.user.repStaker1})
+      await obj.contracts.PR.submitHashList(projArray[i][1], keccakHashes.hashTasks(taskDetails.taskSet1), {from: obj.user.repStaker1})
+
       for (let j = 0; j < _numComplete[i]; j++) {
         // get description and weighting of task with index j from project set i
         let description = _tasks[j].description
@@ -503,7 +546,7 @@ module.exports = function projectHelper (accounts) {
         await obj.contracts.PR.submitTaskComplete(projArray[i][1], j, {from: workerArray[j % 2]})
       }
     }
-    
+
     // increase time 2 weeks + 1 ms to make sure that checkValidating() doesn't bug out
     await evmIncreaseTime((2 * 604800) + 1)
 
