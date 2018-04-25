@@ -37,7 +37,7 @@ contract('Active State', (accounts) => {
   let fastForwards = 2 // ganache 2 weeks ahead at this point from previous test's evmIncreaseTime()
 
   before(async function () {
-    // get contract
+    // get contracts
     await projObj.contracts.setContracts()
     TR = projObj.contracts.TR
     RR = projObj.contracts.RR
