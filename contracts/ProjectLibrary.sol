@@ -300,6 +300,7 @@ library ProjectLibrary {
         require(project.state() == 4);
 
         Task task = Task(project.tasks(_index));
+        require(task.complete() == true);
         _validationState
             ? task.setValidator(_validator, 1, _tokens)
             : task.setValidator(_validator, 0, _tokens);
