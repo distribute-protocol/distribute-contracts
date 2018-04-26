@@ -542,12 +542,12 @@ contract('Active State', (accounts) => {
     })
 
     it('Worker can\'t claim nonexistant task from TR active project', async function () {
-      let description = taskSet1[notIndex].description
-      let weighting = taskSet1[notIndex].weighting
+      let description = taskSet1[indexThrowaway].description
+      let weighting = taskSet1[indexThrowaway].weighting
 
       errorThrown = false
       try {
-        await RR.claimTask(projAddrT, 4, description, weighting, {from: worker1})
+        await RR.claimTask(projAddrT, notIndex, description, weighting, {from: worker1})
       } catch (e) {
         errorThrown = true
       }
@@ -555,12 +555,12 @@ contract('Active State', (accounts) => {
     })
 
     it('Worker can\'t claim nonexistant task from RR active project', async function () {
-      let description = taskSet1[notIndex].description
-      let weighting = taskSet1[notIndex].weighting
+      let description = taskSet1[indexThrowaway].description
+      let weighting = taskSet1[indexThrowaway].weighting
 
       errorThrown = false
       try {
-        await RR.claimTask(projAddrR, 4, description, weighting, {from: worker1})
+        await RR.claimTask(projAddrR, notIndex, description, weighting, {from: worker1})
       } catch (e) {
         errorThrown = true
       }
