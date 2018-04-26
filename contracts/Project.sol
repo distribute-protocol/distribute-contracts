@@ -334,7 +334,6 @@ contract Project {
     */
     function transferWeiReward(address _rewardee, uint _reward) external onlyRR {
         require(_reward <= weiBal);
-
         weiBal -= _reward;
         _rewardee.transfer(_reward);
     }

@@ -44,6 +44,7 @@ contract('Validating State', (accounts) => {
     TR = projObj.contracts.TR
     RR = projObj.contracts.RR
     PR = projObj.contracts.PR
+    DT = projObj.contracts.DT
 
     // get validating projects
     // moves ganache forward 1 more week
@@ -928,7 +929,9 @@ contract('Validating State', (accounts) => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT)
       let projWeiBalBefore = await project.getWeiBal(projAddrT, true)
+      // let projWeiBalBefore = await web3.eth.getBalance(projAddrT)
       let DTBalBefore = await utils.getWeiPoolBal(true)
+      // let DTBalBefore = await web3.eth.getBalance(DT.address)
 
       // attempt to checkStaked
       await PR.checkVoting(projAddrT)
@@ -936,8 +939,10 @@ contract('Validating State', (accounts) => {
       // take stock of variables
       let stateAfter = await project.getState(projAddrT)
       let projWeiBalAfter = await project.getWeiBal(projAddrT, true)
+      // let projWeiBalAfter = await web3.eth.getBalance(projAddrT)
       let DTBalAfter = await utils.getWeiPoolBal(true)
-      let failedTaskWeighting = 0
+      // let DTBalAfter = await web3.eth.getBalance(DT.address)
+      let failedTaskWeiReward = 0
       let pollNonce = []
       let taskClaimable = []
 
@@ -945,9 +950,10 @@ contract('Validating State', (accounts) => {
         let nonce = await task.getPollNonce(projAddrT, i)
         let claimable = await task.getClaimable(projAddrT, i)
         let complete = await task.getComplete(projAddrT, i)
-        if (claimable === false && complete === true) {
-          let weighting = await task.getWeiReward(projAddrT, i)
-          failedTaskWeighting += weighting
+        let oppVal = await task.getOpposingVal(projAddrT, i)
+        if ((claimable === false && complete === true)) {
+          let weiReward = await task.getWeiReward(projAddrT, i)
+          failedTaskWeiReward += weiReward
         }
         pollNonce.push(nonce)
         taskClaimable.push(claimable)
@@ -970,25 +976,67 @@ contract('Validating State', (accounts) => {
       assert.equal(taskClaimable[indexNeither], true, 'should be claimable')
       assert.equal(taskClaimable[indexIncomplete], false, 'should not be claimable')
       assert.equal(taskClaimable[indexBoth], false, 'should not be claimable')
-      // FIGURE OUT WHY FAILEDTASKWEIGHTING TESTS DON'T WORK
-      // assert.equal(weiBalDifference, failedTaskWeighting, 'should be same amount')
-      // assert.equal(weiPoolDifference, failedTaskWeighting, 'should be same amount')
+      // FIGURE OUT WHY FAILEDTASKWEIREWARD TESTS DON'T WORK
+      // assert.equal(weiBalDifference, failedTaskWeiReward, 'should be same amount')
+      // assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
       // ADD PLCR START POLL TEST
     })
 
     it('checkVoting() changes RR validating project to voting after time is up', async function () {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
+      let projWeiBalBefore = await project.getWeiBal(projAddrR, true)
+      // let projWeiBalBefore = await web3.eth.getBalance(projAddrR)
+      let DTBalBefore = await utils.getWeiPoolBal(true)
+      // let DTBalBefore = await web3.eth.getBalance(DT.address)
 
       // attempt to checkStaked
       await PR.checkVoting(projAddrR)
 
       // take stock of variables
       let stateAfter = await project.getState(projAddrR)
+      let projWeiBalAfter = await project.getWeiBal(projAddrR, true)
+      // let projWeiBalAfter = await web3.eth.getBalance(projAddrR)
+      let DTBalAfter = await utils.getWeiPoolBal(true)
+      // let DTBalAfter = await web3.eth.getBalance(DT.address)
+      let failedTaskWeiReward = 0
+      let pollNonce = []
+      let taskClaimable = []
+
+      for (let i = 0; i < taskSet1.length; i++) {
+        let nonce = await task.getPollNonce(projAddrR, i)
+        let claimable = await task.getClaimable(projAddrR, i)
+        let complete = await task.getComplete(projAddrR, i)
+        let oppVal = await task.getOpposingVal(projAddrR, i)
+        if ((claimable === false && complete === true)) {
+          let weiReward = await task.getWeiReward(projAddrR, i)
+          failedTaskWeiReward += weiReward
+        }
+        pollNonce.push(nonce)
+        taskClaimable.push(claimable)
+      }
+
+      // interim calculations
+      let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter).toNumber()
+      let weiPoolDifference = DTBalAfter.minus(DTBalBefore).toNumber()
 
       // checks
       assert.equal(stateBefore, 4, 'state before should be 4')
       assert.equal(stateAfter, 5, 'state should not have changed')
+      assert.equal(pollNonce[indexYes], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexNo], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexNeither], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexIncomplete], 0, 'should be no poll ID')
+      assert.notEqual(pollNonce[indexBoth], 0, 'should be nonzero poll ID')
+      assert.equal(taskClaimable[indexYes], true, 'should be claimable')
+      assert.equal(taskClaimable[indexNo], true, 'should be claimable')
+      assert.equal(taskClaimable[indexNeither], true, 'should be claimable')
+      assert.equal(taskClaimable[indexIncomplete], false, 'should not be claimable')
+      assert.equal(taskClaimable[indexBoth], false, 'should not be claimable')
+      // FIGURE OUT WHY FAILEDTASKWEIREWARD TESTS DON'T WORK
+      // assert.equal(weiBalDifference, failedTaskWeiReward, 'should be same amount')
+      // assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
+      // ADD PLCR START POLL TEST
     })
   })
 
