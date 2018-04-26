@@ -346,6 +346,8 @@ contract Project {
     @param _value The amount of ether to send
     */
     function returnWei(address _distributeToken, uint _value) external onlyPR {
+        require(_value <= weiBal);
+        weiBal -= _value;
         _distributeToken.transfer(_value);
     }
 

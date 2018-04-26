@@ -389,6 +389,20 @@ module.exports = function projectHelper (accounts) {
     return oppVal
   }
 
+  obj.task.getClaimable = async function (_projAddr, _index) {
+    let taskAddr = await obj.project.getTasks(_projAddr, _index)
+    let TASK = await Task.at(taskAddr)
+    let claimable = await TASK.claimable()
+    return claimable
+  }
+
+  obj.task.getPollNonce = async function (_projAddr, _index) {
+    let taskAddr = await obj.project.getTasks(_projAddr, _index)
+    let TASK = await Task.at(taskAddr)
+    let poll = await TASK.pollId()
+    return poll.toNumber()
+  }
+
   // project return functions
   // return project (address) proposed by token holder
   obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash) {
