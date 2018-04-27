@@ -5,6 +5,7 @@ const Project = artifacts.require('Project')
 
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
+const hexToAscii = require('../utils/hexToAscii')
 
 contract('Propose Projects', function (accounts) {
   // set up project helper
@@ -97,6 +98,9 @@ contract('Propose Projects', function (accounts) {
       let _proposerStake = await PROJ_T.proposerStake()
       let _ipfsHash = await PROJ_T.ipfsHash()
 
+      // convert _ipfsHash to ascii
+      _ipfsHash = hexToAscii(_ipfsHash)
+
       assert.equal(TR.address, _TRaddr, 'PR stored incorrect token registry address')
       assert.equal(PR.address, _PRaddr, 'PR stored incorrect project registry address')
       assert.equal(projectCost, _weiCost, 'PR stored incorrect project cost')
@@ -140,6 +144,9 @@ contract('Propose Projects', function (accounts) {
       let _proposerType = await PROJ_R.proposerType()
       let _proposerStake = await PROJ_R.proposerStake()
       let _ipfsHash = await PROJ_R.ipfsHash()
+
+      // convert _ipfsHash to ascii
+      _ipfsHash = hexToAscii(_ipfsHash)
 
       assert.equal(TR.address, _TRaddr, 'PR stored incorrect token registry address')
       assert.equal(PR.address, _PRaddr, 'PR stored incorrect project registry address')

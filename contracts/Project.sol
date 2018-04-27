@@ -105,7 +105,7 @@ contract Project {
     // CONSTRUCTOR
     // =====================================================================
 
-    function Project() {}
+    function Project() public {}
     /**
     @dev Used for proxy deployment of this contract. Initialize a Project with a Reputation Registry
     and a Token Registry, and all related project values.

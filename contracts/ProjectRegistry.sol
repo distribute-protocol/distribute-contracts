@@ -122,7 +122,7 @@ contract ProjectRegistry {
     {
         proxyContract = createProxyImpl(_target, _data);
 
-        ProxyDeployed(proxyContract, _target);
+        emit ProxyDeployed(proxyContract, _target);
     }
 
     function createProxyImpl(address _target, bytes _data)
