@@ -53,7 +53,6 @@ contract Project {
     address public proposer;
     uint256 public proposerType;
     uint256 public proposerStake;
-    uint256 public stakingPeriod;
     uint256 public weiBal;
     uint256 public nextDeadline;
     uint256 public weiCost;
@@ -104,6 +103,7 @@ contract Project {
     // CONSTRUCTOR
     // =====================================================================
 
+    function Project() {}
     /**
     @dev Used for proxy deployment of this contract. Initialize a Project with a Reputation Registry
     and a Token Registry, and all related project values.

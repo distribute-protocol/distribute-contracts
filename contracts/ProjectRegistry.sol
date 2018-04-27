@@ -1,6 +1,7 @@
 pragma solidity 0.4.19;
 
 import "./library/PLCRVoting.sol";
+/* import "./library/ProxyFactory.sol"; */
 import "./ReputationRegistry.sol";
 /* import "./Project.sol"; */
 import "./ProjectLibrary.sol";
@@ -37,6 +38,7 @@ contract ProjectRegistry {
     // =====================================================================
 
     PLCRVoting plcrVoting;
+    /* ProxyFactory proxyFactory; */
 
     address tokenRegistryAddress;
     address reputationRegistryAddress;
@@ -95,6 +97,7 @@ contract ProjectRegistry {
         address _projectAddress,
         address _taskAddress
     ) public {       //contract is created
+              /* address _proxyFactory */
         require(
             tokenRegistryAddress == 0 &&
             reputationRegistryAddress == 0 &&
@@ -106,6 +109,7 @@ contract ProjectRegistry {
         plcrVoting = PLCRVoting(_plcrVoting);
         projectContractAddress = _projectAddress;
         taskContractAddress = _taskAddress;
+        /* proxyFactory = ProxyFactory(_proxyFactory); */
     }
 
     // =====================================================================
@@ -128,11 +132,11 @@ contract ProjectRegistry {
         assembly {
             let contractCode := mload(0x40) // Find empty storage location using "free memory pointer"
 
-            mstore(add(contractCode, 0x0b), _target) // Add target address, with a 11 bytes [i.e. 23 - (32 - 20)] offset to later accomodate first part of the bytecode
-            mstore(sub(contractCode, 0x09), 0x000000000000000000603160008181600b9039f3600080808080368092803773) // First part of the bytecode, shifted left by 9 bytes, overwrites left padding of target address
-            mstore(add(contractCode, 0x2b), 0x5af43d828181803e808314602f57f35bfd000000000000000000000000000000) // Final part of bytecode, offset by 43 bytes
+            mstore(add(contractCode, 0x14), _target) // Add target address, with a 20 bytes [i.e. 32 - (32 - 20)] offset to later accomodate first part of the bytecode
+            mstore(contractCode, 0x000000000000000000603160008181600b9039f3600080808080368092803773) // First part of the bytecode, padded with 9 bytes of zeros to the left, overwrites left padding of target address
+            mstore(add(contractCode, 0x34), 0x5af43d828181803e808314602f57f35bfd000000000000000000000000000000) // Final part of bytecode, offset by 52 bytes
 
-            proxyContract := create(0, contractCode, 60) // total length 60 bytes
+            proxyContract := create(0, add(contractCode, 0x09), 60) // total length 60 bytes
             if iszero(extcodesize(proxyContract)) {
                 revert(0, 0)
             }
@@ -163,14 +167,14 @@ contract ProjectRegistry {
         assembly {
             //let ipfsHashSize := mload(_ipfsHash)
             dataToSend := mload(0x40) // Find empty memory location using "free memory pointer"
-            mstore(add(dataToSend, 0x20), 0xf58a1adb)
+            mstore(add(dataToSend, 0x4), 0xf58a1adb)
             mstore(add(dataToSend, 0x24), _cost) // this is the function ID
             mstore(add(dataToSend, 0x44), _costProportion)
             mstore(add(dataToSend, 0x64), _stakingPeriod)
             mstore(add(dataToSend, 0x84), _proposer)
             mstore(add(dataToSend, 0xa4), _proposerType)
             mstore(add(dataToSend, 0xc4), _proposerStake)
-            mstore(add(dataToSend, 0xe4), add(dataToSend, 0x140)) // <--- _ipfsHash data location part (length + contents)
+            mstore(add(dataToSend, 0xe4), 0x120) // <--- _ipfsHash data location part (length + contents)
             mstore(add(dataToSend, 0x104), _reputationRegistry)
             mstore(add(dataToSend, 0x124), _tokenRegistry)
             mstore(add(dataToSend, 0x144), 46) // <--- Length of the IPFS hash size
@@ -193,11 +197,10 @@ contract ProjectRegistry {
         bytes memory dataToSend;
         assembly {
           dataToSend := mload(0x40)
-          mstore(add(dataToSend, 0x20), 0xae4d1af6)
+          mstore(add(dataToSend, 0x4), 0xae4d1af6)
           mstore(add(dataToSend, 0x24), _hash)
           mstore(add(dataToSend, 0x44), _tokenRegistry)
           mstore(add(dataToSend, 0x64), _reputationRegistry)
-
           mstore(dataToSend, 0x64)/// 4 + 32 * 3 == 100 bytes
           mstore(0x40, add(dataToSend, 0x84))
         }
