@@ -1,7 +1,6 @@
-pragma solidity 0.4.19;
+pragma solidity ^0.4.21;
 
 //import files
-import "./EIP20.sol";
 import "./DLL.sol";
 import "./AttributeStore.sol";
 
@@ -120,10 +119,10 @@ contract PLCRVoting {
         //checks done in THR/WR to ensure that staker has tokens to vote with
         if (msg.sender == tokenRegistry) {
             voteTokenBalance[_staker] += _numTokens;
-            VotingRightsGranted(_staker, _numTokens);
+            emit VotingRightsGranted(_staker, _numTokens);
         } else if (msg.sender == reputationRegistry) {
             voteReputationBalance[_staker] += _numTokens;
-            VotingRightsGranted(_staker, _numTokens);
+            emit VotingRightsGranted(_staker, _numTokens);
         }
     }
 
@@ -136,12 +135,12 @@ contract PLCRVoting {
             uint256 availableTokens = voteTokenBalance[_staker] - getLockedTokens(_staker);
             require(availableTokens >= _numTokens);
             voteTokenBalance[_staker] -= _numTokens;
-            VotingRightsWithdrawn(_staker, _numTokens);
+            emit VotingRightsWithdrawn(_staker, _numTokens);
         } else if (msg.sender == reputationRegistry) {
             availableTokens = voteReputationBalance[_staker] - getLockedTokens(_staker);
             require(availableTokens >= _numTokens);
             voteReputationBalance[_staker] -= _numTokens;
-            VotingRightsWithdrawn(_staker, _numTokens);
+            emit VotingRightsWithdrawn(_staker, _numTokens);
         }
     }
 
@@ -180,7 +179,6 @@ contract PLCRVoting {
             ? require(voteReputationBalance[_staker] >= _numTokens) // prevent user from overspending
             : require(voteTokenBalance[_staker] >= _numTokens); // prevent user from overspending
         require(_pollID != 0);                // prevent user from committing to zero node placeholder
-        // TODO: Move all insert validation into the DLL lib
         // Check if _prevPollID exists
         require(_prevPollID == 0 || getCommitHash(_staker, _prevPollID) != 0);
 
@@ -194,7 +192,7 @@ contract PLCRVoting {
         bytes32 UUID = attrUUID(_staker, _pollID);
         store.setAttribute(UUID, "numTokens", _numTokens);
         store.setAttribute(UUID, "commitHash", uint(_secretHash));
-        VoteCommitted(_staker, _pollID, _numTokens);
+        emit VoteCommitted(_staker, _pollID, _numTokens);
     }
 
     /**
@@ -238,7 +236,7 @@ contract PLCRVoting {
 
     dllMap[msg.sender].remove(_pollID); // remove the node referring to this vote upon reveal
 
-    VoteRevealed(msg.sender, _pollID, numTokens, _voteOption);
+    emit VoteRevealed(msg.sender, _pollID, numTokens, _voteOption);
     }
 
     /**
@@ -285,7 +283,7 @@ contract PLCRVoting {
             votesFor: 0,
             votesAgainst: 0
         });
-        PollCreated(_voteQuorum, _commitDuration, _revealDuration, pollNonce);
+        emit PollCreated(_voteQuorum, _commitDuration, _revealDuration, pollNonce);
         return pollNonce;
     }
 

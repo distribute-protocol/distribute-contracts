@@ -1,4 +1,4 @@
-pragma solidity 0.4.19;
+pragma solidity ^0.4.21;
 
 import "./ProjectRegistry.sol";
 import "./ReputationRegistry.sol";
@@ -24,9 +24,9 @@ contract Project {
     // STATE VARIABLES
     // =====================================================================
 
-    address tokenRegistryAddress;
-    address reputationRegistryAddress;
-    address projectRegistryAddress;
+    address public tokenRegistryAddress;
+    address public reputationRegistryAddress;
+    address public projectRegistryAddress;
 
     uint256 public state;
 
@@ -64,9 +64,11 @@ contract Project {
     mapping (address => uint) public tokenBalances;
     mapping (address => uint) public reputationBalances;
 
-    address[] public tasks;
-
+    bool public hashListSubmitted;
     uint256 public passAmount;
+
+    // MAKE THIS A DLL EVENTUALLY?
+    address[] public tasks;
 
     // =====================================================================
     // MODIFIERS
@@ -130,6 +132,7 @@ contract Project {
         address _reputationRegistry,
         address _tokenRegistry
     ) public {
+        require (bytes(_ipfsHash).length == 46);
         reputationRegistryAddress = _reputationRegistry;
         tokenRegistryAddress = _tokenRegistry;
         projectRegistryAddress = msg.sender;
@@ -169,6 +172,10 @@ contract Project {
     function getTaskCount() external view returns (uint256) {
         return tasks.length;
     }
+
+    /* function getTaskAddress(uint256 _index) external view returns (address) {
+        return tasks[_index];
+    } */
 
     // =====================================================================
     // SETTERS
@@ -238,6 +245,7 @@ contract Project {
     function setTaskAddress(address _taskAddress, uint _index) external onlyPR {
         require(state == 3);
         tasks[_index] = _taskAddress;
+        hashListSubmitted = true;
     }
 
     /**
@@ -262,7 +270,9 @@ contract Project {
     */
     function stakeTokens(address _staker, uint256 _tokens, uint256 _weiValue) external onlyTR {
         require(state == 1);
-
+        require(
+            tokenBalances[_staker].add(_tokens) > tokenBalances[_staker]    // check overflow
+        );
         tokenBalances[_staker] += _tokens;
         tokensStaked += _tokens;
         weiBal += _weiValue;
@@ -277,7 +287,7 @@ contract Project {
     @return The amount of ether to deduct from the projects balance
 
     */
-    function unstakeTokens(address _staker, uint256 _tokens) external onlyTR returns (uint256) {
+    function unstakeTokens(address _staker, uint256 _tokens, address _distributeTokenAddress) external onlyTR returns (uint256) {
         require(state == 1);
         require(
             tokenBalances[_staker].sub(_tokens) < tokenBalances[_staker] &&  //check overflow
@@ -288,6 +298,7 @@ contract Project {
         tokenBalances[_staker] -= _tokens;
         tokensStaked -= _tokens;
         weiBal -= weiVal;
+        _distributeTokenAddress.transfer(weiVal);
         return weiVal;
     }
 
@@ -333,7 +344,6 @@ contract Project {
     */
     function transferWeiReward(address _rewardee, uint _reward) external onlyRR {
         require(_reward <= weiBal);
-
         weiBal -= _reward;
         _rewardee.transfer(_reward);
     }
@@ -345,6 +355,8 @@ contract Project {
     @param _value The amount of ether to send
     */
     function returnWei(address _distributeToken, uint _value) external onlyPR {
+        require(_value <= weiBal);
+        weiBal -= _value;
         _distributeToken.transfer(_value);
     }
 

@@ -1,4 +1,5 @@
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.21;
+
 
 library Division {
     function percent(uint256 _numerator, uint256 _denominator, uint256 _precision) public pure returns (uint256) {

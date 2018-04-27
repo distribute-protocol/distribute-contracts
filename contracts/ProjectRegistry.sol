@@ -1,4 +1,4 @@
-pragma solidity 0.4.19;
+pragma solidity ^0.4.21;
 
 import "./library/PLCRVoting.sol";
 /* import "./library/ProxyFactory.sol"; */
@@ -317,7 +317,7 @@ contract ProjectRegistry {
         projects[projectAddress] = true;
         projectsList[projectNonce] = projectAddress;
         projectNonce += 1;
-        LogProjectCreated(projectAddress, _proposer, _cost, _proposerStake);
+        emit LogProjectCreated(projectAddress, _proposer, _cost, _proposerStake);
         return projectAddress;
     }
 
@@ -356,12 +356,11 @@ contract ProjectRegistry {
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
         require(_projectAddress.isStaker(msg.sender) == true);
-
         checkActive(_projectAddress);
-        if (project.state() == 2) {
-            uint256 stakerWeight = _projectAddress.calculateWeightOfAddress(msg.sender);
-            stakedTaskHash(_projectAddress, msg.sender, _taskHash, stakerWeight);
-        }
+        require(project.state() == 2);
+
+        uint256 stakerWeight = _projectAddress.calculateWeightOfAddress(msg.sender);
+        stakedTaskHash(_projectAddress, msg.sender, _taskHash, stakerWeight);
     }
 
     /**
@@ -407,7 +406,9 @@ contract ProjectRegistry {
     function submitHashList(address _projectAddress, bytes32[] _hashes) external {
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
+        require(project.state() == 3);
         require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
+        require(project.hashListSubmitted() == false);
 
         project.setTaskLength(_hashes.length);
         for (uint256 i = 0; i < _hashes.length; i++) {

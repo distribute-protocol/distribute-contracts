@@ -1,4 +1,4 @@
-pragma solidity 0.4.19;
+pragma solidity ^0.4.21;
 
 import "./Project.sol";
 
@@ -15,9 +15,9 @@ contract Task {
     // STATE VARIABLES
     // =====================================================================
 
-    address projectRegistryAddress;
-    address tokenRegistryAddress;
-    address reputationRegistryAddress;
+    address public projectRegistryAddress;
+    address public tokenRegistryAddress;
+    address public reputationRegistryAddress;
 
     bytes32 public taskHash;
     bool public claimable;
@@ -128,6 +128,7 @@ contract Task {
     @param _tokens Amount of tokens to stake on Validation.
     */
     function setValidator(address _validator, uint256 _validationVal, uint256 _tokens) external onlyTR {
+        require(validators[_validator].stake == 0);
         validators[_validator] = Validator(_validationVal, _tokens);
         _validationVal == 1
             ? totalValidateAffirmative += _tokens
@@ -153,7 +154,7 @@ contract Task {
     @dev Only callable by the ProjectRegistry
     @param _passed Boolean describing the validation state the task should be claimable for.
     */
-    function markTaskClaimable(bool _passed) external onlyPR returns(bool) {             // passed only matters in voting
+    function markTaskClaimable(bool _passed) external onlyPR returns (bool) {             // passed only matters in voting
         if (totalValidateAffirmative == 0 || totalValidateNegative == 0) {
             claimable = true;
             if (totalValidateAffirmative > totalValidateNegative) { claimableByRep = true; }
@@ -167,6 +168,22 @@ contract Task {
             }
         }
         return claimableByRep;
+    }
+
+    /**
+    @notice Return the validator status of validator at `_validator`
+    @param _validator Address of validator
+    */
+    function getValidatorStatus(address _validator) external view returns (uint) {
+      return validators[_validator].status;
+    }
+
+    /**
+    @notice Clear the validator stake of validator at `_validator`
+    @param _validator Address of validator
+    */
+    function getValidatorStake(address _validator) external view returns (uint) {
+      return validators[_validator].stake;
     }
 
     /**

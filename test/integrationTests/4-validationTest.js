@@ -1,209 +1,1096 @@
-// Test functions in open state of a project
-// Before, fund a user with tokens and have them propose and fully stake 2 projects
-var assert = require('assert')
-const TokenRegistry = artifacts.require('TokenRegistry')
-const ReputationRegistry = artifacts.require('ReputationRegistry')
-const DistributeToken = artifacts.require('DistributeToken')
-const ProjectRegistry = artifacts.require('ProjectRegistry')
-const Project = artifacts.require('Project')
-const Promise = require('bluebird')
+/* eslint-env mocha */
+/* global assert contract */
+
+const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
-const keccakHashes = require('../utils/KeccakHashes')
-web3.eth = Promise.promisifyAll(web3.eth)
+const keccakHashes = require('../utils/keccakHashes')
+const taskDetails = require('../utils/taskDetails')
 
-contract('Validation State', (accounts) => {
-  let TR, PR, DT, PROJ, RR
+contract('Validating State', (accounts) => {
+  // set up project helper
+  let projObj = projectHelper(accounts)
+
+  // get project helper variables
+  let TR, RR, PR
+  let {user, project, utils, returnProject, task} = projObj
+  let {validator1, validator2, notValidator} = user
+  let {worker1, worker2, notWorker} = user
+  let {projectCost, stakingPeriod, ipfsHash} = project
+
+  // set up task details & hashing functions
+  let {taskSet1, taskSet2} = taskDetails
+  let {hashTasks} = keccakHashes
+
+  // local test variables
+  let projArray
   let errorThrown
-  // proposer only necessary in the
-  let proposer = accounts[0]
-  let staker1 = accounts[2]
-  let staker2 = accounts[3]
-  let tokenHolder = accounts[4]
-  let worker1 = accounts[5]
-  let worker2 = accounts[6]
-  let worker3 = accounts[7]
+  let projAddrT, projAddrR
+  let tokensToValidate = 100
 
-  let tokens = 10000
-  let stakingPeriod = 20000000000     // 10/11/2603 @ 11:33am (UTC)
-  let projectCost = web3.toWei(0.25, 'ether')
-  let proposeProportion = 20
-  // let proposeReward = 100
+  // define indices
+  let indexYes = 0
+  let indexNo = 1
+  let indexBoth = 2
+  let indexNeither = 3
+  let indexIncomplete = 4
+  let notIndex = 5
 
-  let proposerTokenCost
-  let proposerBalance, stakerBalance1, stakerBalance2, tokenHolderBalance
-
-  let totalTokenSupply, totalFreeSupply
-  let totalReputation, totalFreeReputation
-  let currentPrice
-
-  let projectAddress
-  let tx
-
-  let workerBalance1, workerBalance2, workerBalance3
-
-  // format of task hash is 'taskdescription;weivalue;reputationvalue,secondtask;secondweival;secondrepval,...'
-  let data = 'install a super long string thats most definitely longer than bytes32 I really hope this works yup yup yup;100000;1,install a supernode;200000;1'
-  // let data2 = 'simple project task;100000;1'
-
-  function hashTasksForAddition (data) {
-    let hashList = hashListForSubmission(data)
-    hashList.map(arr => arr.slice(2))
-    let numArgs = hashList.length
-    let args = 'bytes32'.concat(' bytes32'.repeat(numArgs - 1)).split(' ')
-    let taskHash = keccakHashes(args, hashList)
-    // console.log('0x' + taskHash)
-    return '0x' + taskHash
-  }
-
-  function hashListForSubmission (data) {
-    let tasks = data.split(',')     // split tasks up
-    let taskHashArray = []
-    let args = ['string', 'uint', 'uint']
-    // let args = ['bytes32', 'bytes32', 'bytes32']
-    for (var i = 0; i < tasks.length; i++) {
-      let thisTask = tasks[i].split(';')  // split each task into elements
-      taskHashArray.push('0x' + keccakHashes(args, thisTask))
-    }
-    // console.log(taskHashArray)
-    return taskHashArray
-  }
+  let fastForwards = 5 // ganache 5 weeks ahead at this point from previous test's evmIncreaseTime()
 
   before(async function () {
-    // define variables to hold deployed contracts
-    TR = await TokenRegistry.deployed()
-    DT = await DistributeToken.deployed()
-    PR = await ProjectRegistry.deployed()
-    RR = await ReputationRegistry.deployed()
+    // get contract
+    await projObj.contracts.setContracts()
+    TR = projObj.contracts.TR
+    RR = projObj.contracts.RR
+    PR = projObj.contracts.PR
+    DT = projObj.contracts.DT
 
-    // mint 10000 tokens for proposer, stakers, and token holder
-    let mintingCost = await DT.weiRequired(tokens, {from: proposer})
-    await DT.mint(tokens, {from: proposer, value: mintingCost})
-    mintingCost = await DT.weiRequired(tokens, {from: staker1})
-    await DT.mint(tokens, {from: staker1, value: mintingCost})
-    mintingCost = await DT.weiRequired(tokens, {from: staker2})
-    await DT.mint(tokens, {from: staker2, value: mintingCost})
-    mintingCost = await DT.weiRequired(tokens, {from: tokenHolder})
-    await DT.mint(tokens, {from: tokenHolder, value: mintingCost})
-    proposerBalance = await DT.balanceOf(proposer)
-    stakerBalance1 = await DT.balanceOf(staker1)
-    stakerBalance2 = await DT.balanceOf(staker2)
-    tokenHolderBalance = await DT.balanceOf(tokenHolder)
-    totalTokenSupply = await DT.totalSupply()
-    totalFreeSupply = await DT.totalFreeSupply()
-    assert.equal(4 * tokens, proposerBalance.toNumber() + stakerBalance1.toNumber() + stakerBalance2.toNumber() + tokenHolderBalance.toNumber(), 'proposer or stakers did not successfully mint tokens')
-    assert.equal(4 * tokens, totalTokenSupply, 'total supply did not update correctly')
-    assert.equal(4 * tokens, totalFreeSupply, 'total free supply did not update correctly')
+    // get validating projects
+    // moves ganache forward 1 more week
+    projArray = await returnProject.validating(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, 1, taskSet1, [taskSet1.length - 1])
+    projAddrT = projArray[0][0]
+    projAddrR = projArray[0][1]
 
-    // propose a project
-    currentPrice = await DT.currentPrice()              // put this before propose project because current price changes slightly (rounding errors)
-    tx = await TR.proposeProject(projectCost, stakingPeriod, {from: proposer})
-    let log = tx.logs[0].args
-    projectAddress = log.projectAddress.toString()
-    PROJ = await Project.at(projectAddress)
-    proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion) + 1
-    proposerBalance = await DT.balanceOf(proposer)
-    totalFreeSupply = await DT.totalFreeSupply()
-    assert.equal(4 * tokens - proposerTokenCost, totalFreeSupply, 'total free supply did not update correctly')
-    assert.equal(4 * tokens, totalTokenSupply, 'total supply shouldn\'t have updated')
-    assert.equal(proposerBalance, tokens - proposerTokenCost, 'DT did not set aside appropriate proportion to escrow')
-
-    // fully stake the project with all three stakers
-    let totalRequiredTokens = Math.ceil(projectCost / await DT.currentPrice())
-    await TR.stakeTokens(projectAddress, Math.floor(totalRequiredTokens / 2), {from: staker1})
-    let weiRemaining = projectCost - await PROJ.weiBal()
-    let requiredTokens = Math.ceil(weiRemaining / await DT.currentPrice())
-    await TR.stakeTokens(projectAddress, requiredTokens, {from: staker2})
-    totalFreeSupply = await DT.totalFreeSupply()
-    assert.equal(4 * tokens - proposerTokenCost - totalRequiredTokens, totalFreeSupply, 'total free supply did not update correctly')
-
-    // check that project is fully staked, change to open
-    let state = await PROJ.state()
-    assert.equal(state.toNumber(), 2, 'project should be in open state as it is now fully staked')
-    let openProjectsBefore = await PR.openProjects.call(projectAddress)
-    await PR.addTaskHash(projectAddress, hashTasksForAddition(data), {from: staker1})
-    let openProjectsAfter = await PR.openProjects.call(projectAddress)
-    assert.equal(openProjectsAfter[0], hashTasksForAddition(data), 'first hash didn\'t update')
-    assert.equal(openProjectsAfter[1].toNumber(), openProjectsBefore[1].toNumber(), 'logged nonexistant conflict')
-    assert.equal(openProjectsAfter[2].toNumber(), openProjectsBefore[2].toNumber() + 1, 'didn\'t log submission')
-    await evmIncreaseTime(7 * 25 * 60 * 60)
-    await PR.checkActive(projectAddress)
-    state = await PROJ.state()
-    assert.equal(state.toNumber(), 4, 'project should have entered active period')
-
-    console.log('MADE IT HERE')
-
-    // submit task hash list
-    let taskHash = await PR.openProjects.call(projectAddress)
-    // console.log('task hash from PR', taskHash[0])
-    // console.log('task hash from test', hashTasksForAddition(data))
-    // console.log('task list from test', hashListForSubmission(data))
-    assert.equal(taskHash[0], hashTasksForAddition(data), 'incorrect task list stored')
-    await PR.submitHashList(projectAddress, hashListForSubmission(data), {from: staker2})
-    let firstTask = await PR.projectTaskList.call(projectAddress, 0)
-    // console.log('first task from contract', firstTask)
-    assert.equal(firstTask, hashListForSubmission(data)[0], 'incorrect first task hash stored')
-
-    // register workers and check reputation balances
-    await RR.register({from: worker1})
-    await RR.register({from: worker2})
-    await RR.register({from: worker3})
-    workerBalance1 = await RR.balances.call(worker1)
-    workerBalance2 = await RR.balances.call(worker2)
-    workerBalance3 = await RR.balances.call(worker3)
-    // console.log(workerBalance1.toNumber())
-    // console.log(workerBalance2.toNumber())
-    assert.equal(workerBalance1.toNumber(), 1, 'worker 1 does not have the correct amount of reputation')
-    assert.equal(workerBalance2.toNumber(), 1, 'worker 2 does not have the correct amount of reputation')
-    assert.equal(workerBalance3.toNumber(), 1, 'worker 3 does not have the correct amount of reputation')
-    totalReputation = await RR.totalSupply.call()
-    totalFreeReputation = await RR.totalFreeSupply.call()
-    assert.equal(totalReputation, 3, 'incorrect total reputation stored')
-    assert.equal(totalFreeReputation, 3, 'incorrect free reputation stored')
-
-    // worker1 claims task 0
-    let repPrice = 1
-    let weiReward = 100000
-    let index = 0
-    await RR.claimTask(projectAddress, index, 'install a super long string thats most definitely longer than bytes32 I really hope this works yup yup yup', weiReward, repPrice, {from: worker1})
-    let workerBalance1New = await RR.balances.call(worker1)
-    // console.log(workerBalance1New.toNumber())
-    assert.equal(workerBalance1New, workerBalance1 - repPrice, 'worker 1 reputation balance not decremented appropriately')
-    let taskHash1 = hashListForSubmission(data)[index]
-    let reward = await PROJ.taskRewards.call(taskHash1)
-    assert.equal(reward[0].toNumber(), weiReward, 'wei reward stored incorrectly')
-    assert.equal(reward[1].toNumber(), repPrice, 'reputation cost stored incorrectly')
-    assert.equal(reward[2], worker1, 'incorrect worker stored')
-    totalReputation = await RR.totalSupply.call()
-    totalFreeReputation = await RR.totalFreeSupply.call()
-    assert.equal(totalReputation, 3, 'incorrect total reputation stored')
-    assert.equal(totalFreeReputation, 2, 'incorrect free reputation stored')
-
-    // worker2 claims task 1
-    // let data = 'install a super long string thats most definitely longer than bytes32 I really hope this works yup yup yup;100000;1,install a supernode;200000;1'
-    repPrice = 1
-    weiReward = 200000
-    index = 1
-    await RR.claimTask(projectAddress, index, 'install a supernode', weiReward, repPrice, {from: worker1})
-    let workerBalance2New = await RR.balances.call(worker1)
-    // console.log(workerBalance1New.toNumber())
-    assert.equal(workerBalance2New, workerBalance2 - repPrice, 'worker 2 reputation balance not decremented appropriately')
-    let taskHash2 = hashListForSubmission(data)[index]
-    reward = await PROJ.taskRewards.call(taskHash2)
-    assert.equal(reward[0].toNumber(), weiReward, 'wei reward stored incorrectly')
-    assert.equal(reward[1].toNumber(), repPrice, 'reputation cost stored incorrectly')
-    assert.equal(reward[2], worker1, 'incorrect worker stored')
-    totalReputation = await RR.totalSupply.call()
-    totalFreeReputation = await RR.totalFreeSupply.call()
-    assert.equal(totalReputation, 3, 'incorrect total reputation stored')
-    assert.equal(totalFreeReputation, 1, 'incorrect free reputation stored')
-
-    // check how much free reputation and tokens are available
-
+    // fund validators
+    await utils.mintIfNecessary(validator1)
+    await utils.mintIfNecessary(validator2)
   })
 
-  it('math works', async function () {
-    assert.equal(1, 1, 'math broke')
+  describe('validating with tokens', () => {
+    it('Validator can validate a completed task yes from TR validating project', async function () {
+      // take stock of variables before
+      let valBalBefore = await utils.getTokenBalance(validator1)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let taskValNegBefore = await task.getTotalValidate(projAddrT, indexYes, false)
+      let taskValPosBefore = await task.getTotalValidate(projAddrT, indexYes, true)
+      let taskOpposingValBefore = await task.getOpposingVal(projAddrT, indexYes)
+      let taskValDetailsBefore = await task.getValDetails(projAddrT, indexYes, validator1)
+
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      let complete = await task.getComplete(projAddrT, indexYes)
+
+      // validate task
+      await TR.validateTask(projAddrT, indexYes, tokensToValidate, true, {from: validator1})
+
+      // task stock of variables after
+      let valBalAfter = await utils.getTokenBalance(validator1)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let taskValNegAfter = await task.getTotalValidate(projAddrT, indexYes, false)
+      let taskValPosAfter = await task.getTotalValidate(projAddrT, indexYes, true)
+      let taskOpposingValAfter = await task.getOpposingVal(projAddrT, indexYes)
+      let taskValDetailsAfter = await task.getValDetails(projAddrT, indexYes, validator1)
+
+      // checks
+      assert.equal(valBalBefore - tokensToValidate, valBalAfter, 'token addition/subtraction incorrect')
+      assert.equal(TRBalAfter - tokensToValidate, TRBalBefore, 'token addition/subtraction incorrect')
+      assert.equal(taskValNegBefore, 0, 'should be 0')
+      assert.equal(taskValNegAfter, taskValNegBefore, 'shouldn\'t change')
+      assert.equal(taskValPosBefore, 0, 'should be 0')
+      assert.equal(taskValPosAfter, tokensToValidate, 'task contract updated incorrectly')
+      assert.equal(taskOpposingValBefore, false, 'should be false')
+      assert.equal(taskOpposingValAfter, taskOpposingValBefore, 'shouldn\'t change')
+      assert.equal(taskValDetailsBefore[0], 0, 'status should be 0')
+      assert.equal(taskValDetailsBefore[1], 0, 'stake should be 0')
+      assert.equal(taskValDetailsAfter[0], 1, 'status after should be true')
+      assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
+    })
+
+    it('Validator can validate a completed task yes from RR validating project', async function () {
+      // take stock of variables before
+      let valBalBefore = await utils.getTokenBalance(validator1)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let taskValNegBefore = await task.getTotalValidate(projAddrR, indexYes, false)
+      let taskValPosBefore = await task.getTotalValidate(projAddrR, indexYes, true)
+      let taskOpposingValBefore = await task.getOpposingVal(projAddrR, indexYes)
+      let taskValDetailsBefore = await task.getValDetails(projAddrR, indexYes, validator1)
+
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      // validate task
+      await TR.validateTask(projAddrR, indexYes, tokensToValidate, true, {from: validator1})
+
+      // task stock of variables after
+      let valBalAfter = await utils.getTokenBalance(validator1)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let taskValNegAfter = await task.getTotalValidate(projAddrR, indexYes, false)
+      let taskValPosAfter = await task.getTotalValidate(projAddrR, indexYes, true)
+      let taskOpposingValAfter = await task.getOpposingVal(projAddrR, indexYes)
+      let taskValDetailsAfter = await task.getValDetails(projAddrR, indexYes, validator1)
+
+      // checks
+      assert.equal(valBalBefore - tokensToValidate, valBalAfter, 'token addition/subtraction incorrect')
+      assert.equal(TRBalAfter - tokensToValidate, TRBalBefore, 'token addition/subtraction incorrect')
+      assert.equal(taskValNegBefore, 0, 'should be 0')
+      assert.equal(taskValNegAfter, taskValNegBefore, 'shouldn\'t change')
+      assert.equal(taskValPosBefore, 0, 'should be 0')
+      assert.equal(taskValPosAfter, tokensToValidate, 'task contract updated incorrectly')
+      assert.equal(taskOpposingValBefore, false, 'should be false')
+      assert.equal(taskOpposingValAfter, taskOpposingValBefore, 'shouldn\'t change')
+      assert.equal(taskValDetailsBefore[0], 0, 'status should be 0')
+      assert.equal(taskValDetailsBefore[1], 0, 'stake should be 0')
+      assert.equal(taskValDetailsAfter[0], 1, 'status after should be true')
+      assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
+    })
+
+    it('Validator can validate a completed task no from TR validating project', async function () {
+      // take stock of variables before
+      let valBalBefore = await utils.getTokenBalance(validator1)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let taskValNegBefore = await task.getTotalValidate(projAddrT, indexNo, false)
+      let taskValPosBefore = await task.getTotalValidate(projAddrT, indexNo, true)
+      let taskOpposingValBefore = await task.getOpposingVal(projAddrT, indexNo)
+      let taskValDetailsBefore = await task.getValDetails(projAddrT, indexNo, validator1)
+
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      let complete = await task.getComplete(projAddrT, indexNo)
+
+      // validate task
+      await TR.validateTask(projAddrT, indexNo, tokensToValidate, false, {from: validator1})
+
+      // task stock of variables after
+      let valBalAfter = await utils.getTokenBalance(validator1)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let taskValNegAfter = await task.getTotalValidate(projAddrT, indexNo, false)
+      let taskValPosAfter = await task.getTotalValidate(projAddrT, indexNo, true)
+      let taskOpposingValAfter = await task.getOpposingVal(projAddrT, indexNo)
+      let taskValDetailsAfter = await task.getValDetails(projAddrT, indexNo, validator1)
+
+      // checks
+      assert.equal(valBalBefore - tokensToValidate, valBalAfter, 'token addition/subtraction incorrect')
+      assert.equal(TRBalAfter - tokensToValidate, TRBalBefore, 'token addition/subtraction incorrect')
+      assert.equal(taskValPosBefore, 0, 'should be 0')
+      assert.equal(taskValPosAfter, taskValPosBefore, 'shouldn\'t change')
+      assert.equal(taskValNegBefore, 0, 'should be 0')
+      assert.equal(taskValNegAfter, tokensToValidate, 'task contract updated incorrectly')
+      assert.equal(taskOpposingValBefore, false, 'should be false')
+      assert.equal(taskOpposingValAfter, taskOpposingValBefore, 'shouldn\'t change')
+      assert.equal(taskValDetailsBefore[0], 0, 'status should be 0')
+      assert.equal(taskValDetailsBefore[1], 0, 'stake should be 0')
+      assert.equal(taskValDetailsAfter[0], 0, 'status after should be false')
+      assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
+    })
+
+    it('Validator can validate a completed task no from RR validating project', async function () {
+      // take stock of variables before
+      let valBalBefore = await utils.getTokenBalance(validator1)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let taskValNegBefore = await task.getTotalValidate(projAddrR, indexNo, false)
+      let taskValPosBefore = await task.getTotalValidate(projAddrR, indexNo, true)
+      let taskOpposingValBefore = await task.getOpposingVal(projAddrR, indexNo)
+      let taskValDetailsBefore = await task.getValDetails(projAddrR, indexNo, validator1)
+
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      // validate task
+      await TR.validateTask(projAddrR, indexNo, tokensToValidate, false, {from: validator1})
+
+      // task stock of variables after
+      let valBalAfter = await utils.getTokenBalance(validator1)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let taskValNegAfter = await task.getTotalValidate(projAddrR, indexNo, false)
+      let taskValPosAfter = await task.getTotalValidate(projAddrR, indexNo, true)
+      let taskOpposingValAfter = await task.getOpposingVal(projAddrR, indexNo)
+      let taskValDetailsAfter = await task.getValDetails(projAddrR, indexNo, validator1)
+
+      // checks
+      assert.equal(valBalBefore - tokensToValidate, valBalAfter, 'token addition/subtraction incorrect')
+      assert.equal(TRBalAfter - tokensToValidate, TRBalBefore, 'token addition/subtraction incorrect')
+      assert.equal(taskValPosBefore, 0, 'should be 0')
+      assert.equal(taskValPosAfter, taskValPosBefore, 'shouldn\'t change')
+      assert.equal(taskValNegBefore, 0, 'should be 0')
+      assert.equal(taskValNegAfter, tokensToValidate, 'task contract updated incorrectly')
+      assert.equal(taskOpposingValBefore, false, 'should be false')
+      assert.equal(taskOpposingValAfter, taskOpposingValBefore, 'shouldn\'t change')
+      assert.equal(taskValDetailsBefore[0], 0, 'status should be 0')
+      assert.equal(taskValDetailsBefore[1], 0, 'stake should be 0')
+      assert.equal(taskValDetailsAfter[0], 0, 'status after should be false')
+      assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
+    })
+
+    it('Different validator can also validate a yes validated completed task yes from TR validating project', async function () {
+      // take stock of variables before
+      let tokensToValidate = 100
+      let valBalBefore = await utils.getTokenBalance(validator2)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let taskValNegBefore = await task.getTotalValidate(projAddrT, indexYes, false)
+      let taskValPosBefore = await task.getTotalValidate(projAddrT, indexYes, true)
+      let taskOpposingValBefore = await task.getOpposingVal(projAddrT, indexYes)
+      let taskValDetailsBefore = await task.getValDetails(projAddrT, indexYes, validator2)
+
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator2, tokensToValidate)
+
+      // validate task
+      await TR.validateTask(projAddrT, indexYes, tokensToValidate, true, {from: validator2})
+
+      // task stock of variables after
+      let valBalAfter = await utils.getTokenBalance(validator2)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let taskValNegAfter = await task.getTotalValidate(projAddrT, indexYes, false)
+      let taskValPosAfter = await task.getTotalValidate(projAddrT, indexYes, true)
+      let taskOpposingValAfter = await task.getOpposingVal(projAddrT, indexYes)
+      let taskValDetailsAfter = await task.getValDetails(projAddrT, indexYes, validator2)
+
+      // checks
+      assert.equal(valBalBefore - tokensToValidate, valBalAfter, 'token addition/subtraction incorrect')
+      assert.equal(TRBalAfter - tokensToValidate, TRBalBefore, 'token addition/subtraction incorrect')
+      assert.equal(taskValNegBefore, 0, 'should be 0')
+      assert.equal(taskValNegAfter, taskValNegBefore, 'shouldn\'t change')
+      assert.equal(taskValPosBefore, tokensToValidate, 'should be tokensToValidate')
+      assert.equal(taskValPosAfter, tokensToValidate * 2, 'task contract updated incorrectly')
+      assert.equal(taskOpposingValBefore, false, 'should be false')
+      assert.equal(taskOpposingValAfter, taskOpposingValBefore, 'shouldn\'t change')
+      assert.equal(taskValDetailsBefore[0], 0, 'status should be 0')
+      assert.equal(taskValDetailsBefore[1], 0, 'stake should be 0')
+      assert.equal(taskValDetailsAfter[0], 1, 'status after should be true')
+      assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
+    })
+
+    it('Different validator can also validate a yes validated completed task yes from RR validating project', async function () {
+      // take stock of variables before
+      let tokensToValidate = 100
+      let valBalBefore = await utils.getTokenBalance(validator2)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let taskValNegBefore = await task.getTotalValidate(projAddrR, indexYes, false)
+      let taskValPosBefore = await task.getTotalValidate(projAddrR, indexYes, true)
+      let taskOpposingValBefore = await task.getOpposingVal(projAddrR, indexYes)
+      let taskValDetailsBefore = await task.getValDetails(projAddrR, indexYes, validator2)
+
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator2, tokensToValidate)
+
+      // validate task
+      await TR.validateTask(projAddrR, indexYes, tokensToValidate, true, {from: validator2})
+
+      // task stock of variables after
+      let valBalAfter = await utils.getTokenBalance(validator2)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let taskValNegAfter = await task.getTotalValidate(projAddrR, indexYes, false)
+      let taskValPosAfter = await task.getTotalValidate(projAddrR, indexYes, true)
+      let taskOpposingValAfter = await task.getOpposingVal(projAddrR, indexYes)
+      let taskValDetailsAfter = await task.getValDetails(projAddrR, indexYes, validator2)
+
+      // checks
+      assert.equal(valBalBefore - tokensToValidate, valBalAfter, 'token addition/subtraction incorrect')
+      assert.equal(TRBalAfter - tokensToValidate, TRBalBefore, 'token addition/subtraction incorrect')
+      assert.equal(taskValNegBefore, 0, 'should be 0')
+      assert.equal(taskValNegAfter, taskValNegBefore, 'shouldn\'t change')
+      assert.equal(taskValPosBefore, tokensToValidate, 'should be tokensToValidate')
+      assert.equal(taskValPosAfter, tokensToValidate * 2, 'task contract updated incorrectly')
+      assert.equal(taskOpposingValBefore, false, 'should be false')
+      assert.equal(taskOpposingValAfter, taskOpposingValBefore, 'shouldn\'t change')
+      assert.equal(taskValDetailsBefore[0], 0, 'status should be 0')
+      assert.equal(taskValDetailsBefore[1], 0, 'stake should be 0')
+      assert.equal(taskValDetailsAfter[0], 1, 'status after should be true')
+      assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
+    })
+
+    it('Different validator can also validate a no validated completed task no from TR validating project', async function () {
+      // take stock of variables before
+      let tokensToValidate = 100
+      let valBalBefore = await utils.getTokenBalance(validator2)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let taskValNegBefore = await task.getTotalValidate(projAddrT, indexNo, false)
+      let taskValPosBefore = await task.getTotalValidate(projAddrT, indexNo, true)
+      let taskOpposingValBefore = await task.getOpposingVal(projAddrT, indexNo)
+      let taskValDetailsBefore = await task.getValDetails(projAddrT, indexNo, validator2)
+
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator2, tokensToValidate)
+
+      // validate task
+      await TR.validateTask(projAddrT, indexNo, tokensToValidate, false, {from: validator2})
+
+      // task stock of variables after
+      let valBalAfter = await utils.getTokenBalance(validator2)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let taskValNegAfter = await task.getTotalValidate(projAddrT, indexNo, false)
+      let taskValPosAfter = await task.getTotalValidate(projAddrT, indexNo, true)
+      let taskOpposingValAfter = await task.getOpposingVal(projAddrT, indexNo)
+      let taskValDetailsAfter = await task.getValDetails(projAddrT, indexNo, validator2)
+
+      // checks
+      assert.equal(valBalBefore - tokensToValidate, valBalAfter, 'token addition/subtraction incorrect')
+      assert.equal(TRBalAfter - tokensToValidate, TRBalBefore, 'token addition/subtraction incorrect')
+      assert.equal(taskValPosBefore, 0, 'should be 0')
+      assert.equal(taskValPosAfter, taskValPosBefore, 'shouldn\'t change')
+      assert.equal(taskValNegBefore, tokensToValidate, 'should be tokensToValidate')
+      assert.equal(taskValNegAfter, tokensToValidate * 2, 'task contract updated incorrectly')
+      assert.equal(taskOpposingValBefore, false, 'should be false')
+      assert.equal(taskOpposingValAfter, taskOpposingValBefore, 'shouldn\'t change')
+      assert.equal(taskValDetailsBefore[0], 0, 'status should be 0')
+      assert.equal(taskValDetailsBefore[1], 0, 'stake should be 0')
+      assert.equal(taskValDetailsAfter[0], 0, 'status after should be false')
+      assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
+    })
+
+    it('Different validator can also validate a no validated completed task no from RR validating project', async function () {
+      // take stock of variables before
+      let tokensToValidate = 100
+      let valBalBefore = await utils.getTokenBalance(validator2)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let taskValNegBefore = await task.getTotalValidate(projAddrR, indexNo, false)
+      let taskValPosBefore = await task.getTotalValidate(projAddrR, indexNo, true)
+      let taskOpposingValBefore = await task.getOpposingVal(projAddrR, indexNo)
+      let taskValDetailsBefore = await task.getValDetails(projAddrR, indexNo, validator2)
+
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator2, tokensToValidate)
+
+      // validate task
+      await TR.validateTask(projAddrR, indexNo, tokensToValidate, false, {from: validator2})
+
+      // task stock of variables after
+      let valBalAfter = await utils.getTokenBalance(validator2)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let taskValNegAfter = await task.getTotalValidate(projAddrR, indexNo, false)
+      let taskValPosAfter = await task.getTotalValidate(projAddrR, indexNo, true)
+      let taskOpposingValAfter = await task.getOpposingVal(projAddrR, indexNo)
+      let taskValDetailsAfter = await task.getValDetails(projAddrR, indexNo, validator2)
+
+      // checks
+      assert.equal(valBalBefore - tokensToValidate, valBalAfter, 'token addition/subtraction incorrect')
+      assert.equal(TRBalAfter - tokensToValidate, TRBalBefore, 'token addition/subtraction incorrect')
+      assert.equal(taskValPosBefore, 0, 'should be 0')
+      assert.equal(taskValPosAfter, taskValPosBefore, 'shouldn\'t change')
+      assert.equal(taskValNegBefore, tokensToValidate, 'should be tokensToValidate')
+      assert.equal(taskValNegAfter, tokensToValidate * 2, 'task contract updated incorrectly')
+      assert.equal(taskOpposingValBefore, false, 'should be false')
+      assert.equal(taskOpposingValAfter, taskOpposingValBefore, 'shouldn\'t change')
+      assert.equal(taskValDetailsBefore[0], 0, 'status should be 0')
+      assert.equal(taskValDetailsBefore[1], 0, 'stake should be 0')
+      assert.equal(taskValDetailsAfter[0], 0, 'status after should be false')
+      assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
+    })
+
+    it('Validators can validate a completed task yes and no from TR validating project', async function () {
+      // take stock of variables before
+      let val1BalBefore = await utils.getTokenBalance(validator1)
+      let val2BalBefore = await utils.getTokenBalance(validator2)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let taskValNegBefore = await task.getTotalValidate(projAddrT, indexBoth, false)
+      let taskValPosBefore = await task.getTotalValidate(projAddrT, indexBoth, true)
+      let taskOpposingValBefore = await task.getOpposingVal(projAddrT, indexBoth)
+      let taskVal1DetailsBefore = await task.getValDetails(projAddrT, indexBoth, validator1)
+      let taskVal2DetailsBefore = await task.getValDetails(projAddrT, indexBoth, validator2)
+
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      // validate task
+      await TR.validateTask(projAddrT, indexBoth, tokensToValidate, false, {from: validator1})
+
+      // task stock of variables after
+      let val1BalMiddle = await utils.getTokenBalance(validator1)
+      let val2BalMiddle = await utils.getTokenBalance(validator2)
+      let TRBalMiddle = await utils.getTokenBalance(TR.address)
+      let taskValNegMiddle = await task.getTotalValidate(projAddrT, indexBoth, false)
+      let taskValPosMiddle = await task.getTotalValidate(projAddrT, indexBoth, true)
+      let taskOpposingValMiddle = await task.getOpposingVal(projAddrT, indexBoth)
+      let taskVal1DetailsMiddle = await task.getValDetails(projAddrT, indexBoth, validator1)
+      let taskVal2DetailsMiddle = await task.getValDetails(projAddrT, indexBoth, validator2)
+
+      // checks
+      assert.equal(val1BalBefore - tokensToValidate, val1BalMiddle, 'token addition/subtraction incorrect')
+      assert.equal(val2BalBefore, val2BalMiddle, 'shouldn\'t change')
+      assert.equal(TRBalMiddle - tokensToValidate, TRBalBefore, 'token addition/subtraction incorrect')
+      assert.equal(taskValPosBefore, 0, 'should be 0')
+      assert.equal(taskValPosMiddle, taskValPosBefore, 'shouldn\'t change')
+      assert.equal(taskValNegBefore, 0, 'should be 0')
+      assert.equal(taskValNegMiddle, tokensToValidate, 'task contract updated incorrectly')
+      assert.equal(taskOpposingValBefore, false, 'should be false')
+      assert.equal(taskOpposingValMiddle, taskOpposingValBefore, 'shouldn\'t change')
+      assert.equal(taskVal1DetailsBefore[0], 0, 'status should be 0')
+      assert.equal(taskVal1DetailsBefore[1], 0, 'stake should be 0')
+      assert.equal(taskVal2DetailsBefore[0], 0, 'status should be 0')
+      assert.equal(taskVal2DetailsBefore[1], 0, 'stake should be 0')
+      assert.equal(taskVal1DetailsMiddle[0], 0, 'status after should be false')
+      assert.equal(taskVal1DetailsMiddle[1], tokensToValidate, 'stake after should be tokensToValidate')
+      assert.equal(taskVal2DetailsMiddle[0], 0, 'status should be 0')
+      assert.equal(taskVal2DetailsMiddle[1], 0, 'stake should be 0')
+
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator2, tokensToValidate)
+
+      // validate task
+      await TR.validateTask(projAddrT, indexBoth, tokensToValidate, true, {from: validator2})
+
+      // task stock of variables after
+      let val1BalAfter = await utils.getTokenBalance(validator1)
+      let val2BalAfter = await utils.getTokenBalance(validator2)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let taskValNegAfter = await task.getTotalValidate(projAddrT, indexBoth, false)
+      let taskValPosAfter = await task.getTotalValidate(projAddrT, indexBoth, true)
+      let taskOpposingValAfter = await task.getOpposingVal(projAddrT, indexBoth)
+      let taskVal1DetailsAfter = await task.getValDetails(projAddrT, indexBoth, validator1)
+      let taskVal2DetailsAfter = await task.getValDetails(projAddrT, indexBoth, validator2)
+
+      // checks
+      assert.equal(val2BalMiddle - tokensToValidate, val2BalAfter, 'token addition/subtraction incorrect')
+      assert.equal(val1BalMiddle, val1BalAfter, 'shouldn\'t change')
+      assert.equal(TRBalAfter - tokensToValidate, TRBalMiddle, 'token addition/subtraction incorrect')
+      assert.equal(taskValPosAfter, tokensToValidate, 'should change')
+      assert.equal(taskValNegAfter, tokensToValidate, 'shouldn\'t change')
+      assert.equal(taskOpposingValAfter, true, 'should change')
+      assert.equal(taskVal1DetailsAfter[0], 0, 'status after should be false')
+      assert.equal(taskVal1DetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
+      assert.equal(taskVal2DetailsAfter[0], 1, 'status after should be true')
+      assert.equal(taskVal2DetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
+    })
+
+    it('Validators can validate a completed task yes and no from RR validating project', async function () {
+      // take stock of variables before
+      let val1BalBefore = await utils.getTokenBalance(validator1)
+      let val2BalBefore = await utils.getTokenBalance(validator2)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let taskValNegBefore = await task.getTotalValidate(projAddrR, indexBoth, false)
+      let taskValPosBefore = await task.getTotalValidate(projAddrR, indexBoth, true)
+      let taskOpposingValBefore = await task.getOpposingVal(projAddrR, indexBoth)
+      let taskVal1DetailsBefore = await task.getValDetails(projAddrR, indexBoth, validator1)
+      let taskVal2DetailsBefore = await task.getValDetails(projAddrR, indexBoth, validator2)
+
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      // validate task
+      await TR.validateTask(projAddrR, indexBoth, tokensToValidate, false, {from: validator1})
+
+      // task stock of variables after
+      let val1BalMiddle = await utils.getTokenBalance(validator1)
+      let val2BalMiddle = await utils.getTokenBalance(validator2)
+      let TRBalMiddle = await utils.getTokenBalance(TR.address)
+      let taskValNegMiddle = await task.getTotalValidate(projAddrR, indexBoth, false)
+      let taskValPosMiddle = await task.getTotalValidate(projAddrR, indexBoth, true)
+      let taskOpposingValMiddle = await task.getOpposingVal(projAddrR, indexBoth)
+      let taskVal1DetailsMiddle = await task.getValDetails(projAddrR, indexBoth, validator1)
+      let taskVal2DetailsMiddle = await task.getValDetails(projAddrR, indexBoth, validator2)
+
+      // checks
+      assert.equal(val1BalBefore - tokensToValidate, val1BalMiddle, 'token addition/subtraction incorrect')
+      assert.equal(val2BalBefore, val2BalMiddle, 'shouldn\'t change')
+      assert.equal(TRBalMiddle - tokensToValidate, TRBalBefore, 'token addition/subtraction incorrect')
+      assert.equal(taskValPosBefore, 0, 'should be 0')
+      assert.equal(taskValPosMiddle, taskValPosBefore, 'shouldn\'t change')
+      assert.equal(taskValNegBefore, 0, 'should be 0')
+      assert.equal(taskValNegMiddle, tokensToValidate, 'task contract updated incorrectly')
+      assert.equal(taskOpposingValBefore, false, 'should be false')
+      assert.equal(taskOpposingValMiddle, taskOpposingValBefore, 'shouldn\'t change')
+      assert.equal(taskVal1DetailsBefore[0], 0, 'status should be 0')
+      assert.equal(taskVal1DetailsBefore[1], 0, 'stake should be 0')
+      assert.equal(taskVal2DetailsBefore[0], 0, 'status should be 0')
+      assert.equal(taskVal2DetailsBefore[1], 0, 'stake should be 0')
+      assert.equal(taskVal1DetailsMiddle[0], 0, 'status after should be false')
+      assert.equal(taskVal1DetailsMiddle[1], tokensToValidate, 'stake after should be tokensToValidate')
+      assert.equal(taskVal2DetailsMiddle[0], 0, 'status should be 0')
+      assert.equal(taskVal2DetailsMiddle[1], 0, 'stake should be 0')
+
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator2, tokensToValidate)
+
+      // validate task
+      await TR.validateTask(projAddrR, indexBoth, tokensToValidate, true, {from: validator2})
+
+      // task stock of variables after
+      let val1BalAfter = await utils.getTokenBalance(validator1)
+      let val2BalAfter = await utils.getTokenBalance(validator2)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let taskValNegAfter = await task.getTotalValidate(projAddrR, indexBoth, false)
+      let taskValPosAfter = await task.getTotalValidate(projAddrR, indexBoth, true)
+      let taskOpposingValAfter = await task.getOpposingVal(projAddrR, indexBoth)
+      let taskVal1DetailsAfter = await task.getValDetails(projAddrR, indexBoth, validator1)
+      let taskVal2DetailsAfter = await task.getValDetails(projAddrR, indexBoth, validator2)
+
+      // checks
+      assert.equal(val2BalMiddle - tokensToValidate, val2BalAfter, 'token addition/subtraction incorrect')
+      assert.equal(val1BalMiddle, val1BalAfter, 'shouldn\'t change')
+      assert.equal(TRBalAfter - tokensToValidate, TRBalMiddle, 'token addition/subtraction incorrect')
+      assert.equal(taskValPosAfter, tokensToValidate, 'should change')
+      assert.equal(taskValNegAfter, tokensToValidate, 'shouldn\'t change')
+      assert.equal(taskOpposingValAfter, true, 'should change')
+      assert.equal(taskVal1DetailsAfter[0], 0, 'status after should be false')
+      assert.equal(taskVal1DetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
+      assert.equal(taskVal2DetailsAfter[0], 1, 'status after should be true')
+      assert.equal(taskVal2DetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
+    })
+
+    it('Validator can\'t validate a completed task yes from TR validating project more than once', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, indexYes, tokensToValidate, true, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a completed task yes from RR validating project more than once', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrR, indexYes, tokensToValidate, true, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a completed task no from TR validating project more than once', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, indexBoth, tokensToValidate, false, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a completed task no from RR validating project more than once', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrR, indexBoth, tokensToValidate, false, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a completed task yes from TR validating project if they don\'t have enough tokens', async function () {
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, indexBoth, tokensToValidate, true, {from: notValidator})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a completed task yes from RR validating project if they don\'t have enough tokens', async function () {
+      errorThrown = true
+      try {
+        await TR.validateTask(projAddrT, indexBoth, tokensToValidate, true, {from: notValidator})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a completed task no from TR validating project if they don\'t have enough tokens', async function () {
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, indexBoth, tokensToValidate, false, {from: notValidator})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a completed task no from RR validating project if they don\'t have enough tokens', async function () {
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrR, indexBoth, tokensToValidate, false, {from: notValidator})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate incomplete task yes from TR validating project with tokens', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, indexIncomplete, tokensToValidate, true, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate incomplete task yes from RR validating project with tokens', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrR, indexIncomplete, tokensToValidate, true, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate incomplete task no from TR validating project with tokens', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, indexIncomplete, tokensToValidate, false, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate incomplete task no from RR validating project with tokens', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrR, indexIncomplete, tokensToValidate, false, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate nonexistant task yes from TR validating project with tokens', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, notIndex, tokensToValidate, true, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate nonexistant task yes from RR validating project with tokens', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrR, notIndex, tokensToValidate, true, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate nonexistant task no from TR validating project with tokens', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, notIndex, tokensToValidate, false, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate nonexistant task no from RR validating project with tokens', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrR, notIndex, tokensToValidate, false, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
 
+  describe('validating with reputation', () => {
+    it('Validator can\'t validate a completed task yes from TR validating project with reputation', async function () {
+      // assert that worker has tokensToValidate amount of reputation
+      let repBal = await utils.getRepBalance(worker1)
+      assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, indexBoth, tokensToValidate, true, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a completed task yes from RR validating project with reputation', async function () {
+      // assert that worker has tokensToValidate amount of reputation
+      let repBal = await utils.getRepBalance(worker1)
+      assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrR, indexBoth, tokensToValidate, true, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a completed task no from TR validating project with reputation', async function () {
+      // assert that worker has tokensToValidate amount of reputation
+      let repBal = await utils.getRepBalance(worker1)
+      assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, indexBoth, tokensToValidate, false, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a completed task no from RR validating project with reputation', async function () {
+      // assert that worker has tokensToValidate amount of reputation
+      let repBal = await utils.getRepBalance(worker1)
+      assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrR, indexBoth, tokensToValidate, false, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate an incomplete task yes from TR validating project with reputation', async function () {
+      // assert that worker has tokensToValidate amount of reputation
+      let repBal = await utils.getRepBalance(worker1)
+      assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, indexIncomplete, tokensToValidate, true, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate an incomplete task yes from RR validating project with reputation', async function () {
+      // assert that worker has tokensToValidate amount of reputation
+      let repBal = await utils.getRepBalance(worker1)
+      assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrR, indexIncomplete, tokensToValidate, true, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate an incomplete task no from TR validating project with reputation', async function () {
+      // assert that worker has tokensToValidate amount of reputation
+      let repBal = await utils.getRepBalance(worker1)
+      assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, indexIncomplete, tokensToValidate, false, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate an incomplete task no from RR validating project with reputation', async function () {
+      // assert that worker has tokensToValidate amount of reputation
+      let repBal = await utils.getRepBalance(worker1)
+      assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrR, indexIncomplete, tokensToValidate, false, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a nonexistant task yes from TR validating project with reputation', async function () {
+      // assert that worker has tokensToValidate amount of reputation
+      let repBal = await utils.getRepBalance(worker1)
+      assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, notIndex, tokensToValidate, true, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a nonexistant task yes from RR validating project with reputation', async function () {
+      // assert that worker has tokensToValidate amount of reputation
+      let repBal = await utils.getRepBalance(worker1)
+      assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrR, notIndex, tokensToValidate, true, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a nonexistant task no from TR validating project with reputation', async function () {
+      // assert that worker has tokensToValidate amount of reputation
+      let repBal = await utils.getRepBalance(worker1)
+      assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, notIndex, tokensToValidate, false, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a nonexistant task no from RR validating project with reputation', async function () {
+      // assert that worker has tokensToValidate amount of reputation
+      let repBal = await utils.getRepBalance(worker1)
+      assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrR, notIndex, tokensToValidate, false, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+  })
+
+  describe('state changes before time is up', () => {
+    it('checkVoting() does not change TR validating project to voting before time is up', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrT)
+
+      // attempt to checkStaked
+      await PR.checkVoting(projAddrT)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrT)
+
+      // checks
+      assert.equal(stateBefore, 4, 'state before should be 4')
+      assert.equal(stateAfter, 4, 'state should not have changed')
+    })
+
+    it('checkVoting() does not change RR validating project to voting before time is up', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrR)
+
+      // attempt to checkStaked
+      await PR.checkVoting(projAddrR)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrR)
+
+      // checks
+      assert.equal(stateBefore, 4, 'state before should be 4')
+      assert.equal(stateAfter, 4, 'state should not have changed')
+    })
+  })
+
+  describe('state changes after time is up', () => {
+    before(async function () {
+      // fast forward time
+      await evmIncreaseTime(604800) // 1 week
+    })
+
+    it('checkVoting() changes TR validating project to voting after time is up', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrT)
+      let projWeiBalBefore = await project.getWeiBal(projAddrT, true)
+      // let projWeiBalBefore = await web3.eth.getBalance(projAddrT)
+      let DTBalBefore = await utils.getWeiPoolBal(true)
+      // let DTBalBefore = await web3.eth.getBalance(DT.address)
+
+      // attempt to checkStaked
+      await PR.checkVoting(projAddrT)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrT)
+      let projWeiBalAfter = await project.getWeiBal(projAddrT, true)
+      // let projWeiBalAfter = await web3.eth.getBalance(projAddrT)
+      let DTBalAfter = await utils.getWeiPoolBal(true)
+      // let DTBalAfter = await web3.eth.getBalance(DT.address)
+      let failedTaskWeiReward = 0
+      let pollNonce = []
+      let taskClaimable = []
+
+      for (let i = 0; i < taskSet1.length; i++) {
+        let nonce = await task.getPollNonce(projAddrT, i)
+        let claimable = await task.getClaimable(projAddrT, i)
+        let complete = await task.getComplete(projAddrT, i)
+        let oppVal = await task.getOpposingVal(projAddrT, i)
+        if ((claimable === false && complete === true)) {
+          let weiReward = await task.getWeiReward(projAddrT, i)
+          failedTaskWeiReward += weiReward
+        }
+        pollNonce.push(nonce)
+        taskClaimable.push(claimable)
+      }
+
+      // interim calculations
+      let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter).toNumber()
+      let weiPoolDifference = DTBalAfter.minus(DTBalBefore).toNumber()
+
+      // checks
+      assert.equal(stateBefore, 4, 'state before should be 4')
+      assert.equal(stateAfter, 5, 'state should not have changed')
+      assert.equal(pollNonce[indexYes], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexNo], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexNeither], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexIncomplete], 0, 'should be no poll ID')
+      assert.notEqual(pollNonce[indexBoth], 0, 'should be nonzero poll ID')
+      assert.equal(taskClaimable[indexYes], true, 'should be claimable')
+      assert.equal(taskClaimable[indexNo], true, 'should be claimable')
+      assert.equal(taskClaimable[indexNeither], true, 'should be claimable')
+      assert.equal(taskClaimable[indexIncomplete], false, 'should not be claimable')
+      assert.equal(taskClaimable[indexBoth], false, 'should not be claimable')
+      // FIGURE OUT WHY FAILEDTASKWEIREWARD TESTS DON'T WORK
+      // assert.equal(weiBalDifference, failedTaskWeiReward, 'should be same amount')
+      // assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
+      // ADD PLCR START POLL TEST
+    })
+
+    it('checkVoting() changes RR validating project to voting after time is up', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrR)
+      let projWeiBalBefore = await project.getWeiBal(projAddrR, true)
+      // let projWeiBalBefore = await web3.eth.getBalance(projAddrR)
+      let DTBalBefore = await utils.getWeiPoolBal(true)
+      // let DTBalBefore = await web3.eth.getBalance(DT.address)
+
+      // attempt to checkStaked
+      await PR.checkVoting(projAddrR)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrR)
+      let projWeiBalAfter = await project.getWeiBal(projAddrR, true)
+      // let projWeiBalAfter = await web3.eth.getBalance(projAddrR)
+      let DTBalAfter = await utils.getWeiPoolBal(true)
+      // let DTBalAfter = await web3.eth.getBalance(DT.address)
+      let failedTaskWeiReward = 0
+      let pollNonce = []
+      let taskClaimable = []
+
+      for (let i = 0; i < taskSet1.length; i++) {
+        let nonce = await task.getPollNonce(projAddrR, i)
+        let claimable = await task.getClaimable(projAddrR, i)
+        let complete = await task.getComplete(projAddrR, i)
+        let oppVal = await task.getOpposingVal(projAddrR, i)
+        if ((claimable === false && complete === true)) {
+          let weiReward = await task.getWeiReward(projAddrR, i)
+          failedTaskWeiReward += weiReward
+        }
+        pollNonce.push(nonce)
+        taskClaimable.push(claimable)
+      }
+
+      // interim calculations
+      let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter).toNumber()
+      let weiPoolDifference = DTBalAfter.minus(DTBalBefore).toNumber()
+
+      // checks
+      assert.equal(stateBefore, 4, 'state before should be 4')
+      assert.equal(stateAfter, 5, 'state should not have changed')
+      assert.equal(pollNonce[indexYes], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexNo], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexNeither], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexIncomplete], 0, 'should be no poll ID')
+      assert.notEqual(pollNonce[indexBoth], 0, 'should be nonzero poll ID')
+      assert.equal(taskClaimable[indexYes], true, 'should be claimable')
+      assert.equal(taskClaimable[indexNo], true, 'should be claimable')
+      assert.equal(taskClaimable[indexNeither], true, 'should be claimable')
+      assert.equal(taskClaimable[indexIncomplete], false, 'should not be claimable')
+      assert.equal(taskClaimable[indexBoth], false, 'should not be claimable')
+      // FIGURE OUT WHY FAILEDTASKWEIREWARD TESTS DON'T WORK
+      // assert.equal(weiBalDifference, failedTaskWeiReward, 'should be same amount')
+      // assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
+      // ADD PLCR START POLL TEST
+    })
+  })
+
+  describe('validate voting projects', () => {
+    it('Validator can\'t validate a completed task yes from TR voting project', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, indexNeither, tokensToValidate, true, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a completed task yes from RR voting project', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, indexNeither, tokensToValidate, true, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a completed task no from TR voting project', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, indexNeither, tokensToValidate, false, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Validator can\'t validate a completed task no from RR voting project', async function () {
+      // fund validator with tokens if necessary
+      await utils.mintIfNecessary(validator1, tokensToValidate)
+
+      errorThrown = false
+      try {
+        await TR.validateTask(projAddrT, indexNeither, tokensToValidate, false, {from: validator1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+  })
 })

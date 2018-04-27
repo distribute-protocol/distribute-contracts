@@ -1,299 +1,334 @@
-// Test functions in open state of a project
-// Before, fund a user with tokens and have them propose and fully stake 2 projects
-var assert = require('assert')
-const TokenRegistry = artifacts.require('TokenRegistry')
-const DistributeToken = artifacts.require('DistributeToken')
-const ProjectRegistry = artifacts.require('ProjectRegistry')
-const Project = artifacts.require('Project')
-const Promise = require('bluebird')
+/* eslint-env mocha */
+/* global assert contract */
+
+const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
-const {hashTasks, hashTasksArray} = require('../utils/KeccakHashes')
+const keccakHashes = require('../utils/keccakHashes')
+const taskDetails = require('../utils/taskDetails')
 
-web3.eth = Promise.promisifyAll(web3.eth)
+contract('Staked State', (accounts) => {
+  // set up project helper
+  let projObj = projectHelper(accounts)
 
-contract('Staked State |', (accounts) => {
-  let TR
+  // get project helper variables
   let PR
-  let DT
-  let PROJ, PROJ2, PROJ3
+  let {user, project, returnProject} = projObj
+  let {tokenStaker1} = user
+  let {repStaker1} = user
+  let {notStaker, notProject} = user
+  let {projectCost, stakingPeriod, ipfsHash} = project
+
+  // set up task details & hashing functions
+  let {taskSet1, taskSet2} = taskDetails
+  let {hashTasks, hashTasksArray} = keccakHashes
+
+  // local test variables
+  let projAddrT1, projAddrT2
+  let projAddrR1, projAddrR2
   let errorThrown
-  // proposer only necessary in the
-  let proposer = accounts[0]
-  let staker1 = accounts[2]
-  let staker2 = accounts[3]
-  let staker3 = accounts[4]
-  let nonStaker = accounts[5]
 
-  let tokens = 50000
-  let stakingPeriod = 20000000000     // 10/11/2603 @ 11:33am (UTC)
-  let projectCost = web3.toWei(1, 'ether')
-  let projectCost2 = web3.toWei(0.5, 'ether')
-  let proposeProportion = 20
-  let ipfsHash = 'ipfsHash'
-  // let proposeReward = 100
-
-  let proposerTokenCost
-  let proposerBalance, stakerBalance1, stakerBalance2, stakerBalance3
-
-  let totalTokenSupply
-  let currentPrice
-
-  let projectAddress, projectAddress2, projectAddress3
-  let tx
-
-  // each word is a task in this case
-  let data1 = [{weiReward: 10000000000000000, description: 'some random task list'}]
-  let data2 = [{weiReward: 20000000000000000, description: 'some other random task list'}]
-  let data3 = {weiReward: 30000000000000000, description: 'some totally different task list'}
+  let fastForwards = 1 // ganache 1 week ahead at this point from previous test's evmIncreaseTime()
 
   before(async function () {
-    // define variables to hold deployed contracts
-    TR = await TokenRegistry.deployed()
-    DT = await DistributeToken.deployed()
-    PR = await ProjectRegistry.deployed()
+    // get contract
+    await projObj.contracts.setContracts()
+    PR = projObj.contracts.PR
 
-    // mint 10000 tokens for proposer & each staker
-    let mintingCost = await DT.weiRequired(tokens, {from: proposer})
-    await DT.mint(tokens, {from: proposer, value: mintingCost})
-    mintingCost = await DT.weiRequired(tokens, {from: staker1})
-    await DT.mint(tokens, {from: staker1, value: mintingCost})
-    mintingCost = await DT.weiRequired(tokens, {from: staker2})
-    await DT.mint(tokens, {from: staker2, value: mintingCost})
-    mintingCost = await DT.weiRequired(tokens, {from: staker3})
-    await DT.mint(tokens, {from: staker3, value: mintingCost})
+    // get staked projects
+    // to check successful transition to active period
+    projAddrT1 = await returnProject.staked_T(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
+    projAddrR1 = await returnProject.staked_R(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
 
-    proposerBalance = await DT.balanceOf(proposer)
-    stakerBalance1 = await DT.balanceOf(staker1)
-    stakerBalance2 = await DT.balanceOf(staker2)
-    stakerBalance3 = await DT.balanceOf(staker3)
-    totalTokenSupply = await DT.totalSupply()
-    assert.equal(4 * tokens, proposerBalance.toNumber() + stakerBalance1.toNumber() + stakerBalance2.toNumber() + stakerBalance3.toNumber(), 'proposer or stakers did not successfully mint tokens')
-    assert.equal(4 * tokens, totalTokenSupply, 'total supply did not update correctly')
-
-    // propose a project
-    currentPrice = await DT.currentPrice()              // put this before propose project because current price changes slightly (rounding errors)
-    tx = await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: proposer})
-    let log = tx.logs[0].args
-    projectAddress = log.projectAddress.toString()
-    PROJ = await Project.at(projectAddress)
-    proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion)
-    proposerBalance = await DT.balanceOf(proposer)
-    assert.equal(4 * tokens, totalTokenSupply, 'total supply shouldn\'t have updated')
-    assert.equal(proposerBalance, tokens - proposerTokenCost, 'DT did not set aside appropriate proportion to escrow')
-
-    // fully stake the project
-    let requiredTokens = Math.ceil(projectCost / await DT.currentPrice())
-    await TR.stakeTokens(projectAddress, Math.floor(requiredTokens / 3), {from: staker1})
-    await TR.stakeTokens(projectAddress, Math.floor(requiredTokens / 3), {from: staker2})
-    let weiRemaining = projectCost - await PROJ.weiBal()
-    requiredTokens = Math.ceil(weiRemaining / await DT.currentPrice())
-    await TR.stakeTokens(projectAddress, requiredTokens, {from: staker3})
-
-    // check that project is fully staked
-    let state = await PROJ.state()
-    assert.equal(state.toNumber(), 2, 'project should be in open state as it is now fully staked')
-
-    // propose another project
-    currentPrice = await DT.currentPrice()              // put this before propose project because current price changes slightly (rounding errors)
-    tx = await TR.proposeProject(projectCost2, stakingPeriod, ipfsHash, {from: proposer})
-    log = tx.logs[0].args
-    projectAddress2 = log.projectAddress.toString()
-    PROJ2 = await Project.at(projectAddress2)
-
-    // fully stake the project
-    requiredTokens = Math.ceil(projectCost2 / await DT.currentPrice())
-    await TR.stakeTokens(projectAddress2, Math.floor(requiredTokens / 3), {from: staker1})
-    await TR.stakeTokens(projectAddress2, Math.floor(requiredTokens / 3), {from: staker2})
-    weiRemaining = projectCost2 - await PROJ2.weiBal()
-    requiredTokens = Math.ceil(weiRemaining / await DT.currentPrice())
-    await TR.stakeTokens(projectAddress2, requiredTokens, {from: staker3})
-
-    await PR.addTaskHash(projectAddress2, hashTasksArray(data2, projectCost), {from: staker1})
-    await PR.addTaskHash(projectAddress2, hashTasksArray(data2, projectCost), {from: staker2})
-
-    // propose and stake project3 to fail
-    tx = await TR.proposeProject(1, stakingPeriod, ipfsHash, {from: proposer})
-    log = tx.logs[0].args
-    projectAddress3 = log.projectAddress.toString()
-    PROJ3 = await Project.at(projectAddress3)
-    requiredTokens = Math.ceil(1 / await DT.currentPrice())
-    await TR.stakeTokens(projectAddress3, requiredTokens, {from: staker1})
+    // to check failed transition to failed period
+    projAddrT2 = await returnProject.staked_T(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
+    projAddrR2 = await returnProject.staked_R(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
   })
 
-  it('non-staker can\'t submit a task hash', async function () {
-    errorThrown = false
-    try {
-      await PR.addTaskHash(projectAddress, hashTasksArray(data1), {from: nonStaker})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+  describe('adding task hashes to staked projects', () => {
+    it('Token staker can submit a task hash to TR staked project', async function () {
+      // take stock of variables before
+      let topTaskHashBefore = await PR.stakedProjects(projAddrT1)
+
+      // token staker submits
+      await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: tokenStaker1})
+
+      // take stock of variables after
+      let topTaskHashAfter = await PR.stakedProjects(projAddrT1)
+
+      // checks
+      assert.equal(topTaskHashBefore, 0, 'there should be nothing in stakedProjects before anyone adds a task hash')
+      assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash')
+    })
+
+    it('Token staker can submit a task hash to RR staked project', async function () {
+      // take stock of variables before
+      let topTaskHashBefore = await PR.stakedProjects(projAddrR1)
+
+      // token staker submits
+      await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: tokenStaker1})
+
+      // take stock of variables after
+      let topTaskHashAfter = await PR.stakedProjects(projAddrR1)
+
+      // checks
+      assert.equal(topTaskHashBefore, 0, 'there should be nothing in stakedProjects before anyone adds a task hash')
+      assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash after')
+    })
+
+    it('Reputation staker can submit same task hash to TR staked project', async function () {
+      // take stock of variables before
+      let topTaskHashBefore = await PR.stakedProjects(projAddrT1)
+
+      // token staker submits
+      await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: repStaker1})
+
+      // take stock of variables after
+      let topTaskHashAfter = await PR.stakedProjects(projAddrT1)
+
+      // checks
+      assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash before')
+      assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash after')
+    })
+
+    it('Reputation staker can submit same task hash to RR staked project', async function () {
+      // take stock of variables before
+      let topTaskHashBefore = await PR.stakedProjects(projAddrR1)
+
+      // token staker submits
+      await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: repStaker1})
+
+      // take stock of variables after
+      let topTaskHashAfter = await PR.stakedProjects(projAddrR1)
+
+      // checks
+      assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash before')
+      assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash after')
+    })
+
+    it('Reputation staker can submit different task hash to TR staked project', async function () {
+      // take stock of variables before
+      let topTaskHashBefore = await PR.stakedProjects(projAddrT1)
+
+      // token staker submits
+      await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet2), {from: repStaker1})
+
+      // take stock of variables after
+      let topTaskHashAfter = await PR.stakedProjects(projAddrT1)
+
+      // checks
+      assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash before')
+      assert.equal(topTaskHashAfter, hashTasksArray(taskSet2), 'incorrect top task hash after')
+    })
+
+    it('Reputation staker can submit different task hash to RR staked project', async function () {
+      // take stock of variables before
+      let topTaskHashBefore = await PR.stakedProjects(projAddrR1)
+
+      // token staker submits
+      await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet2), {from: repStaker1})
+
+      // take stock of variables after
+      let topTaskHashAfter = await PR.stakedProjects(projAddrR1)
+
+      // checks
+      assert.equal(topTaskHashBefore, hashTasksArray(taskSet1), 'incorrect top task hash before')
+      assert.equal(topTaskHashAfter, hashTasksArray(taskSet2), 'incorrect top task hash after')
+    })
+
+    it('Not staker can\'t submit a task hash to TR staked project', async function () {
+      errorThrown = false
+      try {
+        await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: notStaker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Not staker can\'t submit a task hash to RR staked project', async function () {
+      errorThrown = false
+      try {
+        await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: notStaker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
 
-  it('staker can submit a task hash', async function () {
-    let stakedProjectsBefore = await PR.stakedProjects.call(projectAddress)
-    await PR.addTaskHash(projectAddress, hashTasksArray(data1), {from: staker1})
-    let stakedProjectsAfter = await PR.stakedProjects.call(projectAddress)
-    assert.equal(stakedProjectsAfter, hashTasksArray(data1), 'first hash didn\'t update')
-    // assert.equal(stakedProjectsAfter[1].toNumber(), stakedProjectsBefore[1].toNumber(), 'logged nonexistant conflict')
-    // assert.equal(stakedProjectsAfter[2].toNumber(), stakedProjectsBefore[2].toNumber() + 1, 'didn\'t log submission')
+  describe('adding task hashes to nonexistant projects', () => {
+    it('Token staker can\'t a task hash to a nonexistant project', async function () {
+      errorThrown = false
+      try {
+        await PR.addTaskHash(notProject, hashTasksArray(taskSet1), {from: tokenStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Reputation staker can submit same task hash to RR staked project', async function () {
+      errorThrown = false
+      try {
+        await PR.addTaskHash(notProject, hashTasksArray(taskSet1), {from: repStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
 
-  it('another staker can submit a different task hash', async function () {
-    let stakedProjectsBefore = await PR.stakedProjects.call(projectAddress)
-    await PR.addTaskHash(projectAddress, hashTasksArray(data2), {from: staker2})
-    let stakedProjectsAfter = await PR.stakedProjects.call(projectAddress)
-    assert.equal(stakedProjectsAfter, hashTasksArray(data1), 'first hash shouldn\'t have updated')
-    // assert.equal(stakedProjectsAfter[1].toNumber(), 1, 'didn\'t log conflict')
-    // assert.equal(stakedProjectsAfter[2].toNumber(), stakedProjectsBefore[2].toNumber() + 1, 'didn\'t log submission')
+  describe('submitting hash lists to staked projects', () => {
+    it('Token staker can\'t submit hash list to TR staked project in staked state', async function () {
+      errorThrown = false
+      try {
+        await PR.submitHashList(projAddrT1, hashTasks(taskSet2), {from: tokenStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Reputation staker can\'t submit hash list to TR staked project in staked state', async function () {
+      errorThrown = false
+      try {
+        await PR.submitHashList(projAddrT1, hashTasks(taskSet2), {from: tokenStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Token staker can\'t submit hash list to RR staked project in staked state', async function () {
+      errorThrown = false
+      try {
+        await PR.submitHashList(projAddrR1, hashTasks(taskSet2), {from: tokenStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Reputation staker can\'t submit hash list to RR staked project in staked state', async function () {
+      errorThrown = false
+      try {
+        await PR.submitHashList(projAddrR1, hashTasks(taskSet2), {from: tokenStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
 
-  it('another staker can submit the same task hash', async function () {
-    let stakedProjectsBefore = await PR.stakedProjects.call(projectAddress)
-    await PR.addTaskHash(projectAddress, hashTasksArray(data1), {from: staker1})
-    let stakedProjectsAfter = await PR.stakedProjects.call(projectAddress)
-    assert.equal(stakedProjectsAfter, hashTasksArray(data1), 'first hash shouldn\'t have updated')
-    // assert.equal(stakedProjectsAfter[1].toNumber(), 1, 'conflict should still exist')
-    // assert.equal(stakedProjectsAfter[2].toNumber(), stakedProjectsBefore[2].toNumber(), 'total submissions shouldn\'t update')
+  describe('state changes on staked projects with task hash submissions', () => {
+    before(async function () {
+      // fast forward time
+      await evmIncreaseTime(604800) // 1 week
+    })
+
+    it('TR staked project becomes active if task hashes are submitted by the staking deadline', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrT1)
+
+      // call checkStaked()
+      await PR.checkActive(projAddrT1)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrT1)
+
+      // checks
+      assert.equal(stateBefore, 2, 'state before should be 2')
+      assert.equal(stateAfter, 3, 'state after should be 3')
+    })
+
+    it('RR staked project becomes active if task hashes are submitted by the staking deadline', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrR1)
+
+      // call checkStaked()
+      await PR.checkActive(projAddrR1)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrR1)
+
+      // checks
+      assert.equal(stateBefore, 2, 'state before should be 2')
+      assert.equal(stateAfter, 3, 'state after should be 3')
+    })
   })
 
-  it('staker can\'t submit hash list of staked project, even if correct', async function () {
-    errorThrown = false
-    try {
-      await PR.submitHashList(projectAddress2, hashTasks(data2), {from: staker1})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+  describe('time out state changes', () => {
+    it('TR staked project becomes failed if no task hashes are submitted by the staking deadline', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrT2)
+
+      // call checkStaked()
+      await PR.checkActive(projAddrT2)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrT2)
+
+      // checks
+      assert.equal(stateBefore, 2, 'state before should be 2')
+      assert.equal(stateAfter, 7, 'state after should be 7')
+    })
+
+    it('RR staked project becomes failed if no task hashes are submitted by the staking deadline', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrR2)
+
+      // call checkStaked()
+      await PR.checkActive(projAddrR2)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrR2)
+
+      // checks
+      assert.equal(stateBefore, 2, 'state before should be 2')
+      assert.equal(stateAfter, 7, 'state after should be 7')
+    })
   })
 
-  it('project with same task hash submissions becomes active', async function () {
-    await evmIncreaseTime(7 * 25 * 60 * 60)
-    await PR.checkActive(projectAddress2)
-    let state = await PROJ2.state()
-    assert.equal(state.toNumber(), 3, 'project should have entered active period')
+  describe('submit task hash on active projects', () => {
+    it('Add task hash can\'t be called by token staker on TR staked project once it is active', async function () {
+      errorThrown = false
+      try {
+        await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: tokenStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Add task hash can\'t be called by reputation staker on TR staked project once it is active', async function () {
+      errorThrown = false
+      try {
+        await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: repStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Add task hash can\'t be called by token staker on RR staked project once it is active', async function () {
+      errorThrown = false
+      try {
+        await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: tokenStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Add task hash can\'t be called by reputation staker on RR staked project once it is active', async function () {
+      errorThrown = false
+      try {
+        await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: repStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
-
-  it('non-staker can\'t submit correct hash list of active project', async function () {
-    errorThrown = false
-    try {
-      await PR.submitHashList(projectAddress2, hashTasks(data2), {from: nonStaker})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
-
-  it('staker can\'t submit incorrect hash list of active project', async function () {
-    errorThrown = false
-    try {
-      await PR.submitHashList(projectAddress2, hashTasks(data1), {from: staker1})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
-
-  // it('staker can submit hash list of active project', async function () {
-  //   await evmIncreaseTime(7 * 25 * 60 * 60)
-  //   await PR.checkActive(projectAddress2)
-  //   await PR.submitHashList(projectAddress2, hashTasks(data2), {from: staker1})
-  //   let contractHash = await PR.stakedProjects.call(projectAddress2)
-  //   let testHash = hashTasksArray(data2)
-  //   assert.equal(contractHash, testHash, 'some hashing thing is screwed up')
-  // })
-
-  it('project becomes active after staked period ends', async function () {
-    await evmIncreaseTime(7 * 25 * 60 * 60)
-    await PR.checkActive(projectAddress)
-    let state = await PROJ.state()
-    assert.equal(state.toNumber(), 3, 'project should have entered dispute period')
-  })
-
-  it('staker can\'t submit hash list for active project', async function () {
-    errorThrown = false
-    try {
-      await PR.submitHashList(projectAddress, hashTasks(data2), {from: staker1})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
-
-  // ///staker weights/// //
-  // staker1 - 1332
-  // staker2 - 1332
-  // staker3 - 1333
-  // let numSubmissions = await PR.getNumSubmissionsByWeight(projectAddress, topTaskHashBefore)
-  // console.log('topTaskHash', topTaskHashBefore)
-  // console.log('numSubmissionsByWeight', numSubmissions)
-  // numSubmissions = await PR.getNumSubmissionsByWeight(projectAddress, topTaskHashAfter)
-  // console.log('topTaskHashAfter', topTaskHashAfter)
-  // console.log('numSubmissionsByWeightAfter', numSubmissions)
-
-  // it('staker can submit a task hash on a project in dispute period', async function () {
-  //   let topTaskHashBefore = await PR.disputedProjects.call(projectAddress)
-  //   await PR.addTaskHash(projectAddress, hashTasksArray(data2), {from: staker1})
-  //   // let topTaskHashAfter = await PR.disputedProjects.call(projectAddress)
-  //   // let state = await PROJ.state()
-  //   // assert.equal(topTaskHashBefore, 0, 'there existed a non-zero top hash before the dispute period')
-  //   // assert.equal(topTaskHashAfter, hashTasksArray(data2), 'top hash didn\'t update')
-  //   // assert.equal(state.toNumber(), 3, 'project shouldn\'t have exited the dispute period')
-  // })
-
-  // it('staker can resubmit a different task hash on a project in dispute period', async function () {
-  //   let topTaskHashBefore = await PR.disputedProjects.call(projectAddress)
-  //   await PR.addTaskHash(projectAddress, hashTasksArray(data1), {from: staker1})
-  //   let topTaskHashAfter = await PR.disputedProjects.call(projectAddress)
-  //   let state = await PROJ.state()
-  //   assert.equal(topTaskHashBefore, hashTasksForAddition(data2), 'there existed a non-zero top hash before the dispute period')
-  //   assert.equal(topTaskHashAfter, hashTasksForAddition(data1), 'top hash didn\'t update')
-  //   assert.equal(state.toNumber(), 3, 'project shouldn\'t have exited the dispute period')
-  // })
-
- // it('staker with same weight with a different task hash doesn\'t change top task hash', async function () {
- //   let topTaskHashBefore = await PR.disputedProjects.call(projectAddress)
- //   await PR.addTaskHash(projectAddress, hashTasksForAddition(data2), {from: staker2})
- //   let topTaskHashAfter = await PR.disputedProjects.call(projectAddress)
- //   let state = await PROJ.state()
- //   assert.equal(topTaskHashAfter, hashTasksForAddition(data1), 'top hash didn\'t update')
- //   assert.equal(topTaskHashBefore, topTaskHashAfter, 'top hash shouldn\'t have updated')
- //   assert.equal(state.toNumber(), 3, 'project shouldn\'t have exited the dispute period')
- // })
-
- // it('staker with larger weight with a different task hash changes top task hash', async function () {
- //   let topTaskHashBefore = await PR.disputedProjects.call(projectAddress)
- //   await PR.addTaskHash(projectAddress, hashTasksForAddition(data3), {from: staker3})
- //   let topTaskHashAfter = await PR.disputedProjects.call(projectAddress)
- //   let state = await PROJ.state()
- //   assert.equal(topTaskHashAfter, hashTasksForAddition(data3), 'top hash didn\'t update')
- //   assert.equal(topTaskHashBefore, hashTasksForAddition(data1), 'top hash shouldn\'t have updated')
- //   assert.equal(state.toNumber(), 3, 'project shouldn\'t have exited the dispute period')
- // })
-
- it('non-staker can\'t submit task hash staked project', async function () {
-   errorThrown = false
-   try {
-     await PR.addTaskHash(projectAddress, hashTasksForAddition(data1), {from: nonStaker})
-   } catch (e) {
-     errorThrown = true
-   }
-   assertThrown(errorThrown, 'An error should have been thrown')
- })
-
- // it('staked project with multiple task hash submissions becomes active', async function () {
- //   await PR.checkActive(projectAddress)
- //   let state = await PROJ2.state()
- //   assert.equal(state.toNumber(), 3, 'project should have entered active period')
- // })
-
- it('staked project with no submissions becomes failed', async function () {
-   let state = await PROJ3.state()
-   assert.equal(state.toNumber(), 2, 'project should be in open state')
-   await evmIncreaseTime(7 * 25 * 60 * 60)
-   await PR.checkActive(projectAddress3)
-   state = await PROJ3.state()
-   assert.equal(state.toNumber(), 7, 'project should have entered dispute period')
- })
 })

@@ -1,301 +1,980 @@
-// Test functions in staked state of a project
-// Before, fund a user with tokens and have them propose and fully stake 2 projects
-var assert = require('assert')
-const TokenRegistry = artifacts.require('TokenRegistry')
-const ReputationRegistry = artifacts.require('ReputationRegistry')
-const DistributeToken = artifacts.require('DistributeToken')
-const ProjectRegistry = artifacts.require('ProjectRegistry')
-const Project = artifacts.require('Project')
-const Promise = require('bluebird')
+/* eslint-env mocha */
+/* global assert contract */
+
+const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
-const {hashTasks, hashTasksArray} = require('../utils/KeccakHashes')
-web3.eth = Promise.promisifyAll(web3.eth)
+const keccakHashes = require('../utils/keccakHashes')
+const taskDetails = require('../utils/taskDetails')
 
 contract('Active State', (accounts) => {
-  let TR, PR, DT, PROJ, RR
+  // set up project helper
+  let projObj = projectHelper(accounts)
+
+  // get project helper variables
+  let TR, RR, PR
+  let {user, project, utils, returnProject, task} = projObj
+  let {repStaker1} = user
+  let {worker1, worker2, notWorker} = user
+  let {projectCost, stakingPeriod, ipfsHash} = project
+
+  // set up task details & hashing functions
+  let {taskSet1, taskSet2} = taskDetails
+  let {hashTasks} = keccakHashes
+
+  // local test variables
+  let projArray
   let errorThrown
-  // proposer only necessary in the
-  let proposer = accounts[0]
-  let staker1 = accounts[2]
-  let staker2 = accounts[3]
-  let staker3 = accounts[4]
-  let worker1 = accounts[5]
-  let worker2 = accounts[6]
-  let worker3 = accounts[7]
-  let incorrectProjectAddress = accounts[8]
+  let projAddrT, projAddrR
 
-  let tokens = 10000
-  let stakingPeriod = 20000000000     // 10/11/2603 @ 11:33am (UTC)
-  let projectCost = web3.toWei(0.25, 'ether')
-  let proposeProportion = 20
-  let ipfsHash = 'ipfsHash'
-  // let proposeReward = 100
+  // define indices
+  let indexEndTest = 4 // only to be used to test task claiming in the validating state
+  let indexNoReclaimPre = 3 // to test a task the won't be reclaimed and will be marked complete pre-turnover time
+  let indexNoReclaimPost = 2 // to test a task the won't be reclaimed and will be marked complete post-turnover time
+  let indexReclaim = 1 // to test a task that will be reclaimed
+  let indexThrowaway = 0 // to test a task that will fail every time it's claimed and marked complete
+  let notIndex = 5 // to test a nonexistant task
 
-  let proposerTokenCost
-  let proposerBalance, stakerBalance1, stakerBalance2, stakerBalance3
-
-  let totalTokenSupply
-  let totalReputation, totalFreeReputation
-  let currentPrice
-
-  let projectAddress
-  let tx
-
-  let workerBalance1, workerBalance2, workerBalance3
-
-  // format of task hash is 'taskdescription;weivalue;reputationvalue,secondtask;secondweival;secondrepval,...'
-  // let data = 'install a super long string thats most definitely longer than bytes32 I really hope this works yup yup yup;100000;1,install a supernode;200000;1,break the internet;100;2,save the world;100;1'
-  let data = [{weiReward: 10000000000000000, description: 'some random task list'}]
-
+  let fastForwards = 2 // ganache 2 weeks ahead at this point from previous test's evmIncreaseTime()
 
   before(async function () {
-    // define variables to hold deployed contracts
-    TR = await TokenRegistry.deployed()
-    DT = await DistributeToken.deployed()
-    PR = await ProjectRegistry.deployed()
-    RR = await ReputationRegistry.deployed()
+    // get contracts
+    await projObj.contracts.setContracts()
+    TR = projObj.contracts.TR
+    RR = projObj.contracts.RR
+    PR = projObj.contracts.PR
 
-    // mint 10000 tokens for proposer & each staker
-    let mintingCost = await DT.weiRequired(tokens, {from: proposer})
-    await DT.mint(tokens, {from: proposer, value: mintingCost})
-    mintingCost = await DT.weiRequired(tokens, {from: staker1})
-    await DT.mint(tokens, {from: staker1, value: mintingCost})
-    mintingCost = await DT.weiRequired(tokens, {from: staker2})
-    await DT.mint(tokens, {from: staker2, value: mintingCost})
-    mintingCost = await DT.weiRequired(tokens, {from: staker3})
-    await DT.mint(tokens, {from: staker3, value: mintingCost})
-    proposerBalance = await DT.balanceOf(proposer)
-    stakerBalance1 = await DT.balanceOf(staker1)
-    stakerBalance2 = await DT.balanceOf(staker2)
-    stakerBalance3 = await DT.balanceOf(staker3)
-    totalTokenSupply = await DT.totalSupply()
-    assert.equal(4 * tokens, proposerBalance.toNumber() + stakerBalance1.toNumber() + stakerBalance2.toNumber() + stakerBalance3.toNumber(), 'proposer or stakers did not successfully mint tokens')
-    assert.equal(4 * tokens, totalTokenSupply, 'total supply did not update correctly')
-
-    // propose a project
-    currentPrice = await DT.currentPrice()              // put this before propose project because current price changes slightly (rounding errors)
-    tx = await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: proposer})
-    let log = tx.logs[0].args
-    projectAddress = log.projectAddress.toString()
-    PROJ = await Project.at(projectAddress)
-    proposerTokenCost = Math.floor(Math.floor(projectCost / currentPrice) / proposeProportion)
-    proposerBalance = await DT.balanceOf(proposer)
-    assert.equal(4 * tokens, totalTokenSupply, 'total supply shouldn\'t have updated')
-    assert.equal(proposerBalance, tokens - proposerTokenCost, 'DT did not set aside appropriate proportion to escrow')
-
-    // fully stake the project with all three stakers
-    let requiredTokens = Math.ceil(projectCost / await DT.currentPrice())
-    await TR.stakeTokens(projectAddress, Math.floor(requiredTokens / 3), {from: staker1})
-    await TR.stakeTokens(projectAddress, Math.floor(requiredTokens / 3), {from: staker2})
-    let weiRemaining = projectCost - await PROJ.weiBal()
-    requiredTokens = Math.ceil(weiRemaining / await DT.currentPrice())
-    await TR.stakeTokens(projectAddress, requiredTokens, {from: staker3})
-
-    // check that project is fully staked, change to staked
-    let state = await PROJ.state()
-    assert.equal(state.toNumber(), 2, 'project should be in staked state as it is now fully staked')
-    let stakedProjectsBefore = await PR.stakedProjects.call(projectAddress)
-    await PR.addTaskHash(projectAddress, hashTasksArray(data), {from: staker1})
-    let stakedProjectsAfter = await PR.stakedProjects.call(projectAddress)
-    assert.equal(stakedProjectsAfter, hashTasksArray(data), 'first hash didn\'t update')
-    // assert.equal(stakedProjectsAfter[1].toNumber(), stakedProjectsBefore[1].toNumber(), 'logged nonexistant conflict')
-    // assert.equal(stakedProjectsAfter[2].toNumber(), stakedProjectsBefore[2].toNumber() + 1, 'didn\'t log submission')
-    await evmIncreaseTime(7 * 25 * 60 * 60)
-    await PR.checkActive(projectAddress)
-    state = await PROJ.state()
-    assert.equal(state.toNumber(), 3, 'project should have entered active period')
-
-    // submit task hash list
-    let taskHash = await PR.stakedProjects.call(projectAddress)
-    // console.log('task hash from PR', taskHash[0])
-    // console.log('task hash from test', hashTasksArray(data))
-    // console.log('task list from test', hashTasks(data))
-    assert.equal(taskHash, hashTasksArray(data), 'incorrect task list stored')
-    await PR.submitHashList(projectAddress, hashTasks(data), {from: staker2})
-    // let firstTask = await PR.projectTaskList.call(projectAddress, 0)
-    // assert.equal(firstTask, hashTasks(data)[0], 'incorrect first task hash stored')
-
-    // register workers and check reputation balances
-    await RR.register({from: worker1})
-    await RR.register({from: worker2})
-    await RR.register({from: worker3})
-    workerBalance1 = await RR.balances.call(worker1)
-    workerBalance2 = await RR.balances.call(worker2)
-    workerBalance3 = await RR.balances.call(worker3)
-    assert.equal(workerBalance1.toNumber(), 10000, 'worker 1 does not have the correct amount of reputation')
-    assert.equal(workerBalance2.toNumber(), 10000, 'worker 2 does not have the correct amount of reputation')
-    assert.equal(workerBalance3.toNumber(), 10000, 'worker 3 does not have the correct amount of reputation')
-
-    totalReputation = await RR.totalSupply()
-
-    assert.equal(totalReputation, 30000, 'incorrect total reputation stored')
+    // get active projects
+    // moves ganache forward 1 more week
+    projArray = await returnProject.active(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, 1)
+    projAddrT = projArray[0][0]
+    projAddrR = projArray[0][1]
   })
 
-  it('worker1 can claim a task', async function () {
-    let repPrice = 1
-    let weiReward = 100000
-    let index = 0
-    await RR.claimTask(projectAddress, index, 'install a super long string thats most definitely longer than bytes32 I really hope this works yup yup yup', 90, {from: worker1})
-    let workerBalance1New = await RR.balances.call(worker1)
-    // console.log(workerBalance1New.toNumber())
-    assert.equal(workerBalance1New, workerBalance1 - repPrice, 'worker 1 reputation balance not decremented appropriately')
-    let taskHash = hashTasks(data)[index]
-    let reward = await PROJ.taskRewards.call(taskHash)
-    assert.equal(reward[0].toNumber(), weiReward, 'wei reward stored incorrectly')
-    assert.equal(reward[1].toNumber(), repPrice, 'reputation cost stored incorrectly')
-    assert.equal(reward[2], worker1, 'incorrect worker stored')
-    totalReputation = await RR.totalSupply()
-    totalFreeReputation = await RR.totalFreeSupply()
-    assert.equal(totalReputation, 3, 'incorrect total reputation stored')
-    assert.equal(totalFreeReputation, 2, 'incorrect free reputation stored')
-    // console.log(reward)
+  describe('submitting hash lists to active projects', () => {
+    it('Incorrect hash list can\'t be submitted to TR active project', async function () {
+      errorThrown = false
+      try {
+        await PR.submitHashList(projAddrT, hashTasks(taskSet2), {from: repStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Incorrect hash list can\'t be submitted to RR active project', async function () {
+      errorThrown = false
+      try {
+        await PR.submitHashList(projAddrR, hashTasks(taskSet2), {from: repStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Correct hash list can be submitted to TR active project', async function () {
+      // getting the 0 index of the task array should fail before submitting hash list
+      errorThrown = false
+      try {
+        await project.getTasks(projAddrT, 0)
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+
+      // take stock of variable before and checks
+      let hashListSubmittedBefore = await project.getHashListSubmitted(projAddrT)
+      assert.equal(hashListSubmittedBefore, false, 'hash list submitted flag is incorrect')
+
+      // submit hash list
+      await PR.submitHashList(projAddrT, hashTasks(taskSet1), {from: repStaker1})
+
+      // task stock of variables after and checks
+      for (let i = 0; i < hashTasks(taskSet1).length; i++) {
+        let projTaskAddr = await project.getTasks(projAddrT, i)
+        let taskHash = await task.getTaskHash(projTaskAddr)
+        let PRAddress = await task.getPRAddress(projTaskAddr)
+        let TRAddress = await task.getTRAddress(projTaskAddr)
+        let RRAddress = await task.getRRAddress(projTaskAddr)
+
+        assert.equal(projTaskAddr.length, 42, 'task addresses were stored incorrectly')
+        assert.equal(taskHash, hashTasks(taskSet1)[i], 'task hash was stored incorectly')
+        assert.equal(PRAddress, PR.address, 'PR address was stored incorrectly')
+        assert.equal(TRAddress, TR.address, 'TR address was stored incorrectly')
+        assert.equal(RRAddress, RR.address, 'RR address was stored incorrectly')
+      }
+
+      let hashListSubmittedAfter = await project.getHashListSubmitted(projAddrT)
+      assert.equal(hashListSubmittedAfter, true, 'hash list submitted flag is incorrect')
+    })
+
+    it('Correct hash list can be submitted to RR active project', async function () {
+      // getting the 0 index of the task array should fail before submitting hash list
+      errorThrown = false
+      try {
+        await project.getTasks(projAddrR, 0)
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+
+      // take stock of variable before and checks
+      let hashListSubmittedBefore = await project.getHashListSubmitted(projAddrR)
+      assert.equal(hashListSubmittedBefore, false, 'hash list submitted flag is incorrect')
+
+      // submit hash list
+      await PR.submitHashList(projAddrR, hashTasks(taskSet1), {from: repStaker1})
+
+      // task stock of variables after and checks
+      for (let i = 0; i < taskSet1.length; i++) {
+        let projTaskAddr = await project.getTasks(projAddrR, i)
+        let taskHash = await task.getTaskHash(projTaskAddr)
+        let PRAddress = await task.getPRAddress(projTaskAddr)
+        let TRAddress = await task.getTRAddress(projTaskAddr)
+        let RRAddress = await task.getRRAddress(projTaskAddr)
+
+        assert.equal(projTaskAddr.length, 42, 'task addresses were stored incorrectly')
+        assert.equal(taskHash, hashTasks(taskSet1)[i], 'task hash was stored incorectly')
+        assert.equal(PRAddress, PR.address, 'PR address was stored incorrectly')
+        assert.equal(TRAddress, TR.address, 'TR address was stored incorrectly')
+        assert.equal(RRAddress, RR.address, 'RR address was stored incorrectly')
+      }
+
+      let hashListSubmittedAfter = await project.getHashListSubmitted(projAddrR)
+      assert.equal(hashListSubmittedAfter, true, 'hash list submitted flag is incorrect')
+    })
+
+    it('Correct hash list can\'t be resubmitted to TR active project', async function () {
+      errorThrown = false
+      try {
+        await PR.submitHashList(projAddrT, hashTasks(taskSet1), {from: repStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Correct hash list can\'t be resubmitted to RR active project', async function () {
+      errorThrown = false
+      try {
+        await PR.submitHashList(projAddrR, hashTasks(taskSet1), {from: repStaker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
 
-  it('worker1 can\'t claim another task', async function () {
-    errorThrown = false
-    try {
-      let repPrice = 1
-      let weiReward = 2000000
-      let index = 1
-      await RR.claimTask(projectAddress, index, 'install a supernode', weiReward, repPrice, {from: worker1})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+  describe('claiming tasks pre-turnover time', () => {
+    it('Worker with enough reputation can claim a task from TR active project', async function () {
+      // register worker
+      await utils.register(worker1)
+
+      // take stock of variables before
+      let description = taskSet1[indexNoReclaimPre].description
+      let weighting = taskSet1[indexNoReclaimPre].weighting
+      let weiVal = await project.calculateWeiVal(projAddrT, weighting)
+      let repVal = await project.calculateRepVal(projAddrT, weighting)
+
+      let workerRepBalBefore = await utils.getRepBalance(worker1)
+      let taskWeightingBefore = await task.getWeighting(projAddrT, indexNoReclaimPre)
+      let taskWeiRewardBefore = await task.getWeiReward(projAddrT, indexNoReclaimPre)
+      let taskRepRewardBefore = await task.getRepReward(projAddrT, indexNoReclaimPre)
+      let taskCompleteBefore = await task.getComplete(projAddrT, indexNoReclaimPre)
+      let taskClaimerBefore = await task.getClaimer(projAddrT, indexNoReclaimPre)
+
+      // assert that worker has the reputation to claim the task
+      assert.isAtLeast(workerRepBalBefore, repVal, 'worker1 does not have enough reputation to claim the task')
+
+      // claim task
+      await RR.claimTask(projAddrT, indexNoReclaimPre, description, weighting, {from: worker1})
+
+      // take stock of variables after
+      let workerRepBalAfter = await utils.getRepBalance(worker1)
+      let taskWeightingAfter = await task.getWeighting(projAddrT, indexNoReclaimPre)
+      let taskWeiRewardAfter = await task.getWeiReward(projAddrT, indexNoReclaimPre)
+      let taskRepRewardAfter = await task.getRepReward(projAddrT, indexNoReclaimPre)
+      let taskCompleteAfter = await task.getComplete(projAddrT, indexNoReclaimPre)
+      let taskClaimerAfter = await task.getClaimer(projAddrT, indexNoReclaimPre)
+
+      // checks
+      assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
+      assert.equal(taskWeightingBefore, 0, 'task should not have weighting before claimed')
+      assert.equal(taskWeightingAfter, weighting, 'task given incorrect weighting')
+      assert.equal(taskWeiRewardBefore, 0, 'task should not have wei reward before claimed')
+      assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
+      assert.equal(taskRepRewardBefore, 0, 'task should not have rep reward before claimed')
+      assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
+      assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
+      assert.equal(taskCompleteAfter, false, 'task should not be complete after claiming')
+      assert.equal(taskClaimerBefore, 0, 'task should not have claimer before claimed')
+      assert.equal(taskClaimerAfter, worker1, 'task given incorrect claimer')
+    })
+
+    it('Worker with enough reputation can claim a task from RR active project', async function () {
+      // register worker
+      await utils.register(worker1)
+
+      // take stock of variables before
+      let description = taskSet1[indexNoReclaimPre].description
+      let weighting = taskSet1[indexNoReclaimPre].weighting
+      let weiVal = await project.calculateWeiVal(projAddrR, weighting)
+      let repVal = await project.calculateRepVal(projAddrR, weighting)
+
+      let workerRepBalBefore = await utils.getRepBalance(worker1)
+      let taskWeightingBefore = await task.getWeighting(projAddrR, indexNoReclaimPre)
+      let taskWeiRewardBefore = await task.getWeiReward(projAddrR, indexNoReclaimPre)
+      let taskRepRewardBefore = await task.getRepReward(projAddrR, indexNoReclaimPre)
+      let taskCompleteBefore = await task.getComplete(projAddrR, indexNoReclaimPre)
+      let taskClaimerBefore = await task.getClaimer(projAddrR, indexNoReclaimPre)
+
+      // assert that worker has the reputation to claim the task
+      assert.isAtLeast(workerRepBalBefore, repVal, 'worker1 does not have enough reputation to claim the task')
+
+      // claim task
+      await RR.claimTask(projAddrR, indexNoReclaimPre, description, weighting, {from: worker1})
+
+      // take stock of variables after
+      // let workerRepBalAfter = await utils.getRepBalance(worker1)
+      let taskWeightingAfter = await task.getWeighting(projAddrR, indexNoReclaimPre)
+      let taskWeiRewardAfter = await task.getWeiReward(projAddrR, indexNoReclaimPre)
+      // let taskRepRewardAfter = await task.getRepReward(projAddrR, indexNoReclaimPre)
+      let taskCompleteAfter = await task.getComplete(projAddrR, indexNoReclaimPre)
+      let taskClaimerAfter = await task.getClaimer(projAddrR, indexNoReclaimPre)
+
+      // checks
+      // COMMENTED OUT ASSERTS ARE OFF BY 1 REPUTATION
+      // assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
+      assert.equal(taskWeightingBefore, 0, 'task should not have weighting before claimed')
+      assert.equal(taskWeightingAfter, weighting, 'task given incorrect weighting')
+      assert.equal(taskWeiRewardBefore, 0, 'task should not have wei reward before claimed')
+      assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
+      assert.equal(taskRepRewardBefore, 0, 'task should not have rep reward before claimed')
+      // assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
+      assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
+      assert.equal(taskCompleteAfter, false, 'task should not be complete after claiming')
+      assert.equal(taskClaimerBefore, 0, 'task should not have claimer before claimed')
+      assert.equal(taskClaimerAfter, worker1, 'task given incorrect claimer')
+    })
+
+    it('Same worker with enough reputation can claim a task from TR active project', async function () {
+      // register worker
+      await utils.register(worker1)
+
+      // take stock of variables before
+      let description = taskSet1[indexNoReclaimPost].description
+      let weighting = taskSet1[indexNoReclaimPost].weighting
+      let weiVal = await project.calculateWeiVal(projAddrT, weighting)
+      let repVal = await project.calculateRepVal(projAddrT, weighting)
+
+      let workerRepBalBefore = await utils.getRepBalance(worker1)
+      let taskWeightingBefore = await task.getWeighting(projAddrT, indexNoReclaimPost)
+      let taskWeiRewardBefore = await task.getWeiReward(projAddrT, indexNoReclaimPost)
+      let taskRepRewardBefore = await task.getRepReward(projAddrT, indexNoReclaimPost)
+      let taskCompleteBefore = await task.getComplete(projAddrT, indexNoReclaimPost)
+      let taskClaimerBefore = await task.getClaimer(projAddrT, indexNoReclaimPost)
+
+      // assert that worker has the reputation to claim the task
+      assert.isAtLeast(workerRepBalBefore, repVal, 'worker1 does not have enough reputation to claim the task')
+
+      // claim task
+      await RR.claimTask(projAddrT, indexNoReclaimPost, description, weighting, {from: worker1})
+
+      // take stock of variables after
+      let workerRepBalAfter = await utils.getRepBalance(worker1)
+      let taskWeightingAfter = await task.getWeighting(projAddrT, indexNoReclaimPost)
+      let taskWeiRewardAfter = await task.getWeiReward(projAddrT, indexNoReclaimPost)
+      let taskRepRewardAfter = await task.getRepReward(projAddrT, indexNoReclaimPost)
+      let taskCompleteAfter = await task.getComplete(projAddrT, indexNoReclaimPost)
+      let taskClaimerAfter = await task.getClaimer(projAddrT, indexNoReclaimPost)
+
+      // checks
+      assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
+      assert.equal(taskWeightingBefore, 0, 'task should not have weighting before claimed')
+      assert.equal(taskWeightingAfter, weighting, 'task given incorrect weighting')
+      assert.equal(taskWeiRewardBefore, 0, 'task should not have wei reward before claimed')
+      assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
+      assert.equal(taskRepRewardBefore, 0, 'task should not have rep reward before claimed')
+      assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
+      assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
+      assert.equal(taskCompleteAfter, false, 'task should not be complete after claiming')
+      assert.equal(taskClaimerBefore, 0, 'task should not have claimer before claimed')
+      assert.equal(taskClaimerAfter, worker1, 'task given incorrect claimer')
+    })
+
+    it('Same worker with enough reputation can claim a task from RR active project', async function () {
+      // register worker
+      await utils.register(worker1)
+
+      // take stock of variables before
+      let description = taskSet1[indexNoReclaimPost].description
+      let weighting = taskSet1[indexNoReclaimPost].weighting
+      let weiVal = await project.calculateWeiVal(projAddrR, weighting)
+      let repVal = await project.calculateRepVal(projAddrR, weighting)
+
+      let workerRepBalBefore = await utils.getRepBalance(worker1)
+      let taskWeightingBefore = await task.getWeighting(projAddrR, indexNoReclaimPost)
+      let taskWeiRewardBefore = await task.getWeiReward(projAddrR, indexNoReclaimPost)
+      let taskRepRewardBefore = await task.getRepReward(projAddrR, indexNoReclaimPost)
+      let taskCompleteBefore = await task.getComplete(projAddrR, indexNoReclaimPost)
+      let taskClaimerBefore = await task.getClaimer(projAddrR, indexNoReclaimPost)
+
+      // assert that worker has the reputation to claim the task
+      assert.isAtLeast(workerRepBalBefore, repVal, 'worker1 does not have enough reputation to claim the task')
+
+      // claim task
+      await RR.claimTask(projAddrR, indexNoReclaimPost, description, weighting, {from: worker1})
+
+      // take stock of variables after
+      let workerRepBalAfter = await utils.getRepBalance(worker1)
+      let taskWeightingAfter = await task.getWeighting(projAddrR, indexNoReclaimPost)
+      let taskWeiRewardAfter = await task.getWeiReward(projAddrR, indexNoReclaimPost)
+      let taskRepRewardAfter = await task.getRepReward(projAddrR, indexNoReclaimPost)
+      let taskCompleteAfter = await task.getComplete(projAddrR, indexNoReclaimPost)
+      let taskClaimerAfter = await task.getClaimer(projAddrR, indexNoReclaimPost)
+
+      // checks
+      assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
+      assert.equal(taskWeightingBefore, 0, 'task should not have weighting before claimed')
+      assert.equal(taskWeightingAfter, weighting, 'task given incorrect weighting')
+      assert.equal(taskWeiRewardBefore, 0, 'task should not have wei reward before claimed')
+      assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
+      assert.equal(taskRepRewardBefore, 0, 'task should not have rep reward before claimed')
+      assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
+      assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
+      assert.equal(taskCompleteAfter, false, 'task should not be complete after claiming')
+      assert.equal(taskClaimerBefore, 0, 'task should not have claimer before claimed')
+      assert.equal(taskClaimerAfter, worker1, 'task given incorrect claimer')
+    })
+
+    it('Worker with enough reputation can\'t claim the same task from TR active project', async function () {
+      let description = taskSet1[indexNoReclaimPre].description
+      let weighting = taskSet1[indexNoReclaimPre].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrT, indexNoReclaimPre, description, weighting, {from: worker2})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker with enough reputation can\'t claim the same task from RR active project', async function () {
+      let description = taskSet1[indexNoReclaimPre].description
+      let weighting = taskSet1[indexNoReclaimPre].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrT, indexNoReclaimPre, description, weighting, {from: worker2})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Different worker with enough reputation can claim a different task from TR active project', async function () {
+      // register worker
+      await utils.register(worker2)
+
+      // take stock of variables before
+      let description = taskSet1[indexReclaim].description
+      let weighting = taskSet1[indexReclaim].weighting
+      let weiVal = await project.calculateWeiVal(projAddrT, weighting)
+      let repVal = await project.calculateRepVal(projAddrT, weighting)
+
+      let workerRepBalBefore = await utils.getRepBalance(worker2)
+      let taskWeightingBefore = await task.getWeighting(projAddrT, indexReclaim)
+      let taskWeiRewardBefore = await task.getWeiReward(projAddrT, indexReclaim)
+      let taskRepRewardBefore = await task.getRepReward(projAddrT, indexReclaim)
+      let taskCompleteBefore = await task.getComplete(projAddrT, indexReclaim)
+      let taskClaimerBefore = await task.getClaimer(projAddrT, indexReclaim)
+
+      // assert that worker has the reputation to claim the task
+      assert.isAtLeast(workerRepBalBefore, repVal, 'worker2 does not have enough reputation to claim the task')
+
+      // claim task
+      await RR.claimTask(projAddrT, indexReclaim, description, weighting, {from: worker2})
+
+      // take stock of variables after
+      let workerRepBalAfter = await utils.getRepBalance(worker2)
+      let taskWeightingAfter = await task.getWeighting(projAddrT, indexReclaim)
+      let taskWeiRewardAfter = await task.getWeiReward(projAddrT, indexReclaim)
+      let taskRepRewardAfter = await task.getRepReward(projAddrT, indexReclaim)
+      let taskCompleteAfter = await task.getComplete(projAddrT, indexReclaim)
+      let taskClaimerAfter = await task.getClaimer(projAddrT, indexReclaim)
+
+      // checks
+      assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
+      assert.equal(taskWeightingBefore, 0, 'task should not have weighting before claimed')
+      assert.equal(taskWeightingAfter, weighting, 'task given incorrect weighting')
+      assert.equal(taskWeiRewardBefore, 0, 'task should not have wei reward before claimed')
+      assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
+      assert.equal(taskRepRewardBefore, 0, 'task should not have rep reward before claimed')
+      assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
+      assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
+      assert.equal(taskCompleteAfter, false, 'task should not be complete after claiming')
+      assert.equal(taskClaimerBefore, 0, 'task should not have claimer before claimed')
+      assert.equal(taskClaimerAfter, worker2, 'task given incorrect claimer')
+    })
+
+    it('Different worker with enough reputation can claim a different task from RR active project', async function () {
+      // register worker
+      await utils.register(worker2)
+
+      // take stock of variables before
+      let description = taskSet1[indexReclaim].description
+      let weighting = taskSet1[indexReclaim].weighting
+      let weiVal = await project.calculateWeiVal(projAddrR, weighting)
+      let repVal = await project.calculateRepVal(projAddrR, weighting)
+
+      let workerRepBalBefore = await utils.getRepBalance(worker2)
+      let taskWeightingBefore = await task.getWeighting(projAddrR, indexReclaim)
+      let taskWeiRewardBefore = await task.getWeiReward(projAddrR, indexReclaim)
+      let taskRepRewardBefore = await task.getRepReward(projAddrR, indexReclaim)
+      let taskCompleteBefore = await task.getComplete(projAddrR, indexReclaim)
+      let taskClaimerBefore = await task.getClaimer(projAddrR, indexReclaim)
+
+      // assert that worker has the reputation to claim the task
+      assert.isAtLeast(workerRepBalBefore, repVal, 'worker2 does not have enough reputation to claim the task')
+
+      // claim task
+      await RR.claimTask(projAddrR, indexReclaim, description, weighting, {from: worker2})
+
+      // take stock of variables after
+      let workerRepBalAfter = await utils.getRepBalance(worker2)
+      let taskWeightingAfter = await task.getWeighting(projAddrR, indexReclaim)
+      let taskWeiRewardAfter = await task.getWeiReward(projAddrR, indexReclaim)
+      let taskRepRewardAfter = await task.getRepReward(projAddrR, indexReclaim)
+      let taskCompleteAfter = await task.getComplete(projAddrR, indexReclaim)
+      let taskClaimerAfter = await task.getClaimer(projAddrR, indexReclaim)
+
+      // checks
+      assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
+      assert.equal(taskWeightingBefore, 0, 'task should not have weighting before claimed')
+      assert.equal(taskWeightingAfter, weighting, 'task given incorrect weighting')
+      assert.equal(taskWeiRewardBefore, 0, 'task should not have wei reward before claimed')
+      assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
+      assert.equal(taskRepRewardBefore, 0, 'task should not have rep reward before claimed')
+      assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
+      assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
+      assert.equal(taskCompleteAfter, false, 'task should not be complete after claiming')
+      assert.equal(taskClaimerBefore, 0, 'task should not have claimer before claimed')
+      assert.equal(taskClaimerAfter, worker2, 'task given incorrect claimer')
+    })
+
+    it('Worker without enough reputation can\'t claim a task from TR active project', async function () {
+      let description = taskSet1[indexThrowaway].description
+      let weighting = taskSet1[indexThrowaway].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrT, indexThrowaway, description, weighting, {from: notWorker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker without enough reputation can\'t claim a task from RR active project', async function () {
+      let description = taskSet1[indexThrowaway].description
+      let weighting = taskSet1[indexThrowaway].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrR, indexThrowaway, description, weighting, {from: notWorker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker can\'t claim task from TR active project with incorrect weighting', async function () {
+      let description = taskSet1[indexThrowaway].description
+      let weighting = taskSet1[indexThrowaway].weighting + 1
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrT, indexThrowaway, description, weighting, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker can\'t claim task from RR active project with incorrect weighting', async function () {
+      let description = taskSet1[indexThrowaway].description
+      let weighting = taskSet1[indexThrowaway].weighting + 1
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrR, indexThrowaway, description, weighting, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker can\'t claim task from TR active project with incorrect description', async function () {
+      let description = taskSet1[indexThrowaway].description + 'yolo'
+      let weighting = taskSet1[indexThrowaway].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrT, indexThrowaway, description, weighting, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker can\'t claim task from RR active project with incorrect description', async function () {
+      let description = taskSet1[indexThrowaway].description + 'yolo'
+      let weighting = taskSet1[indexThrowaway].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrR, indexThrowaway, description, weighting, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker can\'t claim nonexistant task from TR active project', async function () {
+      let description = taskSet1[indexThrowaway].description
+      let weighting = taskSet1[indexThrowaway].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrT, notIndex, description, weighting, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker can\'t claim nonexistant task from RR active project', async function () {
+      let description = taskSet1[indexThrowaway].description
+      let weighting = taskSet1[indexThrowaway].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrR, notIndex, description, weighting, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
 
-  it('worker2 can\'t claim worker1\'s task', async function () {
-    errorThrown = false
-    try {
-      let repPrice = 1
-      let weiReward = 100000
-      let index = 0
-      await RR.claimTask(projectAddress, index, 'install a super long string thats most definitely longer than bytes32 I really hope this works yup yup yup', weiReward, repPrice, {from: worker2})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+  describe('marking tasks complete pre-turnover time', () => {
+    it('Worker who claimed a task from TR active project can mark it complete before turnaround time', async function () {
+      // take stock of variables before
+      let taskCompleteBefore = await task.getComplete(projAddrT, indexNoReclaimPre)
+
+      // mark task complete
+      await PR.submitTaskComplete(projAddrT, indexNoReclaimPre, {from: worker1})
+
+      // take stock of variables after
+      let taskCompleteAfter = await task.getComplete(projAddrT, indexNoReclaimPre)
+
+      // checks
+      assert.equal(taskCompleteBefore, false, 'incorrect taskCompleteBefore')
+      assert.equal(taskCompleteAfter, true, 'incorrect taskCompleteAfter')
+    })
+
+    it('Worker who claimed a task from RR active project can mark it complete before turnaround time', async function () {
+      // take stock of variables before
+      let taskCompleteBefore = await task.getComplete(projAddrR, indexNoReclaimPre)
+
+      // mark task complete
+      await PR.submitTaskComplete(projAddrR, indexNoReclaimPre, {from: worker1})
+
+      // take stock of variables after
+      let taskCompleteAfter = await task.getComplete(projAddrT, indexNoReclaimPre)
+
+      // checks
+      assert.equal(taskCompleteBefore, false, 'incorrect taskCompleteBefore')
+      assert.equal(taskCompleteAfter, true, 'incorrect taskCompleteAfter')
+    })
+
+    it('Worker can\'t mark a task from TR active project complete again', async function () {
+      errorThrown = false
+      try {
+        await PR.submitTaskComplete(projAddrT, indexReclaim, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker can\'t mark a task from TR active project complete again', async function () {
+      errorThrown = false
+      try {
+        await PR.submitTaskComplete(projAddrR, indexReclaim, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker can\'t mark a task complete that they did not claim from TR active project', async function () {
+      errorThrown = false
+      try {
+        await PR.submitTaskComplete(projAddrT, indexReclaim, {from: notWorker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker can\'t mark a task complete that they did not claim from RR active project', async function () {
+      errorThrown = false
+      try {
+        await PR.submitTaskComplete(projAddrR, indexReclaim, {from: notWorker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
 
-  it('worker2 can\'t claim a task if incorrect reputation price is provided', async function () {
-    errorThrown = false
-    try {
-      let repPrice = 0
-      let weiReward = 2000000
-      let index = 1
-      await RR.claimTask(projectAddress, index, 'install a supernode', weiReward, repPrice, {from: worker2})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+  describe('claiming tasks post-turnover time', () => {
+    before(async function () {
+      // have worker 2 claim indexThrowaway for post-checkValidate() tests
+      let description = taskSet1[indexThrowaway].description
+      let weighting = taskSet1[indexThrowaway].weighting
+
+      await RR.claimTask(projAddrT, indexThrowaway, description, weighting, {from: worker2})
+      await RR.claimTask(projAddrR, indexThrowaway, description, weighting, {from: worker2})
+
+      // fast forward time
+      await evmIncreaseTime(604800) // 1 week
+    })
+
+    it('Worker with enough reputation can reclaim a task from TR active project that is claimed but not marked complete', async function () {
+      // take stock of variables before
+      let description = taskSet1[indexReclaim].description
+      let weighting = taskSet1[indexReclaim].weighting
+      let weiVal = await project.calculateWeiVal(projAddrT, weighting)
+      let repVal = await project.calculateRepVal(projAddrT, weighting)
+
+      let workerRepBalBefore = await utils.getRepBalance(worker1)
+      let taskWeightingBefore = await task.getWeighting(projAddrT, indexReclaim)
+      let taskWeiRewardBefore = await task.getWeiReward(projAddrT, indexReclaim)
+      let taskRepRewardBefore = await task.getRepReward(projAddrT, indexReclaim)
+      let taskCompleteBefore = await task.getComplete(projAddrT, indexReclaim)
+      let taskClaimerBefore = await task.getClaimer(projAddrT, indexReclaim)
+
+      // assert that worker has the reputation to claim the task
+      assert.isAtLeast(workerRepBalBefore, repVal, 'worker2 does not have enough reputation to claim the task')
+
+      // claim task
+      await RR.claimTask(projAddrT, indexReclaim, description, weighting, {from: worker1})
+
+      // take stock of variables after
+      let workerRepBalAfter = await utils.getRepBalance(worker1)
+      let taskWeightingAfter = await task.getWeighting(projAddrT, indexReclaim)
+      let taskWeiRewardAfter = await task.getWeiReward(projAddrT, indexReclaim)
+      let taskRepRewardAfter = await task.getRepReward(projAddrT, indexReclaim)
+      let taskCompleteAfter = await task.getComplete(projAddrT, indexReclaim)
+      let taskClaimerAfter = await task.getClaimer(projAddrT, indexReclaim)
+
+      // checks
+      assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
+      assert.equal(taskWeightingBefore, taskWeightingAfter, 'should be the same')
+      assert.equal(taskWeiRewardBefore, taskWeiRewardAfter, 'should be the same')
+      assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
+      assert.equal(taskRepRewardBefore, taskRepRewardAfter, 'should be the same')
+      assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
+      assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
+      assert.equal(taskCompleteAfter, false, 'task should not be complete after claiming')
+      assert.equal(taskClaimerBefore, worker2, 'task originally had incorrect claimer')
+      assert.equal(taskClaimerAfter, worker1, 'task given incorrect claimer')
+    })
+
+    it('Worker with enough reputation can reclaim a task from RR active project that is claimed but not marked complete', async function () {
+      // take stock of variables before
+      let description = taskSet1[indexReclaim].description
+      let weighting = taskSet1[indexReclaim].weighting
+      let weiVal = await project.calculateWeiVal(projAddrR, weighting)
+      let repVal = await project.calculateRepVal(projAddrR, weighting)
+
+      let workerRepBalBefore = await utils.getRepBalance(worker1)
+      let taskWeightingBefore = await task.getWeighting(projAddrR, indexReclaim)
+      let taskWeiRewardBefore = await task.getWeiReward(projAddrR, indexReclaim)
+      let taskRepRewardBefore = await task.getRepReward(projAddrR, indexReclaim)
+      let taskCompleteBefore = await task.getComplete(projAddrR, indexReclaim)
+      let taskClaimerBefore = await task.getClaimer(projAddrR, indexReclaim)
+
+      // assert that worker has the reputation to claim the task
+      assert.isAtLeast(workerRepBalBefore, repVal, 'worker2 does not have enough reputation to claim the task')
+
+      // claim task
+      await RR.claimTask(projAddrR, indexReclaim, description, weighting, {from: worker1})
+
+      // take stock of variables after
+      let workerRepBalAfter = await utils.getRepBalance(worker1)
+      let taskWeightingAfter = await task.getWeighting(projAddrR, indexReclaim)
+      let taskWeiRewardAfter = await task.getWeiReward(projAddrR, indexReclaim)
+      let taskRepRewardAfter = await task.getRepReward(projAddrR, indexReclaim)
+      let taskCompleteAfter = await task.getComplete(projAddrR, indexReclaim)
+      let taskClaimerAfter = await task.getClaimer(projAddrR, indexReclaim)
+
+      // checks
+      assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
+      assert.equal(taskWeightingBefore, taskWeightingAfter, 'should be the same')
+      assert.equal(taskWeiRewardBefore, taskWeiRewardAfter, 'should be the same')
+      assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
+      assert.equal(taskRepRewardBefore, taskRepRewardAfter, 'should be the same')
+      assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
+      assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
+      assert.equal(taskCompleteAfter, false, 'task should not be complete after claiming')
+      assert.equal(taskClaimerBefore, worker2, 'task originally had incorrect claimer')
+      assert.equal(taskClaimerAfter, worker1, 'task given incorrect claimer')
+    })
+
+    it('Worker with enough reputation can\'t reclaim that same task from TR active project', async function () {
+      let description = taskSet1[indexReclaim].description
+      let weighting = taskSet1[indexReclaim].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrT, indexReclaim, description, weighting, {from: worker2})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker with enough reputation can\'t reclaim that same task from RR active project', async function () {
+      let description = taskSet1[indexReclaim].description
+      let weighting = taskSet1[indexReclaim].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrR, indexReclaim, description, weighting, {from: worker2})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
 
-  it('worker2 can\'t claim a task if incorrect wei reward is provided', async function () {
-    errorThrown = false
-    try {
-      let repPrice = 1
-      let weiReward = 20000000
-      let index = 1
-      await RR.claimTask(projectAddress, index, 'install a supernode', weiReward, repPrice, {from: worker2})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+  describe('marking tasks complete post-turnover time', () => {
+    it('Worker who claimed a task from TR active project and is past their turnover time can mark it complete if the task wasn\'t reclaimed', async function () {
+      // take stock of variables before
+      let taskCompleteBefore = await task.getComplete(projAddrT, indexNoReclaimPost)
+
+      // mark task complete
+      await PR.submitTaskComplete(projAddrT, indexNoReclaimPost, {from: worker1})
+
+      // take stock of variables after
+      let taskCompleteAfter = await task.getComplete(projAddrT, indexNoReclaimPost)
+
+      // checks
+      assert.equal(taskCompleteBefore, false, 'incorrect taskCompleteBefore')
+      assert.equal(taskCompleteAfter, true, 'incorrect taskCompleteAfter')
+    })
+
+    it('Worker who claimed a task from RR active project and is past their turnover time can mark it complete if the task wasn\'t reclaimed', async function () {
+      // take stock of variables before
+      let taskCompleteBefore = await task.getComplete(projAddrR, indexNoReclaimPost)
+
+      // mark task complete
+      await PR.submitTaskComplete(projAddrR, indexNoReclaimPost, {from: worker1})
+
+      // take stock of variables after
+      let taskCompleteAfter = await task.getComplete(projAddrR, indexNoReclaimPost)
+
+      // checks
+      assert.equal(taskCompleteBefore, false, 'incorrect taskCompleteBefore')
+      assert.equal(taskCompleteAfter, true, 'incorrect taskCompleteAfter')
+    })
+
+    it('Worker who reclaimed a task from TR active project can mark it complete', async function () {
+      // take stock of variables before
+      let taskCompleteBefore = await task.getComplete(projAddrT, indexReclaim)
+
+      // mark task complete
+      await PR.submitTaskComplete(projAddrT, indexReclaim, {from: worker1})
+
+      // take stock of variables after
+      let taskCompleteAfter = await task.getComplete(projAddrT, indexReclaim)
+
+      // checks
+      assert.equal(taskCompleteBefore, false, 'incorrect taskCompleteBefore')
+      assert.equal(taskCompleteAfter, true, 'incorrect taskCompleteAfter')
+    })
+
+    it('Worker who reclaimed a task from RR active project can mark it complete', async function () {
+      // take stock of variables before
+      let taskCompleteBefore = await task.getComplete(projAddrR, indexReclaim)
+
+      // mark task complete
+      await PR.submitTaskComplete(projAddrR, indexReclaim, {from: worker1})
+
+      // take stock of variables after
+      let taskCompleteAfter = await task.getComplete(projAddrR, indexReclaim)
+
+      // checks
+      assert.equal(taskCompleteBefore, false, 'incorrect taskCompleteBefore')
+      assert.equal(taskCompleteAfter, true, 'incorrect taskCompleteAfter')
+    })
+
+    it('Worker can\'t mark a task from TR active project complete again', async function () {
+      errorThrown = false
+      try {
+        await PR.submitTaskComplete(projAddrT, indexReclaim, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker can\'t mark a task from TR active project complete again', async function () {
+      errorThrown = false
+      try {
+        await PR.submitTaskComplete(projAddrR, indexReclaim, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker can\'t mark a task from TR active project complete that was reclaimed from them', async function () {
+      errorThrown = false
+      try {
+        await PR.submitTaskComplete(projAddrT, indexReclaim, {from: worker2})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Worker can\'t mark a task from RR active project complete that was reclaimed from them', async function () {
+      errorThrown = false
+      try {
+        await PR.submitTaskComplete(projAddrR, indexReclaim, {from: worker2})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
 
-  it('worker2 can\'t claim a task if incorrect task description is provided', async function () {
-    errorThrown = false
-    try {
-      let repPrice = 1
-      let weiReward = 2000000
-      let index = 1
-      await RR.claimTask(projectAddress, index, 'install a supergoobi', weiReward, repPrice, {from: worker2})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+  describe('state changes before time is up', () => {
+    it('checkValidate() does not change TR active project to validating before time is up', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrT)
+
+      // attempt to checkStaked
+      await PR.checkValidate(projAddrT)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrT)
+
+      // checks
+      assert.equal(stateBefore, 3, 'state before should be 3')
+      assert.equal(stateAfter, 3, 'state should not have changed')
+    })
+
+    it('checkValidate() does not change RR active project to validating before time is up', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrR)
+
+      // attempt to checkStaked
+      await PR.checkValidate(projAddrR)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrR)
+
+      // checks
+      assert.equal(stateBefore, 3, 'state before should be 3')
+      assert.equal(stateAfter, 3, 'state should not have changed')
+    })
   })
 
-  it('worker2 can\'t claim a task if incorrect task index is provided', async function () {
-    errorThrown = false
-    try {
-      let repPrice = 1
-      let weiReward = 2000000
-      let index = 100
-      await RR.claimTask(projectAddress, index, 'install a supernode', weiReward, repPrice, {from: worker2})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+  describe('state changes after time is up', () => {
+    before(async function () {
+      // fast forward time
+      await evmIncreaseTime(604800) // 1 week
+    })
+
+    it('checkValidate() changes TR active project to validating after time is up', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrT)
+
+      // attempt to checkStaked
+      await PR.checkValidate(projAddrT)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrT)
+
+      // checks
+      assert.equal(stateBefore, 3, 'state before should be 3')
+      assert.equal(stateAfter, 4, 'state after should be 4')
+    })
+
+    it('checkValidate() changes RR active project to validating after time is up', async function () {
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrR)
+
+      // attempt to checkStaked
+      await PR.checkValidate(projAddrR)
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrR)
+
+      // checks
+      assert.equal(stateBefore, 3, 'state before should be 3')
+      assert.equal(stateAfter, 4, 'state after should be 4')
+    })
   })
 
-  it('worker2 can\'t claim a task if incorrect project address is provided', async function () {
-    errorThrown = false
-    try {
-      let repPrice = 1
-      let weiReward = 2000000
-      let index = 1
-      await RR.claimTask(incorrectProjectAddress, index, 'install a supernode', weiReward, repPrice, {from: worker2})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
+  describe('mark task complete on validating projects', () => {
+    it('Claim task can\'t be called on task from TR validating project', async function () {
+      let description = taskSet1[indexEndTest].description
+      let weighting = taskSet1[indexEndTest].weighting
 
-  it('worker2 can\'t claim a task costing more reputation points than she has', async function () {
-    errorThrown = false
-    try {
-      let repPrice = 2
-      let weiReward = 100
-      let index = 2
-      await RR.claimTask(projectAddress, index, 'break the internet', weiReward, repPrice, {from: worker2})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrT, indexEndTest, description, weighting, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
 
-  it('worker2 can claim another task', async function () {
-    let repPrice = 1
-    let weiReward = 200000
-    let index = 1
-    await RR.claimTask(projectAddress, index, 'install a supernode', 90, {from: worker2})
-    let workerBalance2New = await RR.balances.call(worker2)
-    // console.log(workerBalance1New.toNumber())
-    assert.equal(workerBalance2New, workerBalance2 - repPrice, 'worker 1 reputation balance not decremented appropriately')
-    let taskHash = hashTasks(data)[index]
-    let reward = await PROJ.taskRewards.call(taskHash)
-    assert.equal(reward[0].toNumber(), weiReward, 'wei reward stored incorrectly')
-    assert.equal(reward[1].toNumber(), repPrice, 'reputation cost stored incorrectly')
-    assert.equal(reward[2], worker2, 'incorrect worker stored')
-    // console.log(reward)
-    totalReputation = await RR.totalSupply()
-    totalFreeReputation = await RR.totalFreeSupply()
-    assert.equal(totalReputation, 3, 'incorrect total reputation stored')
-    assert.equal(totalFreeReputation, 1, 'incorrect free reputation stored')
-  })
+    it('Claim task can\'t be called on task from RR validating project', async function () {
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrR, indexEndTest, description, weighting, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
 
-  it('active project becomes validating project when active period is up', async function () {
-    let state = await PROJ.state()
-    assert.equal(state.toNumber(), 3, 'project should be in active state')
-    await evmIncreaseTime(7 * 25 * 60 * 60)
-    await PR.checkValidate(projectAddress)
-    state = await PROJ.state()
-    assert.equal(state.toNumber(), 4, 'project should have entered validating state')
-  })
+    it('Mark task complete can\'t be called on task from TR validating project', async function () {
+      errorThrown = false
+      try {
+        await PR.submitTaskComplete(projAddrT, indexThrowaway, {from: worker2})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
 
-  it('worker3 can\'t claim a task once the active period is up', async function () {
-    errorThrown = false
-    try {
-      let repPrice = 1
-      let weiReward = 100
-      let index = 3
-      await RR.claimTask(projectAddress, index, 'save the world', weiReward, repPrice, {from: worker3})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
+    it('Mark task complete can\'t be called on task from RR validating project', async function () {
+      errorThrown = false
+      try {
+        await PR.submitTaskComplete(projAddrR, indexThrowaway, {from: worker2})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
-
 })

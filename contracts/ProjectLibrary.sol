@@ -1,4 +1,4 @@
-pragma solidity 0.4.19;
+pragma solidity ^0.4.21;
 
 import "./Project.sol";
 import "./TokenRegistry.sol";
@@ -18,8 +18,8 @@ library ProjectLibrary {
     // EVENTS
     // =====================================================================
 
-    event tokenRefund(address staker, uint256 refund);
-    event reputationRefund(address projectAddress, address staker, uint256 refund);
+    event TokenRefund(address staker, uint256 refund);
+    event ReputationRefund(address projectAddress, address staker, uint256 refund);
 
     // =====================================================================
     // UTILITY
@@ -207,8 +207,9 @@ library ProjectLibrary {
             for(uint i = 0; i < project.getTaskCount(); i++) {
                 Task task = Task(project.tasks(i));
                 if (task.complete()) {
-                    if (task.opposingValidator()) {   // there is an opposing validator, poll required
-                        task.setPollId(plcr.startPoll(51, project.voteCommitPeriod(), project.voteRevealPeriod())); // function handles storage of voting pollId
+                    if (task.opposingValidator()) { // there is an opposing validator, poll required
+                        uint pollNonce = plcr.startPoll(51, project.voteCommitPeriod(), project.voteRevealPeriod());
+                        task.setPollId(pollNonce); // function handles storage of voting pollId
                     } else {
                         bool repClaim = task.markTaskClaimable(true);
                         if (!repClaim) {
@@ -299,6 +300,7 @@ library ProjectLibrary {
         require(project.state() == 4);
 
         Task task = Task(project.tasks(_index));
+        require(task.complete() == true);
         _validationState
             ? task.setValidator(_validator, 1, _tokens)
             : task.setValidator(_validator, 0, _tokens);
@@ -387,7 +389,7 @@ library ProjectLibrary {
         if(_project.tokensStaked() != 0) {
             refund = _project.tokenBalances(_staker) * _project.passAmount() / 100;
         }
-        tokenRefund(_staker, refund);
+        emit TokenRefund(_staker, refund);
         return refund;
     }
 
@@ -403,7 +405,7 @@ library ProjectLibrary {
         if(_project.reputationStaked() != 0) {
             refund = _project.reputationBalances(_staker) * _project.passAmount() / 100;
         }
-        reputationRefund(address(_project), _staker, refund);
+        emit ReputationRefund(address(_project), _staker, refund);
         return refund;
     }
 }

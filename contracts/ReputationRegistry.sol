@@ -1,4 +1,4 @@
-pragma solidity 0.4.19;
+pragma solidity ^0.4.21;
 
 import "./Project.sol";
 import "./ProjectLibrary.sol";
@@ -81,7 +81,7 @@ contract ReputationRegistry{
         );
         projectRegistry = ProjectRegistry(_projectRegistry);
         plcrVoting = PLCRVoting(_plcrVoting);
-        distributeToken= DistributeToken(_distributeToken);
+        distributeToken = DistributeToken(_distributeToken);
     }
 
     // =====================================================================
@@ -127,13 +127,12 @@ contract ReputationRegistry{
     */
     function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes _ipfsHash) external {    //_cost of project in ether
         //calculate cost of project in tokens currently (_cost in wei)
-        //check proposer has at least 5% of the proposed cost in tokens
+        //check proposer has at least 5% of the proposed cost in reputation
         require(now < _stakingPeriod && _cost > 0);
-
         uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
-        uint256 proposerReputationCost = ( //divide by 20 to get 5 percent of tokens
+        uint256 proposerReputationCost = ( //divide by 20 to get 5 percent of reputation
         Division.percent(costProportion, proposeProportion, 10) *
-        distributeToken.totalSupply()) /
+        totalSupply) /
         10000000000;
         require(balances[msg.sender] >= proposerReputationCost);
 
@@ -147,7 +146,7 @@ contract ReputationRegistry{
             proposerReputationCost,
             _ipfsHash
         );
-        ProjectCreated(projectAddress, _cost, proposerReputationCost);
+        emit ProjectCreated(projectAddress, _cost, proposerReputationCost);
     }
 
     /**
@@ -178,6 +177,10 @@ contract ReputationRegistry{
         require(projectRegistry.projects(_projectAddress) == true);
         require(balances[msg.sender] >= _reputation && _reputation > 0);                    //make sure project exists & RH has tokens to stake
         Project project = Project(_projectAddress);
+        // handles edge case where someone attempts to stake past the staking deadline
+        projectRegistry.checkStaked(_projectAddress);
+        require(project.state() == 1);
+
         uint256 repRemaining = project.reputationCost() - project.reputationStaked();
         uint256 reputationVal = _reputation < repRemaining ? _reputation : repRemaining;
         balances[msg.sender] -= reputationVal;
@@ -194,6 +197,9 @@ contract ReputationRegistry{
     function unstakeReputation(address _projectAddress, uint256 _reputation) external {
         require(projectRegistry.projects(_projectAddress) == true);
         require(_reputation > 0);
+        // handles edge case where someone attempts to stake past the staking deadline
+        projectRegistry.checkStaked(_projectAddress);
+
         balances[msg.sender] += _reputation;
         Project(_projectAddress).unstakeReputation(msg.sender, _reputation);
     }
@@ -219,6 +225,7 @@ contract ReputationRegistry{
     ) external {
         require(projectRegistry.projects(_projectAddress) == true);
         Project project = Project(_projectAddress);
+        require(project.hashListSubmitted() == true);
         uint reputationVal = project.reputationCost() * _weighting / 100;
         require(balances[msg.sender] >= reputationVal);
         uint weiVal = project.weiCost() * _weighting / 100;

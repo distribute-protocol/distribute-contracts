@@ -1,4 +1,4 @@
-var assert = require('assert')
+const assert = require('assert')
 const DistributeToken = artifacts.require('DistributeToken')
 const Promise = require('bluebird')
 web3.eth = Promise.promisifyAll(web3.eth)
