@@ -42,23 +42,22 @@ contract Project {
         8: Expired
     */
 
-    uint256 public stakedStatePeriod = 1 weeks;
-    uint256 public activeStatePeriod = 2 weeks;
-    uint256 public turnoverTime = 1 weeks;
-    uint256 public validateStatePeriod = 1 weeks;
-    uint256 public voteCommitPeriod = 1 weeks;
-    uint256 public voteRevealPeriod = 1 weeks;
-    uint256 public passThreshold = 100;
+    uint256 public stakedStatePeriod;
+    uint256 public activeStatePeriod;
+    uint256 public turnoverTime;
+    uint256 public validateStatePeriod;
+    uint256 public voteCommitPeriod;
+    uint256 public voteRevealPeriod;
+    uint256 public passThreshold;
 
     address public proposer;
     uint256 public proposerType;
     uint256 public proposerStake;
-    uint256 public stakingPeriod;
     uint256 public weiBal;
     uint256 public nextDeadline;
     uint256 public weiCost;
     uint256 public reputationCost;
-    string public ipfsHash;
+    bytes public ipfsHash;
 
     uint256 public tokensStaked;
     uint256 public reputationStaked;
@@ -106,8 +105,10 @@ contract Project {
     // CONSTRUCTOR
     // =====================================================================
 
+    function Project() {}
     /**
-    @dev Initialize a Project with a Reputation Registry and a Token Registry, and all related project values.
+    @dev Used for proxy deployment of this contract. Initialize a Project with a Reputation Registry
+    and a Token Registry, and all related project values.
     @param _cost The total cost of the project in wei
     @param _costProportion The proportion of the project cost divided by theDistributeToken weiBal
     represented as integer
@@ -120,14 +121,14 @@ contract Project {
     @param _reputationRegistry Address of the Reputation Registry
     @param _tokenRegistry Address of the contract system Token Registry
     */
-    function Project(
+    function setup(
         uint256 _cost,
         uint256 _costProportion,
         uint256 _stakingPeriod,
         address _proposer,
         uint256 _proposerType,
         uint256 _proposerStake,
-        string _ipfsHash,
+        bytes _ipfsHash,
         address _reputationRegistry,
         address _tokenRegistry
     ) public {
@@ -143,6 +144,15 @@ contract Project {
         proposerType = _proposerType;
         proposerStake = _proposerStake;
         ipfsHash = _ipfsHash;
+        // Proxies don't initialize variables
+        stakedStatePeriod = 1 weeks;
+        activeStatePeriod = 2 weeks;
+        turnoverTime = 1 weeks;
+        validateStatePeriod = 1 weeks;
+        voteCommitPeriod = 1 weeks;
+        voteRevealPeriod = 1 weeks;
+        passThreshold = 100;
+
     }
 
     // =====================================================================

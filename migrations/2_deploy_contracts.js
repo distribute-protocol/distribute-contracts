@@ -6,6 +6,8 @@ const PLCRVoting = artifacts.require('PLCRVoting')
 const DistributeToken = artifacts.require('DistributeToken')
 const ProjectLibrary = artifacts.require('ProjectLibrary')
 const Division = artifacts.require('library/Division')
+const Task = artifacts.require('Task')
+const ProxyFactory = artifacts.require('library/ProxyFactory')
 
 /*
   deploys and connects contracts
@@ -19,6 +21,12 @@ module.exports = function (deployer) {
     await deployer.link(ProjectLibrary, [TokenRegistry, ReputationRegistry, ProjectRegistry])
     await deployer.deploy(TokenRegistry)
     await deployer.deploy(ReputationRegistry)
+    await deployer.deploy(Task)
+    await deployer.deploy(Project)
+    // await deployer.deploy(ProxyFactory)
+
+    // await deployer.deploy(Task, '0', TokenRegistry.address, ReputationRegistry.address)
+    // await deployer.deploy(Project, 0, 0, 0, '0x0', 0, 0, 'ipfsHash', ReputationRegistry.address, TokenRegistry.address)
     await deployer.deploy(ProjectRegistry)
     await deployer.deploy(DistributeToken, TokenRegistry.address, ReputationRegistry.address)
     await deployer.deploy(PLCRVoting, TokenRegistry.address, ReputationRegistry.address, ProjectRegistry.address)
@@ -26,8 +34,10 @@ module.exports = function (deployer) {
     let PRInstance = await ProjectRegistry.deployed()
     let TRInstance = await TokenRegistry.deployed()
     let RRInstance = await ReputationRegistry.deployed()
+    // PRInstance.init(DistributeToken.address, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address, Project.address, Task.address, ProxyFactory.address),
+
     return Promise.all([
-      PRInstance.init(DistributeToken.address, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address),
+      PRInstance.init(DistributeToken.address, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address, Project.address, Task.address),
       TRInstance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address),
       RRInstance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address)
     ])

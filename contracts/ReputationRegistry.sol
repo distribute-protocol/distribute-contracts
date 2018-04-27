@@ -125,7 +125,7 @@ contract ReputationRegistry{
     @param _stakingPeriod Length of time the project can be staked before it expires
     @param _ipfsHash Hash of the project description
     */
-    function proposeProject(uint256 _cost, uint256 _stakingPeriod, string _ipfsHash) external {    //_cost of project in ether
+    function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes _ipfsHash) external {    //_cost of project in ether
         //calculate cost of project in tokens currently (_cost in wei)
         //check proposer has at least 5% of the proposed cost in reputation
         require(now < _stakingPeriod && _cost > 0);

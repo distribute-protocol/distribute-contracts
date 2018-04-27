@@ -1,10 +1,12 @@
 pragma solidity ^0.4.21;
 
 import "./library/PLCRVoting.sol";
+/* import "./library/ProxyFactory.sol"; */
 import "./ReputationRegistry.sol";
-import "./Project.sol";
+/* import "./Project.sol"; */
 import "./ProjectLibrary.sol";
 import "./Task.sol";
+import "bytes/BytesLib.sol";
 
 /**
 @title Project Registry for Distribute Network
@@ -16,6 +18,7 @@ and Distribute Token
 contract ProjectRegistry {
 
     using ProjectLibrary for address;
+    using BytesLib for bytes;
 
     // =====================================================================
     // EVENTS
@@ -28,15 +31,20 @@ contract ProjectRegistry {
         uint256 proposerStake
     );
 
+    event ProxyDeployed(address proxyAddress, address targetAddress);
+
     // =====================================================================
     // STATE VARIABLES
     // =====================================================================
 
     PLCRVoting plcrVoting;
+    /* ProxyFactory proxyFactory; */
 
     address tokenRegistryAddress;
     address reputationRegistryAddress;
     address distributeTokenAddress;
+    address projectContractAddress;
+    address taskContractAddress;
 
     uint256 projectNonce = 0;
     mapping (uint => address) public projectsList;
@@ -85,8 +93,11 @@ contract ProjectRegistry {
         address _distributeToken,
         address _tokenRegistry,
         address _reputationRegistry,
-        address _plcrVoting
+        address _plcrVoting,
+        address _projectAddress,
+        address _taskAddress
     ) public {       //contract is created
+              /* address _proxyFactory */
         require(
             tokenRegistryAddress == 0 &&
             reputationRegistryAddress == 0 &&
@@ -96,6 +107,105 @@ contract ProjectRegistry {
         tokenRegistryAddress = _tokenRegistry;
         reputationRegistryAddress = _reputationRegistry;
         plcrVoting = PLCRVoting(_plcrVoting);
+        projectContractAddress = _projectAddress;
+        taskContractAddress = _taskAddress;
+        /* proxyFactory = ProxyFactory(_proxyFactory); */
+    }
+
+    // =====================================================================
+    // PROXY DEPLOYER
+    // =====================================================================
+
+    function createProxy(address _target, bytes _data)
+        internal
+        returns (address proxyContract)
+    {
+        proxyContract = createProxyImpl(_target, _data);
+
+        ProxyDeployed(proxyContract, _target);
+    }
+
+    function createProxyImpl(address _target, bytes _data)
+        internal
+        returns (address proxyContract)
+    {
+        assembly {
+            let contractCode := mload(0x40) // Find empty storage location using "free memory pointer"
+
+            mstore(add(contractCode, 0x14), _target) // Add target address, with a 20 bytes [i.e. 32 - (32 - 20)] offset to later accomodate first part of the bytecode
+            mstore(contractCode, 0x000000000000000000603160008181600b9039f3600080808080368092803773) // First part of the bytecode, padded with 9 bytes of zeros to the left, overwrites left padding of target address
+            mstore(add(contractCode, 0x34), 0x5af43d828181803e808314602f57f35bfd000000000000000000000000000000) // Final part of bytecode, offset by 52 bytes
+
+            proxyContract := create(0, add(contractCode, 0x09), 60) // total length 60 bytes
+            if iszero(extcodesize(proxyContract)) {
+                revert(0, 0)
+            }
+
+            // check if the _data.length > 0 and if it is forward it to the newly created contract
+            let dataLength := mload(_data)
+            if iszero(iszero(dataLength)) {
+                if iszero(call(gas, proxyContract, 0, add(_data, 0x20), dataLength, 0, 0)) {
+                    revert(0, 0)
+                }
+            }
+        }
+    }
+
+    function createProxyProject(
+        uint256 _cost,
+        uint256 _costProportion,
+        uint256 _stakingPeriod,
+        address _proposer,
+        uint256 _proposerType,
+        uint256 _proposerStake,
+        bytes _ipfsHash,
+        address _reputationRegistry,
+        address _tokenRegistry
+    ) internal returns (address) {
+        require(_ipfsHash.length == 46);
+        bytes memory dataToSend;
+        assembly {
+            //let ipfsHashSize := mload(_ipfsHash)
+            dataToSend := mload(0x40) // Find empty memory location using "free memory pointer"
+            mstore(add(dataToSend, 0x4), 0xf58a1adb)
+            mstore(add(dataToSend, 0x24), _cost) // this is the function ID
+            mstore(add(dataToSend, 0x44), _costProportion)
+            mstore(add(dataToSend, 0x64), _stakingPeriod)
+            mstore(add(dataToSend, 0x84), _proposer)
+            mstore(add(dataToSend, 0xa4), _proposerType)
+            mstore(add(dataToSend, 0xc4), _proposerStake)
+            mstore(add(dataToSend, 0xe4), 0x120) // <--- _ipfsHash data location part (length + contents)
+            mstore(add(dataToSend, 0x104), _reputationRegistry)
+            mstore(add(dataToSend, 0x124), _tokenRegistry)
+            mstore(add(dataToSend, 0x144), 46) // <--- Length of the IPFS hash size
+            mstore(add(dataToSend, 0x164), mload(add(_ipfsHash, 0x20)))
+            mstore(add(dataToSend, 0x184), mload(add(_ipfsHash, 0x40)))
+            mstore(dataToSend, 0x172) // 4 bytes (function ID) + 32 bytes per parameter * 9 + 32 bytes of "length of bytes" + first 32 bytes of bytes data + 14 bytes = 370 bytes [0x172 bytes]
+
+            // updating the free memory pointer with the length of tightly packed
+            mstore(0x40, add(dataToSend, 0x192)) // 0x192 == 0x172 + 0x20
+        }
+        address projectAddress = createProxy(projectContractAddress, dataToSend);
+        return projectAddress;
+    }
+
+    function createProxyTask(
+        bytes32 _hash,
+        address _tokenRegistry,
+        address _reputationRegistry
+    ) internal returns (address) {
+        bytes memory dataToSend;
+        assembly {
+          dataToSend := mload(0x40)
+          mstore(add(dataToSend, 0x4), 0xae4d1af6)
+          mstore(add(dataToSend, 0x24), _hash)
+          mstore(add(dataToSend, 0x44), _tokenRegistry)
+          mstore(add(dataToSend, 0x64), _reputationRegistry)
+          mstore(dataToSend, 0x64)/// 4 + 32 * 3 == 100 bytes
+          mstore(0x40, add(dataToSend, 0x84))
+        }
+        address taskAddress = createProxy(taskContractAddress, dataToSend);
+        return taskAddress;
     }
 
     // =====================================================================
@@ -191,9 +301,9 @@ contract ProjectRegistry {
         address _proposer,
         uint256 _proposerType,
         uint256 _proposerStake,
-        string _ipfsHash
+        bytes _ipfsHash
     ) external onlyTRorRR returns (address) {
-        Project newProject = new Project(
+        address projectAddress = createProxyProject(
             _cost,
             _costProportion,
             _stakingPeriod,
@@ -204,7 +314,6 @@ contract ProjectRegistry {
             reputationRegistryAddress,
             tokenRegistryAddress
         );
-        address projectAddress = address(newProject);
         projects[projectAddress] = true;
         projectsList[projectNonce] = projectAddress;
         projectNonce += 1;
@@ -303,8 +412,8 @@ contract ProjectRegistry {
 
         project.setTaskLength(_hashes.length);
         for (uint256 i = 0; i < _hashes.length; i++) {
-            Task newTask = new Task(_hashes[i], tokenRegistryAddress, reputationRegistryAddress);
-            project.setTaskAddress(address(newTask), i);
+            address newTask = createProxyTask(_hashes[i], tokenRegistryAddress, reputationRegistryAddress);
+            project.setTaskAddress(newTask, i);
         }
     }
 

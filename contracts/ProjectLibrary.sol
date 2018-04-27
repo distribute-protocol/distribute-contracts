@@ -129,7 +129,7 @@ library ProjectLibrary {
 
         if(timesUp(_projectAddress)) {
             uint256 nextDeadline;
-            if(_taskHash != 0) {
+            if(_taskHash != 0 ) {
                 nextDeadline = now + project.activeStatePeriod();
                 project.setState(3, nextDeadline);
                 return true;
