@@ -89,7 +89,7 @@ contract('Active State', (accounts) => {
       // submit hash list
       await PR.submitHashList(projAddrT, hashTasks(taskSet1), {from: repStaker1})
 
-      // task stock of variables after and checks
+      // take stock of variables after and checks
       for (let i = 0; i < hashTasks(taskSet1).length; i++) {
         let projTaskAddr = await project.getTasks(projAddrT, i)
         let taskHash = await task.getTaskHash(projTaskAddr)
@@ -125,7 +125,7 @@ contract('Active State', (accounts) => {
       // submit hash list
       await PR.submitHashList(projAddrR, hashTasks(taskSet1), {from: repStaker1})
 
-      // task stock of variables after and checks
+      // take stock of variables after and checks
       for (let i = 0; i < taskSet1.length; i++) {
         let projTaskAddr = await project.getTasks(projAddrR, i)
         let taskHash = await task.getTaskHash(projTaskAddr)

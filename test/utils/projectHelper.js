@@ -60,8 +60,15 @@ module.exports = function projectHelper (accounts) {
 
   obj.user.notProject = accounts[8]
 
+  // these will only be used in unit tests
+  // make sure overlap is fine
+  obj.user.spoofedDT = accounts[8]
+  obj.user.TR = accounts[9]
+  obj.user.RR = accounts[7]
+
   // mutable minting details for each user
   obj.minting.tokensToMint = 10000
+  obj.minting.tokensToBurn = 100
 
   // immutable registration reputation amount
   obj.reputation.registeredRep = 10000
@@ -91,12 +98,25 @@ module.exports = function projectHelper (accounts) {
   }
 
   // helper functions
-  obj.utils.mint = async function (_user, _numTokens) {
+  obj.utils.mint = async function (_user, _numTokens, _weiVal) {
     if (_numTokens === undefined) { // use default minting amount
       _numTokens = obj.minting.tokensToMint
     }
+    if (_weiVal === undefined) {
+      let _weiVal = await obj.contracts.DT.weiRequired(_numTokens, {from: _user})
+    }
     let mintingCost = await obj.contracts.DT.weiRequired(_numTokens, {from: _user})
     await obj.contracts.DT.mint(_numTokens, {from: _user, value: mintingCost})
+  }
+
+  obj.utils.sell = async function (_user, _numTokens, _weiVal) {
+    if (_numTokens === undefined) { // use default minting amount
+      _numTokens = await obj.utils.getTokenBalance(_user)
+    }
+    if (_weiVal === undefined) {
+      let _weiVal = await obj.contracts.DT.weiRequired(_numTokens, {from: _user})
+    }
+    await obj.contracts.DT.sell(_numTokens, {from: _user})
   }
 
   obj.utils.register = async function (_user) {
@@ -156,9 +176,52 @@ module.exports = function projectHelper (accounts) {
     }
   }
 
-  obj.utils.getCurrentPrice = async function () {
+  obj.utils.getCurrentPrice = async function (_unadulterated) {
     let currPrice = await obj.contracts.DT.currentPrice()
-    return currPrice.toNumber()
+    if (_unadulterated === true) {
+      return currPrice
+    } else {
+      return currPrice.toNumber()
+    }
+  }
+
+  obj.utils.calculateCurrentPrice = async function () { // will fail if totalSupply == 0
+    let baseCost = await obj.utils.getBaseCost()
+    let weiBal = await obj.utils.getWeiPoolBal()
+    let totalSupply = await obj.utils.getTotalTokens()
+    let price = Math.round(weiBal / totalSupply)
+    if ((price < baseCost) ) {
+      price = baseCost
+    }
+    return price
+  }
+
+  obj.utils.getBaseCost = async function () {
+    let baseCost = await obj.contracts.DT.baseCost()
+    return baseCost.toNumber()
+  }
+
+  obj.utils.getWeiRequired = async function (_tokens) {
+    let weiReq = await obj.contracts.DT.weiRequired(_tokens)
+    return weiReq.toNumber()
+  }
+
+  obj.utils.calculateWeiRequired = async function (_tokens) {
+    let targPrice = await obj.utils.calculateTargetPrice(_tokens)
+    return targPrice.times(_tokens).toNumber()
+  }
+
+  obj.utils.calculateTargetPrice = async function (_tokens) {
+    let currPrice = await obj.utils.getCurrentPrice(true) // get big number version
+    let totalSupply = await obj.utils.getTotalTokens()
+    let newSupply = totalSupply + _tokens
+    let weiReq = currPrice.times(1000 + Math.round(_tokens * 1000 / newSupply)) // emulate Divison.percent() precision of 3
+    return weiReq.div(1000)
+  }
+
+  obj.utils.getBurnPrice = async function (_tokens) {
+    let currPrice = await obj.utils.getCurrentPrice(true) // get big number version
+    return currPrice.times(_tokens).toNumber()
   }
 
   obj.project.getState = async function (_projAddr) {

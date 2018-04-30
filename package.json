@@ -22,9 +22,26 @@
   },
   "scripts": {
     "test": "eslint ./test && truffle test",
-    "coverage": "./node_modules/.bin/solidity-coverage",
+    "coverage": "solidity-coverage",
     "mythril": "myth -o markdown --truffle > report.md",
     "lint": "eslint",
     "fix": "eslint --fix"
-  }
+  },
+  "name": "contracts",
+  "description": "#### An experiment in using smart contract-enabled token economies to decentralize the governance, maintenance, and financial support of public utilities, communal infrastructure, and common pool resources.",
+  "version": "1.0.0",
+  "main": "truffle.js",
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jessicagmarshall/Distribute%22.git"
+  },
+  "author": "Jessica Marshall",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jessicagmarshall/Distribute%22/issues"
+  },
+  "homepage": "https://github.com/jessicagmarshall/Distribute%22#readme"
 }

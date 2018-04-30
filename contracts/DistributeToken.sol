@@ -31,7 +31,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     uint256 public weiBal;
 
     // .00005 ether
-    uint256 baseCost = 50000000000000;
+    uint256 public baseCost = 50000000000000;
 
     // =====================================================================
     // MODIFIERS
