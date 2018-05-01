@@ -21,6 +21,7 @@ module.exports = function projectHelper (accounts) {
   obj.project = {}
   obj.contracts = {}
   obj.utils = {}
+  obj.spoofed = {}
   obj.returnProject = {}
   obj.returnProjectHelper = {}
   obj.task = {}
@@ -62,9 +63,13 @@ module.exports = function projectHelper (accounts) {
 
   // these will only be used in unit tests
   // make sure overlap is fine
-  obj.user.spoofedDT = accounts[8]
-  obj.user.TR = accounts[9]
-  obj.user.RR = accounts[7]
+  obj.spoofed.spoofedDT = accounts[9]
+  obj.spoofed.spoofedTR = accounts[8]
+  obj.spoofed.spoofedRR = accounts[7]
+  obj.spoofed.spoofedPR = accounts[6]
+  obj.spoofed.anyAddress = accounts[5]
+
+  obj.spoofed.weiToReturn = 10000000000000000000
 
   // mutable minting details for each user
   obj.minting.tokensToMint = 10000

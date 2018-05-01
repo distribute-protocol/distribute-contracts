@@ -6,13 +6,14 @@ const DistributeToken = artifacts.require('DistributeToken')
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/AssertThrown')
 
-contract('DistributeToken', function (accounts) {
+contract('Distribute Token', function (accounts) {
   // set up project helper
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let DT
-  let {spoofedDT, TR, RR, tokenProposer} = projObj.user
+  let DT, spoofedDT
+  let {tokenProposer} = projObj.user
+  let {spoofedTR, spoofedRR, spoofedPR, anyAddress, weiToReturn} = projObj.spoofed
   let {tokensToMint, tokensToBurn} = projObj.minting
   let {utils} = projObj
 
@@ -20,12 +21,12 @@ contract('DistributeToken', function (accounts) {
   let errorThrown
 
   before(async function () {
-    // get contracts
+    // get contracts from project helped
     await projObj.contracts.setContracts()
     DT = projObj.contracts.DT
 
-    // set up spoofedDT with correct TR & RR address
-    spoofedDT = await DistributeToken.new(TR.address, RR.address)
+    // initialize spoofed DT
+    spoofedDT = await DistributeToken.new(spoofedTR, spoofedRR)
   })
 
   it('correctly returns baseCost as the current price when no tokens are available', async () => {
@@ -106,94 +107,183 @@ contract('DistributeToken', function (accounts) {
     // checks
     assert.equal(totalSupplyBefore - totalSupplyAfter, tokensToBurn, 'incorrectly updated total supply')
     assert.equal(weiPoolBalBefore - weiPoolBalAfter, burnVal, 'incorrectly updated DT\'s weiBal')
-    assert.equal(tpBalBefore - tpBalAfter, tokensToBurn, 'incorrectly updated tokenProposer\'s balance')
+    assert.equal(tpBalBefore - tpBalAfter, tokensToBurn, 'incorrectly updated tokenProposer\'s token balance')
   })
 
-  it('allows tokenRegistry to burn tokens', async () => {
-    await spoofedDT.mint(tokensToMint, {from: TR.address})
-    spoofedDT.mint(tokens, {from: TR.address, value: weiRequired})
-    await spoofedDT.burn(tokens)
-    let totalSupply = await spoofedDT.totalSupply.call()
-    assert.equal(totalSupply, 0, "doesn't burn tokens correctly")
+  it('allows tokenRegistry to call burn()', async () => {
+    // take stock of variables before
+    let weiRequired = await spoofedDT.weiRequired(tokensToMint)
+    let totalSupplyBefore = await spoofedDT.totalSupply()
+    let TRBalBefore = await spoofedDT.balances(spoofedTR)
+
+    // mint some tokens so TR has tokens to burn, then burn tokens
+    await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
+    await spoofedDT.burn(tokensToBurn, {from: spoofedTR})
+
+    // take stock of variables after
+    let totalSupplyAfter = await spoofedDT.totalSupply()
+    let TRBalAfter = await spoofedDT.balances(spoofedTR)
+
+    // checks
+    assert.equal(totalSupplyAfter - totalSupplyBefore, tokensToMint - tokensToBurn, 'incorrectly updated total supply')
+    assert.equal(TRBalAfter - TRBalBefore, tokensToMint - tokensToBurn, 'incorretly updated TR token balance')
   })
 
-  it('only allows the tokenRegistry to call burn', async () => {
+  it('only allows the tokenRegistry to call burn()', async () => {
+    // mint some tokens so RR has tokens to burn
+    let weiRequired = await spoofedDT.weiRequired(tokensToMint)
+    await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
+
     let errorThrown = false
     try {
-      await DT.burn(10)
+      await spoofedDT.burn(tokensToBurn, {from: anyAddress})
     } catch (e) {
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('allows tokenRegistry to call transferWeiTo', async () => {
-    let weiRequired = await spoofedDT.weiRequired(tokens)
-    await spoofedDT.transferWeiTo(account1, weiRequired)
-    let weiBal = await spoofedDT.weiBal()
-    assert.equal(weiBal, 0, "doesn't transfer wei correctly")
+  it('allows tokenRegistry to call transferWeiTo()', async () => {
+    // mint some tokens so there is wei to transfer from the pool
+    let weiRequired = await spoofedDT.weiRequired(tokensToMint)
+    await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
+
+    // get wei pool bal before
+    let weiPoolBalBefore = await spoofedDT.weiBal()
+
+    // call transferWeiTo
+    await spoofedDT.transferWeiTo(spoofedTR, weiPoolBalBefore, {from: spoofedTR})
+
+    // get wei pool bal after
+    let weiPoolBalAfter = await spoofedDT.weiBal()
+
+    // checks
+    assert.notEqual(weiPoolBalBefore, 0, 'weiPoolBal is 0')
+    assert.equal(weiPoolBalAfter, 0, "doesn't transfer wei correctly")
   })
 
-  it('only allows the tokenRegistry to call transferWeiTo', async () => {
+  it('allows reputationRegistry to call transferWeiTo()', async () => {
+    // mint some tokens so there is wei to transfer from the pool
+    let weiRequired = await spoofedDT.weiRequired(tokensToMint)
+    await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
+
+    // get wei pool bal before
+    let weiPoolBalBefore = await spoofedDT.weiBal()
+
+    // call transferWeiTo
+    await spoofedDT.transferWeiTo(spoofedTR, weiPoolBalBefore, {from: spoofedRR})
+
+    // get wei pool bal after
+    let weiPoolBalAfter = await spoofedDT.weiBal()
+
+    // checks
+    assert.notEqual(weiPoolBalBefore, 0, 'weiPoolBal is 0')
+    assert.equal(weiPoolBalAfter, 0, "doesn't transfer wei correctly")
+  })
+
+  it('only allows the tokenRegistry or reputationRegistry to call transferWeiTo()', async () => {
+    // mint some tokens so there is wei to transfer from the pool
+    let weiRequired = await spoofedDT.weiRequired(tokensToMint)
+    await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
+
+    // get wei pool bal before
+    let weiPoolBalBefore = await spoofedDT.weiBal()
+
     let errorThrown = false
     try {
-      await DT.transferWeiTo(account1, web3.toWei(3, 'ether'))
+      await spoofedDT.transferWeiTo(spoofedPR, weiPoolBalBefore, {from: spoofedPR})
     } catch (e) {
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('allows tokenRegistry to call returnWei', async () => {
-    // let weiRequired = await spoofedDT.weiRequired(tokens)
-    await spoofedDT.returnWei(1000)
-    let weiBal = await spoofedDT.weiBal()
-    assert.equal(weiBal, 1000, "doesn't transfer wei correctly")
+  it('allows tokenRegistry to call returnWei()', async () => {
+    // get wei pool bal before
+    let weiPoolBalBefore = await spoofedDT.weiBal()
+
+    // call transferWeiTo
+    await spoofedDT.returnWei(weiToReturn, {from: spoofedTR})
+
+    // get wei pool bal after
+    let weiPoolBalAfter = await spoofedDT.weiBal()
+
+    // check
+    assert.equal(weiPoolBalAfter - weiPoolBalBefore, weiToReturn, "doesn't increment weiBal correctly")
   })
 
-  it('only allows the tokenRegistry to call returnWei', async () => {
+  it('only allows the tokenRegistry to call returnWei()', async () => {
     let errorThrown = false
     try {
-      await DT.returnWei(1000)
+      await spoofedDT.returnWei(weiToReturn, {from: anyAddress})
     } catch (e) {
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('allows tokenRegistry to call transferToEscrow', async () => {
-    spoofedDT = await DistributeToken.new(accounts[0], accounts[3])
-    let weiRequired = await spoofedDT.weiRequired(tokens)
-    await spoofedDT.mint(tokens, {from: account1, value: weiRequired})
-    await spoofedDT.transferToEscrow(account1, tokens)
-    let totalSupply = await spoofedDT.totalSupply.call()
-    let balance = await spoofedDT.balanceOf(account1)
-    assert.equal(totalSupply, tokens, "doesn't maintain supply correctly")
-    assert.equal(balance, 0, "doesn't update balance correctly")
+  it('allows tokenRegistry to call transferToEscrow()', async () => {
+    // mint some tokens so there are tokens to transfer to escrow
+    let weiRequired = await spoofedDT.weiRequired(tokensToMint)
+    await spoofedDT.mint(tokensToMint, {from: tokenProposer, value: weiRequired})
+
+    // take stock of variables before
+    let totalSupplyBefore = await spoofedDT.totalSupply()
+    let TRBalBefore = await spoofedDT.balances(spoofedTR)
+    let tpBalBefore = await spoofedDT.balances(tokenProposer)
+
+    // transfer tokenProposer's tokens to escrow
+    await spoofedDT.transferToEscrow(tokenProposer, tokensToMint, {from: spoofedTR})
+
+    // take stock of variables after
+    let totalSupplyAfter = await spoofedDT.totalSupply()
+    let TRBalAfter = await spoofedDT.balances(spoofedTR)
+    let tpBalAfter = await spoofedDT.balances(tokenProposer)
+
+    // checks
+    assert.equal(totalSupplyAfter.toNumber(), totalSupplyBefore.toNumber(), "should not change")
+    assert.equal(TRBalAfter - TRBalBefore, tokensToMint, "doesn't update balance correctly")
+    assert.equal(tpBalBefore - tpBalAfter, tokensToMint, "doesn't update balance correctly")
   })
 
-  it('only allows the tokenRegistry to call transferToEscrow', async () => {
+  it('only allows the tokenRegistry to call transferToEscrow()', async () => {
+    // mint some tokens so there are tokens to transfer to escrow
+    let weiRequired = await spoofedDT.weiRequired(tokensToMint)
+    await spoofedDT.mint(tokensToMint, {from: tokenProposer, value: weiRequired})
+
     let errorThrown = false
     try {
-      await DT.transferToEscrow(account1, 10)
+      await spoofedDT.transferToEscrow(tokenProposer, tokensToMint, {from: anyAddress})
     } catch (e) {
       errorThrown = true
     }
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('allows tokenRegistry to call transferFromEscrow', async () => {
-    await spoofedDT.transferFromEscrow(account1, tokens)
-    let totalSupply = await spoofedDT.totalSupply.call()
-    let balance = await spoofedDT.balanceOf(account1)
-    assert.equal(totalSupply, tokens, "doesn't maintain supply correctly")
-    assert.equal(balance, tokens, "doesn't update balance correctly")
+  it('allows tokenRegistry to call transferFromEscrow()', async () => {
+    // take stock of variables before
+    let totalSupplyBefore = await spoofedDT.totalSupply()
+    let TRBalBefore = await spoofedDT.balances(spoofedTR)
+    let tpBalBefore = await spoofedDT.balances(tokenProposer)
+
+    // transfer tokenProposer's tokens to escrow
+    await spoofedDT.transferFromEscrow(tokenProposer, tokensToMint, {from: spoofedTR})
+
+    // take stock of variables after
+    let totalSupplyAfter = await spoofedDT.totalSupply()
+    let TRBalAfter = await spoofedDT.balances(spoofedTR)
+    let tpBalAfter = await spoofedDT.balances(tokenProposer)
+
+    // checks
+    assert.equal(totalSupplyAfter.toNumber(), totalSupplyBefore.toNumber(), "should not change")
+    assert.equal(TRBalBefore - TRBalAfter, tokensToMint, "doesn't update balance correctly")
+    assert.equal(tpBalAfter - tpBalBefore, tokensToMint, "doesn't update balance correctly")
   })
 
-  it('only allows the tokenRegistry to call transferFromEscrow', async () => {
+  it('only allows the tokenRegistry to call transferFromEscrow()', async () => {
     let errorThrown = false
     try {
-      await DT.transferFromEscrow(account1, 10)
+      await spoofedDT.transferFromEscrow(tokenProposer, tokensToMint, {from: anyAddress})
     } catch (e) {
       errorThrown = true
     }
