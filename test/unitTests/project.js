@@ -17,7 +17,7 @@ contract('Project', function (accounts) {
   let {tokenStaker1, tokenStaker2, repStaker1, repStaker2, notStaker} = projObj.user
   let {spoofedTR, spoofedRR, spoofedPR, anyAddress, weiToReturn} = projObj.spoofed
   let {tokensToMint, tokensToBurn} = projObj.minting
-  let {stakingPeriod, projectCost, ipfsHash}
+  let {stakingPeriod, projectCost, ipfsHash} = projObj.project
   let {utils, returnProject} = projObj
 
   // local test variables
