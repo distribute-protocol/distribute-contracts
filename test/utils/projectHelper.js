@@ -90,6 +90,10 @@ module.exports = function projectHelper (accounts) {
   obj.project.incorrectIpfsHash = 'whyiseveryspokeleadawhiteman' // length != 46
 
   // immutable project details
+  obj.project.proposerTypeToken = 1
+  obj.project.proposerTypeRep = 2
+
+  // immutable project details
   obj.project.proposeProportion = 20
   obj.project.proposeReward = 100
 
