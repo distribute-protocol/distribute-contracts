@@ -20,7 +20,7 @@ and PLCR Voting contract
 // ===================================================================== //
 //
 // ===================================================================== //
-contract ReputationRegistry{
+contract ReputationRegistry {
 
     using ProjectLibrary for address;
 

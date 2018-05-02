@@ -67,7 +67,7 @@ module.exports = function projectHelper (accounts) {
   obj.spoofed.spoofedTR = accounts[8]
   obj.spoofed.spoofedRR = accounts[7]
   obj.spoofed.spoofedPR = accounts[6]
-  obj.spoofed.anyAddress = accounts[5]
+  obj.spoofed.anyAddress = accounts[0]
   obj.spoofed.spoofedPLCRVoting = accounts[4]
 
   obj.spoofed.weiToReturn = 10000000000000000000
