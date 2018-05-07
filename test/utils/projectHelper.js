@@ -649,6 +649,23 @@ module.exports = function projectHelper (accounts) {
     return projArray
   }
 
+  // return voting projects (addresses) proposed by token holder and reputation holder
+  // takes a list of tasks and returns
+  // takes a list of tasks and a _valType array parameter of how validated type
+  // 0: validate true only
+  // 1: validate false only
+  // 2: validate both (true > false)
+  // 3: validate both (false > true)
+  // 4: validate neither
+  // moves ganache forward 4 weeks
+  obj.returnProject.voting = async function (_cost, _stakingPeriod, _ipfsHash, _numSets, _tasks, _numComplete, _valType) {
+    // get array of validating projects
+    let projArray = await obj.returnProject.validating(_cost, _stakingPeriod, _ipfsHash, _numSets, _tasks, _numComplete)
+
+    // iterate through projects and validate as outlined by _valType parameter
+
+  }
+
   // fully stake project with tokens via two stakers
   obj.returnProjectHelper.stakeTokens = async function (_projAddr) {
     // fuel token stakers
