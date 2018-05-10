@@ -18,7 +18,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     // EVENTS
     // =====================================================================
 
-    event LogMint(uint256 amountMinted, uint256 totalCost);
+    event LogMint(uint256 amountMinted, uint256 totalCost, address minter);
     event LogWithdraw(uint256 amountWithdrawn, uint256 reward);
 
     // =====================================================================
@@ -133,7 +133,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
         totalSupply += _tokens;
         balances[msg.sender] += _tokens;
         weiBal += weiRequiredVal;
-        emit LogMint(_tokens, weiRequiredVal);
+        emit LogMint(_tokens, weiRequiredVal, msg.sender);
         uint256 fundsLeft = msg.value - weiRequiredVal;
         if (fundsLeft > 0) { msg.sender.transfer(fundsLeft); }
     }
