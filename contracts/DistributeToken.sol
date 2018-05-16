@@ -19,7 +19,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     // =====================================================================
 
     event LogMint(uint256 amountMinted, uint256 totalCost, address minter);
-    event LogWithdraw(uint256 amountWithdrawn, uint256 reward);
+    event LogWithdraw(uint256 amountWithdrawn, uint256 reward, address seller);
 
     // =====================================================================
     // STATE VARIABLES
@@ -163,7 +163,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
         balances[msg.sender] -= _tokens;
         totalSupply = totalSupply.sub(_tokens);
         weiBal -= weiVal;
-        emit LogWithdraw(_tokens, weiVal);
+        emit LogWithdraw(_tokens, weiVal, msg.sender);
         msg.sender.transfer(weiVal);
     }
 
