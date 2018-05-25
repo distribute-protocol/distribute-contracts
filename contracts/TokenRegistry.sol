@@ -233,7 +233,7 @@ contract TokenRegistry {
         }
         task.clearValidatorStake(msg.sender);
         distributeToken.transferFromEscrow(msg.sender, reward);
-        distributeToken.transferWeiTo(msg.sender, reward * distributeToken.currentPrice() / 100);
+        distributeToken.transferWeiTo(msg.sender, reward * 101/100);
     }
 
     // =====================================================================
