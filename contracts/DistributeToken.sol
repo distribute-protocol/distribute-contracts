@@ -66,6 +66,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
         reputationRegistryAddress = _reputationRegistry;
     }
 
+
     // =====================================================================
     // UTILITY
     // =====================================================================
