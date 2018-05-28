@@ -23,6 +23,7 @@ contract PLCRVoting {
 
     using AttributeStore for AttributeStore.Data;
     using DLL for DLL.Data;
+    using SafeMath for uint256;
 
     struct Poll {
         uint commitEndDate;     /// expiration date of commit period for poll

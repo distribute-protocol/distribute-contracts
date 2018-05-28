@@ -7,6 +7,7 @@ import "./ReputationRegistry.sol";
 import "./ProjectLibrary.sol";
 import "./Task.sol";
 import "bytes/BytesLib.sol";
+import "./library/SafeMath.sol";
 
 /**
 @title Project Registry for Distribute Network
@@ -19,6 +20,7 @@ contract ProjectRegistry {
 
     using ProjectLibrary for address;
     using BytesLib for bytes;
+    using SafeMath for uint256;
 
     // =====================================================================
     // EVENTS

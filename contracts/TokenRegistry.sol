@@ -7,6 +7,7 @@ import "./ProjectLibrary.sol";
 import "./Task.sol";
 import "./library/PLCRVoting.sol";
 import "./library/Division.sol";
+import "./library/SafeMath.sol";
 
 /**
 @title This contract serves as the interface through which users propose projects, stake tokens,
@@ -17,6 +18,7 @@ claim their rewards.
 contract TokenRegistry {
 
     using ProjectLibrary for address;
+    using SafeMath for uint256;
 
     // =====================================================================
     // EVENTS

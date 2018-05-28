@@ -7,6 +7,7 @@ import "./DistributeToken.sol";
 import "./Task.sol";
 import "./library/PLCRVoting.sol";
 import "./library/Division.sol";
+import "./library/SafeMath.sol";
 
 /**
 @title Reputation Registry for Distribute Network
@@ -23,6 +24,7 @@ and PLCR Voting contract
 contract ReputationRegistry {
 
     using ProjectLibrary for address;
+    using SafeMath for uint256;
 
     // =====================================================================
     // EVENTS

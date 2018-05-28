@@ -4,6 +4,7 @@ import "./Project.sol";
 import "./TokenRegistry.sol";
 import "./ProjectRegistry.sol";
 import "./Task.sol";
+import "./library/SafeMath.sol";
 import "./library/PLCRVoting.sol";
 import "./library/Division.sol";
 
@@ -13,6 +14,8 @@ import "./library/Division.sol";
 @dev This library is imported into all the Registries to manage project interactions
 */
 library ProjectLibrary {
+
+  using SafeMath for uint256;
 
     // =====================================================================
     // EVENTS
