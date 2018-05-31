@@ -234,7 +234,8 @@ contract ProjectRegistry {
     */
     function checkActive(address _projectAddress) public returns (bool) {
         require(projects[_projectAddress] == true);
-        return _projectAddress.checkActive(stakedProjects[_projectAddress].topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash]);
+        bytes32 topTaskHash = stakedProjects[_projectAddress].topTaskHash;
+        return _projectAddress.checkActive(topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash]);
     }
 
     /**
