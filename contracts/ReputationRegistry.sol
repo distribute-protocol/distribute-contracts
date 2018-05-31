@@ -117,7 +117,7 @@ contract ReputationRegistry {
         balances[msg.sender] = initialRepVal;
         totalSupply += initialRepVal;
         totalUsers += 1;
-        LogRegister(msg.sender);
+        emit LogRegister(msg.sender);
     }
 
     // =====================================================================

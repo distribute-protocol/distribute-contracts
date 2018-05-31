@@ -126,13 +126,13 @@ library ProjectLibrary {
     @param _taskHash Address of the top weighted task hash
     @return Returns a bool denoting the project is in the active state.
     */
-    function checkActive(address _projectAddress, bytes32 _taskHash) public returns (bool) {
+    function checkActive(address _projectAddress, bytes32 _taskHash, uint256 _taskListWeighting) public returns (bool) {
         Project project = Project(_projectAddress);
         require(project.state() == 2);
 
         if(timesUp(_projectAddress)) {
             uint256 nextDeadline;
-            if(_taskHash != 0 ) {
+            if(_taskHash != 0 && _taskListWeighting > 50) {
                 nextDeadline = now + project.activeStatePeriod();
                 project.setState(3, nextDeadline);
                 return true;
