@@ -36,6 +36,10 @@ contract ReputationRegistry {
         uint256 proposerStake
     );
 
+    event LogRegister(
+        address indexed registree
+    );
+
     // =====================================================================
     // STATE VARIABLES
     // =====================================================================
@@ -113,6 +117,7 @@ contract ReputationRegistry {
         balances[msg.sender] = initialRepVal;
         totalSupply += initialRepVal;
         totalUsers += 1;
+        LogRegister(msg.sender);
     }
 
     // =====================================================================
