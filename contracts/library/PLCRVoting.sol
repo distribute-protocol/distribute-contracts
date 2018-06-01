@@ -16,6 +16,7 @@ contract PLCRVoting {
     event PollCreated(uint voteQuorum, uint commitDuration, uint revealDuration, uint pollID);
     event VotingRightsGranted(address voter, uint numTokens);
     event VotingRightsWithdrawn(address voter, uint numTokens);
+    event Hashes(bytes32 hash1, bytes32 hash2, bool equal);
 
     // ============
     // DATA STRUCTURES:
@@ -221,22 +222,22 @@ contract PLCRVoting {
     @param _voteOption Vote choice used to generate commitHash for associated poll
     @param _salt Secret number used to generate commitHash for associated poll
     */
-    function revealVote(uint _pollID, uint _voteOption, uint _salt) onlyTRRR() external {
-    // Make sure the reveal period is active
-    require(revealPeriodActive(_pollID));
-    require(!hasBeenRevealed(msg.sender, _pollID));                        // prevent user from revealing multiple times
-    require(keccak256(abi.encodePacked(_voteOption, _salt)) == getCommitHash(msg.sender, _pollID)); // compare resultant hash from inputs to original commitHash
+    function revealVote(address _voter, uint _pollID, uint _voteOption, uint _salt) onlyTRRR() external {
+      require(revealPeriodActive(_pollID));
+      require(!hasBeenRevealed(_voter, _pollID)); // prevent user from revealing multiple times
+      emit Hashes(keccak256(abi.encodePacked(_voteOption, _salt)), getCommitHash(_voter, _pollID), keccak256(abi.encodePacked(_voteOption, _salt)) == getCommitHash(_voter, _pollID));
+      require(keccak256(abi.encodePacked(_voteOption, _salt)) == getCommitHash(_voter, _pollID)); // compare resultant hash from inputs to original commitHash
 
-    uint numTokens = getNumTokens(msg.sender, _pollID);
+      uint numTokens = getNumTokens(_voter, _pollID);
 
-    if (_voteOption == 1) // apply numTokens to appropriate poll choice
-        pollMap[_pollID].votesFor += numTokens;
-    else
-        pollMap[_pollID].votesAgainst += numTokens;
+      if (_voteOption == 1) // apply numTokens to appropriate poll choice
+          pollMap[_pollID].votesFor += numTokens;
+      else
+          pollMap[_pollID].votesAgainst += numTokens;
 
-    dllMap[msg.sender].remove(_pollID); // remove the node referring to this vote upon reveal
+      dllMap[_voter].remove(_pollID); // remove the node referring to this vote upon reveal
 
-    emit VoteRevealed(msg.sender, _pollID, numTokens, _voteOption);
+      emit VoteRevealed(_voter, _pollID, numTokens, _voteOption);
     }
 
     /**
