@@ -2,25 +2,24 @@
 
 ## What is the Distribute Protocol
 
-##### The Distribute Protocol is an experiment in using smart contract-enabled token economies to decentralize the governance, maintenance, and financial support of public utilities and communal infrastructure.
+The Distribute Protocol is an experiment in using smart contract-enabled token economies to decentralize the governance, maintenance, and financial support of public utilities and communal infrastructure.
 
-The desired outcome of Distribute is a multifaceted incentive structure that makes sure that:
+Its multifaceted incentive structure ensures that:
+
 1. collective public infrastructure projects receive sufficient funding from capital holders;
 2. governance of the public utility is totally transparent;
 3. direct decision making power in the public utility is decoupled from financial investment;
 4. the infrastructure itself is created, maintained, and operated by those who directly benefit from it;
 5. multiple utilities may interlock in the future to create a synergistic system of many distributed utilities and communal infrastructure projects.
 
-*** Might be a good idea to note how capital tokens are different from reputation tokens, and the different actions they perform.
-
 ## How Does it Work?
-...
-To understand how the Distribute Protocol works at each stage, please refer to the section on Stage-Specific Actions.
+
+To understand how the Distribute Protocol works at each stage, please refer to the section on [Stage-Specific Actions](#stage-specific-actions).
 
 ## What Do the Contracts Do?
 
 #### DistributeToken.sol
-The Distribute Token is continuously minted as the network gains more users, so there is no cap on the total number of tokens in circulation. The price of the token is determined by the total market share of the amount of tokens being minted or sold. The user exchanges ether (ETH) for tokens and then the ETH is held in the Distribute Token contract. Any function that involves minting, selling, transferring, or burning tokens goes through DistributeToken.sol. Minting and selling tokens can be called directly by the user while burning and transferring tokens are called by the token registry or reputation registry that the contract was initialized with. The Distribute Token is based on a standard EIP20 token and uses EIP20.sol to import basic token functionality and EIP20Interface.sol to import a getter function for the total supply of tokens.
+The Distribute Token (DST) is continuously minted as the network gains more users, so there is no cap on the total number of tokens in circulation. The price of the token is determined by the total market share of the amount of tokens being minted or sold. The user exchanges ether (ETH) for tokens and then the ETH is held in the Distribute Token contract. Any function that involves minting, selling, transferring, or burning tokens goes through DistributeToken.sol. Minting and selling tokens can be called directly by the user while burning and transferring tokens are called by the token registry or reputation registry that the contract was initialized with. The Distribute Token is based on a standard EIP20 token and uses EIP20.sol to import basic token functionality and EIP20Interface.sol to import a getter function for the total supply of tokens.
 
 #### TokenRegistry.sol
 The token registry is the central contract by which the Distribute Protocol's users perform actions using capital tokens in the various stages of a project. It is the contract through which users are given the ability to propose projects using capital tokens. Users may also stake their capital tokens on projects, come to consensus on which tasks to perform, vote on completed tasks and more.
@@ -29,15 +28,15 @@ The token registry is the central contract by which the Distribute Protocol's us
 The reputation registry is the central contract for the Distribute Protocol to manage the reputation balances of each user. It is the contract through which users are given the ability to propose projects using reputation tokens. Users may also stake their reputation on projects, come to consensus on which tasks to perform, then claim tasks, and subsequent task rewards, vote on completed tasks and more.
 
 #### ProjectRegistry.sol
-The Project Registry manages and records the state of projects and allows for the user to interact with projects by creating projects, add tasks after the project has been staked, submit hashed task lists to finalize the tasks for a project, claim tasks, and submit completed tasks for validation. The Project Registry contract provides a way for the user to manage the information in each project and return information to the Token and Reputation Registries. The Project Registry does not initialize any projects, just handles the information within a project and the state of the projects. ProjectRegistry.sol calls ProjectLibrary.sol to check what stage a project is in and tell the Token Registry or Reputation Registry to burn tokens and reputation if needed.
+The project registry manages and records the state of projects and allows for the user to interact with projects by creating projects, add tasks after the project has been staked, submit hashed task lists to finalize the tasks for a project, claim tasks, and submit completed tasks for validation. The project registry contract provides a way for the user to manage the information in each project and return information to the token and reputation registries. The project registry does not initialize any projects, just handles the information within a project and the state of the projects. ProjectRegistry.sol calls ProjectLibrary.sol to check what stage a project is in and tell the token registry or reputation registry to burn tokens and reputation if needed.
 
 
 #### ProjectLibrary.sol
-The Project Library manages interactions with a project by acting as library with functions that can be imported. ProjectLibrary.sol records how a project is staked, the time a project has till it expires, the staking power a user has on an individual project, supports validation functionality, allows for a worker to claim their reward after completing a task, and refunds any user who staked reputation or capital tokens. Along with providing these function, the Project Library has functions that do the actual state checking of a project to return to the Project Registry.
+The project library manages interactions with a project by acting as library with functions that can be imported. ProjectLibrary.sol records how a project is staked, the time a project has till it expires, the staking power a user has on an individual project, supports validation functionality, allows for a worker to claim their reward after completing a task, and refunds any user who staked reputation or capital tokens. Along with providing these function, the project library has functions that do the actual state checking of a project to return to the project registry.
 
 
 #### Project.sol
-The Project contract manages each individual project and holds in the information recorded from ProjectRegistry.sol. As a project is proposed a new project contract is created to manage interactions with a unique project. Nothing in Project.sol can be directly called by the user and instead all calls go through the three registries. As staking, task claiming, and validation occurs, the users participating in these actions are recorded on each project with the amount of tokens or reputation staked by them.
+The project contract manages each individual project and holds in the information recorded from ProjectRegistry.sol. As a project is proposed a new project contract is created to manage interactions with a unique project. Nothing in Project.sol can be directly called by the user and instead all calls go through the three registries. As staking, task claiming, and validation occurs, the users participating in these actions are recorded on each project with the amount of tokens or reputation staked by them.
 
 In order to reduce gas use, we deploy projects through a proxy, using AssertBytes.sol and BytesLib.sol.
 
@@ -48,8 +47,6 @@ Task contracts are instantiated for single tasks in every project to keep track 
 
 #### PLCRVoting.sol
 This is an extension of the [Partial-Lock-Commit-Reveal Voting scheme with ERC20 tokens](https://github.com/ConsenSys/PLCRVoting) that includes non-ERC20 tokens.
-
-In here, reference AttributeStore.sol and DLL.sol
 
 #### SafeMath.sol
 SafeMath.sol helps Distribute Protocol deal with unsigned integer overflow issues as the Ethereum Virtual Machine allows mathematical operations to overflow the maximum integer value it can handle, resulting in incorrect calculations.
@@ -75,7 +72,6 @@ distributeToken.mint(numTokens)
 [put diagram here eventually]
 
 #### Selling Tokens
-
 
 Users can sell their tokens at any time. Tokens are priced proportionally to the market share of the amount of tokens being sold.
 ```
@@ -147,7 +143,7 @@ reputationRegistry.stakeReputation(_projectAddress, _reputation)
 ##### Unstaking Tokens
 
 *Unstake Capital Tokens*  
-A member may change their mind about staking their capital tokens on a project and decide to unstake those tokens as long as the staking period has not ended.
+A staker may change their mind about staking their capital tokens on a project and decide to unstake those tokens as long as the staking period has not ended.
 ```
 let _projectAddress = '0x0b239F63eC6248162c7F19B0B2956186725eb321'
 let _tokens = 100
@@ -156,7 +152,7 @@ tokenRegistry.unstakeTokens(_projectAddress, _tokens)
 [put diagram here eventually]
 
 *Unstake Reputation Tokens*  
-A member may change their mind about staking their reputation tokens to a project and decide to unstake their tokens as long as the staking period has not ended.
+A staker may change their mind about staking their reputation tokens to a project and decide to unstake their tokens as long as the staking period has not ended.
 ```
 let _projectAddress = '0x0b239F63eC6248162c7F19B0B2956186725eb321'
 let _reputation = 100
@@ -173,7 +169,7 @@ projectRegistry.checkStaked(_projectAddress)
 [put diagram here eventually]
 
 #### 2 - Staked Project
-Once a project is successfully staked, the Proposer is rewarded with 1% of the project cost and gets their collateral tokens back.
+Once a project is successfully staked, the proposer is rewarded with 1% of the project cost and gets their collateral tokens back.
 ```
 let _projectAddress = '0x0b239F63eC6248162c7F19B0B2956186725eb321'
 tokenRegistry.refundProposer(_projectAddress)
@@ -216,7 +212,7 @@ projectRegistry.submitTaskList(_projectAddress, _taskArray)
 ```
 [put diagram here eventually]
 
-Once the task list is submitted, each item in this hashed array of tasks instantiates its own task contract, which is handled by Task.sol.  Using Task.sol, users may view the weighting of the task (as set by the Stakers in the previous stage), see the reward for completing the task, as well as whether or not it has been claimed yet, or if it has been completed.
+Once the task list is submitted, each item in this hashed array of tasks instantiates its own task contract, which is handled by Task.sol. Using Task.sol, users may view the weighting of the task (as set by the stakers in the previous stage), see the reward for completing the task, as well as whether or not it has been claimed yet, or if it has been completed.
 
 ##### Claim/Reclaim Task
 A user can claim available tasks on a project for a specific period of time by staking the predetermined amount of reputation token on it. This effectively allows the user to 'claim' a task, and by staking their reputation tokens on it, are now held accountable to completing the task. If a user claims a task and then fails to complete it after a certain period of time depending, it becomes available again for another worker to reclaim. If they fail to complete the task before the expiration or not get validated, the user loses their staked reputation. The amount of reputation required to claim a task increases with the difficulty/how critical a task. This was decided by the stakers when they submitted their task lists.
@@ -326,9 +322,8 @@ projectRegistry.checkEnd(_projectAddress)
 [put diagram here eventually]
 
 #### 6 - Complete
-When a project reaches stage 6: Complete, all Stakers (Reputation and Token Holders) regain their stake, and the positive Validators are rewarded for their validation.
+When a project reaches stage 6- Complete, all stakers (reputation and token holders) regain their stake, and the positive validators are rewarded for their validation.
 
-** How exactly are positive Validators and Stakers rewarded? What do they get? **
 
 ##### Stakers Can Pull Their Stakes and be Rewarded
 ```
@@ -375,10 +370,10 @@ reputationRegistry.rewardTask(_projectAddress, _index)
 #### 7 - Failed
 If a **task** fails, the associated wei needed to complete it is returned to the collective pool from the project balance. Validators who correctly marked the task as incomplete are rewarded. The reputation tokens staked by the worker who failed to complete the task are burned.
 
-If a **project** fails, validators who validated tasks correctly and workers who completed their tasks still receive rewards. However, all the Stakers' tokens are burned.
+If a **project** fails, validators who validated tasks correctly and workers who completed their tasks still receive rewards. However, all the stakers' tokens are burned.
 
 #### 8 - Expired
-If a project does not receive enough stakes before the set deadline, then the project expires. The proposer who put tokens or reputation as collateral lose them, but Stakers on the project can retrieve their stakes.  
+If a project does not receive enough stakes before the set deadline, then the project expires. The proposer who put tokens or reputation as collateral lose them, but stakers on the project can retrieve their stakes.  
 
 ##### Stakers Can Withdraw Their Stake
 
@@ -386,4 +381,4 @@ see above for code
 
 ##### Proposer's Staked Tokens are Burned
 
-no associated user code, proposer cannot call tokenRegistry.refundProposer(_projAddr) or reputationRegistry.refundProposer(_projAddr)
+no associated user code, proposer cannot call `tokenRegistry.refundProposer(_projAddr)` or `reputationRegistry.refundProposer(_projAddr)`
