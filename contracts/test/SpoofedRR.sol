@@ -6,7 +6,7 @@ contract SpoofedRR {
 
     uint256 public totalSupply;
 
-    function SpoofedRR() public {
+    constructor () public {
       totalSupply = 100000;
     }
 

@@ -410,7 +410,7 @@ contract ProjectRegistry {
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
         require(project.state() == 3);
-        require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
+        require(keccak256(abi.encodePacked(_hashes)) == stakedProjects[_projectAddress].topTaskHash);
         require(project.hashListSubmitted() == false);
 
         project.setTaskLength(_hashes.length);
@@ -446,7 +446,7 @@ contract ProjectRegistry {
         Project project = Project(_projectAddress);
         require(project.state() == 3);
         Task task = Task(project.tasks(_index));
-        require(keccak256(_taskDescription, _weighting) == task.taskHash());
+        require(keccak256(abi.encodePacked(_taskDescription, _weighting)) == task.taskHash());
         require(
             task.claimer() == 0 ||
             (now > (task.claimTime() + project.turnoverTime()) && !task.complete())
