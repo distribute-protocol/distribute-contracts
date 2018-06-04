@@ -317,7 +317,7 @@ contract('Proposed State', (accounts) => {
     it('Reputation staker can unstake reputation from TR proposed project', async function () {
       // get reputation staked on the project
       let repToUnstake = await project.getStakedRep(projAddrT1)
-      console.log(repToUnstake)
+
       // take stock of variables
       let rsBalBefore = await utils.getRepBalance(repStaker1)
       let rsStakedRepBefore = await project.getUserStakedRep(repStaker1, projAddrT1)
