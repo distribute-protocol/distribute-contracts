@@ -14,7 +14,7 @@ contract('Staked State', (accounts) => {
   // get project helper variables
   let PR
   let {user, project, returnProject} = projObj
-  let {tokenStaker1} = user
+  let {tokenStaker1, tokenStaker2} = user
   let {repStaker1} = user
   let {notStaker, notProject} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
@@ -76,7 +76,7 @@ contract('Staked State', (accounts) => {
       assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash after')
     })
 
-    it('Reputation staker can submit same task hash to TR staked project', async function () {
+    it('Reputation staker can submit different task hash to TR staked project', async function () {
       // take stock of variables before
       let topTaskHashBefore = await PR.stakedProjects(projAddrT1)
 
@@ -223,6 +223,14 @@ contract('Staked State', (accounts) => {
 
   describe('state changes on staked projects with task hash submissions', () => {
     before(async function () {
+      /// TEMPORARY FIX ///
+      // write function that checks which staker of each type stakes more and then just pl
+      // have tokenStaker2 and repStaker1 change their hash list back to taskSet1 so that each project has at least 51% on taskSet1
+      await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: tokenStaker2})
+      await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: tokenStaker2})
+      await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: repStaker1})
+      await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: repStaker1})
+
       // fast forward time
       await evmIncreaseTime(604800) // 1 week
     })
@@ -230,6 +238,7 @@ contract('Staked State', (accounts) => {
     it('TR staked project becomes active if task hashes are submitted by the staking deadline', async function () {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT1)
+      let topTaskHash = await PR.stakedProjects(projAddrT1)
 
       // call checkStaked()
       await PR.checkActive(projAddrT1)
