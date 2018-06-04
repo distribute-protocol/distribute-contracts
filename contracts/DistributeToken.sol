@@ -60,7 +60,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     @param _tokenRegistry Address of the Token Registry
     @param _reputationRegistry Address of the ReputationRegistry
     */
-    function DistributeToken(address _tokenRegistry, address _reputationRegistry) public {
+    constructor (address _tokenRegistry, address _reputationRegistry) public {
         require(tokenRegistryAddress == 0 && reputationRegistryAddress == 0);
         tokenRegistryAddress = _tokenRegistry;
         reputationRegistryAddress = _reputationRegistry;

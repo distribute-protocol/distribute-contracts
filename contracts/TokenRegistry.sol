@@ -286,10 +286,10 @@ contract TokenRegistry {
         address _projectAddress,
         uint256 _index,
         uint256 _voteOption,
-        uint _salt
+        uint256 _salt
     ) external {
         require(projectRegistry.projects(_projectAddress) == true);
-        plcrVoting.revealVote(Task(Project(_projectAddress).tasks(_index)).pollId(), _voteOption, _salt);
+        plcrVoting.revealVote(msg.sender, Task(Project(_projectAddress).tasks(_index)).pollId(), _voteOption, _salt);
     }
 
     /**
