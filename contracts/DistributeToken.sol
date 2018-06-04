@@ -214,4 +214,10 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
         return true;
     }
 
+    // =====================================================================
+    // FALLBACK
+    // =====================================================================
+
+    function() public payable {}
+
 }

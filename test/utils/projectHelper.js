@@ -7,20 +7,6 @@ const ProjectRegistry = artifacts.require('ProjectRegistry')
 const ProjectLibrary = artifacts.require('ProjectLibrary')
 const Project = artifacts.require('Project')
 const Task = artifacts.require('Task')
-// var contract = require("truffle-contract");
-//
-//
-// var DistributeTokenJson = require("../../build/contracts/DistributeToken.json");
-// var TokenRegistryJson = require("../../build/contracts/TokenRegistry.json");
-// var ReputationRegistryJson = require("../../build/contracts/ReputationRegistry.json");
-// var ProjectRegistryJson = require("../../build/contracts/ProjectRegistry.json");
-// var ProjectLibraryJson = require("../../build/contracts/ProjectLibrary.json");
-//
-// var DistributeToken = contract(DistributeTokenJson)
-// var TokenRegistry = contract(TokenRegistryJson)
-// var ReputationRegistry = contract(ReputationRegistryJson)
-// var ProjectRegistry = contract(ProjectRegistryJson)
-// var ProjectLibrary = contract(ProjectLibraryJson)
 
 const evmIncreaseTime = require('./evmIncreaseTime')
 const keccakHashes = require('../utils/keccakHashes')
@@ -140,13 +126,6 @@ module.exports = function projectHelper (accounts) {
     await obj.contracts.DT.mint(_numTokens, {from: _user, value: mintingCost})
   }
 
-  // let projHelper = require('./test/utils/projectHelper.js')
-  // let projObj = projHelper(web3.eth.accounts)
-  // TokenRegistry.deployed().then(val => projObj.contracts.setContract('TR', val))
-  // ReputationRegistry.deployed().then(val => projObj.contracts.setContract('RR', val))
-  // DistributeToken.deployed().then(val => projObj.contracts.setContract('DT', val))
-  // ProjectRegistry.deployed().then(val => projObj.contracts.setContract('PR', val))
-  // ProjectLibrary.deployed().then(val => projObj.contracts.setContract('PL', val))
   obj.utils.sell = async function (_user, _numTokens, _weiVal) {
     if (_numTokens === undefined) { // use default minting amount
       _numTokens = await obj.utils.getTokenBalance(_user)

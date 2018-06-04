@@ -118,6 +118,7 @@ contract('Proposed State', (accounts) => {
       let tsStakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrT1)
       let stakedRepBefore = await project.getStakedRep(projAddrT1)
+      let projWeiBalBefore = await web3.eth.getBalance(projAddrT1)
 
       // tokenStaker1 unstakes all
       await TR.unstakeTokens(projAddrT1, tokensToUnstake, {from: tokenStaker1})

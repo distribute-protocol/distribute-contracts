@@ -290,11 +290,11 @@ contract Project {
     function unstakeTokens(address _staker, uint256 _tokens, address _distributeTokenAddress) external onlyTR returns (uint256) {
         require(state == 1);
         require(
-            tokenBalances[_staker].sub(_tokens) < tokenBalances[_staker] &&  //check overflow
-            tokenBalances[_staker] >= _tokens   //make sure _staker has the tokens staked to unstake */
+            tokenBalances[_staker].sub(_tokens) <= tokenBalances[_staker]
         );
 
         uint256 weiVal = (Division.percent(_tokens, tokensStaked, 10) * weiBal) / 10000000000;
+        require(weiVal <= weiBal);
         tokenBalances[_staker] -= _tokens;
         tokensStaked -= _tokens;
         weiBal -= weiVal;
