@@ -7,10 +7,25 @@ const ProjectRegistry = artifacts.require('ProjectRegistry')
 const ProjectLibrary = artifacts.require('ProjectLibrary')
 const Project = artifacts.require('Project')
 const Task = artifacts.require('Task')
+// var contract = require("truffle-contract");
+//
+//
+// var DistributeTokenJson = require("../../build/contracts/DistributeToken.json");
+// var TokenRegistryJson = require("../../build/contracts/TokenRegistry.json");
+// var ReputationRegistryJson = require("../../build/contracts/ReputationRegistry.json");
+// var ProjectRegistryJson = require("../../build/contracts/ProjectRegistry.json");
+// var ProjectLibraryJson = require("../../build/contracts/ProjectLibrary.json");
+//
+// var DistributeToken = contract(DistributeTokenJson)
+// var TokenRegistry = contract(TokenRegistryJson)
+// var ReputationRegistry = contract(ReputationRegistryJson)
+// var ProjectRegistry = contract(ProjectRegistryJson)
+// var ProjectLibrary = contract(ProjectLibraryJson)
 
 const evmIncreaseTime = require('./evmIncreaseTime')
 const keccakHashes = require('../utils/keccakHashes')
 const taskDetails = require('../utils/taskDetails')
+// const web3 = require('web3-utils')
 
 module.exports = function projectHelper (accounts) {
   let obj = {}
@@ -55,8 +70,10 @@ module.exports = function projectHelper (accounts) {
   obj.user.validator2 = accounts[2]
   obj.user.notValidator = accounts[8]
 
-  obj.user.repVoter = accounts[4]
+  obj.user.repVoter = accounts[1]
+  obj.user.repNoVoter = accounts[2]
   obj.user.tokenVoter = accounts[3]
+  obj.user.tokenNoVoter = accounts[4]
   obj.user.notVoter = accounts[8]
 
   obj.user.notProject = accounts[8]
@@ -86,7 +103,7 @@ module.exports = function projectHelper (accounts) {
   obj.project.stakingPeriod = obj.project.now + 604800 // blockchain understands seconds                    // one week from now
 
   obj.project.expiredStakingPeriod = 10 // January 1st, 1970
-  obj.project.projectCost = parseInt(web3.toWei(0.25, 'ether'))
+  obj.project.projectCost = parseInt(web3.toWei('1', 'ether'))
   obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala' // length === 46
   obj.project.incorrectIpfsHash = 'whyiseveryspokeleadawhiteman' // length != 46
 
@@ -107,6 +124,10 @@ module.exports = function projectHelper (accounts) {
     obj.contracts.PL = await ProjectLibrary.deployed()
   }
 
+  obj.contracts.setContract = function (type, contract) {
+    obj.contracts[type] = contract
+  }
+
   // helper functions
   obj.utils.mint = async function (_user, _numTokens, _weiVal) {
     if (_numTokens === undefined) { // use default minting amount
@@ -119,6 +140,13 @@ module.exports = function projectHelper (accounts) {
     await obj.contracts.DT.mint(_numTokens, {from: _user, value: mintingCost})
   }
 
+  // let projHelper = require('./test/utils/projectHelper.js')
+  // let projObj = projHelper(web3.eth.accounts)
+  // TokenRegistry.deployed().then(val => projObj.contracts.setContract('TR', val))
+  // ReputationRegistry.deployed().then(val => projObj.contracts.setContract('RR', val))
+  // DistributeToken.deployed().then(val => projObj.contracts.setContract('DT', val))
+  // ProjectRegistry.deployed().then(val => projObj.contracts.setContract('PR', val))
+  // ProjectLibrary.deployed().then(val => projObj.contracts.setContract('PL', val))
   obj.utils.sell = async function (_user, _numTokens, _weiVal) {
     if (_numTokens === undefined) { // use default minting amount
       _numTokens = await obj.utils.getTokenBalance(_user)
@@ -576,6 +604,12 @@ module.exports = function projectHelper (accounts) {
       // add task hashes to both projects
       await obj.contracts.PR.addTaskHash(projArray[i][0], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker1})
       await obj.contracts.PR.addTaskHash(projArray[i][1], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker1})
+      await obj.contracts.PR.addTaskHash(projArray[i][0], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker2})
+      await obj.contracts.PR.addTaskHash(projArray[i][1], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker2})
+      await obj.contracts.PR.addTaskHash(projArray[i][0], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.repStaker1})
+      await obj.contracts.PR.addTaskHash(projArray[i][1], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.repStaker1})
+      await obj.contracts.PR.addTaskHash(projArray[i][0], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.repStaker2})
+      await obj.contracts.PR.addTaskHash(projArray[i][1], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.repStaker2})
     }
 
     // increase time 1 week + 1 ms to make sure that checkActive() doesn't bug out
@@ -658,12 +692,34 @@ module.exports = function projectHelper (accounts) {
   // 3: validate both (false > true)
   // 4: validate neither
   // moves ganache forward 4 weeks
-  obj.returnProject.voting = async function (_cost, _stakingPeriod, _ipfsHash, _numSets, _tasks, _numComplete, _valType) {
+  obj.returnProject.voting = async function (_cost, _stakingPeriod, _ipfsHash, _numSets, _tasks, _numComplete) {
     // get array of validating projects
     let projArray = await obj.returnProject.validating(_cost, _stakingPeriod, _ipfsHash, _numSets, _tasks, _numComplete)
 
-    // iterate through projects and validate as outlined by _valType parameter
+    let indexYes = 0
+    let indexNo = 1
+    let tokensToValidate = 100
 
+    for (let i = 0; i < _numSets; i++) {
+      await obj.contracts.TR.validateTask(projArray[i][0], indexYes, tokensToValidate, true, {from: obj.user.validator1})
+      await obj.contracts.TR.validateTask(projAddrT[i][1], indexNo, tokensToValidate, false, {from: obj.user.validator1})
+    }
+
+    await evmIncreaseTime((1 * 604800) + 1)
+
+    for (let i = 0; i < _numSets; i++) {
+      // call check validate for each project
+      await obj.contracts.PR.checkVoting(projArray[i][0])
+      await obj.contracts.PR.checkVoting(projArray[i][1])
+
+      // assert that project is in state 4
+      let stateT = await obj.project.getState(projArray[i][0])
+      let stateR = await obj.project.getState(projArray[i][1])
+      assert.equal(stateT, 5, 'project ' + i + ',T not in validating state')
+      assert.equal(stateR, 5, 'project ' + i + ',R not in validating state')
+    }
+
+    return projArray
   }
 
   // fully stake project with tokens via two stakers
