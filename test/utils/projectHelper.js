@@ -608,12 +608,12 @@ module.exports = function projectHelper (accounts) {
   }
 
   // return validating projects (addresses) proposed by token holder and reputation holder
-  // takes a list of tasks and a _numComplete array parameter of how many should be marked complete (in order)
+  // takes a list of tasks and a _numComplete integer parameter of how many tasks should be marked complete
   // moves ganache forward 3 weeks
-  obj.returnProject.validating = async function (_cost, _stakingPeriod, _ipfsHash, _numSets, _tasks, _numComplete) {
+  obj.returnProject.validating = async function (_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete) {
     // get array of active projects
     // moves ganache forward 1 week
-    let projArray = await obj.returnProject.active(_cost, _stakingPeriod, _ipfsHash, _numSets)
+    let projArray = await obj.returnProject.active(_cost, _stakingPeriod, _ipfsHash, 1)
 
     // register workers
     await obj.utils.register(obj.user.worker1)
@@ -622,46 +622,40 @@ module.exports = function projectHelper (accounts) {
     // make worker array
     let workerArray = [obj.user.worker1, obj.user.worker2]
 
-    for (let i = 0; i < _numSets; i++) {
-      // submit hash list
-      await obj.contracts.PR.submitHashList(projArray[i][0], keccakHashes.hashTasks(taskDetails.taskSet1), {from: obj.user.repStaker1})
-      await obj.contracts.PR.submitHashList(projArray[i][1], keccakHashes.hashTasks(taskDetails.taskSet1), {from: obj.user.repStaker1})
+    await obj.contracts.PR.submitHashList(projArray[0][0], keccakHashes.hashTasks(taskDetails.taskSet1), {from: obj.user.repStaker1})
+    await obj.contracts.PR.submitHashList(projArray[0][1], keccakHashes.hashTasks(taskDetails.taskSet1), {from: obj.user.repStaker1})
 
-      for (let j = 0; j < _numComplete[i]; j++) {
-        // get description and weighting of task with index j from project set i
-        let description = _tasks[j].description
-        let weighting = _tasks[j].weighting
+    for (let j = 0; j < _numComplete; j++) {
+      // get description and weighting of task with index j
+      let description = _tasks[j].description
+      let weighting = _tasks[j].weighting
 
-        // claim task j of set i
-        await obj.contracts.RR.claimTask(projArray[i][0], j, description, weighting, {from: workerArray[j % 2]})
-        await obj.contracts.RR.claimTask(projArray[i][1], j, description, weighting, {from: workerArray[j % 2]})
+      // claim task j
+      await obj.contracts.RR.claimTask(projArray[0][0], j, description, weighting, {from: workerArray[j % 2]})
+      await obj.contracts.RR.claimTask(projArray[0][1], j, description, weighting, {from: workerArray[j % 2]})
 
-        // mark task j of set i complete
-        await obj.contracts.PR.submitTaskComplete(projArray[i][0], j, {from: workerArray[j % 2]})
-        await obj.contracts.PR.submitTaskComplete(projArray[i][1], j, {from: workerArray[j % 2]})
-      }
+      // mark task j complete
+      await obj.contracts.PR.submitTaskComplete(projArray[0][0], j, {from: workerArray[j % 2]})
+      await obj.contracts.PR.submitTaskComplete(projArray[0][1], j, {from: workerArray[j % 2]})
     }
 
     // increase time 2 weeks + 1 ms to make sure that checkValidating() doesn't bug out
     await evmIncreaseTime((2 * 604800) + 1)
 
-    for (let i = 0; i < _numSets; i++) {
-      // call check validate for each project
-      await obj.contracts.PR.checkValidate(projArray[i][0])
-      await obj.contracts.PR.checkValidate(projArray[i][1])
+    // call check validate for each project
+    await obj.contracts.PR.checkValidate(projArray[0][0])
+    await obj.contracts.PR.checkValidate(projArray[0][1])
 
-      // assert that project is in state 4
-      let stateT = await obj.project.getState(projArray[i][0])
-      let stateR = await obj.project.getState(projArray[i][1])
-      assert.equal(stateT, 4, 'project ' + i + ',T not in validating state')
-      assert.equal(stateR, 4, 'project ' + i + ',R not in validating state')
-    }
+    // assert that project is in state 4
+    let stateT = await obj.project.getState(projArray[0][0])
+    let stateR = await obj.project.getState(projArray[0][1])
+    assert.equal(stateT, 4, 'project T not in validating state')
+    assert.equal(stateR, 4, 'project R not in validating state')
 
     return projArray
   }
 
   // return voting projects (addresses) proposed by token holder and reputation holder
-  // takes a list of tasks and returns
   // takes a list of tasks and a _valType array parameter of how validated type
   // 0: validate true only
   // 1: validate false only
@@ -669,32 +663,47 @@ module.exports = function projectHelper (accounts) {
   // 3: validate both (false > true)
   // 4: validate neither
   // moves ganache forward 4 weeks
-  obj.returnProject.voting = async function (_cost, _stakingPeriod, _ipfsHash, _numSets, _tasks, _numComplete) {
+  obj.returnProject.voting = async function (_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete, _valType) {
     // get array of validating projects
-    let projArray = await obj.returnProject.validating(_cost, _stakingPeriod, _ipfsHash, _numSets, _tasks, _numComplete)
+    let projArray = await obj.returnProject.validating(_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete)
 
-    let indexYes = 0
-    let indexNo = 1
     let tokensToValidate = 100
+    let tokensToValidateMore = 150
 
-    for (let i = 0; i < _numSets; i++) {
-      await obj.contracts.TR.validateTask(projArray[i][0], indexYes, tokensToValidate, true, {from: obj.user.validator1})
-      await obj.contracts.TR.validateTask(projAddrT[i][1], indexNo, tokensToValidate, false, {from: obj.user.validator1})
+    for (let j = 0; j < _numComplete; j++) {
+      if (_valType[j] == 0) {
+        await obj.contracts.TR.validateTask(projArray[0][0], j, tokensToValidate, true, {from: obj.user.validator1})
+        await obj.contracts.TR.validateTask(projArray[0][1], j, tokensToValidate, true, {from: obj.user.validator1})
+      }
+      if (_valType[j] == 1) {
+        await obj.contracts.TR.validateTask(projArray[0][0], j, tokensToValidate, false, {from: obj.user.validator1})
+        await obj.contracts.TR.validateTask(projArray[0][1], j, tokensToValidate, false, {from: obj.user.validator1})
+      }
+      if (_valType[j] == 2) {
+        await obj.contracts.TR.validateTask(projArray[0][0], j, tokensToValidateMore, true, {from: obj.user.validator1})
+        await obj.contracts.TR.validateTask(projArray[0][1], j, tokensToValidateMore, true, {from: obj.user.validator1})
+        await obj.contracts.TR.validateTask(projArray[0][0], j, tokensToValidate, false, {from: obj.user.validator2})
+        await obj.contracts.TR.validateTask(projArray[0][1], j, tokensToValidate, false, {from: obj.user.validator2})
+      }
+      if (_valType[j] == 3) {
+        await obj.contracts.TR.validateTask(projArray[0][0], j, tokensToValidate, true, {from: obj.user.validator1})
+        await obj.contracts.TR.validateTask(projArray[0][1], j, tokensToValidate, true, {from: obj.user.validator1})
+        await obj.contracts.TR.validateTask(projArray[0][0], j, tokensToValidateMore, false, {from: obj.user.validator2})
+        await obj.contracts.TR.validateTask(projArray[0][1], j, tokensToValidateMore, false, {from: obj.user.validator2})
+      }
     }
 
     await evmIncreaseTime((1 * 604800) + 1)
 
-    for (let i = 0; i < _numSets; i++) {
-      // call check validate for each project
-      await obj.contracts.PR.checkVoting(projArray[i][0])
-      await obj.contracts.PR.checkVoting(projArray[i][1])
+    // call check validate for each project
+    await obj.contracts.PR.checkVoting(projArray[0][0])
+    await obj.contracts.PR.checkVoting(projArray[0][1])
 
-      // assert that project is in state 4
-      let stateT = await obj.project.getState(projArray[i][0])
-      let stateR = await obj.project.getState(projArray[i][1])
-      assert.equal(stateT, 5, 'project ' + i + ',T not in validating state')
-      assert.equal(stateR, 5, 'project ' + i + ',R not in validating state')
-    }
+    // assert that project is in state 4
+    let stateT = await obj.project.getState(projArray[0][0])
+    let stateR = await obj.project.getState(projArray[0][1])
+    assert.equal(stateT, 5, 'project T not in validating state')
+    assert.equal(stateR, 5, 'project R not in validating state')
 
     return projArray
   }
@@ -702,8 +711,8 @@ module.exports = function projectHelper (accounts) {
   // fully stake project with tokens via two stakers
   obj.returnProjectHelper.stakeTokens = async function (_projAddr) {
     // fuel token stakers
-    await obj.utils.mintIfNecessary(obj.user.tokenStaker1)
-    await obj.utils.mintIfNecessary(obj.user.tokenStaker2)
+    await obj.utils.mintIfNecessary(obj.user.tokenStaker1, 5000)
+    await obj.utils.mintIfNecessary(obj.user.tokenStaker2, 5000)
 
     // get tokens required to fully stake the project and stake half of them
     let requiredTokens = await obj.project.calculateRequiredTokens(_projAddr)

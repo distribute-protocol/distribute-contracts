@@ -47,6 +47,7 @@ contract('Active State', (accounts) => {
     // get active projects
     // moves ganache forward 1 more week
     projArray = await returnProject.active(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, 1)
+    // console.log(projArray, projArray[0][0], projArray[0][1])
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
   })

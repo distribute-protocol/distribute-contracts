@@ -6,7 +6,7 @@ const TokenRegistry = artifacts.require('TokenRegistry')
 const SpoofedRR = artifacts.require('SpoofedRR')
 
 const projectHelper = require('../utils/projectHelper')
-const assertThrown = require('../utils/AssertThrown')
+const assertThrown = require('../utils/assertThrown')
 const hexToAscii = require('../utils/hexToAscii')
 
 

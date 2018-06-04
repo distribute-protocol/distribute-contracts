@@ -26,7 +26,6 @@ contract('Voting State', (accounts) => {
   let errorThrown
   let projAddrT, projAddrR
 
-
   // define indices
   let indexYes = 0
   let indexNo = 1
@@ -35,7 +34,7 @@ contract('Voting State', (accounts) => {
   let indexIncomplete = 4
   let notIndex = 5
 
-  let fastForwards = 5 // ganache 5 weeks ahead at this point from previous test's evmIncreaseTime()
+  let fastForwards = 9 // ganache 9 weeks ahead at this point from previous test's evmIncreaseTime()
 
   let secretHash = 10000
   let voteYes = 1
@@ -51,13 +50,14 @@ contract('Voting State', (accounts) => {
 
     // get validating projects
     // moves ganache forward 1 more week
-    projArray = await returnProject.voting(parseInt(web3.toWei('0.1', 'ether')), stakingPeriod + (fastForwards * 604800), ipfsHash, 1, taskSet1, [taskSet1.length - 1])
+
+    projArray = await returnProject.voting(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet1, taskSet1.length - 1, [0, 1, 2, 3, 4])
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
 
     // fund validators
-    await utils.mintIfNecessary(tokenYesVoter)
-    await utils.mintIfNecessary(tokenNoVoter)
+    // await utils.mintIfNecessary(tokenYesVoter)
+    // await utils.mintIfNecessary(tokenNoVoter)
 
   })
   describe('voting with tokens', () => {
