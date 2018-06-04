@@ -89,7 +89,7 @@ module.exports = function projectHelper (accounts) {
   obj.project.stakingPeriod = obj.project.now + 604800 // blockchain understands seconds                    // one week from now
 
   obj.project.expiredStakingPeriod = 10 // January 1st, 1970
-  obj.project.projectCost = parseInt(web3.toWei('0.25', 'ether'))
+  obj.project.projectCost = parseInt(web3.toWei(0.25, 'ether'))
   obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala' // length === 46
   obj.project.incorrectIpfsHash = 'whyiseveryspokeleadawhiteman' // length != 46
 
@@ -580,15 +580,13 @@ module.exports = function projectHelper (accounts) {
       let temp2 = await obj.returnProject.staked_R(_cost, _stakingPeriod, _ipfsHash)
       projArray.push([temp1, temp2])
 
-      // add task hashes to both projects
-      await obj.contracts.PR.addTaskHash(projArray[i][0], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker1})
-      await obj.contracts.PR.addTaskHash(projArray[i][1], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker1})
-      await obj.contracts.PR.addTaskHash(projArray[i][0], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker2})
-      await obj.contracts.PR.addTaskHash(projArray[i][1], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker2})
-      await obj.contracts.PR.addTaskHash(projArray[i][0], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.repStaker1})
-      await obj.contracts.PR.addTaskHash(projArray[i][1], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.repStaker1})
-      await obj.contracts.PR.addTaskHash(projArray[i][0], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.repStaker2})
-      await obj.contracts.PR.addTaskHash(projArray[i][1], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.repStaker2})
+      // add task hashes to both projects by at least 50% of the stakers
+      for (let j = 0; j < 2; j++) {
+        await obj.contracts.PR.addTaskHash(projArray[i][j], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker1})
+        await obj.contracts.PR.addTaskHash(projArray[i][j], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker2})
+        await obj.contracts.PR.addTaskHash(projArray[i][j], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.repStaker1})
+        await obj.contracts.PR.addTaskHash(projArray[i][j], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.repStaker2})
+      }
     }
 
     // increase time 1 week + 1 ms to make sure that checkActive() doesn't bug out
