@@ -38,7 +38,7 @@ contract('Validating State', (accounts) => {
 
   let fastForwards = 5 // ganache 5 weeks ahead at this point from previous test's evmIncreaseTime()
 
-  before(async function () {
+  before(async () => {
     // get contract
     await projObj.contracts.setContracts()
     TR = projObj.contracts.TR
@@ -58,7 +58,7 @@ contract('Validating State', (accounts) => {
   })
 
   describe('validating with tokens', () => {
-    it('Validator can validate a completed task yes from TR validating project', async function () {
+    it('Validator can validate a completed task yes from TR validating project', async () => {
       // take stock of variables before
       let valBalBefore = await utils.getTokenBalance(validator1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
@@ -98,7 +98,7 @@ contract('Validating State', (accounts) => {
       assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
     })
 
-    it('Validator can validate a completed task yes from RR validating project', async function () {
+    it('Validator can validate a completed task yes from RR validating project', async () => {
       // take stock of variables before
       let valBalBefore = await utils.getTokenBalance(validator1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
@@ -136,7 +136,7 @@ contract('Validating State', (accounts) => {
       assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
     })
 
-    it('Validator can validate a completed task no from TR validating project', async function () {
+    it('Validator can validate a completed task no from TR validating project', async () => {
       // take stock of variables before
       let valBalBefore = await utils.getTokenBalance(validator1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
@@ -176,7 +176,7 @@ contract('Validating State', (accounts) => {
       assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
     })
 
-    it('Validator can validate a completed task no from RR validating project', async function () {
+    it('Validator can validate a completed task no from RR validating project', async () => {
       // take stock of variables before
       let valBalBefore = await utils.getTokenBalance(validator1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
@@ -214,7 +214,7 @@ contract('Validating State', (accounts) => {
       assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
     })
 
-    it('Different validator can also validate a yes validated completed task yes from TR validating project', async function () {
+    it('Different validator can also validate a yes validated completed task yes from TR validating project', async () => {
       // take stock of variables before
       let tokensToValidate = 100
       let valBalBefore = await utils.getTokenBalance(validator2)
@@ -253,7 +253,7 @@ contract('Validating State', (accounts) => {
       assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
     })
 
-    it('Different validator can also validate a yes validated completed task yes from RR validating project', async function () {
+    it('Different validator can also validate a yes validated completed task yes from RR validating project', async () => {
       // take stock of variables before
       let tokensToValidate = 100
       let valBalBefore = await utils.getTokenBalance(validator2)
@@ -292,7 +292,7 @@ contract('Validating State', (accounts) => {
       assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
     })
 
-    it('Different validator can also validate a no validated completed task no from TR validating project', async function () {
+    it('Different validator can also validate a no validated completed task no from TR validating project', async () => {
       // take stock of variables before
       let tokensToValidate = 100
       let valBalBefore = await utils.getTokenBalance(validator2)
@@ -331,7 +331,7 @@ contract('Validating State', (accounts) => {
       assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
     })
 
-    it('Different validator can also validate a no validated completed task no from RR validating project', async function () {
+    it('Different validator can also validate a no validated completed task no from RR validating project', async () => {
       // take stock of variables before
       let tokensToValidate = 100
       let valBalBefore = await utils.getTokenBalance(validator2)
@@ -370,7 +370,7 @@ contract('Validating State', (accounts) => {
       assert.equal(taskValDetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
     })
 
-    it('Validators can validate a completed task yes and no from TR validating project', async function () {
+    it('Validators can validate a completed task yes and no from TR validating project', async () => {
       // take stock of variables before
       let val1BalBefore = await utils.getTokenBalance(validator1)
       let val2BalBefore = await utils.getTokenBalance(validator2)
@@ -445,7 +445,7 @@ contract('Validating State', (accounts) => {
       assert.equal(taskVal2DetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
     })
 
-    it('Validators can validate a completed task yes and no from RR validating project', async function () {
+    it('Validators can validate a completed task yes and no from RR validating project', async () => {
       // take stock of variables before
       let val1BalBefore = await utils.getTokenBalance(validator1)
       let val2BalBefore = await utils.getTokenBalance(validator2)
@@ -520,7 +520,7 @@ contract('Validating State', (accounts) => {
       assert.equal(taskVal2DetailsAfter[1], tokensToValidate, 'stake after should be tokensToValidate')
     })
 
-    it('Validator can\'t validate a completed task yes from TR validating project more than once', async function () {
+    it('Validator can\'t validate a completed task yes from TR validating project more than once', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -533,7 +533,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a completed task yes from RR validating project more than once', async function () {
+    it('Validator can\'t validate a completed task yes from RR validating project more than once', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -546,7 +546,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a completed task no from TR validating project more than once', async function () {
+    it('Validator can\'t validate a completed task no from TR validating project more than once', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -559,7 +559,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a completed task no from RR validating project more than once', async function () {
+    it('Validator can\'t validate a completed task no from RR validating project more than once', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -572,7 +572,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a completed task yes from TR validating project if they don\'t have enough tokens', async function () {
+    it('Validator can\'t validate a completed task yes from TR validating project if they don\'t have enough tokens', async () => {
       errorThrown = false
       try {
         await TR.validateTask(projAddrT, indexBoth, tokensToValidate, true, {from: notValidator})
@@ -582,7 +582,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a completed task yes from RR validating project if they don\'t have enough tokens', async function () {
+    it('Validator can\'t validate a completed task yes from RR validating project if they don\'t have enough tokens', async () => {
       errorThrown = true
       try {
         await TR.validateTask(projAddrT, indexBoth, tokensToValidate, true, {from: notValidator})
@@ -592,7 +592,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a completed task no from TR validating project if they don\'t have enough tokens', async function () {
+    it('Validator can\'t validate a completed task no from TR validating project if they don\'t have enough tokens', async () => {
       errorThrown = false
       try {
         await TR.validateTask(projAddrT, indexBoth, tokensToValidate, false, {from: notValidator})
@@ -602,7 +602,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a completed task no from RR validating project if they don\'t have enough tokens', async function () {
+    it('Validator can\'t validate a completed task no from RR validating project if they don\'t have enough tokens', async () => {
       errorThrown = false
       try {
         await TR.validateTask(projAddrR, indexBoth, tokensToValidate, false, {from: notValidator})
@@ -612,7 +612,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate incomplete task yes from TR validating project with tokens', async function () {
+    it('Validator can\'t validate incomplete task yes from TR validating project with tokens', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -625,7 +625,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate incomplete task yes from RR validating project with tokens', async function () {
+    it('Validator can\'t validate incomplete task yes from RR validating project with tokens', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -638,7 +638,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate incomplete task no from TR validating project with tokens', async function () {
+    it('Validator can\'t validate incomplete task no from TR validating project with tokens', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -651,7 +651,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate incomplete task no from RR validating project with tokens', async function () {
+    it('Validator can\'t validate incomplete task no from RR validating project with tokens', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -664,7 +664,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate nonexistant task yes from TR validating project with tokens', async function () {
+    it('Validator can\'t validate nonexistant task yes from TR validating project with tokens', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -677,7 +677,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate nonexistant task yes from RR validating project with tokens', async function () {
+    it('Validator can\'t validate nonexistant task yes from RR validating project with tokens', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -690,7 +690,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate nonexistant task no from TR validating project with tokens', async function () {
+    it('Validator can\'t validate nonexistant task no from TR validating project with tokens', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -703,7 +703,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate nonexistant task no from RR validating project with tokens', async function () {
+    it('Validator can\'t validate nonexistant task no from RR validating project with tokens', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -718,7 +718,7 @@ contract('Validating State', (accounts) => {
   })
 
   describe('validating with reputation', () => {
-    it('Validator can\'t validate a completed task yes from TR validating project with reputation', async function () {
+    it('Validator can\'t validate a completed task yes from TR validating project with reputation', async () => {
       // assert that worker has tokensToValidate amount of reputation
       let repBal = await utils.getRepBalance(worker1)
       assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
@@ -732,7 +732,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a completed task yes from RR validating project with reputation', async function () {
+    it('Validator can\'t validate a completed task yes from RR validating project with reputation', async () => {
       // assert that worker has tokensToValidate amount of reputation
       let repBal = await utils.getRepBalance(worker1)
       assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
@@ -746,7 +746,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a completed task no from TR validating project with reputation', async function () {
+    it('Validator can\'t validate a completed task no from TR validating project with reputation', async () => {
       // assert that worker has tokensToValidate amount of reputation
       let repBal = await utils.getRepBalance(worker1)
       assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
@@ -760,7 +760,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a completed task no from RR validating project with reputation', async function () {
+    it('Validator can\'t validate a completed task no from RR validating project with reputation', async () => {
       // assert that worker has tokensToValidate amount of reputation
       let repBal = await utils.getRepBalance(worker1)
       assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
@@ -774,7 +774,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate an incomplete task yes from TR validating project with reputation', async function () {
+    it('Validator can\'t validate an incomplete task yes from TR validating project with reputation', async () => {
       // assert that worker has tokensToValidate amount of reputation
       let repBal = await utils.getRepBalance(worker1)
       assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
@@ -788,7 +788,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate an incomplete task yes from RR validating project with reputation', async function () {
+    it('Validator can\'t validate an incomplete task yes from RR validating project with reputation', async () => {
       // assert that worker has tokensToValidate amount of reputation
       let repBal = await utils.getRepBalance(worker1)
       assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
@@ -802,7 +802,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate an incomplete task no from TR validating project with reputation', async function () {
+    it('Validator can\'t validate an incomplete task no from TR validating project with reputation', async () => {
       // assert that worker has tokensToValidate amount of reputation
       let repBal = await utils.getRepBalance(worker1)
       assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
@@ -816,7 +816,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate an incomplete task no from RR validating project with reputation', async function () {
+    it('Validator can\'t validate an incomplete task no from RR validating project with reputation', async () => {
       // assert that worker has tokensToValidate amount of reputation
       let repBal = await utils.getRepBalance(worker1)
       assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
@@ -830,7 +830,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a nonexistant task yes from TR validating project with reputation', async function () {
+    it('Validator can\'t validate a nonexistant task yes from TR validating project with reputation', async () => {
       // assert that worker has tokensToValidate amount of reputation
       let repBal = await utils.getRepBalance(worker1)
       assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
@@ -844,7 +844,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a nonexistant task yes from RR validating project with reputation', async function () {
+    it('Validator can\'t validate a nonexistant task yes from RR validating project with reputation', async () => {
       // assert that worker has tokensToValidate amount of reputation
       let repBal = await utils.getRepBalance(worker1)
       assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
@@ -858,7 +858,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a nonexistant task no from TR validating project with reputation', async function () {
+    it('Validator can\'t validate a nonexistant task no from TR validating project with reputation', async () => {
       // assert that worker has tokensToValidate amount of reputation
       let repBal = await utils.getRepBalance(worker1)
       assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
@@ -872,7 +872,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a nonexistant task no from RR validating project with reputation', async function () {
+    it('Validator can\'t validate a nonexistant task no from RR validating project with reputation', async () => {
       // assert that worker has tokensToValidate amount of reputation
       let repBal = await utils.getRepBalance(worker1)
       assert.isAtLeast(repBal, tokensToValidate, 'worker1 does not have tokensToValidate reputation')
@@ -888,7 +888,7 @@ contract('Validating State', (accounts) => {
   })
 
   describe('state changes before time is up', () => {
-    it('checkVoting() does not change TR validating project to voting before time is up', async function () {
+    it('checkVoting() does not change TR validating project to voting before time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT)
 
@@ -903,7 +903,7 @@ contract('Validating State', (accounts) => {
       assert.equal(stateAfter, 4, 'state should not have changed')
     })
 
-    it('checkVoting() does not change RR validating project to voting before time is up', async function () {
+    it('checkVoting() does not change RR validating project to voting before time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
 
@@ -920,12 +920,12 @@ contract('Validating State', (accounts) => {
   })
 
   describe('state changes after time is up', () => {
-    before(async function () {
+    before(async () => {
       // fast forward time
       await evmIncreaseTime(604800) // 1 week
     })
 
-    it('checkVoting() changes TR validating project to voting after time is up', async function () {
+    it('checkVoting() changes TR validating project to voting after time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT)
       let projWeiBalBefore = await project.getWeiBal(projAddrT, true)
@@ -982,7 +982,7 @@ contract('Validating State', (accounts) => {
       // ADD PLCR START POLL TEST
     })
 
-    it('checkVoting() changes RR validating project to voting after time is up', async function () {
+    it('checkVoting() changes RR validating project to voting after time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
       let projWeiBalBefore = await project.getWeiBal(projAddrR, true)
@@ -1041,7 +1041,7 @@ contract('Validating State', (accounts) => {
   })
 
   describe('validate voting projects', () => {
-    it('Validator can\'t validate a completed task yes from TR voting project', async function () {
+    it('Validator can\'t validate a completed task yes from TR voting project', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -1054,7 +1054,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a completed task yes from RR voting project', async function () {
+    it('Validator can\'t validate a completed task yes from RR voting project', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -1067,7 +1067,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a completed task no from TR voting project', async function () {
+    it('Validator can\'t validate a completed task no from TR voting project', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 
@@ -1080,7 +1080,7 @@ contract('Validating State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Validator can\'t validate a completed task no from RR voting project', async function () {
+    it('Validator can\'t validate a completed task no from RR voting project', async () => {
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, tokensToValidate)
 

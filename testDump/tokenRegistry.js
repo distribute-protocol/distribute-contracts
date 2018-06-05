@@ -38,7 +38,7 @@ contract('TokenRegistry', function (accounts) {
   let staker2 = accounts[5]
   let repStaker = accounts[6]
   let nonStaker = accounts[3]
-  before(async function () {
+  before(async () => {
     TR = await TokenRegistry.deployed()
     RR = await ReputationRegistry.deployed()
     PR = await ProjectRegistry.deployed()
