@@ -20,7 +20,7 @@ contract('Distribute Token', function (accounts) {
   // local test variables
   let errorThrown
 
-  before(async function () {
+  before(async () => {
     // get contracts from project helped
     await projObj.contracts.setContracts()
     DT = projObj.contracts.DT

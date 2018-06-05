@@ -282,7 +282,7 @@ contract ReputationRegistry {
         uint256 _prevPollID
     ) external {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
         require(projectRegistry.projects(_projectAddress) == true);
-        require(balances[msg.sender] > 10000); //prevent network effect of new account creation
+        // require(balances[msg.sender] > 10000); //prevent network effect of new account creation
         Project project = Project(_projectAddress);
         uint256 pollId = Task(project.tasks(_index)).pollId();
         //calculate available tokens for voting
