@@ -13,7 +13,7 @@ contract('Voting State', (accounts) => {
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let TR, RR, PR, PLCR
+  let TR, RR, PLCR
   let {user, project, utils, returnProject, task} = projObj
   let {repYesVoter, repNoVoter, tokenYesVoter, tokenNoVoter, notVoter} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
@@ -998,7 +998,6 @@ contract('Voting State', (accounts) => {
     it('token voter can reveal a yes vote to a task validated more yes from TR voting project', async () => {
       // take stock of variables before
       let pollMapBefore = await task.getPollMap(projAddrT, valTrueMore)
-      console.log(pollMapBefore)
 
       // checks
       assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
@@ -1012,11 +1011,11 @@ contract('Voting State', (accounts) => {
       let pollMapAfter = await task.getPollMap(projAddrT, valTrueMore)
 
       // checks
-      assert.equal(pollMapBefore[0], pollMapAfter[0], 'commit end date shouldn\'t change')
-      assert.equal(pollMapBefore[1], pollMapAfter[1], 'reveal end date shouldn\'t change')
-      assert.equal(pollMapBefore[2], 51, 'poll quorum should still be 51')
-      assert.equal(pollMapBefore[3], voteYes, 'vote tally yes updated incorrectly')
-      assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
+      assert.equal(pollMapBefore[0], (pollMapAfter[0]), 'commit end date shouldn\'t change')
+      assert.equal(pollMapBefore[1], (pollMapAfter[1]), 'reveal end date shouldn\'t change')
+      assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
+      assert.equal(pollMapAfter[3], voteAmount, 'vote tally yes updated incorrectly')
+      assert.equal(pollMapAfter[4], 0, 'should be no vote tally no yet')
     })
   })
 })
