@@ -21,7 +21,7 @@ const DistributeToken = artifacts.require('DistributeToken')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const Promise = require('bluebird')
 web3.eth = Promise.promisifyAll(web3.eth)
-const assertThrown = require('../utils/AssertThrown')
+const assertThrown = require('../utils/assertThrown')
 
 contract('TokenRegistry', function (accounts) {
   let DT, TR, RR, PR, spoofedP

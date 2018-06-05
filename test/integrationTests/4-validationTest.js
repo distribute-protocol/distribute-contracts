@@ -48,7 +48,7 @@ contract('Validating State', (accounts) => {
 
     // get validating projects
     // moves ganache forward 1 more week
-    projArray = await returnProject.validating(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, 1, taskSet1, [taskSet1.length - 1])
+    projArray = await returnProject.validating(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet1, taskSet1.length - 1)
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
 

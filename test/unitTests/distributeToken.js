@@ -4,7 +4,7 @@
 const DistributeToken = artifacts.require('DistributeToken')
 
 const projectHelper = require('../utils/projectHelper')
-const assertThrown = require('../utils/AssertThrown')
+const assertThrown = require('../utils/assertThrown')
 
 contract('Distribute Token', function (accounts) {
   // set up project helper
