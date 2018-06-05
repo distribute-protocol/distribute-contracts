@@ -31,7 +31,7 @@ contract('Propose Projects', function (accounts) {
   let tx, log
   let errorThrown
 
-  before(async function () {
+  before(async () => {
     // get contracts
     await projObj.contracts.setContracts()
     TR = projObj.contracts.TR
@@ -66,7 +66,7 @@ contract('Propose Projects', function (accounts) {
   })
 
   describe('propose project successfully', () => {
-    it('Proposer can propose project with tokens', async function () {
+    it('Proposer can propose project with tokens', async () => {
       // propose project
       tx = await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: tokenProposer})
 
@@ -113,7 +113,7 @@ contract('Propose Projects', function (accounts) {
       assert.equal(ipfsHash, _ipfsHash, 'PR stored incorrect ipfs hash')
     })
 
-    it('Proposer can propose project with reputation', async function () {
+    it('Proposer can propose project with reputation', async () => {
       // propose project
       tx = await RR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: repProposer})
 
@@ -162,7 +162,7 @@ contract('Propose Projects', function (accounts) {
   })
 
   describe('propose project unsuccessfully', () => {
-    it('Proposer with tokens can\'t propose project from TR with staking period that\'s passed', async function () {
+    it('Proposer with tokens can\'t propose project from TR with staking period that\'s passed', async () => {
       errorThrown = false
       try {
         await TR.proposeProject(projectCost, expiredStakingPeriod, ipfsHash, {from: tokenProposer})
@@ -173,7 +173,7 @@ contract('Propose Projects', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Proposer with reputation can\'t propose project from RR with staking period that\'s passed', async function () {
+    it('Proposer with reputation can\'t propose project from RR with staking period that\'s passed', async () => {
       errorThrown = false
       try {
         await RR.proposeProject(projectCost, expiredStakingPeriod, ipfsHash, {from: repProposer})
@@ -184,7 +184,7 @@ contract('Propose Projects', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Proposer can\'t propose project from TR with ipfs hash of incorrect length', async function () {
+    it('Proposer can\'t propose project from TR with ipfs hash of incorrect length', async () => {
       errorThrown = false
       try {
         await TR.proposeProject(projectCost, stakingPeriod, incorrectIpfsHash, {from: tokenProposer})
@@ -195,7 +195,7 @@ contract('Propose Projects', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Proposer can\'t propose project from RR with ipfs hash of incorrect length', async function () {
+    it('Proposer can\'t propose project from RR with ipfs hash of incorrect length', async () => {
       errorThrown = false
       try {
         await RR.proposeProject(projectCost, stakingPeriod, incorrectIpfsHash, {from: repProposer})
@@ -206,7 +206,7 @@ contract('Propose Projects', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('User can\'t propose project without the required token stake', async function () {
+    it('User can\'t propose project without the required token stake', async () => {
       errorThrown = false
       try {
         await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: notProposer})
@@ -217,7 +217,7 @@ contract('Propose Projects', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('User can\'t propose project without the required reputation stake', async function () {
+    it('User can\'t propose project without the required reputation stake', async () => {
       errorThrown = false
       try {
         await RR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: notProposer})
