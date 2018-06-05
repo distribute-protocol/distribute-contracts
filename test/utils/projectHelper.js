@@ -482,6 +482,15 @@ module.exports = function projectHelper (accounts) {
     return poll.toNumber()
   }
 
+  obj.task.getPollMap = async function (_projAddr, _index) {
+    let pollNonce = await obj.task.getPollNonce(_projAddr, _index)
+    let pollMap = await obj.contract.PLCR.pollMap(pollNonce)
+    for (let i; i < pollMap.length; i++) {
+      pollMap[i] = pollMap[i].toNumber()
+    }
+    return pollMap
+  }
+
   // project return functions
   // return project (address) proposed by token holder
   obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash) {
