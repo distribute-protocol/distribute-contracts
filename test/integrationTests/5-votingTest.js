@@ -599,8 +599,8 @@ contract('Voting State', (accounts) => {
       // take stock of variables after
 
       // checks
-
     })
+
     it('reputation voter can commit a no vote to a task validated more yes from RR voting project', async function () {
       // take stock of variables before
       let pollId = await task.getPollNonce(projAddrR, valTrueMore)
@@ -615,8 +615,8 @@ contract('Voting State', (accounts) => {
       // take stock of variables after
 
       // checks
-
     })
+
     it('reputation voter can commit a no vote to a task validated more no from TR voting project', async function () {
       // take stock of variables before
       let pollId = await task.getPollNonce(projAddrT, valFalseMore)
@@ -633,6 +633,7 @@ contract('Voting State', (accounts) => {
 
       // checks
     })
+
     it('reputation voter can commit a no vote to a task validated more no from RR voting project', async function () {
       // take stock of variables before
       let pollId = await task.getPollNonce(projAddrR, valFalseMore)
@@ -648,7 +649,8 @@ contract('Voting State', (accounts) => {
 
       // checks
     })
-    it('token voter cannot commit a no vote to a task validated only yes from TR voting project', async function () {
+
+    it('reputation voter cannot commit a no vote to a task validated only yes from TR voting project', async function () {
       // make commit hash
       let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
 
@@ -660,6 +662,7 @@ contract('Voting State', (accounts) => {
       }
       assertThrown(errorThrown, 'An error should have been thrown')
     })
+
     it('reputation voter cannot commit a no vote to a task validated only yes from RR voting project', async function () {
       // make commit hash
       let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
@@ -672,6 +675,7 @@ contract('Voting State', (accounts) => {
       }
       assertThrown(errorThrown, 'An error should have been thrown')
     })
+
     it('reputation voter cannot commit a no vote to a task validated only no from TR voting project', async function () {
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
@@ -687,6 +691,7 @@ contract('Voting State', (accounts) => {
       }
       assertThrown(errorThrown, 'An error should have been thrown')
     })
+
     it('reputation voter cannot commit a no vote to a task validated only no from RR voting project', async function () {
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
@@ -702,7 +707,8 @@ contract('Voting State', (accounts) => {
       }
       assertThrown(errorThrown, 'An error should have been thrown')
     })
-    it('repuation voter cannot commit a no vote to a task not validated from TR voting project', async function () {
+
+    it('reputation voter cannot commit a no vote to a task not validated from TR voting project', async function () {
       // make commit hash
       let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
 
@@ -714,7 +720,7 @@ contract('Voting State', (accounts) => {
       }
       assertThrown(errorThrown, 'An error should have been thrown')
     })
-    it('token voter cannot commit a no vote to a task not validated from RR voting project', async function () {
+    it('reputation voter cannot commit a no vote to a task not validated from RR voting project', async function () {
       // make commit hash
       let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
 
@@ -726,6 +732,7 @@ contract('Voting State', (accounts) => {
       }
       assertThrown(errorThrown, 'An error should have been thrown')
     })
+  })
 
   describe('revealing yes votes with tokens', () => {
     before(async () => {
@@ -748,17 +755,17 @@ contract('Voting State', (accounts) => {
     })
   })
 
-    it('Reputation Voter can commit vote to a validated task yes from TR validating project', async () => {})
-    it('Voter can commit vote to a validated task no from TR validating project', async () => {})
-    it('Reputation can commit vote to a validated task no from TR validating project', async () => {})
-
-    it('Token Voter can commit vote to a validated task yes from RR validating project', async () => {})
-    it('Reputation Voter can commit vote to a validated task yes from RR validating project', async () => {})
-    it('Voter can commit vote to a validated task no from RR validating project', async () => {})
-    it('Reputation can commit vote to a validated task no from RR validating project', async () => {})
-
-    it('Voter can reveal yes vote on a validated task from TR validating project', async () => {})
-    it('Reputation can reveal no vote on a validated task from from RR validating project', async () => {})
-    it('Voter can reveal yes vote on a validated task from TR validating project', async () => {})
-    it('Reputation can reveal no vote on a validated task from from RR validating project', async () => {})
+    // it('Reputation Voter can commit vote to a validated task yes from TR validating project', async () => {})
+    // it('Voter can commit vote to a validated task no from TR validating project', async () => {})
+    // it('Reputation can commit vote to a validated task no from TR validating project', async () => {})
+    //
+    // it('Token Voter can commit vote to a validated task yes from RR validating project', async () => {})
+    // it('Reputation Voter can commit vote to a validated task yes from RR validating project', async () => {})
+    // it('Voter can commit vote to a validated task no from RR validating project', async () => {})
+    // it('Reputation can commit vote to a validated task no from RR validating project', async () => {})
+    //
+    // it('Voter can reveal yes vote on a validated task from TR validating project', async () => {})
+    // it('Reputation can reveal no vote on a validated task from from RR validating project', async () => {})
+    // it('Voter can reveal yes vote on a validated task from TR validating project', async () => {})
+    // it('Reputation can reveal no vote on a validated task from from RR validating project', async () => {})
 })
