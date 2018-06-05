@@ -7,6 +7,8 @@ const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const keccakHashes = require('../utils/keccakHashes')
 const taskDetails = require('../utils/taskDetails')
 
+const ethers = require('ethers')
+
 contract('Voting State', (accounts) => {
   // set up project helper
   let projObj = projectHelper(accounts)
@@ -14,7 +16,7 @@ contract('Voting State', (accounts) => {
   // get project helper variables
   let TR, RR, PR
   let {user, project, utils, returnProject, task} = projObj
-  let {repVoter, repNoVoter, tokenVoter, tokenNoVoter, notVoter} = user
+  let {repYesVoter, repNoVoter, tokenYesVoter, tokenNoVoter, notVoter} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
 
   // set up task details & hashing functions
@@ -27,18 +29,23 @@ contract('Voting State', (accounts) => {
   let projAddrT, projAddrR
 
   // define indices
-  let indexYes = 0
-  let indexNo = 1
-  let indexBoth = 2
-  let indexNeither = 3
-  let indexIncomplete = 4
-  let notIndex = 5
+  let valTrueOnly = 0
+  let valFalseOnly = 1
+  let valTrueMore = 2
+  let valFalseMore = 3
+  let valNeither = 4
 
-  let fastForwards = 9 // ganache 9 weeks ahead at this point from previous test's evmIncreaseTime()
+  let valType = [valTrueOnly, valFalseOnly, valTrueMore, valFalseMore, valNeither]
 
-  let secretHash = 10000
+  // CHANGE THIS BACK TO 9 WHEN RUNNING WITH ALL THE TESTS
+  let fastForwards = 0 // ganache 9 weeks ahead at this point from previous tests' evmIncreaseTime()
+
+  let secretSalt = 10000
   let voteYes = 1
   let voteNo = 0
+
+  let voteAmount = 100
+  let voteAmountMore = 150
 
   before(async function () {
     // get contract
@@ -48,20 +55,308 @@ contract('Voting State', (accounts) => {
     PR = projObj.contracts.PR
     DT = projObj.contracts.DT
 
-    // get validating projects
-    // moves ganache forward 1 more week
-
-    projArray = await returnProject.voting(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet1, taskSet1.length - 1, [0, 1, 2, 3, 4])
+    // get voting projects
+    // moves ganache forward 4 more weeks
+    projArray = await returnProject.voting(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet1, taskSet1.length - 1, valType)
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
 
-    // fund validators
-    // await utils.mintIfNecessary(tokenYesVoter)
-    // await utils.mintIfNecessary(tokenNoVoter)
+    // fund & register voters
+    await utils.mintIfNecessary(tokenYesVoter)
+    await utils.mintIfNecessary(tokenNoVoter)
+    await utils.register(repYesVoter)
+    await utils.register(repNoVoter)
+  })
+
+  describe('committing yes votes with tokens', () => {
+    it('token voter can commit a yes vote to a task validated more yes from TR voting project', async function () {
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrT, valTrueMore)
+
+      // checks
+
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenYesVoter)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      // commit yes vote
+      await TR.voteCommit(projAddrT, valTrueMore, voteAmount, secretHash, 0, {from: tokenYesVoter})
+
+      // take stock of variables after
+
+      // checks
+
+    })
+    it('token voter can commit a yes vote to a task validated more yes from RR voting project', async function () {
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrR, valTrueMore)
+
+      // checks
+
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenYesVoter)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      // commit yes vote
+      await TR.voteCommit(projAddrR, valTrueMore, voteAmount, secretHash, 0, {from: tokenYesVoter})
+
+      // take stock of variables after
+
+      // checks
+
+    })
+    it('token voter can commit a yes vote to a task validated more no from TR voting project', async function () {
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrT, valFalseMore)
+
+      // checks
+
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenYesVoter)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      // commit yes vote
+      await TR.voteCommit(projAddrT, valFalseMore, voteAmount, secretHash, 0, {from: tokenYesVoter})
+
+      // take stock of variables after
+
+      // checks
+
+    })
+    it('token voter can commit a yes vote to a task validated more no from RR voting project', async function () {
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrR, valFalseMore)
+
+      // checks
+
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenYesVoter)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      // commit yes vote
+      await TR.voteCommit(projAddrR, valFalseMore, voteAmount, secretHash, 0, {from: tokenYesVoter})
+
+      // take stock of variables after
+
+      // checks
+
+    })
+    it('token voter cannot commit a yes vote to a task validated only yes from TR voting project', async function () {
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenYesVoter, voteAmount)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      errorThrown = false
+      try {
+        await TR.voteCommit(projAddrT, valTrueOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+    it('token voter cannot commit a yes vote to a task validated only yes from RR voting project', async function () {
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenYesVoter, voteAmount)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      errorThrown = false
+      try {
+        await TR.voteCommit(projAddrR, valTrueOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+    it('token voter cannot commit a yes vote to a task validated only no from TR voting project', async function () {
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenYesVoter, voteAmount)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      errorThrown = false
+      try {
+        await TR.voteCommit(projAddrT, valFalseOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+    it('token voter cannot commit a yes vote to a task validated only no from RR voting project', async function () {
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenYesVoter, voteAmount)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      errorThrown = false
+      try {
+        await TR.voteCommit(projAddrR, valFalseOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+    it('token voter cannot commit a yes vote to a task not validated from TR voting project', async function () {
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenYesVoter, voteAmount)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      errorThrown = false
+      try {
+        await TR.voteCommit(projAddrT, valNeither, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+    it('token voter cannot commit a yes vote to a task not validated from RR voting project', async function () {
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenYesVoter, voteAmount)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      errorThrown = false
+      try {
+        await TR.voteCommit(projAddrR, valNeither, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+  })
+
+  describe('committing no votes with tokens', () => {
+    it('token voter can commit a no vote to a task validated more yes from TR voting project', async function () {
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrT, valTrueMore)
+
+      // checks
+
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenNoVoter)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+
+      // commit yes vote
+      await TR.voteCommit(projAddrT, valTrueMore, voteAmount, secretHash, 0, {from: tokenNoVoter})
+
+      // take stock of variables after
+
+      // checks
+
+    })
+    it('token voter can commit a no vote to a task validated more yes from RR voting project', async function () {
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrR, valTrueMore)
+
+      // checks
+
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenNoVoter)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+
+      // commit yes vote
+      await TR.voteCommit(projAddrR, valTrueMore, voteAmount, secretHash, 0, {from: tokenNoVoter})
+
+      // take stock of variables after
+
+      // checks
+
+    })
+    it('token voter can commit a no vote to a task validated more no from TR voting project', async function () {
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrT, valFalseMore)
+
+      // checks
+
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenNoVoter)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+
+      // commit yes vote
+      await TR.voteCommit(projAddrT, valFalseMore, voteAmount, secretHash, 0, {from: tokenNoVoter})
+
+      // take stock of variables after
+
+      // checks
+
+    })
+    it('token voter can commit a no vote to a task validated more no from RR voting project', async function () {
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrR, valFalseMore)
+
+      // checks
+
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenNoVoter)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+
+      // commit yes vote
+      await TR.voteCommit(projAddrR, valFalseMore, voteAmount, secretHash, 0, {from: tokenNoVoter})
+
+      // take stock of variables after
+
+      // checks
+
+    })
+    it('token voter cannot commit a no vote to a task validated only yes from TR voting project', async function () {
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenNoVoter, voteAmount)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+
+      errorThrown = false
+      try {
+        await TR.voteCommit(projAddrT, valTrueOnly, voteAmount, secretHash, 0, {from: tokenNoVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+    it('token voter cannot commit a no vote to a task validated only yes from RR voting project', async function () {
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenNoVoter, voteAmount)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+
+      errorThrown = false
+      try {
+        await TR.voteCommit(projAddrR, valTrueOnly, voteAmount, secretHash, 0, {from: tokenNoVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+  })
+
+  describe('voting with reputation', () => {
 
   })
-  describe('voting with tokens', () => {
-    it('Token Voter can commit vote to a validated task yes from TR validating project', async function () {})
     it('Reputation Voter can commit vote to a validated task yes from TR validating project', async function () {})
     it('Voter can commit vote to a validated task no from TR validating project', async function () {})
     it('Reputation can commit vote to a validated task no from TR validating project', async function () {})
@@ -1109,5 +1404,4 @@ contract('Voting State', (accounts) => {
   //     }
   //     assertThrown(errorThrown, 'An error should have been thrown')
   //   })
-  })
 })

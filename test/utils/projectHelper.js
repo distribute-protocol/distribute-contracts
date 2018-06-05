@@ -56,9 +56,9 @@ module.exports = function projectHelper (accounts) {
   obj.user.validator2 = accounts[2]
   obj.user.notValidator = accounts[8]
 
-  obj.user.repVoter = accounts[1]
+  obj.user.repYesVoter = accounts[1]
   obj.user.repNoVoter = accounts[2]
-  obj.user.tokenVoter = accounts[3]
+  obj.user.tokenYesVoter = accounts[3]
   obj.user.tokenNoVoter = accounts[4]
   obj.user.notVoter = accounts[8]
 
