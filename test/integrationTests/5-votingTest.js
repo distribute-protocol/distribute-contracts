@@ -1248,8 +1248,8 @@ contract('Voting State', (accounts) => {
       let pollMapAfter = await task.getPollMap(projAddrT, valFalseMore)
 
       // checks
-      assert.equal(pollMapAfter[3], pollMapBefore[3], 'vote tally yes updated incorrectly')
-      // assert.equal(pollMapAfter[4], someNewCorrectAmount, 'some error message')
+      // assert.equal(pollMapAfter[3], someNewCorrectAmount, 'some error message')
+      // assert.equal(pollMapAfter[4], pollMapBefore[4], 'vote tally yes updated incorrectly')
     })
     it('reputation voter can reveal a yes vote to a task validated more no from RR voting project', async () => {
 
