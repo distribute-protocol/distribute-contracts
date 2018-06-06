@@ -484,11 +484,12 @@ module.exports = function projectHelper (accounts) {
 
   obj.task.getPollMap = async function (_projAddr, _index) {
     let pollNonce = await obj.task.getPollNonce(_projAddr, _index)
-    let pollMap = await obj.contract.PLCR.pollMap(pollNonce)
-    for (let i; i < pollMap.length; i++) {
-      pollMap[i] = pollMap[i].toNumber()
+    let pollMap = await obj.contracts.PLCR.pollMap(pollNonce)
+    let pollMapNumber = []
+    for (let i = 0; i < pollMap.length; i++) {
+      pollMapNumber[i] = pollMap[i].toNumber()
     }
-    return pollMap
+    return pollMapNumber
   }
 
   // project return functions
