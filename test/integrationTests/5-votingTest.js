@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-/* global assert contract artifacts */
+/* global assert contract */
 
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
@@ -719,7 +719,7 @@ contract('Voting State', (accounts) => {
       let commitHashAfter = await PLCR.getCommitHash(repYesVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(repYesVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrR, valFalseMore)
-      
+
       // checks
       assert.equal(commitHashAfter, secretHash, 'incorrect hash committed')
       assert.equal(numTokensAfter, voteAmount, 'incorrect number of tokens committed')
