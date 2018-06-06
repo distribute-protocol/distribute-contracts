@@ -340,46 +340,46 @@ contract('Voting State', (accounts) => {
   })
 
   describe('committing no votes with tokens', () => {
-      it('token voter can commit a no vote to a task validated more yes from TR voting project', async () => {
-        // take stock of variables before
-        let pollId = await task.getPollNonce(projAddrT, valTrueMore)
-        let attrUUID = await PLCR.attrUUID(tokenNoVoter, pollId)
-        let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [tokenNoVoter, pollId])
-        let commitHashBefore = await PLCR.getCommitHash(tokenNoVoter, pollId)
-        let numTokensBefore = await PLCR.getNumTokens(tokenNoVoter, pollId)
-        let pollMapBefore = await task.getPollMap(projAddrT, valTrueMore)
+    it('token voter can commit a no vote to a task validated more yes from TR voting project', async () => {
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrT, valTrueMore)
+      let attrUUID = await PLCR.attrUUID(tokenNoVoter, pollId)
+      let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [tokenNoVoter, pollId])
+      let commitHashBefore = await PLCR.getCommitHash(tokenNoVoter, pollId)
+      let numTokensBefore = await PLCR.getNumTokens(tokenNoVoter, pollId)
+      let pollMapBefore = await task.getPollMap(projAddrT, valTrueMore)
 
-        // checks
-        assert.strictEqual(attrUUID, expectedUUID, 'attrUUID was computed incorrectly')
-        assert.equal(commitHashBefore, 0, 'nothing should have been committed yet')
-        assert.equal(numTokensBefore, 0, 'no tokens should have been committed yet')
-        assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
-        assert.equal(pollMapBefore[3], 0, 'should be no vote tally yes yet')
-        assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
+      // checks
+      assert.strictEqual(attrUUID, expectedUUID, 'attrUUID was computed incorrectly')
+      assert.equal(commitHashBefore, 0, 'nothing should have been committed yet')
+      assert.equal(numTokensBefore, 0, 'no tokens should have been committed yet')
+      assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
+      assert.equal(pollMapBefore[3], 0, 'should be no vote tally yes yet')
+      assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
 
-        // fund voter with tokens if necessary
-        await utils.mintIfNecessary(tokenNoVoter)
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenNoVoter)
 
-        // make commit hash
-        let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
 
-        // commit no vote
-        await TR.voteCommit(projAddrT, valTrueMore, voteAmount, secretHash, 0, {from: tokenNoVoter})
+      // commit no vote
+      await TR.voteCommit(projAddrT, valTrueMore, voteAmount, secretHash, 0, {from: tokenNoVoter})
 
-        // take stock of variables after
-        let commitHashAfter = await PLCR.getCommitHash(tokenNoVoter, pollId)
-        let numTokensAfter = await PLCR.getNumTokens(tokenNoVoter, pollId)
-        let pollMapAfter = await task.getPollMap(projAddrT, valTrueMore)
+      // take stock of variables after
+      let commitHashAfter = await PLCR.getCommitHash(tokenNoVoter, pollId)
+      let numTokensAfter = await PLCR.getNumTokens(tokenNoVoter, pollId)
+      let pollMapAfter = await task.getPollMap(projAddrT, valTrueMore)
 
-        // checks
-        assert.equal(commitHashAfter, secretHash, 'incorrect hash committed')
-        assert.equal(numTokensAfter, voteAmount, 'incorrect number of tokens committed')
-        assert.equal(pollMapBefore[0], (pollMapAfter[0]), 'commit end date shouldn\'t change')
-        assert.equal(pollMapBefore[1], (pollMapAfter[1]), 'reveal end date shouldn\'t change')
-        assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
-        assert.equal(pollMapAfter[3], 0, 'votes yes shouldn\'t change')
-        assert.equal(pollMapAfter[4], 0, 'votes no shouldn\'t change')
-      })
+      // checks
+      assert.equal(commitHashAfter, secretHash, 'incorrect hash committed')
+      assert.equal(numTokensAfter, voteAmount, 'incorrect number of tokens committed')
+      assert.equal(pollMapBefore[0], (pollMapAfter[0]), 'commit end date shouldn\'t change')
+      assert.equal(pollMapBefore[1], (pollMapAfter[1]), 'reveal end date shouldn\'t change')
+      assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
+      assert.equal(pollMapAfter[3], 0, 'votes yes shouldn\'t change')
+      assert.equal(pollMapAfter[4], 0, 'votes no shouldn\'t change')
+    })
 
     it('token voter can commit a no vote to a task validated more yes from RR voting project', async () => {
       // take stock of variables before
@@ -503,14 +503,12 @@ contract('Voting State', (accounts) => {
       assert.equal(pollMapAfter[3], 0, 'should be no vote tally yes yet')
       assert.equal(pollMapAfter[4], 0, 'should be no vote tally no yet')
     })
-
     it('token voter cannot commit a no vote to a task validated only yes from TR voting project', async () => {
-
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
       // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
 
       errorThrown = false
       try {
@@ -522,12 +520,11 @@ contract('Voting State', (accounts) => {
     })
 
     it('token voter cannot commit a no vote to a task validated only yes from RR voting project', async () => {
-
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
       // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
 
       errorThrown = false
       try {
@@ -537,14 +534,13 @@ contract('Voting State', (accounts) => {
       }
       assertThrown(errorThrown, 'An error should have been thrown')
     })
-
     it('token voter cannot commit a no vote to a task validated only no from TR voting project', async function () {
 
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
       // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
 
       errorThrown = false
       try {
@@ -553,16 +549,14 @@ contract('Voting State', (accounts) => {
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
-
     })
 
     it('token voter cannot commit a no vote to a task validated only no from RR voting project', async function () {
-
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
       // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
 
       errorThrown = false
       try {
@@ -571,16 +565,14 @@ contract('Voting State', (accounts) => {
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
-
     })
 
     it('token voter cannot commit a no vote to a task not validated from TR voting project', async function () {
-
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
       // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
 
       errorThrown = false
       try {
@@ -593,12 +585,11 @@ contract('Voting State', (accounts) => {
     })
 
     it('token voter cannot commit a no vote to a task not validated from RR voting project', async function () {
-
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
       // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
 
       errorThrown = false
       try {
@@ -860,170 +851,71 @@ contract('Voting State', (accounts) => {
   })
 
   describe('committing no votes with reputation', () => {
-      it('reputation voter can commit a no vote to a task validated more yes from TR voting project', async function () {
-          //take stock of variables before
-          let pollId = await task.getPollNonce(projAddrT, valTrueMore)
-          let attrUUID = await PLCR.attrUUID(repNoVoter, pollId)
-          let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [repNoVoter, pollId])
-          let commitHashBefore = await PLCR.getCommitHash(repNoVoter, pollId)
-          let numTokensBefore = await PLCR.getNumTokens(repNoVoter, pollId)
-          let pollMapBefore = await task.getPollMap(projAddrT, valTrueMore)
+    it('reputation voter can commit a no vote to a task validated more yes from TR voting project', async function () {
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrT, valTrueMore)
 
-          // checks
-          assert.strictEqual(attrUUID, expectedUUID, 'attrUUID was computed incorrectly')
-          assert.equal(commitHashBefore, 0, 'nothing should have been committed yet')
-          assert.equal(numTokensBefore, 0, 'no tokens should have been committed yet')
-          assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
-          assert.equal(pollMapBefore[3], 0, 'should be no vote tally yes yet')
-          assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
+      // checks
 
-          // fund voter with tokens if necessary
-          await utils.mintIfNecessary(repNoVoter)
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
 
-          // make commit hash
-          let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      // commit yes vote
+      await RR.voteCommit(projAddrT, valTrueMore, voteAmount, secretHash, 0, {from: repNoVoter})
 
-          // commit no vote
-          await RR.voteCommit(projAddrT, valTrueMore, voteAmount, secretHash, 0, {from: repNoVoter})
+      // take stock of variables after
 
-          // take stock of variables after
-          let commitHashAfter = await PLCR.getCommitHash(repNoVoter, pollId)
-          let numTokensAfter = await PLCR.getNumTokens(repNoVoter, pollId)
-          let pollMapAfter = await task.getPollMap(projAddrT, valTrueMore)
-
-          // checks
-          assert.equal(commitHashAfter, secretHash, 'incorrect hash committed')
-          assert.equal(numTokensAfter, voteAmount, 'incorrect number of tokens committed')
-          assert.equal(pollMapBefore[0], (pollMapAfter[0]), 'commit end date shouldn\'t change')
-          assert.equal(pollMapBefore[1], (pollMapAfter[1]), 'reveal end date shouldn\'t change')
-          assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
-          assert.equal(pollMapAfter[3], 0, 'votes yes shouldn\'t change')
-          assert.equal(pollMapAfter[4], 0, 'votes no shouldn\'t change')
-        })
+      // checks
+    })
 
     it('reputation voter can commit a no vote to a task validated more yes from RR voting project', async function () {
-          // take stock of variables before
-          let pollId = await task.getPollNonce(projAddrR, valTrueMore)
-          let attrUUID = await PLCR.attrUUID(repNoVoter, pollId)
-          let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [repNoVoter, pollId])
-          let commitHashBefore = await PLCR.getCommitHash(repNoVoter, pollId)
-          let numTokensBefore = await PLCR.getNumTokens(repNoVoter, pollId)
-          let pollMapBefore = await task.getPollMap(projAddrR, valTrueMore)
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrR, valTrueMore)
 
-          // checks
-          assert.strictEqual(attrUUID, expectedUUID, 'attrUUID was computed incorrectly')
-          assert.equal(commitHashBefore, 0, 'nothing should have been committed yet')
-          assert.equal(numTokensBefore, 0, 'no tokens should have been committed yet')
-          assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
-          assert.equal(pollMapBefore[3], 0, 'should be no vote tally yes yet')
-          assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
+      // checks
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
 
-          // fund voter with tokens if necessary
-          await utils.mintIfNecessary(repNoVoter)
+      // commit yes vote
+      await RR.voteCommit(projAddrR, valTrueMore, voteAmount, secretHash, 0, {from: repNoVoter})
 
-          // make commit hash
-          let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      // take stock of variables after
 
-          // commit no vote
-          await RR.voteCommit(projAddrR, valTrueMore, voteAmount, secretHash, 0, {from: repNoVoter})
-
-          // take stock of variables after
-          let commitHashAfter = await PLCR.getCommitHash(repNoVoter, pollId)
-          let numTokensAfter = await PLCR.getNumTokens(repNoVoter, pollId)
-          let pollMapAfter = await task.getPollMap(projAddrR, valTrueMore)
-
-          // checks
-          assert.equal(commitHashAfter, secretHash, 'incorrect hash committed')
-          assert.equal(numTokensAfter, voteAmount, 'incorrect number of tokens committed')
-          assert.equal(pollMapBefore[0], (pollMapAfter[0]), 'commit end date shouldn\'t change')
-          assert.equal(pollMapBefore[1], (pollMapAfter[1]), 'reveal end date shouldn\'t change')
-          assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
-          assert.equal(pollMapAfter[3], 0, 'votes yes shouldn\'t change')
-          assert.equal(pollMapAfter[4], 0, 'votes no shouldn\'t change')
-        })
+      // checks
+    })
 
     it('reputation voter can commit a no vote to a task validated more no from TR voting project', async function () {
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrT, valFalseMore)
 
-          //take stock of variables before
-          let pollId = await task.getPollNonce(projAddrT, valFalseMore)
-          let attrUUID = await PLCR.attrUUID(repNoVoter, pollId)
-          let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [repNoVoter, pollId])
-          let commitHashBefore = await PLCR.getCommitHash(repNoVoter, pollId)
-          let numTokensBefore = await PLCR.getNumTokens(repNoVoter, pollId)
-          let pollMapBefore = await task.getPollMap(projAddrT, valFalseMore)
+      // checks
 
-          // checks
-          assert.strictEqual(attrUUID, expectedUUID, 'attrUUID was computed incorrectly')
-          assert.equal(commitHashBefore, 0, 'nothing should have been committed yet')
-          assert.equal(numTokensBefore, 0, 'no tokens should have been committed yet')
-          assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
-          assert.equal(pollMapBefore[3], 0, 'should be no vote tally yes yet')
-          assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
 
-          // fund voter with tokens if necessary
-          await utils.mintIfNecessary(repNoVoter)
+      // commit yes vote
+      await RR.voteCommit(projAddrT, valFalseMore, voteAmount, secretHash, 0, {from: repNoVoter})
 
-          // make commit hash
-          let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      // take stock of variables after
 
-          // commit no vote
-          await RR.voteCommit(projAddrT, valFalseMore, voteAmount, secretHash, 0, {from: repNoVoter})
-
-          // take stock of variables after
-          let commitHashAfter = await PLCR.getCommitHash(repNoVoter, pollId)
-          let numTokensAfter = await PLCR.getNumTokens(repNoVoter, pollId)
-          let pollMapAfter = await task.getPollMap(projAddrT, valFalseMore)
-
-          // checks
-          assert.equal(commitHashAfter, secretHash, 'incorrect hash committed')
-          assert.equal(numTokensAfter, voteAmount, 'incorrect number of tokens committed')
-          assert.equal(pollMapBefore[0], (pollMapAfter[0]), 'commit end date shouldn\'t change')
-          assert.equal(pollMapBefore[1], (pollMapAfter[1]), 'reveal end date shouldn\'t change')
-          assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
-          assert.equal(pollMapAfter[3], 0, 'votes yes shouldn\'t change')
-          assert.equal(pollMapAfter[4], 0, 'votes no shouldn\'t change')
-        })
+      // checks
+    })
 
     it('reputation voter can commit a no vote to a task validated more no from RR voting project', async function () {
-          //take stock of variables before
-          let pollId = await task.getPollNonce(projAddrR, valFalseMore)
-          let attrUUID = await PLCR.attrUUID(repNoVoter, pollId)
-          let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [repNoVoter, pollId])
-          let commitHashBefore = await PLCR.getCommitHash(repNoVoter, pollId)
-          let numTokensBefore = await PLCR.getNumTokens(repNoVoter, pollId)
-          let pollMapBefore = await task.getPollMap(projAddrR, valFalseMore)
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrR, valFalseMore)
 
-          // checks
-          assert.strictEqual(attrUUID, expectedUUID, 'attrUUID was computed incorrectly')
-          assert.equal(commitHashBefore, 0, 'nothing should have been committed yet')
-          assert.equal(numTokensBefore, 0, 'no tokens should have been committed yet')
-          assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
-          assert.equal(pollMapBefore[3], 0, 'should be no vote tally yes yet')
-          assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
+      // checks
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
 
-          // fund voter with tokens if necessary
-          await utils.mintIfNecessary(repNoVoter)
+      // commit yes vote
+      await RR.voteCommit(projAddrR, valFalseMore, voteAmount, secretHash, 0, {from: repNoVoter})
 
-          // make commit hash
-          let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      // take stock of variables after
 
-          // commit no vote
-          await RR.voteCommit(projAddrR, valFalseMore, voteAmount, secretHash, 0, {from: repNoVoter})
-
-          // take stock of variables after
-          let commitHashAfter = await PLCR.getCommitHash(repNoVoter, pollId)
-          let numTokensAfter = await PLCR.getNumTokens(repNoVoter, pollId)
-          let pollMapAfter = await task.getPollMap(projAddrR, valFalseMore)
-
-          // checks
-          assert.equal(commitHashAfter, secretHash, 'incorrect hash committed')
-          assert.equal(numTokensAfter, voteAmount, 'incorrect number of tokens committed')
-          assert.equal(pollMapBefore[0], (pollMapAfter[0]), 'commit end date shouldn\'t change')
-          assert.equal(pollMapBefore[1], (pollMapAfter[1]), 'reveal end date shouldn\'t change')
-          assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
-          assert.equal(pollMapAfter[3], 0, 'votes yes shouldn\'t change')
-          assert.equal(pollMapAfter[4], 0, 'votes no shouldn\'t change')
-        })
+      // checks
+    })
 
     it('reputation voter cannot commit a no vote to a task validated only yes from TR voting project', async function () {
       // make commit hash
@@ -1138,20 +1030,145 @@ contract('Voting State', (accounts) => {
       assert.equal(pollMapAfter[4], 0, 'should be no vote tally no yet')
     })
     it('token voter can reveal a yes vote to a task validated more yes from RR voting project', async () => {
+      // take stock of variables before
+      let pollMapBefore = await task.getPollMap(projAddrR, valTrueMore)
+
+      // checks
+      assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
+      assert.equal(pollMapBefore[3], 0, 'should be no vote tally yes yet')
+      assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
+
+      // reveal yes vote
+      await TR.voteReveal(projAddrR, valTrueMore, voteYes, secretSalt, {from: tokenYesVoter})
+
+      // take stock of variables after
+      let pollMapAfter = await task.getPollMap(projAddrR, valTrueMore)
+
+      // checks
+      assert.equal(pollMapBefore[0], (pollMapAfter[0]), 'commit end date shouldn\'t change')
+      assert.equal(pollMapBefore[1], (pollMapAfter[1]), 'reveal end date shouldn\'t change')
+      assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
+      assert.equal(pollMapAfter[3], voteAmount, 'vote tally yes updated incorrectly')
+      assert.equal(pollMapAfter[4], 0, 'should be no vote tally no yet')
     })
     it('token voter can reveal a yes vote to a task validated more no from TR voting project', async () => {
+      // take stock of variables before
+      let pollMapBefore = await task.getPollMap(projAddrT, valFalseMore)
+
+      // checks
+      assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
+      assert.equal(pollMapBefore[3], 0, 'should be no vote tally yes yet')
+      assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
+
+      // reveal yes vote
+      await TR.voteReveal(projAddrT, valFalseMore, voteYes, secretSalt, {from: tokenYesVoter})
+
+      // take stock of variables after
+      let pollMapAfter = await task.getPollMap(projAddrT, valFalseMore)
+
+      // checks
+      assert.equal(pollMapBefore[0], (pollMapAfter[0]), 'commit end date shouldn\'t change')
+      assert.equal(pollMapBefore[1], (pollMapAfter[1]), 'reveal end date shouldn\'t change')
+      assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
+      assert.equal(pollMapAfter[3], voteAmount, 'vote tally yes updated incorrectly')
+      assert.equal(pollMapAfter[4], 0, 'should be no vote tally no yet')
     })
     it('token voter can reveal a yes vote to a task validated more no from RR voting project', async () => {
+      // take stock of variables before
+      let pollMapBefore = await task.getPollMap(projAddrR, valFalseMore)
+
+      // checks
+      assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
+      assert.equal(pollMapBefore[3], 0, 'should be no vote tally yes yet')
+      assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
+
+      // reveal yes vote
+      await TR.voteReveal(projAddrR, valFalseMore, voteYes, secretSalt, {from: tokenYesVoter})
+
+      // take stock of variables after
+      let pollMapAfter = await task.getPollMap(projAddrR, valFalseMore)
+
+      // checks
+      assert.equal(pollMapBefore[0], (pollMapAfter[0]), 'commit end date shouldn\'t change')
+      assert.equal(pollMapBefore[1], (pollMapAfter[1]), 'reveal end date shouldn\'t change')
+      assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
+      assert.equal(pollMapAfter[3], voteAmount, 'vote tally yes updated incorrectly')
+      assert.equal(pollMapAfter[4], 0, 'should be no vote tally no yet')
     })
-    it('token voter cannot reveal a yes vote to a task validated only yes from TR voting project', async () => {
+    it('token voter cannot reveal the no votes side if they voted yes', async () => {
+      // NOT WORKING
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      // check
+      errorThrown = false
+      try {
+        await TR.voteReveal(projAddrT, valTrueMore, voteYes, secretSalt, {from: voteNo})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
-    it('token voter cannot reveal a yes vote to a task validated only yes from RR voting project', async () => {
+    it('token voter cannot reveal a vote they didn\'t commit for a project', async () => {
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      // check
+      errorThrown = false
+      try {
+        await TR.voteReveal(projAddrT, valFalseMore, voteYes, secretSalt, {from: notVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
-    it('token voter cannot reveal a yes vote to a task validated only no from TR voting project', async () => {
+  })
+  describe('revealing yes votes with reputation', () => {
+    it('reputation voter can reveal a yes vote to a task validated more yes from TR voting project', async () => {
+
     })
-    it('token voter cannot reveal a yes vote to a task validated only no from RR voting project', async () => {
+    it('reputation voter can reveal a yes vote to a task validated more yes from RR voting project', async () => {
+
     })
-    it('token voter cannot reveal a yes vote to a task validated only no from RR voting project', async () => {
+    it('reputation voter can reveal a yes vote to a task validated more no from TR voting project', async () => {
+      // take stock of variables before
+      let pollMapBefore = await task.getPollMap(projAddrT, valFalseMore)
+
+      // checks
+      assert.equal(pollMapBefore[4], someCorrectAmount, 'some error message')
+
+      // reveal yes vote
+      await RR.voteReveal(projAddrT, valFalseMore, voteYes, secretSalt, {from: repYesVoter})
+
+      // take stock of variables after
+      let pollMapAfter = await task.getPollMap(projAddrT, valFalseMore)
+
+      // checks
+      assert.equal(pollMapAfter[3], pollMapBefore[3], 'vote tally yes updated incorrectly')
+      assert.equal(pollMapAfter[4], someNewCorrectAmount, 'some error message')
+    })
+    it('reputation voter can reveal a yes vote to a task validated more no from RR voting project', async () => {
+
+    })
+    it('reputation voter cannot reveal the no votes side if they voted yes', async () => {
+      // NOT WORKING
+      // check
+      errorThrown = false
+      try {
+        await RR.voteReveal(projAddrT, valTrueMore, voteYes, secretSalt, {from: voteNo})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+    it('reputation voter cannot reveal a vote they didn\'t commit for a project', async () => {
+      // check
+      errorThrown = false
+      try {
+        await RR.voteReveal(projAddrT, valFalseMore, voteYes, secretSalt, {from: notVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
