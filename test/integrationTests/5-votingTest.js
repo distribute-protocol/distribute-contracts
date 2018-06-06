@@ -480,6 +480,9 @@ contract('Voting State', (accounts) => {
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+
       errorThrown = false
       try {
         await TR.voteCommit(projAddrT, valTrueOnly, voteAmount, secretHash, 0, {from: tokenNoVoter})
@@ -494,6 +497,9 @@ contract('Voting State', (accounts) => {
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+
       errorThrown = false
       try {
         await TR.voteCommit(projAddrR, valTrueOnly, voteAmount, secretHash, 0, {from: tokenNoVoter})
@@ -507,6 +513,9 @@ contract('Voting State', (accounts) => {
 
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
 
       errorThrown = false
       try {
@@ -523,6 +532,9 @@ contract('Voting State', (accounts) => {
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+
       errorThrown = false
       try {
         await TR.voteCommit(projAddrR, valFalseOnly, voteAmount, secretHash, 0, {from: tokenNoVoter})
@@ -538,6 +550,9 @@ contract('Voting State', (accounts) => {
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+
       errorThrown = false
       try {
         await TR.voteCommit(projAddrT, valNeither, voteAmount, secretHash, 0, {from: tokenNoVoter})
@@ -552,6 +567,9 @@ contract('Voting State', (accounts) => {
 
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
 
       errorThrown = false
       try {
@@ -719,7 +737,7 @@ contract('Voting State', (accounts) => {
       let commitHashAfter = await PLCR.getCommitHash(repYesVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(repYesVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrR, valFalseMore)
-      
+
       // checks
       assert.equal(commitHashAfter, secretHash, 'incorrect hash committed')
       assert.equal(numTokensAfter, voteAmount, 'incorrect number of tokens committed')
