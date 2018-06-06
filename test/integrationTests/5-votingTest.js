@@ -503,14 +503,13 @@ contract('Voting State', (accounts) => {
       assert.equal(pollMapAfter[3], 0, 'should be no vote tally yes yet')
       assert.equal(pollMapAfter[4], 0, 'should be no vote tally no yet')
     })
-
     it('token voter cannot commit a no vote to a task validated only yes from TR voting project', async () => {
 
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
       // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
 
       errorThrown = false
       try {
@@ -527,7 +526,7 @@ contract('Voting State', (accounts) => {
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
       // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
 
       errorThrown = false
       try {
@@ -537,14 +536,13 @@ contract('Voting State', (accounts) => {
       }
       assertThrown(errorThrown, 'An error should have been thrown')
     })
-
     it('token voter cannot commit a no vote to a task validated only no from TR voting project', async function () {
 
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
       // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
 
       errorThrown = false
       try {
@@ -562,7 +560,7 @@ contract('Voting State', (accounts) => {
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
       // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
 
       errorThrown = false
       try {
@@ -580,7 +578,7 @@ contract('Voting State', (accounts) => {
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
       // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
 
       errorThrown = false
       try {
@@ -598,7 +596,7 @@ contract('Voting State', (accounts) => {
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
       // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
 
       errorThrown = false
       try {
@@ -1137,181 +1135,175 @@ contract('Voting State', (accounts) => {
       assert.equal(pollMapAfter[4], 0, 'should be no vote tally no yet')
     })
     it('token voter can reveal a yes vote to a task validated more yes from RR voting project', async () => {
-      await TR.voteReveal(projAddrT, valTrueMore, voteYes, secretSalt, {from: repYesVoter})
+      // take stock of variables before
+      let pollMapBefore = await task.getPollMap(projAddrR, valTrueMore)
 
+      // checks
+      assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
+      assert.equal(pollMapBefore[3], 0, 'should be no vote tally yes yet')
+      assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
+
+      // reveal yes vote
       await TR.voteReveal(projAddrR, valTrueMore, voteYes, secretSalt, {from: tokenYesVoter})
-      await TR.voteReveal(projAddrR, valTrueMore, voteYes, secretSalt, {from: repYesVoter})
+
+      // take stock of variables after
+      let pollMapAfter = await task.getPollMap(projAddrR, valTrueMore)
+
+      // checks
+      assert.equal(pollMapBefore[0], (pollMapAfter[0]), 'commit end date shouldn\'t change')
+      assert.equal(pollMapBefore[1], (pollMapAfter[1]), 'reveal end date shouldn\'t change')
+      assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
+      assert.equal(pollMapAfter[3], voteAmount, 'vote tally yes updated incorrectly')
+      assert.equal(pollMapAfter[4], 0, 'should be no vote tally no yet')
     })
     it('token voter can reveal a yes vote to a task validated more no from TR voting project', async () => {
+      // take stock of variables before
+      let pollMapBefore = await task.getPollMap(projAddrT, valFalseMore)
+
+      // checks
+      assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
+      assert.equal(pollMapBefore[3], 0, 'should be no vote tally yes yet')
+      assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
+
+      // reveal yes vote
       await TR.voteReveal(projAddrT, valFalseMore, voteYes, secretSalt, {from: tokenYesVoter})
-      await TR.voteReveal(projAddrT, valFalseMore, voteYes, secretSalt, {from: repYesVoter})
+
+      // take stock of variables after
+      let pollMapAfter = await task.getPollMap(projAddrT, valFalseMore)
+
+      // checks
+      assert.equal(pollMapBefore[0], (pollMapAfter[0]), 'commit end date shouldn\'t change')
+      assert.equal(pollMapBefore[1], (pollMapAfter[1]), 'reveal end date shouldn\'t change')
+      assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
+      assert.equal(pollMapAfter[3], voteAmount, 'vote tally yes updated incorrectly')
+      assert.equal(pollMapAfter[4], 0, 'should be no vote tally no yet')
     })
     it('token voter can reveal a yes vote to a task validated more no from RR voting project', async () => {
+      // take stock of variables before
+      let pollMapBefore = await task.getPollMap(projAddrR, valFalseMore)
+
+      // checks
+      assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
+      assert.equal(pollMapBefore[3], 0, 'should be no vote tally yes yet')
+      assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
+
+      // reveal yes vote
       await TR.voteReveal(projAddrR, valFalseMore, voteYes, secretSalt, {from: tokenYesVoter})
-      await TR.voteReveal(projAddrR, valFalseMore, voteYes, secretSalt, {from: repYesVoter})
+
+      // take stock of variables after
+      let pollMapAfter = await task.getPollMap(projAddrR, valFalseMore)
+
+      // checks
+      assert.equal(pollMapBefore[0], (pollMapAfter[0]), 'commit end date shouldn\'t change')
+      assert.equal(pollMapBefore[1], (pollMapAfter[1]), 'reveal end date shouldn\'t change')
+      assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
+      assert.equal(pollMapAfter[3], voteAmount, 'vote tally yes updated incorrectly')
+      assert.equal(pollMapAfter[4], 0, 'should be no vote tally no yet')
     })
-    it('token voter cannot reveal a yes vote to a task validated only yes from TR voting project', async () => {
+    it('token voter cannot reveal the no votes side if they voted yes', async () => {
+      // NOT WORKING
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      // check
+      errorThrown = false
+      try {
+        await TR.voteReveal(projAddrT, valTrueMore, voteYes, secretSalt, {from: voteNo})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
-    it('token voter cannot reveal a yes vote to a task validated only yes from RR voting project', async () => {
+    it('token voter cannot reveal a vote they didn\'t commit for a project', async () => {
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      // check
+      errorThrown = false
+      try {
+        await TR.voteReveal(projAddrT, valFalseMore, voteYes, secretSalt, {from: notVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
-    it('token voter cannot reveal a yes vote to a task validated only no from TR voting project', async () => {
+  })
+  describe('revealing yes votes with reputation', () => {
+    it('reputation voter can reveal a yes vote to a task validated more yes from TR voting project', async () => {
+
     })
-    it('token voter cannot reveal a yes vote to a task validated only no from RR voting project', async () => {
+    it('reputation voter can reveal a yes vote to a task validated more yes from RR voting project', async () => {
+
     })
-    it('token voter cannot reveal a yes vote to a task validated only no from RR voting project', async () => {
+    it('reputation voter can reveal a yes vote to a task validated more no from TR voting project', async () => {
+      // take stock of variables before
+      let pollMapBefore = await task.getPollMap(projAddrT, valFalseMore)
+
+      // checks
+      assert.equal(pollMapBefore[4], someCorrectAmount, 'some error message')
+
+      // reveal yes vote
+      await RR.voteReveal(projAddrT, valFalseMore, voteYes, secretSalt, {from: repYesVoter})
+
+      // take stock of variables after
+      let pollMapAfter = await task.getPollMap(projAddrT, valFalseMore)
+
+      // checks
+      assert.equal(pollMapAfter[3], pollMapBefore[3], 'vote tally yes updated incorrectly')
+      assert.equal(pollMapAfter[4], someNewCorrectAmount, 'some error message')
+    })
+    it('reputation voter can reveal a yes vote to a task validated more no from RR voting project', async () => {
+
+    })
+    it('reputation voter cannot reveal the no votes side if they voted yes', async () => {
+      // NOT WORKING
+      // check
+      errorThrown = false
+      try {
+        await RR.voteReveal(projAddrT, valTrueMore, voteYes, secretSalt, {from: voteNo})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+    it('reputation voter cannot reveal a vote they didn\'t commit for a project', async () => {
+      // check
+      errorThrown = false
+      try {
+        await RR.voteReveal(projAddrT, valFalseMore, voteYes, secretSalt, {from: notVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
-  describe('state changes before time is up', () => {
-    it('checkEnd() does not change TR voting project to complete before time is up', async () => {
-      // take stock of variables
-      let stateBefore = await project.getState(projAddrT)
+  describe('revealing no votes with tokens', () => {
 
-      // attempt to checkStaked
-      await PR.checkEnd(projAddrT)
-
-      // take stock of variables
-      let stateAfter = await project.getState(projAddrT)
+    it('token voter can reveal a no vote to a task validated more yes from TR voting project', async () => {
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrT, valTrueMore)
+      let pollMapBefore = await task.getPollMap(projAddrT, valTrueMore)
+      let numTokensAfter = await PLCR.getNumTokens(tokenNoVoter, pollId)
+      console.log(numTokensAfter.toNumber())
 
       // checks
-      assert.equal(stateBefore, 5, 'state before should be 5')
-      assert.equal(stateAfter, 5, 'state should not have changed')
-    })
+      assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
+      assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
 
-    it('checkEnd() does not change RR voting project to complete before time is up', async () => {
-      // take stock of variables
-      let stateBefore = await project.getState(projAddrR)
+      // reveal yes vote
+      await TR.voteReveal(projAddrT, valTrueMore, voteNo, secretSalt, {from: tokenNoVoter})
 
-      // attempt to checkStaked
-      await PR.checkEnd(projAddrR)
-
-      // take stock of variables
-      let stateAfter = await project.getState(projAddrR)
+      // take stock of variables after
+      let pollMapAfter = await task.getPollMap(projAddrT, valTrueMore)
 
       // checks
-      assert.equal(stateBefore, 5, 'state before should be 5')
-      assert.equal(stateAfter, 5, 'state should not have changed')
-    })
-  })
-
-  describe('state changes after time is up', () => {
-    before(async () => {
-      // fast forward time
-      await evmIncreaseTime(604800) // 1 week
+      assert.equal(pollMapBefore[0], pollMapAfter[0], 'commit end date shouldn\'t change')
+      assert.equal(pollMapBefore[1], pollMapAfter[1], 'reveal end date shouldn\'t change')
+      assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
+      assert.equal(pollMapBefore[3], pollMapAfter[3], 'should be no vote tally yes yet')
+      assert.equal(pollMapAfter[4], voteAmount, 'vote tally no incorrect')
     })
 
-    it('checkEnd() changes TR voting project to complete after time is up', async () => {
-      // take stock of variables
-      // let stateBefore = await project.getState(projAddrT)
-      // let projWeiBalBefore = await project.getWeiBal(projAddrT, true)
-      // // let projWeiBalBefore = await web3.eth.getBalance(projAddrT)
-      // let DTBalBefore = await utils.getWeiPoolBal(true)
-      // // let DTBalBefore = await web3.eth.getBalance(DT.address)
-
-      // attempt to checkStaked
-      await PR.checkEnd(projAddrT)
-
-      // take stock of variables
-      // let stateAfter = await project.getState(projAddrT)
-      // let projWeiBalAfter = await project.getWeiBal(projAddrT, true)
-      // // let projWeiBalAfter = await web3.eth.getBalance(projAddrT)
-      // let DTBalAfter = await utils.getWeiPoolBal(true)
-      // // let DTBalAfter = await web3.eth.getBalance(DT.address)
-      // let failedTaskWeiReward = 0
-      // let pollNonce = []
-      // let taskClaimable = []
-      //
-      // for (let i = 0; i < taskSet1.length; i++) {
-      //   let nonce = await task.getPollNonce(projAddrT, i)
-      //   let claimable = await task.getClaimable(projAddrT, i)
-      //   let complete = await task.getComplete(projAddrT, i)
-      //   let oppVal = await task.getOpposingVal(projAddrT, i)
-      //   if ((claimable === false && complete === true)) {
-      //     let weiReward = await task.getWeiReward(projAddrT, i)
-      //     failedTaskWeiReward += weiReward
-      //   }
-      //   pollNonce.push(nonce)
-      //   taskClaimable.push(claimable)
-      // }
-
-      // interim calculations
-      // let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter).toNumber()
-      // let weiPoolDifference = DTBalAfter.minus(DTBalBefore).toNumber()
-
-      // checks
-      // assert.equal(stateBefore, 4, 'state before should be 4')
-      // assert.equal(stateAfter, 5, 'state should not have changed')
-      // assert.equal(pollNonce[indexYes], 0, 'should be no poll ID')
-      // assert.equal(pollNonce[indexNo], 0, 'should be no poll ID')
-      // assert.equal(pollNonce[indexNeither], 0, 'should be no poll ID')
-      // assert.equal(pollNonce[indexIncomplete], 0, 'should be no poll ID')
-      // assert.notEqual(pollNonce[indexBoth], 0, 'should be nonzero poll ID')
-      // assert.equal(taskClaimable[indexYes], true, 'should be claimable')
-      // assert.equal(taskClaimable[indexNo], true, 'should be claimable')
-      // assert.equal(taskClaimable[indexNeither], true, 'should be claimable')
-      // assert.equal(taskClaimable[indexIncomplete], false, 'should not be claimable')
-      // assert.equal(taskClaimable[indexBoth], false, 'should not be claimable')
-      // // FIGURE OUT WHY FAILEDTASKWEIREWARD TESTS DON'T WORK
-      // // assert.equal(weiBalDifference, failedTaskWeiReward, 'should be same amount')
-      // // assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
-      // // ADD PLCR START POLL TEST
-    })
-
-    it('checkEnd() changes RR voting project to complete after time is up', async () => {
-      // take stock of variables
-      // let stateBefore = await project.getState(projAddrT)
-      // let projWeiBalBefore = await project.getWeiBal(projAddrT, true)
-      // // let projWeiBalBefore = await web3.eth.getBalance(projAddrT)
-      // let DTBalBefore = await utils.getWeiPoolBal(true)
-      // // let DTBalBefore = await web3.eth.getBalance(DT.address)
-
-      // attempt to checkStaked
-      await PR.checkEnd(projAddrR)
-
-      // take stock of variables
-      // let stateAfter = await project.getState(projAddrT)
-      // let projWeiBalAfter = await project.getWeiBal(projAddrT, true)
-      // // let projWeiBalAfter = await web3.eth.getBalance(projAddrT)
-      // let DTBalAfter = await utils.getWeiPoolBal(true)
-      // // let DTBalAfter = await web3.eth.getBalance(DT.address)
-      // let failedTaskWeiReward = 0
-      // let pollNonce = []
-      // let taskClaimable = []
-      //
-      // for (let i = 0; i < taskSet1.length; i++) {
-      //   let nonce = await task.getPollNonce(projAddrT, i)
-      //   let claimable = await task.getClaimable(projAddrT, i)
-      //   let complete = await task.getComplete(projAddrT, i)
-      //   let oppVal = await task.getOpposingVal(projAddrT, i)
-      //   if ((claimable === false && complete === true)) {
-      //     let weiReward = await task.getWeiReward(projAddrT, i)
-      //     failedTaskWeiReward += weiReward
-      //   }
-      //   pollNonce.push(nonce)
-      //   taskClaimable.push(claimable)
-      // }
-
-      // interim calculations
-      // let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter).toNumber()
-      // let weiPoolDifference = DTBalAfter.minus(DTBalBefore).toNumber()
-
-      // checks
-      // assert.equal(stateBefore, 4, 'state before should be 4')
-      // assert.equal(stateAfter, 5, 'state should not have changed')
-      // assert.equal(pollNonce[indexYes], 0, 'should be no poll ID')
-      // assert.equal(pollNonce[indexNo], 0, 'should be no poll ID')
-      // assert.equal(pollNonce[indexNeither], 0, 'should be no poll ID')
-      // assert.equal(pollNonce[indexIncomplete], 0, 'should be no poll ID')
-      // assert.notEqual(pollNonce[indexBoth], 0, 'should be nonzero poll ID')
-      // assert.equal(taskClaimable[indexYes], true, 'should be claimable')
-      // assert.equal(taskClaimable[indexNo], true, 'should be claimable')
-      // assert.equal(taskClaimable[indexNeither], true, 'should be claimable')
-      // assert.equal(taskClaimable[indexIncomplete], false, 'should not be claimable')
-      // assert.equal(taskClaimable[indexBoth], false, 'should not be claimable')
-      // // FIGURE OUT WHY FAILEDTASKWEIREWARD TESTS DON'T WORK
-      // // assert.equal(weiBalDifference, failedTaskWeiReward, 'should be same amount')
-      // // assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
-      // // ADD PLCR START POLL TESTOLL TEST
-    })
+    //more it statement
   })
 })
