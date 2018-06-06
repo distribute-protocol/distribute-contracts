@@ -240,6 +240,9 @@ contract('Voting State', (accounts) => {
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenYesVoter)
 
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
       // commit yes vote
       errorThrown = false
       try {
@@ -254,10 +257,13 @@ contract('Voting State', (accounts) => {
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenYesVoter)
 
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
       // commit yes vote
       errorThrown = false
       try {
-        await RR.voteCommit(projAddrT, valTrueOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
+        await TR.voteCommit(projAddrR, valTrueOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
       } catch (e) {
         errorThrown = true
       }
@@ -267,6 +273,9 @@ contract('Voting State', (accounts) => {
     it('token voter cannot commit a yes vote to a task validated only no from TR voting project', async () => {
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenYesVoter)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
 
       // commit yes vote
       errorThrown = false
@@ -282,10 +291,13 @@ contract('Voting State', (accounts) => {
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenYesVoter)
 
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
       // commit yes vote
       errorThrown = false
       try {
-        await RR.voteCommit(projAddrT, valFalseOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
+        await TR.voteCommit(projAddrR, valFalseOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
       } catch (e) {
         errorThrown = true
       }
@@ -295,6 +307,9 @@ contract('Voting State', (accounts) => {
     it('token voter cannot commit a yes vote to a task not validated from TR voting project', async () => {
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenYesVoter)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
 
       // commit yes vote
       errorThrown = false
@@ -307,6 +322,20 @@ contract('Voting State', (accounts) => {
     })
 
     it('token voter cannot commit a yes vote to a task not validated from RR voting project', async () => {
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenYesVoter)
+
+      // make commit hash
+      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+
+      // commit yes vote
+      errorThrown = false
+      try {
+        await TR.voteCommit(projAddrR, valNeither, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
@@ -1107,6 +1136,22 @@ contract('Voting State', (accounts) => {
       assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
       assert.equal(pollMapAfter[3], voteAmount, 'vote tally yes updated incorrectly')
       assert.equal(pollMapAfter[4], 0, 'should be no vote tally no yet')
+    })
+    it('token voter can reveal a yes vote to a task validated more yes from RR voting project', async () => {
+    })
+    it('token voter can reveal a yes vote to a task validated more no from TR voting project', async () => {
+    })
+    it('token voter can reveal a yes vote to a task validated more no from RR voting project', async () => {
+    })
+    it('token voter cannot reveal a yes vote to a task validated only yes from TR voting project', async () => {
+    })
+    it('token voter cannot reveal a yes vote to a task validated only yes from RR voting project', async () => {
+    })
+    it('token voter cannot reveal a yes vote to a task validated only no from TR voting project', async () => {
+    })
+    it('token voter cannot reveal a yes vote to a task validated only no from RR voting project', async () => {
+    })
+    it('token voter cannot reveal a yes vote to a task validated only no from RR voting project', async () => {
     })
   })
 })
