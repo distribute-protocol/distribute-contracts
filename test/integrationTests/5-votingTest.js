@@ -1154,4 +1154,36 @@ contract('Voting State', (accounts) => {
     it('token voter cannot reveal a yes vote to a task validated only no from RR voting project', async () => {
     })
   })
+
+  describe('revealing no votes with tokens', () => {
+
+    it('token voter can reveal a no vote to a task validated more yes from TR voting project', async () => {
+      // take stock of variables before
+      let pollId = await task.getPollNonce(projAddrT, valTrueMore)
+      let pollMapBefore = await task.getPollMap(projAddrT, valTrueMore)
+      let numTokensAfter = await PLCR.getNumTokens(tokenNoVoter, pollId)
+      console.log(numTokensAfter.toNumber())
+
+      // checks
+      assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
+      assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
+
+      // reveal yes vote
+      await TR.voteReveal(projAddrT, valTrueMore, voteNo, secretSalt, {from: tokenNoVoter})
+
+      // take stock of variables after
+      let pollMapAfter = await task.getPollMap(projAddrT, valTrueMore)
+
+      // checks
+      assert.equal(pollMapBefore[0], pollMapAfter[0], 'commit end date shouldn\'t change')
+      assert.equal(pollMapBefore[1], pollMapAfter[1], 'reveal end date shouldn\'t change')
+      assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
+      assert.equal(pollMapBefore[3], pollMapAfter[3], 'should be no vote tally yes yet')
+      assert.equal(pollMapAfter[4], voteAmount, 'vote tally no incorrect')
+    })
+
+    //more it statement
+  })
+
+
 })
