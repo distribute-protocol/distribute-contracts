@@ -53,7 +53,6 @@ contract PLCRVoting {
     address reputationRegistry;
     address projectRegistry;
 
-
     // =====================================================================
     // MODIFIERS
     // =====================================================================
@@ -65,6 +64,11 @@ contract PLCRVoting {
 
       modifier onlyTR() {
         require(msg.sender == tokenRegistry);
+        _;
+      }
+
+      modifier onlyPR() {
+        require(msg.sender == projectRegistry);
         _;
       }
 
@@ -293,10 +297,8 @@ contract PLCRVoting {
     @dev Check if votesFor out of totalVotes exceeds votesQuorum (requires pollEnded)
     @param _pollID Integer identifier associated with target poll
     */
-    function isPassed(uint _pollID) onlyTRRR() constant public returns (bool passed) {
-        require(msg.sender == tokenRegistry);
+    function isPassed(uint _pollID) onlyPR() constant public returns (bool passed) {
         require(pollEnded(_pollID));
-
         Poll memory poll = pollMap[_pollID];
         return (100 * poll.votesFor) > (poll.voteQuorum * (poll.votesFor + poll.votesAgainst));
     }
