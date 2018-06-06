@@ -4,7 +4,6 @@
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
-const keccakHashes = require('../utils/keccakHashes')
 const taskDetails = require('../utils/taskDetails')
 
 contract('Validating State', (accounts) => {
@@ -12,15 +11,14 @@ contract('Validating State', (accounts) => {
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let TR, RR, PR
+  let TR, PR
   let {user, project, utils, returnProject, task} = projObj
   let {validator1, validator2, notValidator} = user
-  let {worker1, worker2, notWorker} = user
+  let {worker1} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
 
   // set up task details & hashing functions
-  let {taskSet1, taskSet2} = taskDetails
-  let {hashTasks} = keccakHashes
+  let {taskSet1} = taskDetails
 
   // local test variables
   let projArray
@@ -42,9 +40,7 @@ contract('Validating State', (accounts) => {
     // get contract
     await projObj.contracts.setContracts()
     TR = projObj.contracts.TR
-    RR = projObj.contracts.RR
     PR = projObj.contracts.PR
-    DT = projObj.contracts.DT
 
     // get validating projects
     // moves ganache forward 3 more weeks
