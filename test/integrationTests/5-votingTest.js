@@ -236,105 +236,74 @@ contract('Voting State', (accounts) => {
     })
 
     it('token voter cannot commit a yes vote to a task validated only yes from TR voting project', async () => {
-      // NOT WORKING
-      // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrT, valTrueOnly)
-      let attrUUID = await PLCR.attrUUID(tokenYesVoter, pollId)
-      let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [tokenYesVoter, pollId])
-      let commitHashBefore = await PLCR.getCommitHash(tokenYesVoter, pollId)
-      let numTokensBefore = await PLCR.getNumTokens(tokenYesVoter, pollId)
-
-      // checks
-      assert.strictEqual(attrUUID, expectedUUID, 'attrUUID was computed incorrectly')
-      assert.equal(commitHashBefore, 0, 'nothing should have been committed yet')
-      assert.equal(numTokensBefore, 0, 'no tokens should have been committed yet')
-
+      // WORKING
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenYesVoter)
 
-      // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
-
       // commit yes vote
-      await TR.voteCommit(projAddrT, valTrueOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
-
-      // take stock of variables after
-      let commitHashAfter = await PLCR.getCommitHash(tokenYesVoter, pollId)
-      let numTokensAfter = await PLCR.getNumTokens(tokenYesVoter, pollId)
-
-      // checks
-      assert.equal(commitHashAfter, secretHash, 'incorrect hash committed')
-      assert.equal(numTokensAfter, voteAmount, 'incorrect number of tokens committed')
+      errorThrown = false
+      try {
+        await TR.voteCommit(projAddrT, valTrueOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot commit a yes vote to a task validated only yes from RR voting project', async () => {
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenYesVoter)
+
+      // commit yes vote
+      errorThrown = false
+      try {
+        await RR.voteCommit(projAddrT, valTrueOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot commit a yes vote to a task validated only no from TR voting project', async () => {
-      // NOT WORKING
-      // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrT, valFalseOnly)
-      let attrUUID = await PLCR.attrUUID(tokenYesVoter, pollId)
-      let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [tokenYesVoter, pollId])
-      let commitHashBefore = await PLCR.getCommitHash(tokenYesVoter, pollId)
-      let numTokensBefore = await PLCR.getNumTokens(tokenYesVoter, pollId)
-
-      // checks
-      assert.strictEqual(attrUUID, expectedUUID, 'attrUUID was computed incorrectly')
-      assert.equal(commitHashBefore, 0, 'nothing should have been committed yet')
-      assert.equal(numTokensBefore, 0, 'no tokens should have been committed yet')
-
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenYesVoter)
 
-      // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
-
       // commit yes vote
-      await TR.voteCommit(projAddrT, valFalseOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
-
-      // take stock of variables after
-      let commitHashAfter = await PLCR.getCommitHash(tokenYesVoter, pollId)
-      let numTokensAfter = await PLCR.getNumTokens(tokenYesVoter, pollId)
-
-      // checks
-      assert.equal(commitHashAfter, secretHash, 'incorrect hash committed')
-      assert.equal(numTokensAfter, voteAmount, 'incorrect number of tokens committed')
+      errorThrown = false
+      try {
+        await TR.voteCommit(projAddrT, valFalseOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot commit a yes vote to a task validated only no from RR voting project', async () => {
-    })
-
-    it('token voter cannot commit a yes vote to a task not validated from TR voting project', async () => {
-      // NOT WORKING
-      // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrT, valNeither)
-      let attrUUID = await PLCR.attrUUID(tokenYesVoter, pollId)
-      let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [tokenYesVoter, pollId])
-      let commitHashBefore = await PLCR.getCommitHash(tokenYesVoter, pollId)
-      let numTokensBefore = await PLCR.getNumTokens(tokenYesVoter, pollId)
-
-      // checks
-      assert.strictEqual(attrUUID, expectedUUID, 'attrUUID was computed incorrectly')
-      assert.equal(commitHashBefore, 0, 'nothing should have been committed yet')
-      assert.equal(numTokensBefore, 0, 'no tokens should have been committed yet')
-
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenYesVoter)
 
-      // make commit hash
-      let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
+      // commit yes vote
+      errorThrown = false
+      try {
+        await RR.voteCommit(projAddrT, valFalseOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('token voter cannot commit a yes vote to a task not validated from TR voting project', async () => {
+      // fund voter with tokens if necessary
+      await utils.mintIfNecessary(tokenYesVoter)
 
       // commit yes vote
-      await TR.voteCommit(projAddrT, valNeither, voteAmount, secretHash, 0, {from: tokenYesVoter})
-
-      // take stock of variables after
-      let commitHashAfter = await PLCR.getCommitHash(tokenYesVoter, pollId)
-      let numTokensAfter = await PLCR.getNumTokens(tokenYesVoter, pollId)
-
-      // checks
-      assert.equal(commitHashAfter, secretHash, 'incorrect hash committed')
-      assert.equal(numTokensAfter, voteAmount, 'incorrect number of tokens committed')
+      errorThrown = false
+      try {
+        await TR.voteCommit(projAddrT, valNeither, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot commit a yes vote to a task not validated from RR voting project', async () => {
@@ -496,7 +465,6 @@ contract('Voting State', (accounts) => {
       let commitHashAfter = await PLCR.getCommitHash(tokenNoVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(tokenNoVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrR, valFalseMore)
-
 
       // checks
       assert.equal(commitHashAfter, secretHash, 'incorrect hash committed')
