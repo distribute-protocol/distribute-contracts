@@ -6,7 +6,7 @@ const TokenRegistry = artifacts.require('TokenRegistry')
 const SpoofedRR = artifacts.require('SpoofedRR')
 
 const projectHelper = require('../utils/projectHelper')
-const assertThrown = require('../utils/AssertThrown')
+const assertThrown = require('../utils/assertThrown')
 const hexToAscii = require('../utils/hexToAscii')
 
 
@@ -28,7 +28,7 @@ contract('Project', function (accounts) {
   let costProportion, proposerTokenCost
   let errorThrown
 
-  before(async function () {
+  before(async () => {
     // set costProportion, proposerTokenCost, weiToReturn
     costProportion = 10
     proposerTokenCost = 100
@@ -506,7 +506,7 @@ contract('Project', function (accounts) {
   //   console.log('second', val)
   //   assert.isTrue(val, 'returns timesUp false when should be true')
   // })
-  // it('only allows Token Registry to stake tokens', async function () {
+  // it('only allows Token Registry to stake tokens', async () => {
   //
   // })
 
