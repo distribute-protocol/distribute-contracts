@@ -181,6 +181,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
 
     function transferTokensTo(address _address, uint256 _tokens) external onlyTR {
         // check for overflow
+        totalSupply += _tokens;
         balances[_address] += _tokens;
     }
 
