@@ -112,8 +112,8 @@ contract PLCRVoting {
     */
     function getAvailableTokens(address _voter, uint _type) public view returns(uint256) {
         return _type == 1
-            ? voteTokenBalance[_voter] - getLockedTokens(_voter)
-            : voteReputationBalance[_voter] - getLockedTokens(_voter);
+            ? voteTokenBalance[_voter]
+            : voteReputationBalance[_voter];
     }
     /**
     @notice Loads _numTokens ERC20 tokens into the voting contract for one-to-one voting rights
