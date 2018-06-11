@@ -1108,12 +1108,12 @@ contract('Voting State', (accounts) => {
     before(async () => {
       // commit votes to fail in reveal
       let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
-      await TR.voteCommit(projAddrT, valFalseMore, voteAmountMore, secretHash, 0, {from: cheekyYesVoter})
+      await TR.voteCommit(projAddrT, valFalseMore, voteAmount, secretHash, 0, {from: cheekyYesVoter})
       await RR.voteCommit(projAddrR, valTrueMore, voteAmount, secretHash, 0, {from: cheekyYesVoter})
 
       secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
-      await RR.voteCommit(projAddrR, valTrueMore, voteAmountMore, secretHash, 0, {from: cheekyNoVoter})
-      await TR.voteCommit(projAddrT, valFalseMore, voteAmountMore, secretHash, 0, {from: cheekyNoVoter})
+      await TR.voteCommit(projAddrT, valFalseMore, voteAmount, secretHash, 0, {from: cheekyNoVoter})
+      await RR.voteCommit(projAddrR, valTrueMore, voteAmount, secretHash, 0, {from: cheekyNoVoter})
 
       // fast forward time
       await evmIncreaseTime(604801) // 1 week
@@ -1212,7 +1212,6 @@ contract('Voting State', (accounts) => {
     })
 
     it('token voter cannot reveal the no votes side if they voted yes', async () => {
-      // check
       errorThrown = false
       try {
         await TR.voteReveal(projAddrT, valFalseMore, voteNo, secretSalt, {from: cheekyYesVoter})
@@ -1223,7 +1222,6 @@ contract('Voting State', (accounts) => {
     })
 
     it('token voter cannot reveal a vote they didn\'t commit for a project', async () => {
-      // check
       errorThrown = false
       try {
         await TR.voteReveal(projAddrT, valFalseMore, voteYes, secretSalt, {from: notVoter})
@@ -1236,17 +1234,44 @@ contract('Voting State', (accounts) => {
 
   describe('revealing yes votes with reputation', () => {
     it('reputation voter can reveal a yes vote to a task validated more yes from TR voting project', async () => {
+      // take stock of variables before
+      let pollMapBefore = await task.getPollMap(projAddrT, valTrueMore)
 
+      // checks
+      assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
+
+      // reveal yes vote
+      await RR.voteReveal(projAddrT, valTrueMore, voteYes, secretSalt, {from: repYesVoter})
+
+      // take stock of variables after
+      let pollMapAfter = await task.getPollMap(projAddrT, valTrueMore)
+
+      // checks
+      assert.equal(pollMapBefore[0], pollMapAfter[0], 'commit end date shouldn\'t change')
+      assert.equal(pollMapBefore[1], pollMapAfter[1], 'reveal end date shouldn\'t change')
+      assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
+      assert.equal(pollMapAfter[3], pollMapBefore[3] + voteAmountMore, 'vote tally yes updated incorrectly')
+      assert.equal(pollMapAfter[4], pollMapBefore[4], 'vote tally no updated incorrectly')
     })
+
     it('reputation voter can reveal a yes vote to a task validated more yes from RR voting project', async () => {
+      // take stock of variables before
+      let pollMapBefore = await task.getPollMap(projAddrR, valTrueMore)
 
+      // reveal yes vote
+      await RR.voteReveal(projAddrR, valTrueMore, voteYes, secretSalt, {from: repYesVoter})
+
+      // take stock of variables after
+      let pollMapAfter = await task.getPollMap(projAddrR, valTrueMore)
+
+      // checks
+      assert.equal(pollMapAfter[3], pollMapBefore[3] + voteAmountMore, 'vote tally yes updated incorrectly')
+      assert.equal(pollMapAfter[4], pollMapBefore[4], 'vote tally no updated incorrectly')
     })
+
     it('reputation voter can reveal a yes vote to a task validated more no from TR voting project', async () => {
       // take stock of variables before
       let pollMapBefore = await task.getPollMap(projAddrT, valFalseMore)
-
-      // checks
-      // assert.equal(pollMapBefore[4], someCorrectAmount, 'some error message')
 
       // reveal yes vote
       await RR.voteReveal(projAddrT, valFalseMore, voteYes, secretSalt, {from: repYesVoter})
@@ -1255,20 +1280,37 @@ contract('Voting State', (accounts) => {
       let pollMapAfter = await task.getPollMap(projAddrT, valFalseMore)
 
       // checks
-      // assert.equal(pollMapAfter[3], someNewCorrectAmount, 'some error message')
-      // assert.equal(pollMapAfter[4], pollMapBefore[4], 'vote tally yes updated incorrectly')
+      assert.equal(pollMapAfter[3], pollMapBefore[3] + voteAmountMore, 'vote tally yes updated incorrectly')
+      assert.equal(pollMapAfter[4], pollMapBefore[4], 'vote tally no updated incorrectly')
     })
 
     it('reputation voter can reveal a yes vote to a task validated more no from RR voting project', async () => {
+      // take stock of variables before
+      let pollMapBefore = await task.getPollMap(projAddrR, valFalseMore)
 
+      // reveal yes vote
+      await RR.voteReveal(projAddrR, valFalseMore, voteYes, secretSalt, {from: repYesVoter})
+
+      // take stock of variables after
+      let pollMapAfter = await task.getPollMap(projAddrR, valFalseMore)
+
+      // checks
+      assert.equal(pollMapAfter[3], pollMapBefore[3] + voteAmountMore, 'vote tally yes updated incorrectly')
+      assert.equal(pollMapAfter[4], pollMapBefore[4], 'vote tally no updated incorrectly')
     })
 
     it('reputation voter cannot reveal the no votes side if they voted yes', async () => {
-      // BROKEN
+      // check
+      errorThrown = false
+      try {
+        await RR.voteReveal(projAddrT, valTrueMore, voteNo, secretSalt, {from: cheekyYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('reputation voter cannot reveal a vote they didn\'t commit for a project', async () => {
-      // check
+    it('reputation voter cannot reveal a vote they didn\'t commit for a RR voting project', async () => {
       errorThrown = false
       try {
         await RR.voteReveal(projAddrT, valFalseMore, voteYes, secretSalt, {from: notVoter})
@@ -1308,7 +1350,6 @@ contract('Voting State', (accounts) => {
 
       // checks
       assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
-      assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
 
       // reveal yes vote
       await TR.voteReveal(projAddrR, valTrueMore, voteNo, secretSalt, {from: tokenNoVoter})
@@ -1321,7 +1362,7 @@ contract('Voting State', (accounts) => {
       assert.equal(pollMapBefore[1], pollMapAfter[1], 'reveal end date shouldn\'t change')
       assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
       assert.equal(pollMapBefore[3], pollMapAfter[3], 'should be no vote tally yes yet')
-      assert.equal(pollMapAfter[4], voteAmount, 'vote tally no incorrect')
+      assert.equal(pollMapAfter[4], pollMapBefore[4] + voteAmount, 'vote tally no incorrect')
     })
 
     it('token voter can reveal a no vote to a task validated more no from TR voting project', async () => {
@@ -1330,7 +1371,6 @@ contract('Voting State', (accounts) => {
 
       // checks
       assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
-      assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
 
       // reveal yes vote
       await TR.voteReveal(projAddrT, valFalseMore, voteNo, secretSalt, {from: tokenNoVoter})
@@ -1343,7 +1383,7 @@ contract('Voting State', (accounts) => {
       assert.equal(pollMapBefore[1], pollMapAfter[1], 'reveal end date shouldn\'t change')
       assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
       assert.equal(pollMapBefore[3], pollMapAfter[3], 'should be no vote tally yes yet')
-      assert.equal(pollMapAfter[4], voteAmount, 'vote tally no incorrect')
+      assert.equal(pollMapAfter[4], pollMapBefore[4] + voteAmount, 'vote tally no incorrect')
     })
 
     it('token voter can reveal a no vote to a task validated more no from RR voting project', async () => {
@@ -1352,7 +1392,6 @@ contract('Voting State', (accounts) => {
 
       // checks
       assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
-      assert.equal(pollMapBefore[4], 0, 'should be no vote tally no yet')
 
       // reveal yes vote
       await TR.voteReveal(projAddrR, valFalseMore, voteNo, secretSalt, {from: tokenNoVoter})
@@ -1365,11 +1404,17 @@ contract('Voting State', (accounts) => {
       assert.equal(pollMapBefore[1], pollMapAfter[1], 'reveal end date shouldn\'t change')
       assert.equal(pollMapAfter[2], 51, 'poll quorum should still be 51')
       assert.equal(pollMapBefore[3], pollMapAfter[3], 'should be no vote tally yes yet')
-      assert.equal(pollMapAfter[4], voteAmount, 'vote tally no incorrect')
+      assert.equal(pollMapAfter[4], pollMapBefore[4] + voteAmount, 'vote tally no incorrect')
     })
 
     it('token voter cannot reveal the yes votes side if they voted no', async () => {
-      // BROKEN
+      errorThrown = false
+      try {
+        await TR.voteReveal(projAddrT, valTrueMore, voteYes, secretSalt, {from: cheekyNoVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
@@ -1381,7 +1426,7 @@ contract('Voting State', (accounts) => {
       // checks
       assert.equal(pollMapBefore[2], 51, 'poll quorum should be 51')
 
-      // reveal yes vote
+      // reveal no vote
       await RR.voteReveal(projAddrT, valTrueMore, voteNo, secretSalt, {from: repNoVoter})
 
       // take stock of variables after
@@ -1459,7 +1504,13 @@ contract('Voting State', (accounts) => {
     })
 
     it('reputation voter cannot reveal the yes votes side if they voted no', async () => {
-      // BROKEN
+      errorThrown = false
+      try {
+        await TR.voteReveal(projAddrT, valTrueMore, voteYes, secretSalt, {from: cheekyNoVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 

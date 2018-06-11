@@ -22,7 +22,7 @@ library DLL {
 		self.dll[_curr].prev = _prev;
 		self.dll[_curr].next = _next;
 
-		/* self.dll[_prev].next = _curr; */
+		self.dll[_prev].next = _curr;
 		self.dll[_next].prev = _curr;
 	}
 
