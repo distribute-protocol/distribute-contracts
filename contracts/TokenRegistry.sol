@@ -259,14 +259,13 @@ contract TokenRegistry {
         uint256 _tokens,
         bytes32 _secretHash,
         uint256 _prevPollID
-    ) external {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+    ) external {     // _secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
-        require(pollId != 0);
-        //calculate available tokens for voting
+        // calculate available tokens for voting
         uint256 availableTokens = plcrVoting.getAvailableTokens(msg.sender, 1);
-        //make sure msg.sender has tokens available in PLCR contract
-        //if not, request voting rights for token holder
+        // make sure msg.sender has tokens available in PLCR contract
+        // if not, request voting rights for token holder
         if (availableTokens < _tokens) {
             require(distributeToken.balanceOf(msg.sender) >= _tokens - availableTokens);
             distributeToken.transferToEscrow(msg.sender, _tokens - availableTokens);

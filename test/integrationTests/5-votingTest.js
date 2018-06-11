@@ -59,13 +59,13 @@ contract('Voting State', (accounts) => {
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
 
-    // fund & register voters
+    // fund & register voters for successful commit & reveal tests
     await utils.mintIfNecessary(tokenYesVoter)
     await utils.mintIfNecessary(tokenNoVoter)
     await utils.register(repYesVoter)
     await utils.register(repNoVoter)
 
-    // for reveal
+    // fund & register voters for failed reveal tests
     await utils.mintIfNecessary(cheekyYesVoter)
     await utils.mintIfNecessary(cheekyNoVoter)
     await utils.register(cheekyYesVoter)
@@ -74,7 +74,6 @@ contract('Voting State', (accounts) => {
 
   describe('committing yes votes with tokens', () => {
     it('token voter can commit a yes vote to a task validated more yes from TR voting project', async () => {
-      // WORKING
       // take stock of variables before
       let pollId = await task.getPollNonce(projAddrT, valTrueMore)
       let attrUUID = await PLCR.attrUUID(tokenYesVoter, pollId)
@@ -116,7 +115,6 @@ contract('Voting State', (accounts) => {
     })
 
     it('token voter can commit a yes vote to a task validated more yes from RR voting project', async () => {
-      // WORKING
       // take stock of variables before
       let pollId = await task.getPollNonce(projAddrR, valTrueMore)
       let attrUUID = await PLCR.attrUUID(tokenYesVoter, pollId)
@@ -158,7 +156,6 @@ contract('Voting State', (accounts) => {
     })
 
     it('token voter can commit a yes vote to a task validated more no from TR voting project', async () => {
-      // WORKING
       // take stock of variables before
       let pollId = await task.getPollNonce(projAddrT, valFalseMore)
       let attrUUID = await PLCR.attrUUID(tokenYesVoter, pollId)
@@ -200,7 +197,6 @@ contract('Voting State', (accounts) => {
     })
 
     it('token voter can commit a yes vote to a task validated more no from RR voting project', async () => {
-      // WORKING
       // take stock of variables before
       let pollId = await task.getPollNonce(projAddrR, valFalseMore)
       let attrUUID = await PLCR.attrUUID(tokenYesVoter, pollId)
@@ -242,7 +238,6 @@ contract('Voting State', (accounts) => {
     })
 
     it('token voter cannot commit a yes vote to a task validated only yes from TR voting project', async () => {
-      // WORKING
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenYesVoter)
 
@@ -615,7 +610,6 @@ contract('Voting State', (accounts) => {
 
   describe('committing yes votes with reputation', () => {
     it('reputation voter can commit a yes vote to a task validated more yes from TR voting project', async function () {
-      // WORKING
       // take stock of variables before
       let pollId = await task.getPollNonce(projAddrT, valTrueMore)
       let attrUUID = await PLCR.attrUUID(repYesVoter, pollId)
@@ -1112,14 +1106,14 @@ contract('Voting State', (accounts) => {
 
   describe('revealing yes votes with tokens', () => {
     before(async () => {
-      // for reveal test, BROKEN
+      // commit votes to fail in reveal
       let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
       await TR.voteCommit(projAddrT, valFalseMore, voteAmountMore, secretHash, 0, {from: cheekyYesVoter})
-      // await RR.voteCommit(projAddrR, valTrueMore, voteAmountMore, secretHash, 0, {from: cheekyYesVoter})
+      await RR.voteCommit(projAddrR, valTrueMore, voteAmount, secretHash, 0, {from: cheekyYesVoter})
 
-      // secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
-      // await RR.voteCommit(projAddrR, valTrueMore, voteAmountMore, secretHash, 0, {from: cheekyNoVoter})
-      // await TR.voteCommit(projAddrT, valFalseMore, voteAmountMore, secretHash, 0, {from: cheekyNoVoter})
+      secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
+      await RR.voteCommit(projAddrR, valTrueMore, voteAmountMore, secretHash, 0, {from: cheekyNoVoter})
+      await TR.voteCommit(projAddrT, valFalseMore, voteAmountMore, secretHash, 0, {from: cheekyNoVoter})
 
       // fast forward time
       await evmIncreaseTime(604801) // 1 week
