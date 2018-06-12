@@ -223,12 +223,11 @@ contract('Staked State', (accounts) => {
 
   describe('state changes on staked projects with task hash submissions', () => {
     before(async () => {
-      /// TEMPORARY FIX ///
-      // write function that checks which staker of each type stakes more and then just pl
       // have tokenStaker2 and repStaker1 change their hash list back to taskSet1 so that each project has at least 51% on taskSet1
       await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: tokenStaker2})
-      await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: tokenStaker2})
       await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: repStaker1})
+
+      await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: tokenStaker2})
       await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: repStaker1})
 
       // fast forward time
@@ -238,7 +237,6 @@ contract('Staked State', (accounts) => {
     it('TR staked project becomes active if task hashes are submitted by the staking deadline', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT1)
-      let topTaskHash = await PR.stakedProjects(projAddrT1)
 
       // call checkStaked()
       await PR.checkActive(projAddrT1)

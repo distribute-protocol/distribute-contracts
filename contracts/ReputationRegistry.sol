@@ -282,16 +282,14 @@ contract ReputationRegistry {
         uint256 _prevPollID
     ) external {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
         require(projectRegistry.projects(_projectAddress) == true);
-        // require(balances[msg.sender] > 10000); //prevent network effect of new account creation
-        Project project = Project(_projectAddress);
-        uint256 pollId = Task(project.tasks(_index)).pollId();
+        uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         //calculate available tokens for voting
         uint256 availableTokens = plcrVoting.getAvailableTokens(msg.sender, 2);
         //make sure msg.sender has tokens available in PLCR contract
         //if not, request voting rights for token holder
         if (availableTokens < _reputation) {
-            require(balances[msg.sender] >= _reputation - availableTokens && pollId != 0);
-            balances[msg.sender] -= _reputation;
+            require(balances[msg.sender] >= _reputation - availableTokens);
+            balances[msg.sender] -= (_reputation - availableTokens);
             plcrVoting.requestVotingRights(msg.sender, _reputation - availableTokens);
         }
         plcrVoting.commitVote(msg.sender, pollId, _secretHash, _reputation, _prevPollID);
