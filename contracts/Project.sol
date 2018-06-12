@@ -21,6 +21,27 @@ contract Project {
     using SafeMath for uint256;
 
     // =====================================================================
+    // EVENTS
+    // =====================================================================
+
+    event LogProjectDetails(
+      uint weiCost,
+      uint reputationCost,
+      uint state,
+      uint nextDeadline,
+      address proposer,
+      uint proposerType,
+      bytes ipfsHash,
+      uint stakedStatePeriod,
+      uint activeStatePeriod,
+      uint turnoverTime,
+      uint validateStatePeriod,
+      uint voteCommitPeriod,
+      uint voteRevealPeriod,
+      uint passThreshold
+    );
+
+    // =====================================================================
     // STATE VARIABLES
     // =====================================================================
 
@@ -138,6 +159,7 @@ contract Project {
         tokenRegistryAddress = _tokenRegistry;
         projectRegistryAddress = msg.sender;
         weiCost = _cost;
+        // This is broken math
         reputationCost = _costProportion * ReputationRegistry(_reputationRegistry).totalSupply() / 10000000000;
         state = 1;
         nextDeadline = _stakingPeriod;
@@ -153,7 +175,26 @@ contract Project {
         voteCommitPeriod = 1 weeks;
         voteRevealPeriod = 1 weeks;
         passThreshold = 100;
+        emit LogProjectDetails(
+          weiCost,
+          reputationCost,
+          state,
+          nextDeadline,
+          proposer,
+          proposerType,
+          ipfsHash,
+          stakedStatePeriod,
+          activeStatePeriod,
+          turnoverTime,
+          validateStatePeriod,
+          voteCommitPeriod,
+          voteRevealPeriod,
+          passThreshold
+        );
+
     }
+
+
 
     // =====================================================================
     // FALLBACK
