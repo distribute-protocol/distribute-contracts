@@ -129,7 +129,7 @@ contract TokenRegistry {
 
         uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);        //call project to "send back" staked tokens to put in proposer's balances
         distributeToken.transferFromEscrow(msg.sender, proposerVals[1]);
-        distributeToken.transferWeiTo(msg.sender, proposerVals[0] / 100);
+        distributeToken.transferWeiTo(msg.sender, proposerVals[0] / (100));
     }
 
     // =====================================================================
@@ -292,7 +292,7 @@ contract TokenRegistry {
     }
 
     /**
-    @notice Withdraw voting rights from PLCR Contract
+    @notice Refunds staked tokens, thus also withdrawing voting rights from PLCR Contract
     @param _tokens Amount of tokens to withdraw
     */
     function refundVotingTokens(uint256 _tokens) external {
@@ -318,7 +318,7 @@ contract TokenRegistry {
     }
 
     /**
-    @notice Rescue unrevealed reputation votes from expired polls of task at `_index` of project at
+    @notice Rescue unrevealed token votes from expired polls of task at `_index` of project at
     `_projectAddress`
     @param _projectAddress Address of the project
     @param _index Index of the task
