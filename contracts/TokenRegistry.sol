@@ -13,6 +13,7 @@ import "./library/Division.sol";
 come to consensus around tasks, validate projects, vote on projects, refund their stakes, and
 claim their rewards.
 @author Team: Jessica Marshall, Ashoka Finley
+@notice This contract implements how users perform actions using capital tokens in the various stages of a project.
 */
 contract TokenRegistry {
 
@@ -84,13 +85,13 @@ contract TokenRegistry {
     /**
     @notice Propose a project of cost `_cost` with staking period `_stakingPeriod` and hash `_ipfsHash`,
     with tokens.
-    @dev Calls ProjectRegistry.createProject finalize transaction
+    @dev Calls ProjectRegistry.createProject to finalize transaction and emits ProjectCreated event
     @param _cost Total project cost in wei
-    @param _stakingPeriod Length of time the project can be staked before it expires
+    @param _stakingPeriod Length of time the project can be staked on before it expires
     @param _ipfsHash Hash of the project description
     */
     function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes _ipfsHash) external {
-        // _cost of project in ether
+        // _cost of project in wei
         // calculate cost of project in tokens currently (_cost in wei)
         // check proposer has at least 5% of the proposed cost in tokens
         require(now < _stakingPeriod && _cost > 0);
@@ -116,8 +117,9 @@ contract TokenRegistry {
     }
 
     /**
-    @notice Refund a reputation proposer upon proposal success, transfer 1% of the project cost in
-    wei as a reward along with any tokens staked.
+    @notice Refund a token proposer upon proposal success, transfer 1% of the project cost in
+    wei as a reward along with any tokens staked on the project.
+    @dev token proposer types are denoted by '1' and reputation proposers by '2'
     @param _projectAddress Address of the project
     */
     function refundProposer(address _projectAddress) external {                                 //called by proposer to get refund once project is active
@@ -164,7 +166,7 @@ contract TokenRegistry {
         // updating of P weiBal happens via the next line
         project.stakeTokens(msg.sender, tokens, weiChange);
         // the transfer of wei and the updating of DT weiBal happens via the next line
-        distributeToken.transferWeiTo(_projectAddress, weiChange);
+        distributeToken.transferWeiTo(_projectAddress, weiChange);      // A and S are confused - why is this here/what is it doing?
         distributeToken.transferToEscrow(msg.sender, tokens);
         projectRegistry.checkStaked(_projectAddress);
     }
