@@ -30,12 +30,6 @@ contract ReputationRegistry {
     // EVENTS
     // =====================================================================
 
-    event ProjectCreated(
-        address indexed projectAddress,
-        uint256 projectCost,
-        uint256 proposerStake
-    );
-
     event LogRegister(
         address indexed registree
     );
@@ -153,7 +147,6 @@ contract ReputationRegistry {
             proposerReputationCost,
             _ipfsHash
         );
-        emit ProjectCreated(projectAddress, _cost, proposerReputationCost);
     }
 
     /**

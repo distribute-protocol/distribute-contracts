@@ -24,12 +24,6 @@ contract TokenRegistry {
     // EVENTS
     // =====================================================================
 
-    /* event ProjectCreated(
-        address indexed projectAddress,
-        uint256 projectCost,
-        uint256 proposerStake
-    ); */
-
     // =====================================================================
     // STATE VARIABLES
     // =====================================================================
@@ -114,7 +108,6 @@ contract TokenRegistry {
             proposerTokenCost,
             _ipfsHash
         );
-        /* emit ProjectCreated(projectAddress, _cost, proposerTokenCost); */
     }
 
     /**
