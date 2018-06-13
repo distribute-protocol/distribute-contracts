@@ -10,7 +10,7 @@ import "./library/Division.sol";
 @title An individual project in the distribute DAO system
 @author Team: Jessica Marshall, Ashoka Finley
 @notice This contract is used to manage the state of all project related parameters while also
-maintaining a wei balance to be used in the case of reward. The project can be in 8 state represented by
+maintaining a wei balance to be used in the case of reward. The project can be in 8 states, represented by
 integers. They are as follows: [1: Proposed, 2: Staked, 3: Active, 4: Validation, 5: Voting, 6: Complete,
 7: Failed, 8: Expired]
 @dev This contract is managed and deployed by a Project Registry contract, and must be initialized
@@ -112,14 +112,14 @@ contract Project {
     @param _cost The total cost of the project in wei
     @param _costProportion The proportion of the project cost divided by theDistributeToken weiBal
     represented as integer
-    @param _stakingPeriod The length of time this project is open for staking
+    @param _stakingPeriod The length of time the project is open for staking
     @param _proposer The address of the user proposing the project
-    @param _proposerType Denotes if a proposer is using reputation or tokens,
+    @param _proposerType Denotes if a proposer is proposing a project with reputation or tokens,
     value must be 1: tokens or 2: reputation
-    @param _proposerStake The amount of reputation or tokens needed to create the proposal
+    @param _proposerStake The amount of reputation or tokens needed to create the proposal (5% of project cost)
     @param _ipfsHash The ipfs hash of the full project description
     @param _reputationRegistry Address of the Reputation Registry
-    @param _tokenRegistry Address of the contract system Token Registry
+    @param _tokenRegistry Address of the Token Registry
     */
     function setup(
         uint256 _cost,
@@ -166,7 +166,7 @@ contract Project {
     // =====================================================================
     /**
     @notice The amount of tasks created in the project during the Staked period.
-    @dev Helper function used by the project library
+    @dev Helper function used by the project library to get the length of the task array
     @return The number of tasks in the task array
     */
     function getTaskCount() external view returns (uint256) {
@@ -183,7 +183,7 @@ contract Project {
 
     /**
     @notice Set the project state to `_state`, and update the nextDeadline to `_nextDeadline`
-    @dev Only callable by the Project Registry initialized during construction
+    @dev Only callable by the Project Registry that was initialized during construction
     @param _state The state to update the project to
     @param _nextDeadline The nextDeadline to transition project to the next state
     */
@@ -282,6 +282,7 @@ contract Project {
     @notice Unstake `_tokens` tokens from the project, subtract this value from the balance of `_staker`
     Returns the amount of ether to subtract from the project's ether balance
     @dev Only callable by the Token Registry initialized during construction, to maintain control flow
+    @dev Only callable before the staking period of a proposed project ends (state must still be 1)
     @param _staker Address of the staker who is unstaking
     @param _tokens Amount of tokens to unstake on the project
     @return The amount of ether to deduct from the projects balance
@@ -319,6 +320,7 @@ contract Project {
     /**
     @notice Unstake `_reputation` reputation from the project, and update staked balance of `_staker`
     @dev Only callable by the Reputation Registry initialized during construction, to maintain control flow
+    @dev Only callable before the staking period of a proposed project ends (state must still be 1)
     @param _staker Address of the staker who is unstaking
     @param _reputation Amount of reputation to unstake on the project
     */
