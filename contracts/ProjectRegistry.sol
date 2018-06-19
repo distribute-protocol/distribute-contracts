@@ -418,7 +418,7 @@ contract ProjectRegistry {
     /**
     @notice Claim a task at index `_index` from project at `_projectAddress` with description
     `_taskDescription`, weighting `_weighting` by claimer `_claimer. Set the ether reward of the task
-    to `_weiVal` and the repuation needed to claim the task to `_reputationVal`
+    to `_weiVal` and the reputation needed to claim the task to `_reputationVal`
     @dev Only callable by the ReputationRegistry
     @param _projectAddress Address of project
     @param _index Index of the task in task array.
