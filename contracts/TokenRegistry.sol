@@ -24,6 +24,9 @@ contract TokenRegistry {
     // EVENTS
     // =====================================================================
 
+    event LogStakedTokens(address indexed projectAddress, uint256 tokens, address staker);
+    event LogUnstakedTokens(address indexed projectAddress, uint256 tokens, address unstaker);
+
     // =====================================================================
     // STATE VARIABLES
     // =====================================================================
@@ -162,6 +165,7 @@ contract TokenRegistry {
         distributeToken.transferWeiTo(_projectAddress, weiChange);
         distributeToken.transferToEscrow(msg.sender, tokens);
         projectRegistry.checkStaked(_projectAddress);
+        emit LogStakedTokens(_projectAddress, _tokens, msg.sender);
     }
 
     /**
@@ -180,6 +184,7 @@ contract TokenRegistry {
         // the weiBal is updated via the next line
         distributeToken.returnWei(weiVal);
         distributeToken.transferFromEscrow(msg.sender, _tokens);
+        emit LogUnstakedTokens(_projectAddress, _tokens, msg.sender);
     }
 
     // =====================================================================

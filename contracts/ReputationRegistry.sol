@@ -34,6 +34,9 @@ contract ReputationRegistry {
         address indexed registree
     );
 
+    event LogStakedReputation(address indexed projectAddress, uint256 reputation, address staker);
+    event LogUnstakedReputation(address indexed projectAddress, uint256 reputation, address unstaker);
+
     // =====================================================================
     // STATE VARIABLES
     // =====================================================================
@@ -102,7 +105,7 @@ contract ReputationRegistry {
 
     /**
     @notice Register an account `msg.sender` for the first time in the reputation registry, grant 10,000
-    repuation to start.
+    reputation to start.
     @dev Has no sybil protection, thus a user can auto generate accounts to receive excess reputation.
     */
     function register() external {
@@ -186,11 +189,12 @@ contract ReputationRegistry {
         balances[msg.sender] -= reputationVal;
         Project(_projectAddress).stakeReputation(msg.sender, reputationVal);
         projectRegistry.checkStaked(_projectAddress);
+        emit LogStakedReputation(_projectAddress, _reputation, msg.sender);
     }
 
     /**
     @notice Unstake `_reputation` reputation from project at `_projectAddress`
-    @dev Require repuation unstaked is greater than 0
+    @dev Require reputation unstaked is greater than 0
     @param _projectAddress Address of the project
     @param _reputation Amount of reputation to unstake
     */
@@ -202,6 +206,7 @@ contract ReputationRegistry {
 
         balances[msg.sender] += _reputation;
         Project(_projectAddress).unstakeReputation(msg.sender, _reputation);
+        emit LogUnstakedReputation(_projectAddress, _reputation, msg.sender);
     }
 
     // =====================================================================
