@@ -102,7 +102,7 @@ contract TokenRegistry {
         require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
 
         distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
-        address projectAddress = projectRegistry.createProject(
+        projectRegistry.createProject(
             _cost,
             costProportion,
             _stakingPeriod,
@@ -196,18 +196,17 @@ contract TokenRegistry {
     tokens for validation state `_validationState`
     @dev Requires the token balance of msg.sender to be greater than the reputationVal of the task
     @param _projectAddress Address of the project
-    @param _index Index of the task
-    @param _tokens Amount of tokens to stake on the validation state
+    @param _taskIndex Index of the task
     @param _validationState Approve or Deny task
     */
     function validateTask(
         address _projectAddress,
-        uint256 _index,
+        uint256 _taskIndex,
         bool _validationState
     ) external {
         require(projectRegistry.projects(_projectAddress) == true);
         Project project = Project(_projectAddress);
-        Task task = Task(project.tasks(_index));
+        Task task = Task(project.tasks(_taskIndex));
         uint256 validationFee = task.validationEntryFee();
         require(distributeToken.balanceOf(msg.sender) >= validationFee);
         distributeToken.transferToEscrow(msg.sender, validationFee);
@@ -225,19 +224,18 @@ contract TokenRegistry {
         Task task = Task(project.tasks(_index));
         require(task.claimable());
         uint returnAmount;
-        uint status = task.getValidatorStatus(msg.sender);
         uint index = task.getValidatorIndex(msg.sender);
-        uint entryFee = task.validationEntryFee()
         require(index < 5);
         task.setValidatorIndex(msg.sender);
         uint rewardWeighting = projectRegistry.validationRewardWeightings(index);
-        uint statusNeed = task.claimableByRep() ? 1 : 0
-        if (statusNeed == status) {
-            returnAmount += entryFee;
+        uint statusNeed = task.claimableByRep() ? 1 : 0;
+
+        if (statusNeed == task.getValidatorStatus(msg.sender)) {
+            returnAmount += task.validationEntryFee();
             uint validationIndex;
-            if (status) {
+            if (task.getValidatorStatus(msg.sender) == 1) {
               require(task.affirmativeValidators(index) == msg.sender);
-              validationIndex = task.affrimativeIndex();
+              validationIndex = task.affirmativeIndex();
             } else {
               require(task.negativeValidators(index) == msg.sender);
               validationIndex = task.negativeIndex();
@@ -245,17 +243,17 @@ contract TokenRegistry {
             if (validationIndex < 5) {
                 uint addtlWeighting;
                 for(uint i = validationIndex; i < 5; i++) {
-                    addtlWeighting += projectRegisty.validationRewardWeightings(i);
+                    addtlWeighting += projectRegistry.validationRewardWeightings(i);
                 }
-                rewardWeighting += addtionalWeighting / validationIndex;
+                rewardWeighting += addtlWeighting / validationIndex;
             }
             project.transferWeiReward(msg.sender, ((project.validationReward() * task.weighting() / 100) * rewardWeighting / 100));
         } else {
             statusNeed == 1
                 ? require(task.negativeValidators(index) == msg.sender)
                 : require(task.affirmativeValidators(index) == msg.sender);
-            returnAmount += task.validationEntryFee / 2;
-            distributeToken.burn(entryFee - returnAmount);
+            returnAmount += task.validationEntryFee() / 2;
+            distributeToken.burn(task.validationEntryFee() - returnAmount);
         }
         distributeToken.transferFromEscrow(msg.sender, returnAmount);
     }
