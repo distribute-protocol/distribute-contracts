@@ -336,7 +336,7 @@ contract ProjectRegistry {
         require(project.proposerStake() > 0);
 
         uint256[2] memory returnValues;
-        returnValues[0] = project.weiCost();
+        returnValues[0] = project.proposedCost();
         returnValues[1] = project.proposerStake();
         project.clearProposerStake();
         return returnValues;
@@ -467,7 +467,7 @@ contract ProjectRegistry {
         require(task.claimer() == msg.sender);
         require(task.complete() == false);
         require(project.state() == 3);
-        task.setValidationEntryFee((task.weighting() * project.weiCost() / 100) / dt.currentPrice());
+        task.setValidationEntryFee((task.weighting() * project.proposedCost() / 100) / dt.currentPrice());
         task.markTaskComplete();
     }
 }

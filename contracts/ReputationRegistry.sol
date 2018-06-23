@@ -233,7 +233,7 @@ contract ReputationRegistry {
         require(project.hashListSubmitted() == true);
         uint reputationVal = project.reputationCost() * _weighting / 100;   // does this need SafeMath?
         require(balances[msg.sender] >= reputationVal);
-        uint weiVal = project.weiCost() * _weighting / 100;     // does this need SafeMath?
+        uint weiVal = project.proposedCost() * _weighting / 100;
         balances[msg.sender] -= reputationVal;
         projectRegistry.claimTask(
             _projectAddress,
