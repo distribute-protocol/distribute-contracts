@@ -35,7 +35,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     uint256 public baseCost = 50000000000000;
 
     bool public freeze;
-    
+
     // =====================================================================
     // MODIFIERS
     // =====================================================================
@@ -79,6 +79,10 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
      */
     function freezeContract() external onlyOwner {
       freeze = true;
+    }
+
+    function unfreezeContract() external onlyOwner {
+      freeze = false;
     }
 
     function updateTokenRegistry(address _newTokenRegistry) external onlyOwner {
