@@ -210,7 +210,7 @@ library ProjectLibrary {
                 Task task = Task(project.tasks(i));
                 if (task.complete()) {
                     // require that one of the indexes is not zero, meaning that a validator existss
-                    require(task.affrimativeIndex() != 0 || task.negativeIndex() != 0);
+                    require(task.affirmativeIndex() != 0 || task.negativeIndex() != 0);
                     if (task.affirmativeIndex() != 0 && task.negativeIndex() != 0) { // there is an opposing validator, poll required
                         uint pollNonce = plcr.startPoll(51, project.voteCommitPeriod(), project.voteRevealPeriod());
                         task.setPollId(pollNonce); // function handles storage of voting pollId
@@ -218,7 +218,7 @@ library ProjectLibrary {
                         if (task.negativeIndex() == 0) {
                           task.markTaskClaimable(true);
                         } else {
-                          task.markTaskClaimable(false)
+                          task.markTaskClaimable(false);
                           uint reward = task.weiReward();
                           tr.revertWei(reward);
                           project.returnWei(_distributeTokenAddress, reward);
@@ -259,7 +259,7 @@ library ProjectLibrary {
             PLCRVoting plcr = PLCRVoting(_plcrVoting);
             for (uint i = 0; i < project.getTaskCount(); i++) {
                 Task task = Task(project.tasks(i));
-                if (task.pollId()) {      // check tasks with polls only
+                if (task.pollId() != 0) {      // check tasks with polls only
                     if (plcr.pollEnded(task.pollId())) {
                         if (plcr.isPassed(task.pollId())) {
                             task.markTaskClaimable(true);
@@ -290,8 +290,7 @@ library ProjectLibrary {
     `_validator` can validate either approve or deny, with `tokens` tokens.
     @param _projectAddress Address of the project
     @param _validator Address of the validator
-    @param _index Index of the task in the projects task array
-    @param _tokens Amount of tokens validator is staking
+    @param _taskIndex Index of the task in the projects task array
     @param _validationState Bool representing validators choice.s
     */
     function validate(
@@ -337,6 +336,7 @@ library ProjectLibrary {
     transfers the wei reward to the task claimer. Returns the reputation reward for the claimer.
     @param _projectAddress Address of the project
     @param _index Index of the task in project task array
+    @param _claimer Address of account claiming task reward.
     @return The amount of reputation the claimer staked on the task
     */
     function claimTaskReward(

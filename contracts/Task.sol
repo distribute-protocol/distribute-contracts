@@ -45,6 +45,7 @@ contract Task {
     struct Validator {
         uint256 status;
         uint256 index;
+        bool initialized;
     }
 
     /* bool public opposingValidator = false;
@@ -142,17 +143,17 @@ contract Task {
     @param _validationVal Flag for positive or negative validation
     */
     function setValidator(address _validator, uint256 _validationVal) external onlyTR {
-        require(validators[_validator] == 0);
+        require(!validators[_validator].initialized);
         require(_validationVal == 1 || _validationVal == 0);
         if (_validationVal == 1) {
           require(affirmativeIndex < 5);
           affirmativeValidators[affirmativeIndex] = _validator;
-          validators[_validator] = Validator(_validationVal, affirmativeIndex);
+          validators[_validator] = Validator(_validationVal, affirmativeIndex, true);
           affirmativeIndex += 1;
         } else {
           require(negativeIndex < 5);
           negativeValidators[negativeIndex] = _validator;
-          validators[_validator] = Validator(_validationVal, negativeIndex);
+          validators[_validator] = Validator(_validationVal, negativeIndex, true);
           negativeIndex += 1;
         }
     }
@@ -184,7 +185,7 @@ contract Task {
     @param _validator Address of validator
     */
     function getValidatorStatus(address _validator) external view returns (uint) {
-      require(validators[_validator] != 0);
+      require(validators[_validator].initialized);
       return validators[_validator].status;
     }
 
@@ -192,8 +193,8 @@ contract Task {
     @notice Return the validator validationindex of validator at `_validator`
     @param _validator Address of validator
     */
-    function getVaidatorIndex(address _validator) external view returns (uint) {
-      require(validators[_validator] != 0);
+    function getValidatorIndex(address _validator) external view returns (uint) {
+      require(validators[_validator].initialized);
       return validators[_validator].index;
     }
 
