@@ -3,6 +3,7 @@ pragma solidity ^0.4.21;
 import "./library/PLCRVoting.sol";
 /* import "./library/ProxyFactory.sol"; */
 import "./ReputationRegistry.sol";
+import "./DistributeToken.sol";
 /* import "./Project.sol"; */
 import "./ProjectLibrary.sol";
 import "./Task.sol";
@@ -54,6 +55,8 @@ contract ProjectRegistry {
     }
 
     mapping (address => StakedState) public stakedProjects;
+
+    uint256[5] validationRewardWeightings = [36, 24, 17, 13, 10];
 
     // =====================================================================
     // MODIFIERS
@@ -460,10 +463,11 @@ contract ProjectRegistry {
     function submitTaskComplete(address _projectAddress, uint256 _index) external {
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));
+        DistributeToken dt = DistributeToken(distributeTokenAddress);
         require(task.claimer() == msg.sender);
         require(task.complete() == false);
         require(project.state() == 3);
-
+        task.setValidationEntryFee((task.weighting() * project.weiCost() / 100) / dt.currentPrice());
         task.markTaskComplete();
     }
 }

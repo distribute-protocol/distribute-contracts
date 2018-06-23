@@ -78,6 +78,7 @@ contract Project {
     uint256 public nextDeadline;
     uint256 public weiCost;
     uint256 public reputationCost;
+    uint256 public validationReward;
     bytes public ipfsHash;
 
     uint256 public tokensStaked;
@@ -107,6 +108,11 @@ contract Project {
 
     modifier onlyRR() {
         require(msg.sender == reputationRegistryAddress);
+        _;
+    }
+
+    modifier onlyTRorRR() {
+        require(msg.sender == tokenRegistryAddress || msg.sender == reputationRegistryAddress);
         _;
     }
 
@@ -158,7 +164,9 @@ contract Project {
         reputationRegistryAddress = _reputationRegistry;
         tokenRegistryAddress = _tokenRegistry;
         projectRegistryAddress = msg.sender;
-        weiCost = _cost;
+        validationReward = _cost * 5 / 100;
+        weiCost = _cost + validateReward;
+
         // This is broken math
         reputationCost = _costProportion * ReputationRegistry(_reputationRegistry).totalSupply() / 10000000000;
         state = 1;
@@ -383,7 +391,7 @@ contract Project {
     @dev Only callable by the Reputation Registry initialized during construction, to maintain control flow
     @param _rewardee The account who claimed and completed the task.
     */
-    function transferWeiReward(address _rewardee, uint _reward) external onlyRR {
+    function transferWeiReward(address _rewardee, uint _reward) external onlyTRorRR {
         require(_reward <= weiBal);
         weiBal -= _reward;
         _rewardee.transfer(_reward);
