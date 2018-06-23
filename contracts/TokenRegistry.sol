@@ -205,13 +205,15 @@ contract TokenRegistry {
     function validateTask(
         address _projectAddress,
         uint256 _index,
-        uint256 _tokens,
         bool _validationState
     ) external {
         require(projectRegistry.projects(_projectAddress) == true);
-        require(distributeToken.balanceOf(msg.sender) >= _tokens);
-        distributeToken.transferToEscrow(msg.sender, _tokens);
-        _projectAddress.validate(msg.sender, _index, _tokens, _validationState);
+        Project project = Project(_projectAddress);
+        Task task = Task(project.tasks(_index));
+        uint256 validationFee = task.validationEntryFee();
+        require(distributeToken.balanceOf(msg.sender) >= validationFee);
+        distributeToken.transferToEscrow(msg.sender, validationFee);
+        _projectAddress.validate(msg.sender, _taskIndex, _validationState);
     }
 
     /**
@@ -224,19 +226,40 @@ contract TokenRegistry {
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));
         require(task.claimable());
+        uint returnAmount;
         uint status = task.getValidatorStatus(msg.sender);
-        uint reward = task.getValidatorStake(msg.sender);
-        if (task.totalValidateNegative() == 0) {
-            require(status == 1);
-        } else if (task.totalValidateAffirmative() == 0) {
-            require(status == 0);
+        uint index = task.getValidatorIndex(msg.sender);
+        uint entryFee = task.validationEntryFee()
+        require(index < 5);
+        task.setValidatorIndex(msg.sender);
+        uint rewardWeighting = projectRegistry.validationRewardWeightings(index);
+        uint statusNeed = task.claimableByRep() ? 1 : 0
+        if (statusNeed == status) {
+            returnAmount += entryFee;
+            uint validationIndex;
+            if (status) {
+              require(task.affirmativeValidators(index) == msg.sender);
+              validationIndex = task.affrimativeIndex();
+            } else {
+              require(task.negativeValidators(index) == msg.sender);
+              validationIndex = task.negativeIndex();
+            }
+            if (validationIndex < 5) {
+                uint addtlWeighting;
+                for(uint i = validationIndex; i < 5; i++) {
+                    addtlWeighting += projectRegisty.validationRewardWeightings(i);
+                }
+                rewardWeighting += addtionalWeighting / validationIndex;
+            }
+            project.transferWeiReward(msg.sender, ((project.validationReward() * task.weighting() / 100) * rewardWeighting / 100));
         } else {
-            revert();
+            statusNeed == 1
+                ? require(task.negativeValidators(index) == msg.sender)
+                : require(task.affirmativeValidators(index) == msg.sender);
+            returnAmount += task.validationEntryFee / 2;
+            distributeToken.burn(entryFee - returnAmount);
         }
-        task.clearValidatorStake(msg.sender);
-        distributeToken.transferFromEscrow(msg.sender, reward);
-        uint256 rewardPlus = (reward * Division.percent(101, 100, 10)) / 10000000000;
-        distributeToken.transferTokensTo(msg.sender, rewardPlus);
+        distributeToken.transferFromEscrow(msg.sender, returnAmount);
     }
 
     // =====================================================================
