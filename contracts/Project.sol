@@ -165,7 +165,7 @@ contract Project {
         tokenRegistryAddress = _tokenRegistry;
         projectRegistryAddress = msg.sender;
         validationReward = _cost * 5 / 100;
-        weiCost = _cost + validateReward;
+        weiCost = _cost + validationReward;
 
         // This is broken math
         reputationCost = _costProportion * ReputationRegistry(_reputationRegistry).totalSupply() / 10000000000;
@@ -334,6 +334,7 @@ contract Project {
     @dev Only callable before the staking period of a proposed project ends (state must still be 1)
     @param _staker Address of the staker who is unstaking
     @param _tokens Amount of tokens to unstake on the project
+    @param _distributeTokenAddress Address of distribute token contract
     @return The amount of ether to deduct from the projects balance
 
     */
@@ -392,6 +393,7 @@ contract Project {
     @notice Transfer `_reward` wei as reward for completing a task to `_rewardee
     @dev Only callable by the Reputation Registry initialized during construction, to maintain control flow
     @param _rewardee The account who claimed and completed the task.
+    @param _reward The amount of wei to transfer.
     */
     function transferWeiReward(address _rewardee, uint _reward) external onlyTRorRR {
         require(_reward <= weiBal);

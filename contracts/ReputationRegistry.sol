@@ -141,7 +141,7 @@ contract ReputationRegistry {
         require(balances[msg.sender] >= proposerReputationCost);
 
         balances[msg.sender] -= proposerReputationCost;
-        address projectAddress = projectRegistry.createProject(
+        projectRegistry.createProject(
             _cost,
             costProportion,
             _stakingPeriod,
