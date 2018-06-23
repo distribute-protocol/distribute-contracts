@@ -81,6 +81,10 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
       freeze = true;
     }
 
+    function unfreezeContract() external onlyOwner {
+      freeze = false;
+    }
+
     function updateTokenRegistry(address _newTokenRegistry) external onlyOwner {
       tokenRegistryAddress = _newTokenRegistry;
     }
