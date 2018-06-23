@@ -56,7 +56,7 @@ contract ProjectRegistry {
 
     mapping (address => StakedState) public stakedProjects;
 
-    uint256[5] validationRewardWeightings = [36, 24, 17, 13, 10];
+    uint[5] public validationRewardWeightings = [36, 24, 17, 13, 10];
 
     // =====================================================================
     // MODIFIERS

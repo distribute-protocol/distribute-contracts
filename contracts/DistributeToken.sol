@@ -179,12 +179,6 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
         _address.transfer(_weiValue);
     }
 
-    function transferTokensTo(address _address, uint256 _tokens) external onlyTR {
-        // check for overflow
-        totalSupply += _tokens;
-        balances[_address] += _tokens;
-    }
-
     /**
     @notice Return `_weiValue` wei back to Distribute Token contract
     @dev Only callable by the TokenRegistry initialized during contract construction
