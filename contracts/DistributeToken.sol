@@ -40,10 +40,14 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
 
     bool public freeze;
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 
 >>>>>>> update distribute token to be ownable
+=======
+
+>>>>>>> update project registry to be ownable
     // =====================================================================
     // MODIFIERS
     // =====================================================================
