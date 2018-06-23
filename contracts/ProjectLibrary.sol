@@ -201,7 +201,6 @@ library ProjectLibrary {
     ) public returns (bool) {
         Project project = Project(_projectAddress);
         require(project.state() == 4);
-
         if (timesUp(_projectAddress)) {
             uint256 nextDeadline = now + project.voteCommitPeriod() + project.voteRevealPeriod();
             project.setState(5, nextDeadline);
@@ -210,15 +209,19 @@ library ProjectLibrary {
             for(uint i = 0; i < project.getTaskCount(); i++) {
                 Task task = Task(project.tasks(i));
                 if (task.complete()) {
-                    if (task.opposingValidator()) { // there is an opposing validator, poll required
+                    // require that one of the indexes is not zero, meaning that a validator existss
+                    require(task.affrimativeIndex() != 0 || task.negativeIndex() != 0);
+                    if (task.affirmativeIndex() != 0 && task.negativeIndex() != 0) { // there is an opposing validator, poll required
                         uint pollNonce = plcr.startPoll(51, project.voteCommitPeriod(), project.voteRevealPeriod());
                         task.setPollId(pollNonce); // function handles storage of voting pollId
                     } else {
-                        bool repClaim = task.markTaskClaimable(true);
-                        if (!repClaim) {
-                            uint reward = task.weiReward();
-                            tr.revertWei(reward);
-                            project.returnWei(_distributeTokenAddress, reward);
+                        if (task.negativeIndex() == 0) {
+                          task.markTaskClaimable(true);
+                        } else {
+                          task.markTaskClaimable(false)
+                          uint reward = task.weiReward();
+                          tr.revertWei(reward);
+                          project.returnWei(_distributeTokenAddress, reward);
                         }
                     }
                 }
@@ -256,7 +259,7 @@ library ProjectLibrary {
             PLCRVoting plcr = PLCRVoting(_plcrVoting);
             for (uint i = 0; i < project.getTaskCount(); i++) {
                 Task task = Task(project.tasks(i));
-                if (task.complete() && task.opposingValidator()) {      // check tasks with polls only
+                if (task.pollId()) {      // check tasks with polls only
                     if (plcr.pollEnded(task.pollId())) {
                         if (plcr.isPassed(task.pollId())) {
                             task.markTaskClaimable(true);
@@ -294,19 +297,16 @@ library ProjectLibrary {
     function validate(
         address _projectAddress,
         address _validator,
-        uint256 _index,
-        uint256 _tokens,
+        uint256 _taskIndex,
         bool _validationState
     ) public {
-        require(_tokens > 0);
         Project project = Project(_projectAddress);
         require(project.state() == 4);
-
-        Task task = Task(project.tasks(_index));
+        Task task = Task(project.tasks(_taskIndex));
         require(task.complete() == true);
         _validationState
-            ? task.setValidator(_validator, 1, _tokens)
-            : task.setValidator(_validator, 0, _tokens);
+            ? task.setValidator(_validator, 1)
+            : task.setValidator(_validator, 0);
     }
 
     /**
