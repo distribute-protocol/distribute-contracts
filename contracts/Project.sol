@@ -76,9 +76,11 @@ contract Project {
     uint256 public proposerStake;
     uint256 public weiBal;
     uint256 public nextDeadline;
+    uint256 public proposedCost;
+    uint256 public validationReward;
     uint256 public weiCost;
     uint256 public reputationCost;
-    uint256 public validationReward;
+
     bytes public ipfsHash;
 
     uint256 public tokensStaked;
@@ -165,7 +167,8 @@ contract Project {
         tokenRegistryAddress = _tokenRegistry;
         projectRegistryAddress = msg.sender;
         validationReward = _cost * 5 / 100;
-        weiCost = _cost + validationReward;
+        proposedCost = _cost;
+        weiCost = proposedCost + validationReward;
 
         // This is broken math
         reputationCost = _costProportion * ReputationRegistry(_reputationRegistry).totalSupply() / 10000000000;
