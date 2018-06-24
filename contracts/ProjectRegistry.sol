@@ -118,35 +118,62 @@ contract ProjectRegistry is Ownable {
      * @dev Freezes the distribute token contract and allows existing token holders to withdraw tokens
      */
     function freezeContract() external onlyOwner {
-      freeze = true;
+        freeze = true;
     }
 
+    /**
+     * @dev Unfreezes the distribute token contract and allows existing token holders to withdraw tokens
+     */
     function unfreezeContract() external onlyOwner {
-      freeze = false;
+        freeze = false;
     }
 
+    /**
+     * @dev Instantiate a new instance of plcrVoting contract
+     * @param _newPlcrRegistry Address of the new plcr contract
+     */
     function updatePLCRVoting(address _newPlcrVoting) external onlyOwner {
-      plcrVoting = PLCRVoting(_newPlcrVoting);
+        plcrVoting = PLCRVoting(_newPlcrVoting);
     }
 
+    /**
+     * @dev Update the address of the distributeToken
+     * @param _newDistributeToken Address of the new distribute token
+     */
     function updateDistributeToken(address _newDistributeToken) external onlyOwner {
-      distributeTokenAddress = _newDistributeToken;
+        distributeTokenAddress = _newDistributeToken;
     }
 
+    /**
+     * @dev Update the address of the base product proxy contract
+     * @param _newProjectContract Address of the new project contract
+     */
     function updateProjectContract(address _newProjectContract) external onlyOwner {
-      projectContractAddress = _newProjectContract;
+        projectContractAddress = _newProjectContract;
     }
 
+    /**
+     * @dev Update the address of the base task proxy contract
+     * @param _newTaskContract Address of the new task contract
+     */
     function updateTaskContract(address _newTaskContract) external onlyOwner {
-      taskContractAddress = _newTaskContract;
+        taskContractAddress = _newTaskContract;
     }
 
+    /**
+     * @dev Update the address of the token registry
+     * @param _newTokenRegistry Address of the new token registry
+     */
     function updateTokenRegistry(address _newTokenRegistry) external onlyOwner {
-      tokenRegistryAddress = _newTokenRegistry;
+        tokenRegistryAddress = _newTokenRegistry;
     }
 
+    /**
+     * @dev Update the address of the reputation registry
+     * @param _newReputationRegistry Address of the new reputation registry
+     */
     function updateReputationRegistry(address _newReputationRegistry) external onlyOwner {
-      reputationRegistryAddress = _newReputationRegistry;
+        reputationRegistryAddress = _newReputationRegistry;
     }
 
     // =====================================================================
