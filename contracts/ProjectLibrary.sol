@@ -126,7 +126,7 @@ library ProjectLibrary {
     @param _taskHash Address of the top weighted task hash
     @return Returns a bool denoting the project is in the active state.
     */
-    function checkActive(address _projectAddress, bytes32 _taskHash, uint256 _taskListWeighting, address _tokenRegistryAddress, address _reputationRegistryAddress) public returns (bool) {
+    function checkActive(address _projectAddress, bytes32 _taskHash, uint256 _taskListWeighting, address _tokenRegistryAddress, address _reputationRegistryAddress, address _distributeTokenAddress) public returns (bool) {
         Project project = Project(_projectAddress);
         require(project.state() == 2);
 
@@ -138,8 +138,11 @@ library ProjectLibrary {
                 return true;
             } else {
                 project.setState(7, 0);
-                TokenRegistry(_tokenRegistryAddress).burnTokens(project.tokensStaked())
-                ReputationRegistry(_reputationRegistryAddress).burnReputation(project.reputationStaked())
+                TokenRegistry(_tokenRegistryAddress).burnTokens(project.tokensStaked());
+                ReputationRegistry(_reputationRegistryAddress).burnReputation(project.reputationStaked());
+                tr.revertWei(project.weiBal());
+                project.returnWei(_distributeTokenAddress, project.weiBal());
+                project.clearStake();
             }
         }
         return false;
