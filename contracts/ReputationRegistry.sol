@@ -45,17 +45,14 @@ contract ReputationRegistry is Ownable {
     ProjectRegistry projectRegistry;
     PLCRVoting plcrVoting;
 
-    /* struct User {
+    struct User {
       uint balance;
-      bool registered;
+      bool registered; //indicates if address has registerd
       uint lastAccess;
-    } */
-
+    }
+    mapping (address => User) public users;
     // make this a struct and save the mapping
-    mapping (address => uint) public balances;
-    mapping (address => bool) public first;   //indicates if address has registerd
-    mapping (address => uint) public lastAccess;
-    /* mapping (address => User) public users; */
+
     uint256 public totalSupply;               //total supply of reputation in all states
     uint256 public totalUsers;
 
@@ -162,9 +159,9 @@ contract ReputationRegistry is Ownable {
     */
     function register() external {
         require(!freeze);
-        require(balances[msg.sender] == 0 && first[msg.sender] == false);
-        first[msg.sender] = true;
-        balances[msg.sender] = initialRepVal;
+        require(users[msg.sender].balance == 0 && users[msg.sender].registered == false);
+        users[msg.sender].registered = true;
+        users[msg.sender].balance = initialRepVal;
         totalSupply += initialRepVal;
         totalUsers += 1;
         emit LogRegister(msg.sender);
@@ -190,9 +187,9 @@ contract ReputationRegistry is Ownable {
         Division.percent(costProportion, proposeProportion, 10) *
         totalSupply) /
         10000000000;
-        require(balances[msg.sender] >= proposerReputationCost);
+        require(users[msg.sender].balance >= proposerReputationCost);
 
-        balances[msg.sender] -= proposerReputationCost;
+        users[msg.sender].balance -= proposerReputationCost;
         projectRegistry.createProject(
             _cost,
             costProportion,
@@ -215,7 +212,7 @@ contract ReputationRegistry is Ownable {
         require(project.proposer() == msg.sender);
         require(project.proposerType() == 2);
         uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);   //call project to "send back" staked tokens to put in proposer's balances
-        balances[msg.sender] += proposerVals[1];
+        users[msg.sender].balance += proposerVals[1];
         distributeToken.transferWeiTo(msg.sender, proposerVals[0] / 100);
     }
 
@@ -232,7 +229,7 @@ contract ReputationRegistry is Ownable {
     function stakeReputation(address _projectAddress, uint256 _reputation) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
-        require(balances[msg.sender] >= _reputation && _reputation > 0);                    //make sure project exists & RH has tokens to stake
+        require(users[msg.sender].balance >= _reputation && _reputation > 0);                    //make sure project exists & RH has tokens to stake
         Project project = Project(_projectAddress);
         // handles edge case where someone attempts to stake past the staking deadline
         projectRegistry.checkStaked(_projectAddress);
@@ -240,7 +237,7 @@ contract ReputationRegistry is Ownable {
 
         uint256 repRemaining = project.reputationCost() - project.reputationStaked();
         uint256 reputationVal = _reputation < repRemaining ? _reputation : repRemaining;
-        balances[msg.sender] -= reputationVal;
+        users[msg.sender].balance -= reputationVal;
         Project(_projectAddress).stakeReputation(msg.sender, reputationVal);
         projectRegistry.checkStaked(_projectAddress);
         emit LogStakedReputation(_projectAddress, _reputation, msg.sender);
@@ -259,7 +256,7 @@ contract ReputationRegistry is Ownable {
         // handles edge case where someone attempts to stake past the staking deadline
         projectRegistry.checkStaked(_projectAddress);
 
-        balances[msg.sender] += _reputation;
+        users[msg.sender].balance += _reputation;
         Project(_projectAddress).unstakeReputation(msg.sender, _reputation);
         emit LogUnstakedReputation(_projectAddress, _reputation, msg.sender);
     }
@@ -287,10 +284,10 @@ contract ReputationRegistry is Ownable {
         require(projectRegistry.projects(_projectAddress) == true);
         Project project = Project(_projectAddress);
         require(project.hashListSubmitted() == true);
-        uint reputationVal = project.reputationCost() * _weighting / 100;   // does this need SafeMath?
-        require(balances[msg.sender] >= reputationVal);
+        uint reputationVal = project.reputationCost() * _weighting / 100;
+        require(users[msg.sender].balance >= reputationVal);
         uint weiVal = project.proposedCost() * _weighting / 100;
-        balances[msg.sender] -= reputationVal;
+        users[msg.sender].balance -= reputationVal;
         projectRegistry.claimTask(
             _projectAddress,
             _index,
@@ -312,7 +309,7 @@ contract ReputationRegistry is Ownable {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 reward = _projectAddress.claimTaskReward(_index, msg.sender);
-        balances[msg.sender] += reward;
+        users[msg.sender].balance += reward;
     }
 
     // =====================================================================
@@ -344,8 +341,8 @@ contract ReputationRegistry is Ownable {
         //make sure msg.sender has tokens available in PLCR contract
         //if not, request voting rights for token holder
         if (availableTokens < _reputation) {
-            require(balances[msg.sender] >= _reputation - availableTokens);
-            balances[msg.sender] -= (_reputation - availableTokens);
+            require(users[msg.sender].balance >= _reputation - availableTokens);
+            users[msg.sender].balance -= (_reputation - availableTokens);
             plcrVoting.requestVotingRights(msg.sender, _reputation - availableTokens);
         }
         plcrVoting.commitVote(msg.sender, pollId, _secretHash, _reputation, _prevPollID);
@@ -377,7 +374,7 @@ contract ReputationRegistry is Ownable {
     */
     function refundVotingReputation(uint256 _reputation) external {
         require(!freeze);
-        balances[msg.sender] += _reputation;
+        users[msg.sender].balance += _reputation;
         plcrVoting.withdrawVotingRights(msg.sender, _reputation);
     }
 
@@ -394,7 +391,7 @@ contract ReputationRegistry is Ownable {
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 _refund = _projectAddress.refundStaker(msg.sender);
         require(_refund > 0);
-        balances[msg.sender] += _refund * 3 / 2;
+        users[msg.sender].balance += _refund * 3 / 2;
         Project(_projectAddress).clearReputationStake(msg.sender);
     }
 
