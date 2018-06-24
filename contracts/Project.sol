@@ -297,7 +297,10 @@ contract Project {
     function setTaskAddress(address _taskAddress, uint _index) external onlyPR {
         require(state == 3);
         tasks[_index] = _taskAddress;
-        hashListSubmitted = true;
+    }
+
+    function setHashListSubmitted() external onlyPR {
+      hashListSubmitted = true;
     }
 
     /**
