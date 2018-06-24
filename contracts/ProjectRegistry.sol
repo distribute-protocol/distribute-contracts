@@ -490,6 +490,7 @@ contract ProjectRegistry is Ownable {
             address newTask = createProxyTask(_hashes[i], tokenRegistryAddress, reputationRegistryAddress);
             project.setTaskAddress(newTask, i);
         }
+        project.setHashListSubmitted();
     }
 
     /**
