@@ -8,7 +8,7 @@ import "./Task.sol";
 import "./library/PLCRVoting.sol";
 import "./library/Division.sol";
 import "./library/SafeMath.sol";
-
+import "./library/Ownable.sol";
 /**
 @title Reputation Registry for Distribute Network
 @author Team: Jessica Marshall, Ashoka Finley
@@ -21,7 +21,7 @@ and PLCR Voting contract
 // ===================================================================== //
 //
 // ===================================================================== //
-contract ReputationRegistry {
+contract ReputationRegistry is Ownable {
 
     using ProjectLibrary for address;
     using SafeMath for uint256;
@@ -45,16 +45,25 @@ contract ReputationRegistry {
     ProjectRegistry projectRegistry;
     PLCRVoting plcrVoting;
 
+    /* struct User {
+      uint balance;
+      bool registered;
+      uint lastAccess;
+    } */
+
+    // make this a struct and save the mapping
     mapping (address => uint) public balances;
     mapping (address => bool) public first;   //indicates if address has registerd
     mapping (address => uint) public lastAccess;
-
+    /* mapping (address => User) public users; */
     uint256 public totalSupply;               //total supply of reputation in all states
     uint256 public totalUsers;
 
-    uint256 proposeProportion = 200000000000; // tokensupply/proposeProportion is the number of tokens the proposer must stake
+    uint256 proposeProportion = 20 * 10000000000; // tokensupply/proposeProportion is the number of tokens the proposer must stake
     uint256 rewardProportion = 100;
     uint256 public initialRepVal = 10000;
+
+    bool freeze;
 
     // =====================================================================
     // MODIFIERS
@@ -66,7 +75,7 @@ contract ReputationRegistry {
     }
 
     // =====================================================================
-    // QUASI-CONSTRUCTOR
+    // CONSTRUCTOR
     // =====================================================================
 
     /**
@@ -100,6 +109,49 @@ contract ReputationRegistry {
     }
 
     // =====================================================================
+    // OWNABLE
+    // =====================================================================
+
+    /**
+     * @dev Freezes the contract and allows existing token holders to withdraw tokens
+     */
+    function freezeContract() external onlyOwner {
+      freeze = true;
+    }
+
+    /**
+     * @dev Unfreezes the contract and allows existing token holders to withdraw tokens
+     */
+    function unfreezeContract() external onlyOwner {
+      freeze = false;
+    }
+
+    /**
+     * @dev Instantiate a new instance of plcrVoting contract
+     * @param _newPlcrRegistry Address of the new plcr contract
+     */
+    function updatePLCRVoting(address _newPlcrVoting) external onlyOwner {
+      plcrVoting = PLCRVoting(_newPlcrVoting);
+    }
+
+    /**
+     * @dev Update the address of the distributeToken
+     * @param _newDistributeToken Address of the new distribute token
+     */
+    function updateDistributeToken(address _newDistributeToken) external onlyOwner {
+      distributeToken = DistributeToken(_newDistributeToken);
+    }
+
+    /**
+     * @dev Update the address of the base product proxy contract
+     * @param _newProjectRegistry Address of the new project contract
+     */
+    function updateProjectRegistry(address _newProjectRegistry) external onlyOwner {
+      projectRegistry = ProjectRegistry(_newProjectRegistry);
+    }
+
+
+    // =====================================================================
     // START UP
     // =====================================================================
 
@@ -109,6 +161,7 @@ contract ReputationRegistry {
     @dev Has no sybil protection, thus a user can auto generate accounts to receive excess reputation.
     */
     function register() external {
+        require(!freeze);
         require(balances[msg.sender] == 0 && first[msg.sender] == false);
         first[msg.sender] = true;
         balances[msg.sender] = initialRepVal;
@@ -129,9 +182,8 @@ contract ReputationRegistry {
     @param _stakingPeriod Length of time the project can be staked before it expires
     @param _ipfsHash Hash of the project description
     */
-    function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes _ipfsHash) external {    //_cost of project in ether
-        //calculate cost of project in tokens currently (_cost in wei)
-        //check proposer has at least 5% of the proposed cost in reputation
+    function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes _ipfsHash) external {
+        require(!freeze);
         require(now < _stakingPeriod && _cost > 0);
         uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
         uint256 proposerReputationCost = ( //divide by 20 to get 5 percent of reputation
@@ -158,6 +210,7 @@ contract ReputationRegistry {
     @param _projectAddress Address of the project
     */
     function refundProposer(address _projectAddress) external {
+        require(!freeze);
         Project project = Project(_projectAddress);                                         //called by proposer to get refund once project is active
         require(project.proposer() == msg.sender);
         require(project.proposerType() == 2);
@@ -177,6 +230,7 @@ contract ReputationRegistry {
     @param _reputation Amount of reputation to stake
     */
     function stakeReputation(address _projectAddress, uint256 _reputation) external {
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         require(balances[msg.sender] >= _reputation && _reputation > 0);                    //make sure project exists & RH has tokens to stake
         Project project = Project(_projectAddress);
@@ -199,6 +253,7 @@ contract ReputationRegistry {
     @param _reputation Amount of reputation to unstake
     */
     function unstakeReputation(address _projectAddress, uint256 _reputation) external {
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         require(_reputation > 0);
         // handles edge case where someone attempts to stake past the staking deadline
@@ -228,6 +283,7 @@ contract ReputationRegistry {
         bytes32 _taskDescription,
         uint _weighting
     ) external {
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         Project project = Project(_projectAddress);
         require(project.hashListSubmitted() == true);
@@ -253,6 +309,7 @@ contract ReputationRegistry {
     */
     //called by reputation holder who completed a task
     function rewardTask(address _projectAddress, uint8 _index) external {
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 reward = _projectAddress.claimTaskReward(_index, msg.sender);
         balances[msg.sender] += reward;
@@ -279,6 +336,7 @@ contract ReputationRegistry {
         bytes32 _secretHash,
         uint256 _prevPollID
     ) external {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         //calculate available tokens for voting
@@ -306,6 +364,7 @@ contract ReputationRegistry {
         uint256 _voteOption,
         uint256 _salt
     ) external {
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         Project project = Project(_projectAddress);
         uint256 pollId = Task(project.tasks(_index)).pollId();
@@ -317,6 +376,7 @@ contract ReputationRegistry {
     @param _reputation Amount of reputation to withdraw
     */
     function refundVotingReputation(uint256 _reputation) external {
+        require(!freeze);
         balances[msg.sender] += _reputation;
         plcrVoting.withdrawVotingRights(msg.sender, _reputation);
     }
@@ -330,6 +390,7 @@ contract ReputationRegistry {
     @param _projectAddress Address of the project
     */
     function refundStaker(address _projectAddress) external {     //called by worker who staked or voted
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 _refund = _projectAddress.refundStaker(msg.sender);
         require(_refund > 0);
@@ -344,7 +405,7 @@ contract ReputationRegistry {
     @param _index Index of the task
     */
     function rescueTokens(address _projectAddress, uint _index) external {
-        //rescue locked reputation that wasn't revealed
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         plcrVoting.rescueTokens(msg.sender, pollId);
@@ -361,6 +422,7 @@ contract ReputationRegistry {
     @param _reputation Amount of reputation to burn
     */
     function burnReputation(uint256 _reputation) external onlyPR {
+        require(!freeze);
         totalSupply -= _reputation;
     }
 
