@@ -11,7 +11,7 @@ import "./library/Ownable.sol";
 @notice This contract implements functionality to be controlled by a TokenRegistry & a ReputationRegistry.
 @dev This contract must be initialized with both a TokenRegistry & a ReputationRegistry.
 */
-contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ownable() {
+contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ownable {
 
     using SafeMath for uint256;
 
