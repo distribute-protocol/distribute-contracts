@@ -8,6 +8,7 @@ import "./Task.sol";
 import "./library/PLCRVoting.sol";
 import "./library/Division.sol";
 import "./library/SafeMath.sol";
+import "./library/Ownable.sol";
 
 /**
 @title This contract serves as the interface through which users propose projects, stake tokens,
