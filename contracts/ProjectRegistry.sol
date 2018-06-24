@@ -300,7 +300,7 @@ contract ProjectRegistry is Ownable {
         require(!freeze);
         require(projects[_projectAddress] == true);
         bytes32 topTaskHash = stakedProjects[_projectAddress].topTaskHash;
-        return _projectAddress.checkActive(topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash]);
+        return _projectAddress.checkActive(topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash], tokenRegistryAddress, reputationRegistryAddress);
     }
 
     /**
@@ -336,13 +336,7 @@ contract ProjectRegistry is Ownable {
     function checkEnd(address _projectAddress) external {
         require(!freeze);
         require(projects[_projectAddress] == true);
-        _projectAddress.checkEnd(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
-        Project project = Project(_projectAddress);
-        if (project.state() == 7) {
-            TokenRegistry(tokenRegistryAddress).burnTokens(project.tokensStaked());
-            ReputationRegistry(reputationRegistryAddress).burnReputation(project.reputationStaked());
-            project.clearStake();
-        }
+        _projectAddress.checkEnd(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting), reputationRegistryAddress);
     }
 
     // =====================================================================
@@ -482,15 +476,22 @@ contract ProjectRegistry is Ownable {
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
         require(project.state() == 3);
-        require(keccak256(abi.encodePacked(_hashes)) == stakedProjects[_projectAddress].topTaskHash);
+        StakedState storage ss = stakedProjects[_projectAddress];
+        require(keccak256(abi.encodePacked(_hashes)) == ss.topTaskHash);
+        // Fail project if topTaskHash is not over 50
         require(project.hashListSubmitted() == false);
-
-        project.setTaskLength(_hashes.length);
-        for (uint256 i = 0; i < _hashes.length; i++) {
-            address newTask = createProxyTask(_hashes[i], tokenRegistryAddress, reputationRegistryAddress);
-            project.setTaskAddress(newTask, i);
+        if (ss.numSubmissionsByWeight[ss.topTaskHash] <= 50) {
+          project.setState(7, 0);
+          TokenRegistry(tokenRegistryAddress).burnTokens(project.tokensStaked())
+          ReputationRegistry(reputationRegistryAddress).burnReputation(project.reputationStaked())
+        } else {
+          project.setTaskLength(_hashes.length);
+          for (uint256 i = 0; i < _hashes.length; i++) {
+              address newTask = createProxyTask(_hashes[i], tokenRegistryAddress, reputationRegistryAddress);
+              project.setTaskAddress(newTask, i);
+          }
+          project.setHashListSubmitted();
         }
-        project.setHashListSubmitted();
     }
 
     /**

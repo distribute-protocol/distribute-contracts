@@ -126,7 +126,7 @@ library ProjectLibrary {
     @param _taskHash Address of the top weighted task hash
     @return Returns a bool denoting the project is in the active state.
     */
-    function checkActive(address _projectAddress, bytes32 _taskHash, uint256 _taskListWeighting) public returns (bool) {
+    function checkActive(address _projectAddress, bytes32 _taskHash, uint256 _taskListWeighting, address _tokenRegistryAddress, address _reputationRegistryAddress) public returns (bool) {
         Project project = Project(_projectAddress);
         require(project.state() == 2);
 
@@ -138,6 +138,8 @@ library ProjectLibrary {
                 return true;
             } else {
                 project.setState(7, 0);
+                TokenRegistry(_tokenRegistryAddress).burnTokens(project.tokensStaked())
+                ReputationRegistry(_reputationRegistryAddress).burnReputation(project.reputationStaked())
             }
         }
         return false;
@@ -249,7 +251,8 @@ library ProjectLibrary {
         address _projectAddress,
         address _tokenRegistryAddress,
         address _distributeTokenAddress,
-        address _plcrVoting
+        address _plcrVoting,
+        address _reputationRegistry
     ) public returns (bool) {
         Project project = Project(_projectAddress);
         require(project.state() == 5);
@@ -273,9 +276,14 @@ library ProjectLibrary {
                 }
             }
             calculatePassAmount(_projectAddress);
-            project.passAmount() >= project.passThreshold()
-                ? project.setState(6, 0)
-                : project.setState(7, 0);
+            if (project.passAmount() >= project.passThreshold()) {
+              project.setState(6, 0);
+            } else {
+              project.setState(7, 0);
+              TokenRegistry(_tokenRegistryAddress).burnTokens(project.tokensStaked())
+              ReputationRegistry(_reputationRegistryAddress).burnReputation(project.reputationStaked())
+              project.clearStake();
+            }
             return true;
         }
         return false;
