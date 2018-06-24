@@ -78,19 +78,30 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
      * @dev Freezes the distribute token contract and allows existing token holders to withdraw tokens
      */
     function freezeContract() external onlyOwner {
-      freeze = true;
+        freeze = true;
     }
 
+    /**
+     * @dev Unfreezes the distribute token contract and allows existing token holders to withdraw tokens
+     */
     function unfreezeContract() external onlyOwner {
-      freeze = false;
+        freeze = false;
     }
 
+    /**
+     * @dev Update the address of the token registry
+     * @param _newTokenRegistry Address of the new token registry
+     */
     function updateTokenRegistry(address _newTokenRegistry) external onlyOwner {
-      tokenRegistryAddress = _newTokenRegistry;
+        tokenRegistryAddress = _newTokenRegistry;
     }
 
+    /**
+     * @dev Update the address of the reputation registry
+     * @param _newReputationRegistry Address of the new reputation registry
+     */
     function updateReputationRegistry(address _newReputationRegistry) external onlyOwner {
-      reputationRegistryAddress = _newReputationRegistry;
+        reputationRegistryAddress = _newReputationRegistry;
     }
 
     // =====================================================================
