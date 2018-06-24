@@ -38,9 +38,7 @@ contract Project {
       uint validateStatePeriod,
       uint voteCommitPeriod,
       uint voteRevealPeriod,
-      uint passThreshold,
-      uint proposerCost,
-      uint validationReward
+      uint passThreshold
     );
 
     // =====================================================================
@@ -203,8 +201,6 @@ contract Project {
           voteCommitPeriod,
           voteRevealPeriod,
           passThreshold
-          proposedCost,
-          validateReward
         );
 
     }
