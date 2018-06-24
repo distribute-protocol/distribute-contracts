@@ -93,7 +93,7 @@ contract TokenRegistry is Ownable {
 
     /**
      * @dev Instantiate a new instance of plcrVoting contract
-     * @param _newPlcrRegistry Address of the new plcr contract
+     * @param _newPlcrVoting Address of the new plcr contract
      */
     function updatePLCRVoting(address _newPlcrVoting) external onlyOwner {
       plcrVoting = PLCRVoting(_newPlcrVoting);
