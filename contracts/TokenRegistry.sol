@@ -24,7 +24,7 @@ contract TokenRegistry {
     // EVENTS
     // =====================================================================
 
-    event LogStakedTokens(address indexed projectAddress, uint256 tokens, address staker);
+    event LogStakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address staker);
     event LogUnstakedTokens(address indexed projectAddress, uint256 tokens, address unstaker);
 
     // =====================================================================
@@ -165,7 +165,7 @@ contract TokenRegistry {
         distributeToken.transferWeiTo(_projectAddress, weiChange);
         distributeToken.transferToEscrow(msg.sender, tokens);
         projectRegistry.checkStaked(_projectAddress);
-        emit LogStakedTokens(_projectAddress, _tokens, msg.sender);
+        emit LogStakedTokens(_projectAddress, _tokens, weiChange, msg.sender);
     }
 
     /**
