@@ -27,6 +27,7 @@ contract ProjectRegistry {
     // =====================================================================
 
     event LogProjectCreated(address indexed projectAddress);
+    event LogProjectFullyStaked(bool flag, address projectAddress);
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */
 
@@ -217,7 +218,9 @@ contract ProjectRegistry {
     */
     function checkStaked(address _projectAddress) external returns (bool) {
         require(projects[_projectAddress] == true);
-        return _projectAddress.checkStaked();
+        flag = _projectAddress.checkStaked();
+        return flag;
+        emit LogProjectFullyStaked(flag, _projectAddress);
     }
 
     /**
