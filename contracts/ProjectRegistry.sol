@@ -217,9 +217,8 @@ contract ProjectRegistry {
     @return Boolean representing Staked status
     */
     function checkStaked(address _projectAddress) external returns (bool) {
-        require(projects[_projectAddress] == true);
-        return _projectAddress.checkStaked();
-        emit LogProjectFullyStaked(_projectAddress);
+      require(projects[_projectAddress] == true);
+      return _projectAddress.checkStaked();
     }
 
     /**
