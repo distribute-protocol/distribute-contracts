@@ -7,6 +7,7 @@ import "./ProjectLibrary.sol";
 import "./Task.sol";
 import "./library/PLCRVoting.sol";
 import "./library/Division.sol";
+import "./library/SafeMath.sol";
 
 /**
 @title This contract serves as the interface through which users propose projects, stake tokens,
@@ -18,16 +19,11 @@ claim their rewards.
 contract TokenRegistry {
 
     using ProjectLibrary for address;
+    using SafeMath for uint256;
 
     // =====================================================================
     // EVENTS
     // =====================================================================
-
-    event ProjectCreated(
-        address indexed projectAddress,
-        uint256 projectCost,
-        uint256 proposerStake
-    );
 
     // =====================================================================
     // STATE VARIABLES
@@ -113,7 +109,6 @@ contract TokenRegistry {
             proposerTokenCost,
             _ipfsHash
         );
-        emit ProjectCreated(projectAddress, _cost, proposerTokenCost);
     }
 
     /**
@@ -235,7 +230,8 @@ contract TokenRegistry {
         }
         task.clearValidatorStake(msg.sender);
         distributeToken.transferFromEscrow(msg.sender, reward);
-        distributeToken.transferWeiTo(msg.sender, reward * 101/100);
+        uint256 rewardPlus = (reward * Division.percent(101, 100, 10)) / 10000000000;
+        distributeToken.transferTokensTo(msg.sender, rewardPlus);
     }
 
     // =====================================================================
@@ -258,14 +254,13 @@ contract TokenRegistry {
         uint256 _tokens,
         bytes32 _secretHash,
         uint256 _prevPollID
-    ) external {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+    ) external {     // _secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
-        require(pollId != 0);
-        //calculate available tokens for voting
+        // calculate available tokens for voting
         uint256 availableTokens = plcrVoting.getAvailableTokens(msg.sender, 1);
-        //make sure msg.sender has tokens available in PLCR contract
-        //if not, request voting rights for token holder
+        // make sure msg.sender has tokens available in PLCR contract
+        // if not, request voting rights for token holder
         if (availableTokens < _tokens) {
             require(distributeToken.balanceOf(msg.sender) >= _tokens - availableTokens);
             distributeToken.transferToEscrow(msg.sender, _tokens - availableTokens);
@@ -285,10 +280,10 @@ contract TokenRegistry {
         address _projectAddress,
         uint256 _index,
         uint256 _voteOption,
-        uint _salt
+        uint256 _salt
     ) external {
         require(projectRegistry.projects(_projectAddress) == true);
-        plcrVoting.revealVote(Task(Project(_projectAddress).tasks(_index)).pollId(), _voteOption, _salt);
+        plcrVoting.revealVote(msg.sender, Task(Project(_projectAddress).tasks(_index)).pollId(), _voteOption, _salt);
     }
 
     /**

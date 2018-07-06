@@ -7,6 +7,7 @@ import "./ReputationRegistry.sol";
 import "./ProjectLibrary.sol";
 import "./Task.sol";
 import "bytes/BytesLib.sol";
+import "./library/SafeMath.sol";
 
 /**
 @title Project Registry for Distribute Network
@@ -19,19 +20,15 @@ contract ProjectRegistry {
 
     using ProjectLibrary for address;
     using BytesLib for bytes;
+    using SafeMath for uint256;
 
     // =====================================================================
     // EVENTS
     // =====================================================================
 
-    event LogProjectCreated(
-        address indexed projectAddress,
-        address proposerAddress,
-        uint256 projectCost,
-        uint256 proposerStake
-    );
+    event LogProjectCreated(address indexed projectAddress);
 
-    event ProxyDeployed(address proxyAddress, address targetAddress);
+    /* event ProxyDeployed(address proxyAddress, address targetAddress); */
 
     // =====================================================================
     // STATE VARIABLES
@@ -122,7 +119,7 @@ contract ProjectRegistry {
     {
         proxyContract = createProxyImpl(_target, _data);
 
-        emit ProxyDeployed(proxyContract, _target);
+        /* emit ProxyDeployed(proxyContract, _target); */
     }
 
     function createProxyImpl(address _target, bytes _data)
@@ -167,8 +164,8 @@ contract ProjectRegistry {
         assembly {
             //let ipfsHashSize := mload(_ipfsHash)
             dataToSend := mload(0x40) // Find empty memory location using "free memory pointer"
-            mstore(add(dataToSend, 0x4), 0xf58a1adb)
-            mstore(add(dataToSend, 0x24), _cost) // this is the function ID
+            mstore(add(dataToSend, 0x4), 0xf58a1adb)  // this is the function ID
+            mstore(add(dataToSend, 0x24), _cost)
             mstore(add(dataToSend, 0x44), _costProportion)
             mstore(add(dataToSend, 0x64), _stakingPeriod)
             mstore(add(dataToSend, 0x84), _proposer)
@@ -232,7 +229,8 @@ contract ProjectRegistry {
     */
     function checkActive(address _projectAddress) public returns (bool) {
         require(projects[_projectAddress] == true);
-        return _projectAddress.checkActive(stakedProjects[_projectAddress].topTaskHash);
+        bytes32 topTaskHash = stakedProjects[_projectAddress].topTaskHash;
+        return _projectAddress.checkActive(topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash]);
     }
 
     /**
@@ -317,7 +315,7 @@ contract ProjectRegistry {
         projects[projectAddress] = true;
         projectsList[projectNonce] = projectAddress;
         projectNonce += 1;
-        emit LogProjectCreated(projectAddress, _proposer, _cost, _proposerStake);
+        emit LogProjectCreated(projectAddress);
         return projectAddress;
     }
 
@@ -407,7 +405,7 @@ contract ProjectRegistry {
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
         require(project.state() == 3);
-        require(keccak256(_hashes) == stakedProjects[_projectAddress].topTaskHash);
+        require(keccak256(abi.encodePacked(_hashes)) == stakedProjects[_projectAddress].topTaskHash);
         require(project.hashListSubmitted() == false);
 
         project.setTaskLength(_hashes.length);
@@ -443,7 +441,7 @@ contract ProjectRegistry {
         Project project = Project(_projectAddress);
         require(project.state() == 3);
         Task task = Task(project.tasks(_index));
-        require(keccak256(_taskDescription, _weighting) == task.taskHash());
+        require(keccak256(abi.encodePacked(_taskDescription, _weighting)) == task.taskHash());
         require(
             task.claimer() == 0 ||
             (now > (task.claimTime() + project.turnoverTime()) && !task.complete())

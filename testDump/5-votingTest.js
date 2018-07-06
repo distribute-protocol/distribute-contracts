@@ -68,7 +68,7 @@ contract('Voting State', (accounts) => {
     return taskHashArray
   }
 
-  before(async function () {
+  before(async () => {
     // define variables to hold deployed contracts
     TR = await TokenRegistry.deployed()
     DT = await DistributeToken.deployed()
@@ -201,19 +201,19 @@ contract('Voting State', (accounts) => {
 
   })
 
-  it('a task validated true has no opposing validator, been marked claimable and has a nonzero wei reward and task reward', async function () {
+  it('a task validated true has no opposing validator, been marked claimable and has a nonzero wei reward and task reward', async () => {
 
   })
 
-  it('a task validated false has no opposing validator, been marked claimable, has a zero wei reward, and has a nonzero task reward', async function () {
+  it('a task validated false has no opposing validator, been marked claimable, has a zero wei reward, and has a nonzero task reward', async () => {
 
   })
 
-  it('the token registry sent the reward wei back to the distribute token contract for the failed task', async function () {
+  it('the token registry sent the reward wei back to the distribute token contract for the failed task', async () => {
 
   })
 
-  it('a task with an opposing validator has not been marked claimable, has a nonzero wei reward and task reward, and has an associatd poll ID', async function () {
+  it('a task with an opposing validator has not been marked claimable, has a nonzero wei reward and task reward, and has an associatd poll ID', async () => {
 
   })
 

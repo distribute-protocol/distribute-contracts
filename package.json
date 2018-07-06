@@ -2,10 +2,10 @@
   "dependencies": {
     "bignumber.js": "^6.0.0",
     "ethereumjs-abi": "^0.6.5",
+    "ethers": "^3.0.19",
     "scrypt": "^6.0.3",
     "sha3": "^1.2.2",
     "solc-js": "^0.4.20-browser.1",
-    "truffle": "^4.1.7",
     "truffle-hdwallet-provider": "^0.0.3",
     "web3": "^0.20.6",
     "web3-utils": "^1.0.0-beta.34",
@@ -21,7 +21,8 @@
     "eslint-plugin-standard": "^3.0.1",
     "eth-gas-reporter": "^0.1.7",
     "ganache-cli": "^6.1.0",
-    "solidity-coverage": "^0.4.15"
+    "solidity-coverage": "^0.4.15",
+    "truffle": "^4.1.11"
   },
   "scripts": {
     "test": "eslint ./test && truffle test",

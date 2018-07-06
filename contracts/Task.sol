@@ -1,6 +1,7 @@
 pragma solidity ^0.4.21;
 
 import "./Project.sol";
+import "./library/SafeMath.sol";
 
 /**
 @title Task Contract for Distribute Network
@@ -10,6 +11,8 @@ import "./Project.sol";
 TokenRegistry, and ReputationRegistry.
 */
 contract Task {
+
+    using SafeMath for uint256;
 
     // =====================================================================
     // STATE VARIABLES

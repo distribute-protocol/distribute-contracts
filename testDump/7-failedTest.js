@@ -68,7 +68,7 @@ contract('Failed State', (accounts) => {
     return taskHashArray
   }
 
-  before(async function () {
+  before(async () => {
     // define variables to hold deployed contracts
     TR = await TokenRegistry.deployed()
     DT = await DistributeToken.deployed()
@@ -201,7 +201,7 @@ contract('Failed State', (accounts) => {
 
   })
 
-  it('worker can\'t claim a task once the active period is up', async function () {
+  it('worker can\'t claim a task once the active period is up', async () => {
     errorThrown = false
     try {
       let repPrice = 1
@@ -214,7 +214,7 @@ contract('Failed State', (accounts) => {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('math works', async function () {
+  it('math works', async () => {
     assert.equal(1, 1, 'math broke')
   })
 
