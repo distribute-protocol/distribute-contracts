@@ -80,7 +80,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
         //calculated current burn reward of 1 token at current weiBal and token supply
         if (weiBal == 0 || totalSupply == 0) { return baseCost; }
         // If totalTokenSupply is greater than weiBal this will fail
-        uint256 price = weiBal / totalSupply;
+        uint256 price = weiBal.div(totalSupply);     // added SafeMath
         return price < baseCost
             ? baseCost
             : price;
@@ -108,7 +108,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     function targetPrice(uint _tokens) internal view returns (uint256) {
         uint256 cp = currentPrice();
         uint256 newSupply = totalSupply + _tokens;
-        return cp * (1000 + Division.percent(_tokens, newSupply, 3)) / 1000;
+        return cp * (1000 + Division.percent(_tokens, newSupply, 3)) / 1000;    // does this need SafeMath?
     }
 
     // =====================================================================
@@ -136,7 +136,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     /**
     @notice Burn `_tokens` tokens by removing them from the total supply, and from the Token Registry
     balance.
-    @dev Only to be called by the Token Registry initialized during constrction
+    @dev Only to be called by the Token Registry initialized during construction
     @param _tokens The number of tokens to burn
     */
     function burn(uint256 _tokens) external onlyTR {
@@ -167,20 +167,32 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     // =====================================================================
 
     /**
-    @notice Transfer `_weiValue` wei to `_address`
+    @notice Transfer `_weiValue` wei to `_address`       // check where this is used and add that here
     @dev Only callable by the TokenRegistry or ReputationRegistry initialized during contract
     construction
-    @param _address Receipient of wei value
+    @param _address Recipient of wei value
     @param _weiValue The amount of wei to transfer to the _address
     */
     function transferWeiTo(address _address, uint256 _weiValue) external onlyTRorRR {
-        require(_weiValue <= weiBal);
+        require(_weiValue <= weiBal);     // what is weiBal? The amount of wei in the collective pool?
         weiBal -= _weiValue;
         _address.transfer(_weiValue);
     }
 
     function transferTokensTo(address _address, uint256 _tokens) external onlyTR {
         // check for overflow
+        totalSupply += _tokens;
+        balances[_address] += _tokens;
+    }
+
+    /**
+    @notice Transfer `_tokens` wei to `_address`       // check where this is used and add that here
+    @dev Only callable by the TokenRegistry initialized during contract construction
+    @param _address Recipient of tokens
+    @param _weiValue The amount of tokens to transfer to the _address
+    */
+    function transferTokensTo(address _address, uint256 _tokens) external onlyTR {
+        // check for overflow     // we still need to check for overflow here.
         totalSupply += _tokens;
         balances[_address] += _tokens;
     }
@@ -209,15 +221,15 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     }
 
     /**
-    @notice Transfer `_tokens` tokens from the TokenRegistry escrow to the balance of `_receipient`
+    @notice Transfer `_tokens` tokens from the TokenRegistry escrow to the balance of `_`
     @dev Only callable by the TokenRegistry initialized during contract construction
-    @param _receipient Receipient of the tokens being transferred
+    @param _  address of where the tokens being transferred
     @param _tokens The number of tokens to transfer
     */
-    function transferFromEscrow(address _receipient, uint256 _tokens) external onlyTR returns (bool) {
+    function transferFromEscrow(address _, uint256 _tokens) external onlyTR returns (bool) {
         require(balances[msg.sender] >= _tokens);
         balances[msg.sender] -= _tokens;
-        balances[_receipient] += _tokens;
+        balances[_] += _tokens;
         return true;
     }
 

@@ -55,7 +55,7 @@ library ProjectLibrary {
     @notice Return true if the current time is greater than the next deadline of the project at `_projectAddress`
     @dev Uses block.timestamp as a time variable. Note that this is subject to variability
     @param _projectAddress Address of the project
-    @return A boolean representing wether the project has passed its next deadline.
+    @return A boolean representing whether the project has passed its next deadline.
     */
     function timesUp(address _projectAddress) public view returns (bool) {
         return (now > Project(_projectAddress).nextDeadline());
@@ -63,12 +63,12 @@ library ProjectLibrary {
 
     /**
     @notice Calculates the relative staking weight of `_address` on project at `_projectAddress.
-    Weighting is caluclated by the proportional amount of both reputation and tokens that have been
+    Weighting is calculated by the proportional amount of both reputation and tokens that have been
     staked on the project.
-    @dev Returns an average of the token staking and reputation staking.
+    @dev Returns an average of the token staking and reputation staking to understand the relative influence of a staker
     @param _projectAddress Address of the project
     @param _address Address of the staker
-    @return The relaive weight of a staker as a whole integer
+    @return The relative weight of a staker as a whole integer
     */
     function calculateWeightOfAddress(
         address _projectAddress,
@@ -117,10 +117,10 @@ library ProjectLibrary {
 
     /**
     @notice Checks if the project at `_projectAddress` has passed its next deadline, and if a
-    valid task hash, meaning that the accounts who have staked on the project have succefully
+    valid task hash exists, meaning that the accounts who have staked on the project have successfully
     curated a list of tasks relating to project work. If a task hash exists the project is moved
-    to state 3: Active and the next deadline is set. If no task hash exists the project is moved
-    to state 7: Failed.
+    to state 3: Active and the next deadline is set. If no task hash exists once the deadline has passed,
+    the project is moved to state 7: Failed.
     @dev The nextDeadline value for the active state is set in the project state variables.
     @param _projectAddress Address of the project
     @param _taskHash Address of the top weighted task hash
@@ -181,10 +181,10 @@ library ProjectLibrary {
     }
 
     /**
-    @notice Checks if the project at `_projectAddress` has passed its next deadline, and if it has
+    @notice Checks if the project at `_projectAddress` has passed its next deadline, and if it has,
     moves the project to state 5: Voting. It iterates through the project task list and checks if
     there are opposing validators for each task. If there are then its starts a plcr for each
-    disputed task, otherwise it marks the task claimable by the validators, and by the reputation holder
+    disputed task, otherwise it marks the task claimable by the validators, as well as by the reputation holder
     who claimed the task if the validators approved the task.
     @dev This is an interative function and gas costs will vary depending on the number of tasks.
     @param _projectAddress Address of the project
