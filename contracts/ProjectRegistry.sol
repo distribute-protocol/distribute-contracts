@@ -28,7 +28,7 @@ contract ProjectRegistry {
 
     event LogProjectCreated(address indexed projectAddress);
     event LogProjectFullyStaked(address projectAddress, bool staked);
-    event LogTaskHashSubmitted(address projectAddress, bytes32 taskHash);
+    event LogTaskHashSubmitted(address projectAddress, bytes32 taskHash, address submitter);
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */
 
@@ -363,7 +363,7 @@ contract ProjectRegistry {
 
         uint256 stakerWeight = _projectAddress.calculateWeightOfAddress(msg.sender);
         stakedTaskHash(_projectAddress, msg.sender, _taskHash, stakerWeight);
-        emit LogTaskHashSubmitted(_projectAddress, _taskHash);
+        emit LogTaskHashSubmitted(_projectAddress, _taskHash, msg.sender);
     }
 
     /**
