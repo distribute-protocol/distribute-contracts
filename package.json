@@ -47,5 +47,8 @@
   "bugs": {
     "url": "https://github.com/jessicagmarshall/Distribute%22/issues"
   },
-  "homepage": "https://github.com/jessicagmarshall/Distribute%22#readme"
+  "homepage": "https://github.com/jessicagmarshall/Distribute%22#readme",
+  "resolutions": {
+   "eslint-scope": "3.7.1"
+ }
 }
