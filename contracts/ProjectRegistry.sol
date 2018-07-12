@@ -29,6 +29,7 @@ contract ProjectRegistry {
     event LogProjectCreated(address indexed projectAddress);
     event LogProjectFullyStaked(address projectAddress, bool staked);
     event LogTaskHashSubmitted(address projectAddress, bytes32 taskHash, address submitter, uint weighting);
+    event LogProjectActive(address projectAddress, bytes32 topTaskHash, bool active);
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */
 
@@ -234,7 +235,9 @@ contract ProjectRegistry {
     function checkActive(address _projectAddress) public returns (bool) {
         require(projects[_projectAddress] == true);
         bytes32 topTaskHash = stakedProjects[_projectAddress].topTaskHash;
-        return _projectAddress.checkActive(topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash]);
+        bool active =  _projectAddress.checkActive(topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash]);
+        emit LogProjectActive(_projectAddress, topTaskHash, active);
+        return active;
     }
 
     /**
