@@ -92,7 +92,8 @@ module.exports = function projectHelper (accounts) {
   obj.project.stakingPeriod = obj.project.now + 604800 // blockchain understands seconds                    // one week from now
 
   obj.project.expiredStakingPeriod = 10 // January 1st, 1970
-  obj.project.projectCost = parseInt(web3.toWei(0.25, 'ether'))
+  obj.project.proposalCost = parseInt(web3.toWei(0.25, 'ether'))
+  obj.project.projectCost = obj.project.proposalCost * 1.05
   obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala' // length === 46
   obj.project.incorrectIpfsHash = 'whyiseveryspokeleadawhiteman' // length != 46
 
@@ -138,9 +139,10 @@ module.exports = function projectHelper (accounts) {
   }
 
   obj.utils.register = async function (_user) {
-    let bal = await obj.contracts.RR.balances(_user)
-    let first = await obj.contracts.RR.first(_user)
-    if (bal.toNumber() === 0 && first === false) {
+    let user = await obj.contracts.RR.users(_user)
+    let bal = user[0]
+    let registered = user[1]
+    if (bal.toNumber() === 0 && registered === false) {
       await obj.contracts.RR.register({from: _user})
     }
   }
@@ -167,7 +169,7 @@ module.exports = function projectHelper (accounts) {
   }
 
   obj.utils.getRepBalance = async function (_user, _unadulterated) {
-    let bal = await obj.contracts.RR.balances(_user)
+    let bal = await obj.contracts.RR.users(_user)[0]
     if (_unadulterated === true) {
       return bal
     } else {
@@ -520,8 +522,9 @@ module.exports = function projectHelper (accounts) {
 
     // propose project
     let tx = await obj.contracts.TR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.tokenProposer})
-    let log = tx.logs[0].args
-    return log.projectAddress.toString() // return project address
+    console.log('LINE 524')
+    console.log(tx.receipt.logs[0].address, 'loggy')
+    return tx.receipt.logs[0].address // return project address
   }
 
   // return project (address) proposed by reputation holder

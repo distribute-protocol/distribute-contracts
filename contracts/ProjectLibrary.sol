@@ -3,6 +3,7 @@ pragma solidity ^0.4.21;
 import "./Project.sol";
 import "./TokenRegistry.sol";
 import "./ProjectRegistry.sol";
+import "./ReputationRegistry.sol";
 import "./Task.sol";
 import "./library/SafeMath.sol";
 import "./library/PLCRVoting.sol";
@@ -140,7 +141,7 @@ library ProjectLibrary {
                 project.setState(7, 0);
                 TokenRegistry(_tokenRegistryAddress).burnTokens(project.tokensStaked());
                 ReputationRegistry(_reputationRegistryAddress).burnReputation(project.reputationStaked());
-                tr.revertWei(project.weiBal());
+                TokenRegistry(_tokenRegistryAddress).revertWei(project.weiBal());
                 project.returnWei(_distributeTokenAddress, project.weiBal());
                 project.clearStake();
             }
@@ -255,7 +256,7 @@ library ProjectLibrary {
         address _tokenRegistryAddress,
         address _distributeTokenAddress,
         address _plcrVoting,
-        address _reputationRegistry
+        address _reputationRegistryAddress
     ) public returns (bool) {
         Project project = Project(_projectAddress);
         require(project.state() == 5);
@@ -283,8 +284,8 @@ library ProjectLibrary {
               project.setState(6, 0);
             } else {
               project.setState(7, 0);
-              TokenRegistry(_tokenRegistryAddress).burnTokens(project.tokensStaked())
-              ReputationRegistry(_reputationRegistryAddress).burnReputation(project.reputationStaked())
+              TokenRegistry(_tokenRegistryAddress).burnTokens(project.tokensStaked());
+              ReputationRegistry(_reputationRegistryAddress).burnReputation(project.reputationStaked());
               project.clearStake();
             }
             return true;

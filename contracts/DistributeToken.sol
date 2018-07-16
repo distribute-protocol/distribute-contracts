@@ -253,8 +253,8 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     function transferFromEscrow(address _receipient, uint256 _tokens) external onlyTR returns (bool) {
         require(!freeze);
         require(balances[msg.sender] >= _tokens);
-        balances[msg.sender] -= _tokens;
-        balances[_receipient] += _tokens;
+        balances[msg.sender] = balances[msg.sender].sub(_tokens);
+        balances[_receipient] = balances[_receipient].add(_tokens);
         return true;
     }
 
