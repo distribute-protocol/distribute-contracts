@@ -22,6 +22,13 @@ module.exports = {
     rinkeby: {
       provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/'),
       network_id: '*'
+    },
+    mocha: {
+      reporter: 'eth-gas-reporter',
+      reporterOptions: {
+        currency: 'ETH',
+        gasPrice: 21
+      }
     }
   }
 }

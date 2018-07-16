@@ -61,7 +61,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     /**
     @dev Initialize the DistributeToken contract with the address of a TokenRegistry contract & a
     ReputationRegistry contract
-    @param _tokenRegistry Address of the Token Registry
+    @param _tokenRegistry Address of the TokenRegistry
     @param _reputationRegistry Address of the ReputationRegistry
     */
     constructor (address _tokenRegistry, address _reputationRegistry) public {
@@ -109,15 +109,15 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     // =====================================================================
 
     /**
-    @notice Returns the current price of a token calculated as the contract wei balance divided
+    @notice Returns the current sell price of a token calculated as the contract wei balance divided
     by the token supply
-    @return The current price of 1 token in wei
+    @return The current sell price of 1 token in wei
     */
     function currentPrice() public view returns (uint256) {
         //calculated current burn reward of 1 token at current weiBal and token supply
         if (weiBal == 0 || totalSupply == 0) { return baseCost; }
         // If totalTokenSupply is greater than weiBal this will fail
-        uint256 price = weiBal / totalSupply;
+        uint256 price = weiBal.div(totalSupply);     // added SafeMath
         return price < baseCost
             ? baseCost
             : price;
@@ -126,26 +126,26 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     /**
     @notice Return the wei required to mint `_tokens` tokens
     @dev Calulates the target price and multiplies it by the number of tokens desired
+    @dev A helper function to provide clarity for mint()
     @param _tokens The number of tokens requested to be minted
     @return The wei required to purchase the given amount of tokens
     */
     function weiRequired(uint256 _tokens) public view returns (uint256) {
         require(_tokens > 0);
-
-        return targetPrice(_tokens) *  _tokens;
+        return targetPrice(_tokens).mul(_tokens);
     }
 
     /**
     @notice Calulates the price of `_tokens` tokens dependent on the market share that `_tokens`
     tokens represent.
-    @dev A helper function to provide clarity for weiRequired
+    @dev A helper function to provide clarity for weiRequired()
     @param _tokens The number of tokens requested to be minted
     @return The target price of the amount of tokens requested
     */
     function targetPrice(uint _tokens) internal view returns (uint256) {
         uint256 cp = currentPrice();
         uint256 newSupply = totalSupply + _tokens;
-        return cp * (1000 + Division.percent(_tokens, newSupply, 3)) / 1000;
+        return cp * (1000 + Division.percent(_tokens, newSupply, 3)) / 1000;    // does this need SafeMath?
     }
 
     // =====================================================================
@@ -174,7 +174,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     /**
     @notice Burn `_tokens` tokens by removing them from the total supply, and from the Token Registry
     balance.
-    @dev Only to be called by the Token Registry initialized during constrction
+    @dev Only to be called by the Token Registry initialized during construction
     @param _tokens The number of tokens to burn
     */
     function burn(uint256 _tokens) external onlyTR {
@@ -206,10 +206,10 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     // =====================================================================
 
     /**
-    @notice Transfer `_weiValue` wei to `_address`
+    @notice Transfer `_weiValue` wei to `_address`       // check where this is used and add that here
     @dev Only callable by the TokenRegistry or ReputationRegistry initialized during contract
     construction
-    @param _address Receipient of wei value
+    @param _address Recipient of wei value
     @param _weiValue The amount of wei to transfer to the _address
     */
     function transferWeiTo(address _address, uint256 _weiValue) external onlyTRorRR {
@@ -217,6 +217,19 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
         require(_weiValue <= weiBal);
         weiBal -= _weiValue;
         _address.transfer(_weiValue);
+    }
+
+    /**
+    @notice Transfer `_tokens` wei to `_address`       // check where this is used and add that here
+    @dev Only callable by the TokenRegistry initialized during contract construction
+    @param _address Recipient of tokens
+    @param _tokens The amount of tokens to transfer to the _address
+    */
+
+    function transferTokensTo(address _address, uint256 _tokens) external onlyTR {
+        // check for overflow
+        totalSupply += _tokens;
+        balances[_address] += _tokens;
     }
 
     /**
@@ -245,9 +258,9 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     }
 
     /**
-    @notice Transfer `_tokens` tokens from the TokenRegistry escrow to the balance of `_receipient`
+    @notice Transfer `_tokens` tokens from the TokenRegistry escrow to the balance of `_`
     @dev Only callable by the TokenRegistry initialized during contract construction
-    @param _receipient Receipient of the tokens being transferred
+    @param _  address of where the tokens being transferred
     @param _tokens The number of tokens to transfer
     */
     function transferFromEscrow(address _receipient, uint256 _tokens) external onlyTR returns (bool) {

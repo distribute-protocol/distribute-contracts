@@ -19,6 +19,7 @@
     "eslint-plugin-node": "^6.0.1",
     "eslint-plugin-promise": "^3.7.0",
     "eslint-plugin-standard": "^3.0.1",
+    "eth-gas-reporter": "^0.1.7",
     "ganache-cli": "^6.1.0",
     "solidity-coverage": "^0.4.15",
     "truffle": "^4.1.11"
@@ -46,5 +47,8 @@
   "bugs": {
     "url": "https://github.com/jessicagmarshall/Distribute%22/issues"
   },
-  "homepage": "https://github.com/jessicagmarshall/Distribute%22#readme"
+  "homepage": "https://github.com/jessicagmarshall/Distribute%22#readme",
+  "resolutions": {
+   "eslint-scope": "3.7.1"
+ }
 }

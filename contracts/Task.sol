@@ -170,7 +170,7 @@ contract Task {
 
     /**
     @notice Marks a task claimable by the correct or only validators. Determines if the task reward
-    is claimable by the reputation holder who initially claimed the task.
+    is claimableByRep for the reputation holder who initially claimed the task.
     @dev Only callable by the ProjectRegistry
     @param _passed Boolean describing the validation state the task should be claimable for.
     */

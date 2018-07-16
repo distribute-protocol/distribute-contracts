@@ -15,6 +15,7 @@ import "./library/Ownable.sol";
 come to consensus around tasks, validate projects, vote on projects, refund their stakes, and
 claim their rewards.
 @author Team: Jessica Marshall, Ashoka Finley
+@notice This contract implements how users perform actions using capital tokens in the various stages of a project.
 */
 contract TokenRegistry is Ownable {
 
@@ -26,7 +27,7 @@ contract TokenRegistry is Ownable {
     // =====================================================================
 
     event LogStakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address staker);
-    event LogUnstakedTokens(address indexed projectAddress, uint256 tokens, address unstaker);
+    event LogUnstakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address unstaker);
 
     // =====================================================================
     // STATE VARIABLES
@@ -128,9 +129,9 @@ contract TokenRegistry is Ownable {
     /**
     @notice Propose a project of cost `_cost` with staking period `_stakingPeriod` and hash `_ipfsHash`,
     with tokens.
-    @dev Calls ProjectRegistry.createProject finalize transaction
+    @dev Calls ProjectRegistry.createProject to finalize transaction and emits ProjectCreated event
     @param _cost Total project cost in wei
-    @param _stakingPeriod Length of time the project can be staked before it expires
+    @param _stakingPeriod Length of time the project can be staked on before it expires
     @param _ipfsHash Hash of the project description
     */
     function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes _ipfsHash) external {
@@ -156,8 +157,9 @@ contract TokenRegistry is Ownable {
     }
 
     /**
-    @notice Refund a reputation proposer upon proposal success, transfer 1% of the project cost in
-    wei as a reward along with any tokens staked.
+    @notice Refund a token proposer upon proposal success, transfer 1% of the project cost in
+    wei as a reward along with any tokens staked on the project.
+    @dev token proposer types are denoted by '1' and reputation proposers by '2'
     @param _projectAddress Address of the project
     */
     function refundProposer(address _projectAddress) external {                                 //called by proposer to get refund once project is active
@@ -168,7 +170,7 @@ contract TokenRegistry is Ownable {
 
         uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);        //call project to "send back" staked tokens to put in proposer's balances
         distributeToken.transferFromEscrow(msg.sender, proposerVals[1]);
-        distributeToken.transferWeiTo(msg.sender, proposerVals[0] / 100);
+        distributeToken.transferWeiTo(msg.sender, proposerVals[0] / (100));
     }
 
     // =====================================================================
@@ -204,12 +206,12 @@ contract TokenRegistry is Ownable {
             ? ((weiRemaining/currentPrice) + 1)     // round up to prevent loophole where user can stake without losing tokens
             : _tokens;
         // updating of P weiBal happens via the next line
-        project.stakeTokens(msg.sender, tokens, weiChange);
+        project.stakeTokens(msg.sender, _tokens, weiChange);
         // the transfer of wei and the updating of DT weiBal happens via the next line
-        distributeToken.transferWeiTo(_projectAddress, weiChange);
+        distributeToken.transferWeiTo(_projectAddress, weiChange);      // A and S are confused - why is this here/what is it doing?
         distributeToken.transferToEscrow(msg.sender, tokens);
         projectRegistry.checkStaked(_projectAddress);
-        emit LogStakedTokens(_projectAddress, _tokens, weiChange, msg.sender);
+        emit LogStakedTokens(_projectAddress, tokens, weiChange, msg.sender);
     }
 
     /**
@@ -229,7 +231,7 @@ contract TokenRegistry is Ownable {
         // the weiBal is updated via the next line
         distributeToken.returnWei(weiVal);
         distributeToken.transferFromEscrow(msg.sender, _tokens);
-        emit LogUnstakedTokens(_projectAddress, _tokens, msg.sender);
+        emit LogUnstakedTokens(_projectAddress, _tokens, weiVal, msg.sender);
     }
 
     // =====================================================================
@@ -360,7 +362,7 @@ contract TokenRegistry is Ownable {
     }
 
     /**
-    @notice Withdraw voting rights from PLCR Contract
+    @notice Refunds staked tokens, thus also withdrawing voting rights from PLCR Contract
     @param _tokens Amount of tokens to withdraw
     */
     function refundVotingTokens(uint256 _tokens) external {
@@ -388,7 +390,7 @@ contract TokenRegistry is Ownable {
     }
 
     /**
-    @notice Rescue unrevealed reputation votes from expired polls of task at `_index` of project at
+    @notice Rescue unrevealed token votes from expired polls of task at `_index` of project at
     `_projectAddress`
     @param _projectAddress Address of the project
     @param _index Index of the task

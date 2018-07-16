@@ -1,3 +1,4 @@
+# !!!!!!!!!!!!!!OUTDATED!!!!!!!!!!!!!!!!
 # Contract Docs
 
 ## What is the Distribute Protocol
