@@ -25,8 +25,8 @@ contract TokenRegistry {
     // EVENTS
     // =====================================================================
 
-    event LogStakedTokens(address indexed projectAddress, uint256 tokens, address staker);
-    event LogUnstakedTokens(address indexed projectAddress, uint256 tokens, address unstaker);
+    event LogStakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address staker);
+    event LogUnstakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address unstaker);
 
     // =====================================================================
     // STATE VARIABLES
