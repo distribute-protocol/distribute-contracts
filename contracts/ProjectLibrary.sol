@@ -23,7 +23,6 @@ library ProjectLibrary {
 
     event TokenRefund(address staker, uint256 refund);
     event ReputationRefund(address projectAddress, address staker, uint256 refund);
-
     // =====================================================================
     // UTILITY
     // =====================================================================
