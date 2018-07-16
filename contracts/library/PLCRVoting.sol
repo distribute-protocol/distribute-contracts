@@ -3,7 +3,7 @@ pragma solidity ^0.4.21;
 //import files
 import "./DLL.sol";
 import "./AttributeStore.sol";
-
+import "./SafeMath.sol";
 /**
 @title Extension of Partial-Lock-Commit-Reveal Voting scheme with ERC20 tokens to include non-ERC20 token
 @author Team: Jessica Marshall, Ashoka Finley, borrowed heavily from Cem Ozer, Aspyn Palatnick, Yorke Rhodes
@@ -24,6 +24,7 @@ contract PLCRVoting {
 
     using AttributeStore for AttributeStore.Data;
     using DLL for DLL.Data;
+    using SafeMath for uint256;
 
     struct Poll {
         uint commitEndDate;     /// expiration date of commit period for poll
@@ -279,12 +280,11 @@ contract PLCRVoting {
       uint _revealDuration
     ) public returns (uint pollID) {
         require(msg.sender == projectRegistry);
-
-        pollNonce = pollNonce + 1;
+        pollNonce = pollNonce.add(1);
         pollMap[pollNonce] = Poll({
             voteQuorum: _voteQuorum,
-            commitEndDate: block.timestamp + _commitDuration,
-            revealEndDate: block.timestamp + _commitDuration + _revealDuration,
+            commitEndDate: block.timestamp.add(_commitDuration),
+            revealEndDate: (block.timestamp.add(_commitDuration)).add(_revealDuration),
             votesFor: 0,
             votesAgainst: 0
         });

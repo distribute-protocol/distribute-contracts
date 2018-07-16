@@ -11,11 +11,7 @@ import "./library/Ownable.sol";
 @notice This contract implements functionality to be controlled by a TokenRegistry & a ReputationRegistry.
 @dev This contract must be initialized with both a TokenRegistry & a ReputationRegistry.
 */
-<<<<<<< HEAD
 contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ownable {
-=======
-contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ownable() {
->>>>>>> update distribute token to be ownable
 
     using SafeMath for uint256;
 
@@ -39,15 +35,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     uint256 public baseCost = 50000000000000;
 
     bool public freeze;
-<<<<<<< HEAD
-<<<<<<< HEAD
 
-=======
-
->>>>>>> update distribute token to be ownable
-=======
-
->>>>>>> update project registry to be ownable
     // =====================================================================
     // MODIFIERS
     // =====================================================================
@@ -278,8 +266,8 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     function transferFromEscrow(address _receipient, uint256 _tokens) external onlyTR returns (bool) {
         require(!freeze);
         require(balances[msg.sender] >= _tokens);
-        balances[msg.sender] -= _tokens;
-        balances[_receipient] += _tokens;
+        balances[msg.sender] = balances[msg.sender].sub(_tokens);
+        balances[_receipient] = balances[_receipient].add(_tokens);
         return true;
     }
 

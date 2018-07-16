@@ -343,13 +343,7 @@ contract ProjectRegistry is Ownable {
     function checkEnd(address _projectAddress) external {
         require(!freeze);
         require(projects[_projectAddress] == true);
-        _projectAddress.checkEnd(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
-        Project project = Project(_projectAddress);
-        if (project.state() == 7) {
-            TokenRegistry(tokenRegistryAddress).burnTokens(project.tokensStaked());
-            ReputationRegistry(reputationRegistryAddress).burnReputation(project.reputationStaked());
-            project.clearStake();
-        }
+        _projectAddress.checkEnd(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting), reputationRegistryAddress);
     }
 
     // =====================================================================
@@ -491,8 +485,8 @@ contract ProjectRegistry is Ownable {
         Project project = Project(_projectAddress);
         require(project.state() == 3);
         require(keccak256(abi.encodePacked(_hashes)) == stakedProjects[_projectAddress].topTaskHash);
+        // Fail project if topTaskHash is not over 50
         require(project.hashListSubmitted() == false);
-
         project.setTaskLength(_hashes.length);
         for (uint256 i = 0; i < _hashes.length; i++) {
             address newTask = createProxyTask(_hashes[i], tokenRegistryAddress, reputationRegistryAddress);

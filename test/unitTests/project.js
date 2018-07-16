@@ -19,7 +19,7 @@ contract('Project', function (accounts) {
   let {tokenStaker1, tokenStaker2, repStaker1, repStaker2, notStaker} = projObj.user
   let {spoofedTR, spoofedPR, anyAddress, weiToReturn} = projObj.spoofed
   let {tokensToMint, tokensToBurn, registeredRep} = projObj.minting
-  let {stakingPeriod, projectCost, ipfsHash, proposerTypeToken, proposerTypeRep} = projObj.project
+  let {stakingPeriod, proposalCost, projectCost, ipfsHash, proposerTypeToken, proposerTypeRep} = projObj.project
   let {utils, returnProject} = projObj
 
   // local test variables
@@ -50,8 +50,8 @@ contract('Project', function (accounts) {
 
   it('can be initialized via setup()', async () => {
     // initialize project contract
-    await SpoofedP_T.setup(projectCost, costProportion, stakingPeriod, tokenProposer, proposerTypeToken, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
-    await SpoofedP_R.setup(projectCost, costProportion, stakingPeriod, repProposer, proposerTypeRep, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
+    await SpoofedP_T.setup(proposalCost, costProportion, stakingPeriod, tokenProposer, proposerTypeToken, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
+    await SpoofedP_R.setup(proposalCost, costProportion, stakingPeriod, repProposer, proposerTypeRep, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
 
     // take stock of variables
     let repRegAddrT = await SpoofedP_T.reputationRegistryAddress()
