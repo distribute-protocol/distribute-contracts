@@ -260,7 +260,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     /**
     @notice Transfer `_tokens` tokens from the TokenRegistry escrow to the balance of `_`
     @dev Only callable by the TokenRegistry initialized during contract construction
-    @param _  address of where the tokens being transferred
+    @param _receipient  address of where the tokens being transferred
     @param _tokens The number of tokens to transfer
     */
     function transferFromEscrow(address _receipient, uint256 _tokens) external onlyTR returns (bool) {

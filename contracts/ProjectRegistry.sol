@@ -305,7 +305,7 @@ contract ProjectRegistry is Ownable {
         require(!freeze);
         require(projects[_projectAddress] == true);
         bytes32 topTaskHash = stakedProjects[_projectAddress].topTaskHash;
-        bool active = _projectAddress.checkActive(topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash]);
+        bool active = _projectAddress.checkActive(topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash], tokenRegistryAddress, reputationRegistryAddress, distributeTokenAddress);
         emit LogProjectActive(_projectAddress, topTaskHash, active);
         return active;
     }
