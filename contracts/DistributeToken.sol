@@ -61,7 +61,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     /**
     @dev Initialize the DistributeToken contract with the address of a TokenRegistry contract & a
     ReputationRegistry contract
-    @param _tokenRegistry Address of the Token Registry
+    @param _tokenRegistry Address of the TokenRegistry
     @param _reputationRegistry Address of the ReputationRegistry
     */
     constructor (address _tokenRegistry, address _reputationRegistry) public {
@@ -109,9 +109,9 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     // =====================================================================
 
     /**
-    @notice Returns the current price of a token calculated as the contract wei balance divided
+    @notice Returns the current sell price of a token calculated as the contract wei balance divided
     by the token supply
-    @return The current price of 1 token in wei
+    @return The current sell price of 1 token in wei
     */
     function currentPrice() public view returns (uint256) {
         //calculated current burn reward of 1 token at current weiBal and token supply
@@ -126,19 +126,19 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     /**
     @notice Return the wei required to mint `_tokens` tokens
     @dev Calulates the target price and multiplies it by the number of tokens desired
+    @dev A helper function to provide clarity for mint()
     @param _tokens The number of tokens requested to be minted
     @return The wei required to purchase the given amount of tokens
     */
     function weiRequired(uint256 _tokens) public view returns (uint256) {
         require(_tokens > 0);
-
-        return targetPrice(_tokens) *  _tokens;
+        return targetPrice(_tokens).mul(_tokens);
     }
 
     /**
     @notice Calulates the price of `_tokens` tokens dependent on the market share that `_tokens`
     tokens represent.
-    @dev A helper function to provide clarity for weiRequired
+    @dev A helper function to provide clarity for weiRequired()
     @param _tokens The number of tokens requested to be minted
     @return The target price of the amount of tokens requested
     */
