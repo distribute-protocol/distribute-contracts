@@ -14,7 +14,7 @@ import "./library/SafeMath.sol";
 @author Team: Jessica Marshall, Ashoka Finley
 @notice This contract manages the reputation balances of each user and serves as the interface through
 which users stake reputation, come to consensus around tasks, claim tasks, vote, refund their stakes,
-and claim their task rewards.
+and claim their task rewards. This contract also registers users and instantiates their accounts with 10.000 reputation
 @dev This contract must be initialized with the address of a valid DistributeToken, ProjectRegistry,
 and PLCR Voting contract
 */
@@ -194,7 +194,7 @@ contract ReputationRegistry {
 
     /**
     @notice Unstake `_reputation` reputation from project at `_projectAddress`
-    @dev Require reputation unstaked is greater than 0
+    @dev Require reputation to be unstaked to be greater than 0
     @param _projectAddress Address of the project
     @param _reputation Amount of reputation to unstake
     */
@@ -231,9 +231,9 @@ contract ReputationRegistry {
         require(projectRegistry.projects(_projectAddress) == true);
         Project project = Project(_projectAddress);
         require(project.hashListSubmitted() == true);
-        uint reputationVal = project.reputationCost() * _weighting / 100;
+        uint reputationVal = project.reputationCost() * _weighting / 100;   // does this need SafeMath?
         require(balances[msg.sender] >= reputationVal);
-        uint weiVal = project.weiCost() * _weighting / 100;
+        uint weiVal = project.weiCost() * _weighting / 100;     // does this need SafeMath?
         balances[msg.sender] -= reputationVal;
         projectRegistry.claimTask(
             _projectAddress,
