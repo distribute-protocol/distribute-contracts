@@ -103,7 +103,7 @@ contract TokenRegistry {
         require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
 
         distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
-        address projectAddress = projectRegistry.createProject(
+        projectRegistry.createProject(
             _cost,
             costProportion,
             _stakingPeriod,
@@ -198,20 +198,21 @@ contract TokenRegistry {
     tokens for validation state `_validationState`
     @dev Requires the token balance of msg.sender to be greater than the reputationVal of the task
     @param _projectAddress Address of the project
-    @param _index Index of the task
-    @param _tokens Amount of tokens to stake on the validation state
+    @param _taskIndex Index of the task
     @param _validationState Approve or Deny task
     */
     function validateTask(
         address _projectAddress,
-        uint256 _index,
-        uint256 _tokens,
+        uint256 _taskIndex,
         bool _validationState
     ) external {
         require(projectRegistry.projects(_projectAddress) == true);
-        require(distributeToken.balanceOf(msg.sender) >= _tokens);
-        distributeToken.transferToEscrow(msg.sender, _tokens);
-        _projectAddress.validate(msg.sender, _index, _tokens, _validationState);
+        Project project = Project(_projectAddress);
+        Task task = Task(project.tasks(_taskIndex));
+        uint256 validationFee = task.validationEntryFee();
+        require(distributeToken.balanceOf(msg.sender) >= validationFee);
+        distributeToken.transferToEscrow(msg.sender, validationFee);
+        _projectAddress.validate(msg.sender, _taskIndex, _validationState);
     }
 
     /**
@@ -224,19 +225,39 @@ contract TokenRegistry {
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));
         require(task.claimable());
-        uint status = task.getValidatorStatus(msg.sender);
-        uint reward = task.getValidatorStake(msg.sender);
-        if (task.totalValidateNegative() == 0) {
-            require(status == 1);
-        } else if (task.totalValidateAffirmative() == 0) {
-            require(status == 0);
+        uint returnAmount;
+        uint index = task.getValidatorIndex(msg.sender);
+        require(index < 5);
+        task.setValidatorIndex(msg.sender);
+        uint rewardWeighting = projectRegistry.validationRewardWeightings(index);
+        uint statusNeed = task.claimableByRep() ? 1 : 0;
+
+        if (statusNeed == task.getValidatorStatus(msg.sender)) {
+            returnAmount += task.validationEntryFee();
+            uint validationIndex;
+            if (task.getValidatorStatus(msg.sender) == 1) {
+              require(task.affirmativeValidators(index) == msg.sender);
+              validationIndex = task.affirmativeIndex();
+            } else {
+              require(task.negativeValidators(index) == msg.sender);
+              validationIndex = task.negativeIndex();
+            }
+            if (validationIndex < 5) {
+                uint addtlWeighting;
+                for(uint i = validationIndex; i < 5; i++) {
+                    addtlWeighting += projectRegistry.validationRewardWeightings(i);
+                }
+                rewardWeighting += addtlWeighting / validationIndex;
+            }
+            project.transferWeiReward(msg.sender, ((project.validationReward() * task.weighting() / 100) * rewardWeighting / 100));
         } else {
-            revert();
+            statusNeed == 1
+                ? require(task.negativeValidators(index) == msg.sender)
+                : require(task.affirmativeValidators(index) == msg.sender);
+            returnAmount += task.validationEntryFee() / 2;
+            distributeToken.burn(task.validationEntryFee() - returnAmount);
         }
-        task.clearValidatorStake(msg.sender);
-        distributeToken.transferFromEscrow(msg.sender, reward);
-        uint256 rewardPlus = (reward * Division.percent(101, 100, 10)) / 10000000000;
-        distributeToken.transferTokensTo(msg.sender, rewardPlus);
+        distributeToken.transferFromEscrow(msg.sender, returnAmount);
     }
 
     // =====================================================================

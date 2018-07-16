@@ -34,17 +34,23 @@ contract Task {
     bool public complete;
     address public claimer;
 
+    mapping (address => Validator) public validators;
+    uint256 public validateReward;
+    uint public validationEntryFee;
+    address[5] public affirmativeValidators;
+    uint public affirmativeIndex;
+    address[5] public negativeValidators;
+    uint public negativeIndex;
+
     struct Validator {
         uint256 status;
-        uint256 stake;
+        uint256 index;
+        bool initialized;
     }
 
-    bool public opposingValidator = false;
-    uint256 public validateReward;
-
-    mapping (address => Validator) public validators;
+    /* bool public opposingValidator = false;
     uint256 public totalValidateAffirmative;
-    uint256 public totalValidateNegative;
+    uint256 public totalValidateNegative; */
 
     // =====================================================================
     // MODIFIERS
@@ -123,21 +129,32 @@ contract Task {
     }
 
     /**
-    @notice Set validator of the current task, if the validator is of a different type than the other
-    validators i.e. No when there are only Yes validators, then sets opposingValidator to true.
+    @notice Sets the entry fee for validation
+    @dev Only callable by the Project Registry
+    */
+    function setValidationEntryFee(uint256 _entryFee) external onlyPR {
+        validationEntryFee = _entryFee;
+    }
+
+    /**
+    @notice Set a validator of the current task,
     @dev Only callable by the Token Registry
     @param _validator Address of validator
     @param _validationVal Flag for positive or negative validation
-    @param _tokens Amount of tokens to stake on Validation.
     */
-    function setValidator(address _validator, uint256 _validationVal, uint256 _tokens) external onlyTR {
-        require(validators[_validator].stake == 0);
-        validators[_validator] = Validator(_validationVal, _tokens);
-        _validationVal == 1
-            ? totalValidateAffirmative += _tokens
-            : totalValidateNegative += _tokens;
-        if (!opposingValidator && (totalValidateAffirmative != 0 && totalValidateNegative != 0)) {
-            opposingValidator = true;
+    function setValidator(address _validator, uint256 _validationVal) external onlyTR {
+        require(!validators[_validator].initialized);
+        require(_validationVal == 1 || _validationVal == 0);
+        if (_validationVal == 1) {
+          require(affirmativeIndex < 5);
+          affirmativeValidators[affirmativeIndex] = _validator;
+          validators[_validator] = Validator(_validationVal, affirmativeIndex, true);
+          affirmativeIndex += 1;
+        } else {
+          require(negativeIndex < 5);
+          negativeValidators[negativeIndex] = _validator;
+          validators[_validator] = Validator(_validationVal, negativeIndex, true);
+          negativeIndex += 1;
         }
     }
 
@@ -157,44 +174,37 @@ contract Task {
     @dev Only callable by the ProjectRegistry
     @param _passed Boolean describing the validation state the task should be claimable for.
     */
-    function markTaskClaimable(bool _passed) external onlyPR returns (bool) {             // passed only matters in voting
-        if (totalValidateAffirmative == 0 || totalValidateNegative == 0) {
-            claimable = true;
-            if (totalValidateAffirmative > totalValidateNegative) { claimableByRep = true; }
-        } else {
-            claimable = true;
-            if (_passed) {
-                claimableByRep = true;
-                totalValidateNegative = 0;
-            } else {
-                totalValidateAffirmative = 0;
-            }
-        }
+    function markTaskClaimable(bool _passed) external onlyPR returns (bool) {
+        claimable = true;            // passed only matters in voting
+        if (_passed) { claimableByRep = true; }
         return claimableByRep;
     }
 
     /**
-    @notice Return the validator status of validator at `_validator`
+    @notice Return the validator status (affrimative of negative) of validator at `_validator`
     @param _validator Address of validator
     */
     function getValidatorStatus(address _validator) external view returns (uint) {
+      require(validators[_validator].initialized);
       return validators[_validator].status;
     }
 
     /**
-    @notice Clear the validator stake of validator at `_validator`
+    @notice Return the validator validationindex of validator at `_validator`
     @param _validator Address of validator
     */
-    function getValidatorStake(address _validator) external view returns (uint) {
-      return validators[_validator].stake;
+    function getValidatorIndex(address _validator) external view returns (uint) {
+      require(validators[_validator].initialized);
+      return validators[_validator].index;
     }
+
 
     /**
     @notice Clear the validator stake of validator at `_validator`
     @dev Only callable by TokenRegistry
     @param _validator Address of validator
     */
-    function clearValidatorStake(address _validator) external onlyTR {
-        validators[_validator].stake = 0;
+    function setValidatorIndex(address _validator) external onlyTR {
+        validators[_validator].index = 100;
     }
 }

@@ -76,8 +76,11 @@ contract Project {
     uint256 public proposerStake;
     uint256 public weiBal;
     uint256 public nextDeadline;
+    uint256 public proposedCost;
+    uint256 public validationReward;
     uint256 public weiCost;
     uint256 public reputationCost;
+
     bytes public ipfsHash;
 
     uint256 public tokensStaked;
@@ -107,6 +110,11 @@ contract Project {
 
     modifier onlyRR() {
         require(msg.sender == reputationRegistryAddress);
+        _;
+    }
+
+    modifier onlyTRorRR() {
+        require(msg.sender == tokenRegistryAddress || msg.sender == reputationRegistryAddress);
         _;
     }
 
@@ -158,7 +166,10 @@ contract Project {
         reputationRegistryAddress = _reputationRegistry;
         tokenRegistryAddress = _tokenRegistry;
         projectRegistryAddress = msg.sender;
-        weiCost = _cost;
+        validationReward = _cost * 5 / 100;
+        proposedCost = _cost;
+        weiCost = proposedCost + validationReward;
+
         // This is broken math
         reputationCost = _costProportion * ReputationRegistry(_reputationRegistry).totalSupply() / 10000000000;
         state = 1;
@@ -326,6 +337,7 @@ contract Project {
     @dev Only callable before the staking period of a proposed project ends (state must still be 1)
     @param _staker Address of the staker who is unstaking
     @param _tokens Amount of tokens to unstake on the project
+    @param _distributeTokenAddress Address of distribute token contract
     @return The amount of ether to deduct from the projects balance
 
     */
@@ -384,8 +396,9 @@ contract Project {
     @notice Transfer `_reward` wei as reward for completing a task to `_rewardee
     @dev Only callable by the Reputation Registry initialized during construction, to maintain control flow
     @param _rewardee The account who claimed and completed the task.
+    @param _reward The amount of wei to transfer.
     */
-    function transferWeiReward(address _rewardee, uint _reward) external onlyRR {
+    function transferWeiReward(address _rewardee, uint _reward) external onlyTRorRR {
         require(_reward <= weiBal);
         weiBal -= _reward;
         _rewardee.transfer(_reward);
