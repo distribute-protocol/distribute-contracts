@@ -30,6 +30,7 @@ contract ProjectRegistry {
     event LogProjectFullyStaked(address projectAddress, bool staked);
     event LogTaskHashSubmitted(address projectAddress, bytes32 taskHash, address submitter, uint weighting);
     event LogProjectActive(address projectAddress, bytes32 topTaskHash, bool active);
+    event LogFinalTaskCreated(address taskAddress, address projectAddress, bytes32 finalTaskHash);
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */
 
@@ -420,6 +421,7 @@ contract ProjectRegistry {
         for (uint256 i = 0; i < _hashes.length; i++) {
             address newTask = createProxyTask(_hashes[i], tokenRegistryAddress, reputationRegistryAddress);
             project.setTaskAddress(newTask, i);
+            emit LogFinalTaskCreated(newTask, _projectAddress, _hashes);
         }
     }
 
