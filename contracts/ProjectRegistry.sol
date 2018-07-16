@@ -28,6 +28,9 @@ contract ProjectRegistry {
     // =====================================================================
 
     event LogProjectCreated(address indexed projectAddress);
+    event LogProjectFullyStaked(address projectAddress, bool staked);
+    event LogTaskHashSubmitted(address projectAddress, bytes32 taskHash, address submitter, uint weighting);
+    event LogProjectActive(address projectAddress, bytes32 topTaskHash, bool active);
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */
 
@@ -219,8 +222,10 @@ contract ProjectRegistry {
     @return Boolean representing Staked status
     */
     function checkStaked(address _projectAddress) external returns (bool) {
-        require(projects[_projectAddress] == true);
-        return _projectAddress.checkStaked();
+      require(projects[_projectAddress] == true);
+      bool staked = _projectAddress.checkStaked();
+      emit LogProjectFullyStaked(_projectAddress, staked);
+      return staked;
     }
 
     /**
@@ -233,7 +238,9 @@ contract ProjectRegistry {
     function checkActive(address _projectAddress) public returns (bool) {
         require(projects[_projectAddress] == true);
         bytes32 topTaskHash = stakedProjects[_projectAddress].topTaskHash;
-        return _projectAddress.checkActive(topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash]);
+        bool active = _projectAddress.checkActive(topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash]);
+        emit LogProjectActive(_projectAddress, topTaskHash, active);
+        return active;
     }
 
     /**
@@ -362,6 +369,7 @@ contract ProjectRegistry {
 
         uint256 stakerWeight = _projectAddress.calculateWeightOfAddress(msg.sender);
         stakedTaskHash(_projectAddress, msg.sender, _taskHash, stakerWeight);
+        emit LogTaskHashSubmitted(_projectAddress, _taskHash, msg.sender, stakerWeight);
     }
 
     /**

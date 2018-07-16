@@ -162,12 +162,12 @@ contract TokenRegistry {
             ? ((weiRemaining/currentPrice) + 1)     // round up to prevent loophole where user can stake without losing tokens
             : _tokens;
         // updating of P weiBal happens via the next line
-        project.stakeTokens(msg.sender, tokens, weiChange);
+        project.stakeTokens(msg.sender, _tokens, weiChange);
         // the transfer of wei and the updating of DT weiBal happens via the next line
         distributeToken.transferWeiTo(_projectAddress, weiChange);      // A and S are confused - why is this here/what is it doing?
         distributeToken.transferToEscrow(msg.sender, tokens);
         projectRegistry.checkStaked(_projectAddress);
-        emit LogStakedTokens(_projectAddress, _tokens, msg.sender);
+        emit LogStakedTokens(_projectAddress, tokens, weiChange, msg.sender);
     }
 
     /**
@@ -186,7 +186,7 @@ contract TokenRegistry {
         // the weiBal is updated via the next line
         distributeToken.returnWei(weiVal);
         distributeToken.transferFromEscrow(msg.sender, _tokens);
-        emit LogUnstakedTokens(_projectAddress, _tokens, msg.sender);
+        emit LogUnstakedTokens(_projectAddress, _tokens, weiVal, msg.sender);
     }
 
     // =====================================================================
