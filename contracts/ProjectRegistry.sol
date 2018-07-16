@@ -1,14 +1,13 @@
 pragma solidity ^0.4.21;
 
 import "./library/PLCRVoting.sol";
-/* import "./library/ProxyFactory.sol"; */
 import "./ReputationRegistry.sol";
 import "./DistributeToken.sol";
-/* import "./Project.sol"; */
 import "./ProjectLibrary.sol";
 import "./Task.sol";
 import "bytes/BytesLib.sol";
 import "./library/SafeMath.sol";
+import "./library/Ownable.sol";
 
 /**
 @title Project Registry for Distribute Network
@@ -17,7 +16,7 @@ import "./library/SafeMath.sol";
 @dev This contract must be initialized with the address of a valid Token Registry, Reputation Registry
 and Distribute Token
 */
-contract ProjectRegistry {
+contract ProjectRegistry is Ownable {
 
     using ProjectLibrary for address;
     using BytesLib for bytes;
@@ -39,8 +38,6 @@ contract ProjectRegistry {
     // =====================================================================
 
     PLCRVoting plcrVoting;
-    /* ProxyFactory proxyFactory; */
-
     address tokenRegistryAddress;
     address reputationRegistryAddress;
     address distributeTokenAddress;
@@ -60,6 +57,8 @@ contract ProjectRegistry {
     mapping (address => StakedState) public stakedProjects;
 
     uint[5] public validationRewardWeightings = [36, 24, 17, 13, 10];
+
+    bool freeze;
 
     // =====================================================================
     // MODIFIERS
@@ -113,6 +112,72 @@ contract ProjectRegistry {
         projectContractAddress = _projectAddress;
         taskContractAddress = _taskAddress;
         /* proxyFactory = ProxyFactory(_proxyFactory); */
+    }
+
+    // =====================================================================
+    // OWNABLE
+    // =====================================================================
+
+    /**
+     * @dev Freezes the distribute token contract and allows existing token holders to withdraw tokens
+     */
+    function freezeContract() external onlyOwner {
+        freeze = true;
+    }
+
+    /**
+     * @dev Unfreezes the distribute token contract and allows existing token holders to withdraw tokens
+     */
+    function unfreezeContract() external onlyOwner {
+        freeze = false;
+    }
+
+    /**
+     * @dev Instantiate a new instance of plcrVoting contract
+     * @param _newPlcrVoting Address of the new plcr contract
+     */
+    function updatePLCRVoting(address _newPlcrVoting) external onlyOwner {
+        plcrVoting = PLCRVoting(_newPlcrVoting);
+    }
+
+    /**
+     * @dev Update the address of the distributeToken
+     * @param _newDistributeToken Address of the new distribute token
+     */
+    function updateDistributeToken(address _newDistributeToken) external onlyOwner {
+        distributeTokenAddress = _newDistributeToken;
+    }
+
+    /**
+     * @dev Update the address of the base product proxy contract
+     * @param _newProjectContract Address of the new project contract
+     */
+    function updateProjectContract(address _newProjectContract) external onlyOwner {
+        projectContractAddress = _newProjectContract;
+    }
+
+    /**
+     * @dev Update the address of the base task proxy contract
+     * @param _newTaskContract Address of the new task contract
+     */
+    function updateTaskContract(address _newTaskContract) external onlyOwner {
+        taskContractAddress = _newTaskContract;
+    }
+
+    /**
+     * @dev Update the address of the token registry
+     * @param _newTokenRegistry Address of the new token registry
+     */
+    function updateTokenRegistry(address _newTokenRegistry) external onlyOwner {
+        tokenRegistryAddress = _newTokenRegistry;
+    }
+
+    /**
+     * @dev Update the address of the reputation registry
+     * @param _newReputationRegistry Address of the new reputation registry
+     */
+    function updateReputationRegistry(address _newReputationRegistry) external onlyOwner {
+        reputationRegistryAddress = _newReputationRegistry;
     }
 
     // =====================================================================
@@ -222,10 +287,11 @@ contract ProjectRegistry {
     @return Boolean representing Staked status
     */
     function checkStaked(address _projectAddress) external returns (bool) {
-      require(projects[_projectAddress] == true);
-      bool staked = _projectAddress.checkStaked();
-      emit LogProjectFullyStaked(_projectAddress, staked);
-      return staked;
+        require(!freeze);
+        require(projects[_projectAddress] == true);
+        bool staked = _projectAddress.checkStaked();
+        emit LogProjectFullyStaked(_projectAddress, staked);
+        return staked;
     }
 
     /**
@@ -236,6 +302,7 @@ contract ProjectRegistry {
     @return Boolean representing Active status
     */
     function checkActive(address _projectAddress) public returns (bool) {
+        require(!freeze);
         require(projects[_projectAddress] == true);
         bytes32 topTaskHash = stakedProjects[_projectAddress].topTaskHash;
         bool active = _projectAddress.checkActive(topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash]);
@@ -250,6 +317,7 @@ contract ProjectRegistry {
     @return Boolean representing Validate status
     */
     function checkValidate(address _projectAddress) external {
+        require(!freeze);
         require(projects[_projectAddress] == true);
         _projectAddress.checkValidate(tokenRegistryAddress, distributeTokenAddress);
     }
@@ -261,6 +329,7 @@ contract ProjectRegistry {
     @return Boolean representing Voting status
     */
     function checkVoting(address _projectAddress) external {
+        require(!freeze);
         require(projects[_projectAddress] == true);
         _projectAddress.checkVoting(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
     }
@@ -272,6 +341,7 @@ contract ProjectRegistry {
     @return Boolean representing Final Status
     */
     function checkEnd(address _projectAddress) external {
+        require(!freeze);
         require(projects[_projectAddress] == true);
         _projectAddress.checkEnd(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
         Project project = Project(_projectAddress);
@@ -311,6 +381,7 @@ contract ProjectRegistry {
         uint256 _proposerStake,
         bytes _ipfsHash
     ) external onlyTRorRR returns (address) {
+        require(!freeze);
         address projectAddress = createProxyProject(
             _cost,
             _costProportion,
@@ -337,6 +408,7 @@ contract ProjectRegistry {
     @return An array with the weiCost of the project and the proposers stake
     */
     function refundProposer(address _projectAddress) external onlyTRorRR returns (uint256[2]) {
+        require(!freeze);
         require(projects[_projectAddress] == true);
         Project project =  Project(_projectAddress);
         require(project.state() > 1 && project.state() != 8);
@@ -361,6 +433,7 @@ contract ProjectRegistry {
     @param _taskHash Hash of the task list
     */
     function addTaskHash(address _projectAddress, bytes32 _taskHash) external  {      // format of has should be 'description', 'percentage', check via js that percentages add up to 100 prior to calling contract
+        require(!freeze);
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
         require(_projectAddress.isStaker(msg.sender) == true);
@@ -413,6 +486,7 @@ contract ProjectRegistry {
     */
     // Doesn't Change State Here Could Possibly move to ProjectLibrary
     function submitHashList(address _projectAddress, bytes32[] _hashes) external {
+        require(!freeze);
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
         require(project.state() == 3);
@@ -449,6 +523,7 @@ contract ProjectRegistry {
         uint _weiVal,
         uint _reputationVal
     ) external onlyRR {
+        require(!freeze);
         Project project = Project(_projectAddress);
         require(project.state() == 3);
         Task task = Task(project.tasks(_index));
@@ -469,6 +544,7 @@ contract ProjectRegistry {
     */
     // Doesn't Change State Here Could Possibly move to ProjectLibrary
     function submitTaskComplete(address _projectAddress, uint256 _index) external {
+        require(!freeze);
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));
         DistributeToken dt = DistributeToken(distributeTokenAddress);

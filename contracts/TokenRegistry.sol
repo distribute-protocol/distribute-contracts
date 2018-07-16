@@ -8,6 +8,7 @@ import "./Task.sol";
 import "./library/PLCRVoting.sol";
 import "./library/Division.sol";
 import "./library/SafeMath.sol";
+import "./library/Ownable.sol";
 
 /**
 @title This contract serves as the interface through which users propose projects, stake tokens,
@@ -16,7 +17,7 @@ claim their rewards.
 @author Team: Jessica Marshall, Ashoka Finley
 @notice This contract implements how users perform actions using capital tokens in the various stages of a project.
 */
-contract TokenRegistry {
+contract TokenRegistry is Ownable {
 
     using ProjectLibrary for address;
     using SafeMath for uint256;
@@ -39,6 +40,8 @@ contract TokenRegistry {
     uint256 proposeProportion = 200000000000;  // tokensupply/proposeProportion is the number of tokens the proposer must stake
     uint256 rewardProportion = 100;
 
+    bool freeze;
+
     // =====================================================================
     // MODIFIERS
     // =====================================================================
@@ -49,7 +52,7 @@ contract TokenRegistry {
     }
 
     // =====================================================================
-    // QUASI-CONSTRUCTOR
+    // CONSTRUCTOR
     // =====================================================================
 
     /**
@@ -72,6 +75,48 @@ contract TokenRegistry {
     }
 
     // =====================================================================
+    // OWNABLE
+    // =====================================================================
+
+    /**
+     * @dev Freezes the contract and allows existing token holders to withdraw tokens
+     */
+    function freezeContract() external onlyOwner {
+      freeze = true;
+    }
+
+    /**
+     * @dev Unfreezes the contract and allows existing token holders to withdraw tokens
+     */
+    function unfreezeContract() external onlyOwner {
+      freeze = false;
+    }
+
+    /**
+     * @dev Instantiate a new instance of plcrVoting contract
+     * @param _newPlcrVoting Address of the new plcr contract
+     */
+    function updatePLCRVoting(address _newPlcrVoting) external onlyOwner {
+      plcrVoting = PLCRVoting(_newPlcrVoting);
+    }
+
+    /**
+     * @dev Update the address of the distributeToken
+     * @param _newDistributeToken Address of the new distribute token
+     */
+    function updateDistributeToken(address _newDistributeToken) external onlyOwner {
+      distributeToken = DistributeToken(_newDistributeToken);
+    }
+
+    /**
+     * @dev Update the address of the base product proxy contract
+     * @param _newProjectRegistry Address of the new project contract
+     */
+    function updateProjectRegistry(address _newProjectRegistry) external onlyOwner {
+      projectRegistry = ProjectRegistry(_newProjectRegistry);
+    }
+
+    // =====================================================================
     // FALLBACK
     // =====================================================================
 
@@ -90,11 +135,8 @@ contract TokenRegistry {
     @param _ipfsHash Hash of the project description
     */
     function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes _ipfsHash) external {
-        // _cost of project in wei
-        // calculate cost of project in tokens currently (_cost in wei)
-        // check proposer has at least 5% of the proposed cost in tokens
+        require(!freeze);
         require(now < _stakingPeriod && _cost > 0);
-
         uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
         uint256 proposerTokenCost = (
             Division.percent(costProportion, proposeProportion, 10) *
@@ -121,6 +163,7 @@ contract TokenRegistry {
     @param _projectAddress Address of the project
     */
     function refundProposer(address _projectAddress) external {                                 //called by proposer to get refund once project is active
+        require(!freeze);
         Project project = Project(_projectAddress);                            //called by proposer to get refund once project is active
         require(project.proposer() == msg.sender);
         require(project.proposerType() == 1);
@@ -141,6 +184,7 @@ contract TokenRegistry {
     @param _tokens Amount of tokens to stake
     */
     function stakeTokens(address _projectAddress, uint256 _tokens) external {
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         require(distributeToken.balanceOf(msg.sender) >= _tokens);
         Project project = Project(_projectAddress);
@@ -177,6 +221,7 @@ contract TokenRegistry {
     @param _tokens Amount of reputation to unstake
     */
     function unstakeTokens(address _projectAddress, uint256 _tokens) external {
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         // handles edge case where someone attempts to unstake past the staking deadline
         projectRegistry.checkStaked(_projectAddress);
@@ -206,6 +251,7 @@ contract TokenRegistry {
         uint256 _taskIndex,
         bool _validationState
     ) external {
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_taskIndex));
@@ -221,6 +267,7 @@ contract TokenRegistry {
     @param _index Index of the task
     */
     function rewardValidator(address _projectAddress, uint256 _index) external {
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));
@@ -281,6 +328,7 @@ contract TokenRegistry {
         bytes32 _secretHash,
         uint256 _prevPollID
     ) external {     // _secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         // calculate available tokens for voting
@@ -308,6 +356,7 @@ contract TokenRegistry {
         uint256 _voteOption,
         uint256 _salt
     ) external {
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         plcrVoting.revealVote(msg.sender, Task(Project(_projectAddress).tasks(_index)).pollId(), _voteOption, _salt);
     }
@@ -317,6 +366,7 @@ contract TokenRegistry {
     @param _tokens Amount of tokens to withdraw
     */
     function refundVotingTokens(uint256 _tokens) external {
+        require(!freeze);
         plcrVoting.withdrawVotingRights(msg.sender, _tokens);
         distributeToken.transferFromEscrow(msg.sender, _tokens);
     }
@@ -330,6 +380,7 @@ contract TokenRegistry {
     @param _projectAddress Address of the project
     */
     function refundStaker(address _projectAddress) external {
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 refund = _projectAddress.refundStaker(msg.sender);
         require(refund > 0);
@@ -345,6 +396,7 @@ contract TokenRegistry {
     @param _index Index of the task
     */
     function rescueTokens(address _projectAddress, uint _index) external {
+        require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         //rescue locked tokens that weren't revealed
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
@@ -361,6 +413,7 @@ contract TokenRegistry {
     @param _value Amount of wei to transfer to the distributeToken contract
     */
     function revertWei(uint256 _value) external onlyPR {
+        require(!freeze);
         distributeToken.returnWei(_value);
     }
 
@@ -370,6 +423,7 @@ contract TokenRegistry {
     @param _tokens Amount of reputation to burn
     */
     function burnTokens(uint256 _tokens) external onlyPR {
+        require(!freeze);
         distributeToken.burn(_tokens);
     }
 

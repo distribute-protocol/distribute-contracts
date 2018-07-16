@@ -3,6 +3,7 @@ pragma solidity ^0.4.21;
 import "./library/EIP20.sol";
 import "./library/SafeMath.sol";
 import "./library/Division.sol";
+import "./library/Ownable.sol";
 
 /**
 @title Bonded Curve Implementation of an ERC20 token
@@ -10,7 +11,7 @@ import "./library/Division.sol";
 @notice This contract implements functionality to be controlled by a TokenRegistry & a ReputationRegistry.
 @dev This contract must be initialized with both a TokenRegistry & a ReputationRegistry.
 */
-contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
+contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ownable {
 
     using SafeMath for uint256;
 
@@ -33,9 +34,12 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     // .00005 ether
     uint256 public baseCost = 50000000000000;
 
+    bool public freeze;
+
     // =====================================================================
     // MODIFIERS
     // =====================================================================
+
 
     modifier onlyTR() {
         require(msg.sender == tokenRegistryAddress);
@@ -66,6 +70,39 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
         reputationRegistryAddress = _reputationRegistry;
     }
 
+    // =====================================================================
+    // OWNABLE
+    // =====================================================================
+
+    /**
+     * @dev Freezes the distribute token contract and allows existing token holders to withdraw tokens
+     */
+    function freezeContract() external onlyOwner {
+        freeze = true;
+    }
+
+    /**
+     * @dev Unfreezes the distribute token contract and allows existing token holders to withdraw tokens
+     */
+    function unfreezeContract() external onlyOwner {
+        freeze = false;
+    }
+
+    /**
+     * @dev Update the address of the token registry
+     * @param _newTokenRegistry Address of the new token registry
+     */
+    function updateTokenRegistry(address _newTokenRegistry) external onlyOwner {
+        tokenRegistryAddress = _newTokenRegistry;
+    }
+
+    /**
+     * @dev Update the address of the reputation registry
+     * @param _newReputationRegistry Address of the new reputation registry
+     */
+    function updateReputationRegistry(address _newReputationRegistry) external onlyOwner {
+        reputationRegistryAddress = _newReputationRegistry;
+    }
 
     // =====================================================================
     // UTILITY
@@ -122,6 +159,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     @param _tokens The number of tokens requested to be minted
     */
     function mint(uint _tokens) external payable {
+        require(!freeze);
         uint256 weiRequiredVal = weiRequired(_tokens);
         require(msg.value >= weiRequiredVal);
 
@@ -140,6 +178,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     @param _tokens The number of tokens to burn
     */
     function burn(uint256 _tokens) external onlyTR {
+        require(!freeze);
         require(_tokens <= totalSupply && _tokens > 0);
         balances[msg.sender] -= _tokens;
         totalSupply -= _tokens;
@@ -174,7 +213,8 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     @param _weiValue The amount of wei to transfer to the _address
     */
     function transferWeiTo(address _address, uint256 _weiValue) external onlyTRorRR {
-        require(_weiValue <= weiBal);     // what is weiBal? The amount of wei in the collective pool?
+        require(!freeze);
+        require(_weiValue <= weiBal);
         weiBal -= _weiValue;
         _address.transfer(_weiValue);
     }
@@ -198,6 +238,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     @param _weiValue The amount of wei to transfer back to the token contract
     */
     function returnWei(uint _weiValue) external onlyTR {
+        require(!freeze);
         // check for overflow
         weiBal += _weiValue;
     }
@@ -209,6 +250,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     @param _tokens The number of tokens to transfer
     */
     function transferToEscrow(address _owner, uint256 _tokens) external onlyTR returns (bool) {
+        require(!freeze);
         require(balances[_owner] >= _tokens);
         balances[_owner] -= _tokens;
         balances[msg.sender] += _tokens;
@@ -221,10 +263,11 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST") {
     @param _  address of where the tokens being transferred
     @param _tokens The number of tokens to transfer
     */
-    function transferFromEscrow(address _, uint256 _tokens) external onlyTR returns (bool) {
+    function transferFromEscrow(address _receipient, uint256 _tokens) external onlyTR returns (bool) {
+        require(!freeze);
         require(balances[msg.sender] >= _tokens);
         balances[msg.sender] -= _tokens;
-        balances[_] += _tokens;
+        balances[_receipient] += _tokens;
         return true;
     }
 
