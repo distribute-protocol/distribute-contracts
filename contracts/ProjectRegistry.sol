@@ -31,6 +31,7 @@ contract ProjectRegistry {
     event LogTaskHashSubmitted(address projectAddress, bytes32 taskHash, address submitter, uint weighting);
     event LogProjectActive(address projectAddress, bytes32 topTaskHash, bool active);
     event LogFinalTaskCreated(address taskAddress, address projectAddress, bytes32 finalTaskHash, uint256 index);
+    event LogTaskClaimed(address projectAddress, uint256 index, uint256 reputationVal, address claimer);
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */
 
@@ -458,6 +459,7 @@ contract ProjectRegistry {
         );
         task.setWeighting(_weighting);
         task.setTaskReward(_weiVal, _reputationVal, _claimer);
+        emit LogTaskClaimed(_projectAddress, _index, _reputationVal, _claimer);
     }
 
     /**
