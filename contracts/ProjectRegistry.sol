@@ -30,6 +30,10 @@ contract ProjectRegistry is Ownable {
     event LogProjectFullyStaked(address projectAddress, bool staked);
     event LogTaskHashSubmitted(address projectAddress, bytes32 taskHash, address submitter, uint weighting);
     event LogProjectActive(address projectAddress, bytes32 topTaskHash, bool active);
+    event LogFinalTaskCreated(address taskAddress, address projectAddress, bytes32 finalTaskHash, uint256 index);
+    event LogTaskClaimed(address projectAddress, uint256 index, uint256 reputationVal, address claimer);
+    event LogSubmitTaskComplete(address projectAddress, uint256 index);
+    event LogProjectValidate(address projectAddress, bool validate);
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */
 
@@ -319,7 +323,8 @@ contract ProjectRegistry is Ownable {
     function checkValidate(address _projectAddress) external {
         require(!freeze);
         require(projects[_projectAddress] == true);
-        _projectAddress.checkValidate(tokenRegistryAddress, distributeTokenAddress);
+        bool validate = _projectAddress.checkValidate(tokenRegistryAddress, distributeTokenAddress);
+        emit LogProjectValidate(_projectAddress, validate);
     }
 
     /**
@@ -491,6 +496,7 @@ contract ProjectRegistry is Ownable {
         for (uint256 i = 0; i < _hashes.length; i++) {
             address newTask = createProxyTask(_hashes[i], tokenRegistryAddress, reputationRegistryAddress);
             project.setTaskAddress(newTask, i);
+            emit LogFinalTaskCreated(newTask, _projectAddress, _hashes[i], i);
         }
         project.setHashListSubmitted();
     }
@@ -529,6 +535,7 @@ contract ProjectRegistry is Ownable {
         );
         task.setWeighting(_weighting);
         task.setTaskReward(_weiVal, _reputationVal, _claimer);
+        emit LogTaskClaimed(_projectAddress, _index, _reputationVal, _claimer);
     }
 
     /**
@@ -548,5 +555,6 @@ contract ProjectRegistry is Ownable {
         require(project.state() == 3);
         task.setValidationEntryFee((task.weighting() * project.proposedCost() / 100) / dt.currentPrice());
         task.markTaskComplete();
+        emit LogSubmitTaskComplete(_projectAddress, _index);
     }
 }
