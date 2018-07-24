@@ -25,6 +25,7 @@
     "truffle": "^4.1.11"
   },
   "scripts": {
+    "docker": "truffle migrate --docker",
     "test": "eslint ./test && truffle test",
     "coverage": "solidity-coverage",
     "mythril": "myth -o markdown --truffle > report.md",

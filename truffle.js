@@ -19,6 +19,10 @@ module.exports = {
       port: 8545,
       network_id: 5777
     },
+    docker: {
+      host: 'ganachecli',
+      port: 8545
+    },
     rinkeby: {
       provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/'),
       network_id: '*'
