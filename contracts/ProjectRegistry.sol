@@ -32,6 +32,7 @@ contract ProjectRegistry {
     event LogProjectActive(address projectAddress, bytes32 topTaskHash, bool active);
     event LogFinalTaskCreated(address taskAddress, address projectAddress, bytes32 finalTaskHash, uint256 index);
     event LogTaskClaimed(address projectAddress, uint256 index, uint256 reputationVal, address claimer);
+    event LogSubmitTaskComplete(address projectAddress, uint256 index);
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */
 
@@ -477,5 +478,6 @@ contract ProjectRegistry {
         require(project.state() == 3);
 
         task.markTaskComplete();
+        emit LogSubmitTaskComplete(_projectAddress, _index);
     }
 }
