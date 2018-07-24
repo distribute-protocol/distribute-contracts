@@ -33,6 +33,7 @@ contract ProjectRegistry {
     event LogFinalTaskCreated(address taskAddress, address projectAddress, bytes32 finalTaskHash, uint256 index);
     event LogTaskClaimed(address projectAddress, uint256 index, uint256 reputationVal, address claimer);
     event LogSubmitTaskComplete(address projectAddress, uint256 index);
+    event LogProjectValidate(address projectAddress, bool validate);
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */
 
@@ -251,7 +252,8 @@ contract ProjectRegistry {
     */
     function checkValidate(address _projectAddress) external {
         require(projects[_projectAddress] == true);
-        _projectAddress.checkValidate(tokenRegistryAddress, distributeTokenAddress);
+        bool validate = _projectAddress.checkValidate(tokenRegistryAddress, distributeTokenAddress);
+        emit LogProjectValidate(_projectAddress, validate);
     }
 
     /**
