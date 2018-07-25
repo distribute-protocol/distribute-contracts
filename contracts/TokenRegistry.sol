@@ -28,8 +28,7 @@ contract TokenRegistry is Ownable {
 
     event LogStakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address staker);
     event LogUnstakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address unstaker);
-    event LogValidateTask(address indexed projectAddress, uint256 validationFee, bool validationState, uint256 taskIndex, address validator)
-
+    event LogValidateTask(address indexed projectAddress, uint256 validationFee, bool validationState, uint256 taskIndex, address validator);
 
     // =====================================================================
     // STATE VARIABLES
@@ -261,7 +260,7 @@ contract TokenRegistry is Ownable {
         require(distributeToken.balanceOf(msg.sender) >= validationFee);
         distributeToken.transferToEscrow(msg.sender, validationFee);
         _projectAddress.validate(msg.sender, _taskIndex, _validationState);
-        emit LogValidateTask(_projectAddress, validationFee, _validationState, _taskIndex, msg.sender)
+        emit LogValidateTask(_projectAddress, validationFee, _validationState, _taskIndex, msg.sender);
     }
 
     /**
