@@ -24,6 +24,9 @@ library ProjectLibrary {
 
     event TokenRefund(address staker, uint256 refund);
     event ReputationRefund(address projectAddress, address staker, uint256 refund);
+    event LogTaskVote(address taskAddress, uint pollNonce);
+    event LogTaskPass(address taskAddress, bool confirmation);
+    event LogTaskFail(address taskAddress, bool confirmation);
     // =====================================================================
     // UTILITY
     // =====================================================================
@@ -219,14 +222,17 @@ library ProjectLibrary {
                     if (task.affirmativeIndex() != 0 && task.negativeIndex() != 0) { // there is an opposing validator, poll required
                         uint pollNonce = plcr.startPoll(51, project.voteCommitPeriod(), project.voteRevealPeriod());
                         task.setPollId(pollNonce); // function handles storage of voting pollId
+                        emit LogTaskVote(task, pollNonce);
                     } else {
                         if (task.negativeIndex() == 0) {
                           task.markTaskClaimable(true);
+                          emit LogTaskPass(task, true);
                         } else {
                           task.markTaskClaimable(false);
                           uint reward = task.weiReward();
                           tr.revertWei(reward);
                           project.returnWei(_distributeTokenAddress, reward);
+                          emit LogTaskFail(task, false);
                         }
                     }
                 }
