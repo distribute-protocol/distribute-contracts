@@ -25,8 +25,7 @@ library ProjectLibrary {
     event TokenRefund(address staker, uint256 refund);
     event ReputationRefund(address projectAddress, address staker, uint256 refund);
     event LogTaskVote(address taskAddress, address projectAddress, uint pollNonce);
-    event LogTaskPass(address taskAddress, address projectAddress, bool confirmation);
-    event LogTaskFail(address taskAddress, address projectAddress, bool confirmation);
+    event LogTaskValidated(address taskAddress, address projectAddress, bool confirmation);
     // =====================================================================
     // UTILITY
     // =====================================================================
@@ -225,14 +224,15 @@ library ProjectLibrary {
                         emit LogTaskVote(task, _projectAddress, pollNonce);
                     } else {
                         if (task.negativeIndex() == 0) {
+                          // this means that there are no negative validators, the task passes, and reward is claimable.
                           task.markTaskClaimable(true);
-                          emit LogTaskPass(task, _projectAddress, true);
+                          emit LogTaskValidated(task, _projectAddress, true);
                         } else {
                           task.markTaskClaimable(false);
                           uint reward = task.weiReward();
                           tr.revertWei(reward);
                           project.returnWei(_distributeTokenAddress, reward);
-                          emit LogTaskFail(task, _projectAddress, false);
+                          emit LogTaskValidated(task, _projectAddress, false);
                         }
                     }
                 }
