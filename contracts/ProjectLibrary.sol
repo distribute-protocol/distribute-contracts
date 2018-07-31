@@ -179,7 +179,7 @@ library ProjectLibrary {
                     uint reward = task.weiReward();
                     tr.revertWei(reward);
                     project.returnWei(_distributeTokenAddress, reward);
-                    task.setTaskReward(0, 0, task.claimer());
+                    task.setTaskReward(0, 0, 0);
                 }
             }
             return true;
