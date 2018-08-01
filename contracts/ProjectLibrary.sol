@@ -24,6 +24,8 @@ library ProjectLibrary {
 
     event TokenRefund(address staker, uint256 refund);
     event ReputationRefund(address projectAddress, address staker, uint256 refund);
+    event LogTaskVote(address taskAddress, address projectAddress, uint pollNonce);
+    event LogTaskValidated(address taskAddress, address projectAddress, bool confirmation);
     // =====================================================================
     // UTILITY
     // =====================================================================
@@ -177,7 +179,7 @@ library ProjectLibrary {
                     uint reward = task.weiReward();
                     tr.revertWei(reward);
                     project.returnWei(_distributeTokenAddress, reward);
-                    task.setTaskReward(0, 0, task.claimer());
+                    task.setTaskReward(0, 0, 0);
                 }
             }
             return true;
@@ -219,14 +221,18 @@ library ProjectLibrary {
                     if (task.affirmativeIndex() != 0 && task.negativeIndex() != 0) { // there is an opposing validator, poll required
                         uint pollNonce = plcr.startPoll(51, project.voteCommitPeriod(), project.voteRevealPeriod());
                         task.setPollId(pollNonce); // function handles storage of voting pollId
+                        emit LogTaskVote(task, _projectAddress, pollNonce);
                     } else {
                         if (task.negativeIndex() == 0) {
+                          // this means that there are no negative validators, the task passes, and reward is claimable.
                           task.markTaskClaimable(true);
+                          emit LogTaskValidated(task, _projectAddress, true);
                         } else {
                           task.markTaskClaimable(false);
                           uint reward = task.weiReward();
                           tr.revertWei(reward);
                           project.returnWei(_distributeTokenAddress, reward);
+                          emit LogTaskValidated(task, _projectAddress, false);
                         }
                     }
                 }

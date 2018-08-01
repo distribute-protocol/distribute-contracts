@@ -32,7 +32,7 @@ contract ProjectRegistry is Ownable {
     event LogProjectActive(address projectAddress, bytes32 topTaskHash, bool active);
     event LogFinalTaskCreated(address taskAddress, address projectAddress, bytes32 finalTaskHash, uint256 index);
     event LogTaskClaimed(address projectAddress, uint256 index, uint256 reputationVal, address claimer);
-    event LogSubmitTaskComplete(address projectAddress, uint256 index);
+    event LogSubmitTaskComplete(address projectAddress, uint256 index, uint256 validationFee);
     event LogProjectValidate(address projectAddress, bool validate);
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */
@@ -553,8 +553,8 @@ contract ProjectRegistry is Ownable {
         require(task.claimer() == msg.sender);
         require(task.complete() == false);
         require(project.state() == 3);
-        task.setValidationEntryFee((task.weighting() * project.proposedCost() / 100) / dt.currentPrice());
+        uint256 validationFee = task.setValidationEntryFee((task.weighting() * project.proposedCost() / 100) / dt.currentPrice());
         task.markTaskComplete();
-        emit LogSubmitTaskComplete(_projectAddress, _index);
+        emit LogSubmitTaskComplete(_projectAddress, _index, validationFee);
     }
 }

@@ -132,8 +132,9 @@ contract Task {
     @notice Sets the entry fee for validation
     @dev Only callable by the Project Registry
     */
-    function setValidationEntryFee(uint256 _entryFee) external onlyPR {
+    function setValidationEntryFee(uint256 _entryFee) external onlyPR returns (uint) {
         validationEntryFee = _entryFee;
+        return validationEntryFee;
     }
 
     /**
