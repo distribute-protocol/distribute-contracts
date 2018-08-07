@@ -369,6 +369,7 @@ library ProjectLibrary {
         uint256 reputationReward = task.reputationReward();
         task.setTaskReward(0, 0, _claimer);
         project.transferWeiReward(_claimer, weiReward);
+        emit LogClaimTaskReward(_projectAddress, _index, _claimer, weiReward, reputationReward);
         return reputationReward;
     }
 
