@@ -299,8 +299,9 @@ contract TokenRegistry is Ownable {
                 }
                 rewardWeighting += addtlWeighting / validationIndex;
             }
-            uint weiReward = project.validationReward() * task.weighting() * rewardWeighting / 10000;
+            uint256 weiReward = project.validationReward() * task.weighting() * rewardWeighting / 10000;
             project.transferWeiReward(msg.sender, weiReward);
+            emit LogRewardValidator(_projectAddress, _index, weiReward, returnAmount, msg.sender);
         } else {
             weiReward = 0;
             statusNeed == 1
@@ -308,6 +309,7 @@ contract TokenRegistry is Ownable {
                 : require(task.affirmativeValidators(index) == msg.sender);
             returnAmount += task.validationEntryFee() / 2;
             distributeToken.burn(task.validationEntryFee() - returnAmount);
+            emit LogRewardValidator(_projectAddress, _index, 0, returnAmount, msg.sender);
         }
         emit LogRewardValidator(_projectAddress, _index, weiReward, returnAmount, msg.sender);
         distributeToken.transferFromEscrow(msg.sender, returnAmount);

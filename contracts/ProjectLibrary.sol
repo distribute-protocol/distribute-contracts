@@ -26,7 +26,8 @@ library ProjectLibrary {
     event ReputationRefund(address projectAddress, address staker, uint256 refund);
     event LogTaskVote(address taskAddress, address projectAddress, uint pollNonce);
     event LogTaskValidated(address taskAddress, address projectAddress, bool confirmation);
-    event LogClaimTaskReward(address projectAddress, uint256 index, address taskClaimer, uint256 weiReward, uint256 reputationReward);
+    event LogClaimTaskReward(address projectAddress, uint256 index, address claimer, uint256 weiReward, uint256 reputationReward);
+    
     // =====================================================================
     // UTILITY
     // =====================================================================
@@ -370,6 +371,7 @@ library ProjectLibrary {
         uint256 reputationReward = task.reputationReward();
         task.setTaskReward(0, 0, _claimer);
         project.transferWeiReward(_claimer, weiReward);
+        emit LogClaimTaskReward(_projectAddress, _index, _claimer, weiReward, reputationReward);
         return reputationReward;
         emit LogClaimTaskReward(_projectAddress, _index, _claimer, weiReward, reputationReward);
     }
