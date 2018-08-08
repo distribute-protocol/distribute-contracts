@@ -34,6 +34,7 @@ contract ProjectRegistry is Ownable {
     event LogTaskClaimed(address projectAddress, uint256 index, uint256 reputationVal, address claimer);
     event LogSubmitTaskComplete(address projectAddress, uint256 index, uint256 validationFee);
     event LogProjectValidate(address projectAddress, bool validate);
+    event LogProjectVoting(address projectAddress, bool vote);
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */
 
@@ -336,7 +337,8 @@ contract ProjectRegistry is Ownable {
     function checkVoting(address _projectAddress) external {
         require(!freeze);
         require(projects[_projectAddress] == true);
-        _projectAddress.checkVoting(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
+        bool vote = _projectAddress.checkVoting(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
+        emit LogProjectVoting(_projectAddress, vote);
     }
 
     /**

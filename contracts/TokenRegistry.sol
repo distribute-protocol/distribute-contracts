@@ -211,7 +211,7 @@ contract TokenRegistry is Ownable {
         // updating of P weiBal happens via the next line
         project.stakeTokens(msg.sender, _tokens, weiChange);
         // the transfer of wei and the updating of DT weiBal happens via the next line
-        distributeToken.transferWeiTo(_projectAddress, weiChange);      // A and S are confused - why is this here/what is it doing?
+        distributeToken.transferWeiTo(_projectAddress, weiChange);
         distributeToken.transferToEscrow(msg.sender, tokens);
         projectRegistry.checkStaked(_projectAddress);
         emit LogStakedTokens(_projectAddress, tokens, weiChange, msg.sender);
