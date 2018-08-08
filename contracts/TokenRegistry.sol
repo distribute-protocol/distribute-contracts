@@ -31,7 +31,6 @@ contract TokenRegistry is Ownable {
     event LogValidateTask(address indexed projectAddress, uint256 validationFee, bool validationState, uint256 taskIndex, address validator);
     event LogRewardValidator(address indexed projectAddress, uint256 index, uint256 weiReward, uint256 returnAmount, address validator);
 
-
     // =====================================================================
     // STATE VARIABLES
     // =====================================================================
@@ -304,6 +303,7 @@ contract TokenRegistry is Ownable {
             project.transferWeiReward(msg.sender, weiReward);
             emit LogRewardValidator(_projectAddress, _index, weiReward, returnAmount, msg.sender);
         } else {
+            weiReward = 0;
             statusNeed == 1
                 ? require(task.negativeValidators(index) == msg.sender)
                 : require(task.affirmativeValidators(index) == msg.sender);
@@ -311,6 +311,7 @@ contract TokenRegistry is Ownable {
             distributeToken.burn(task.validationEntryFee() - returnAmount);
             emit LogRewardValidator(_projectAddress, _index, 0, returnAmount, msg.sender);
         }
+        emit LogRewardValidator(_projectAddress, _index, weiReward, returnAmount, msg.sender);
         distributeToken.transferFromEscrow(msg.sender, returnAmount);
     }
 
