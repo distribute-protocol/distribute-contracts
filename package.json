@@ -3,6 +3,7 @@
     "bignumber.js": "^6.0.0",
     "ethereumjs-abi": "^0.6.5",
     "ethers": "^3.0.19",
+    "lodash": "^4.17.10",
     "scrypt": "^6.0.3",
     "sha3": "^1.2.2",
     "solc-js": "^0.4.20-browser.1",
