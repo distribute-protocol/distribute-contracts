@@ -27,7 +27,7 @@ library ProjectLibrary {
     event LogTaskVote(address taskAddress, address projectAddress, uint pollNonce);
     event LogTaskValidated(address taskAddress, address projectAddress, bool confirmation);
     event LogClaimTaskReward(address projectAddress, uint256 index, address claimer, uint256 weiReward, uint256 reputationReward);
-    
+
     // =====================================================================
     // UTILITY
     // =====================================================================
@@ -373,7 +373,6 @@ library ProjectLibrary {
         project.transferWeiReward(_claimer, weiReward);
         emit LogClaimTaskReward(_projectAddress, _index, _claimer, weiReward, reputationReward);
         return reputationReward;
-        emit LogClaimTaskReward(_projectAddress, _index, _claimer, weiReward, reputationReward);
     }
 
     // =====================================================================
