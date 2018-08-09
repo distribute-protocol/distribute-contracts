@@ -34,7 +34,7 @@ contract ReputationRegistry is Ownable {
         address indexed registree
     );
 
-    event LogStakedReputation(address indexed projectAddress, uint256 reputation, address staker);
+    event LogStakedReputation(address indexed projectAddress, uint256 reputation, address staker, bool staked);
     event LogUnstakedReputation(address indexed projectAddress, uint256 reputation, address unstaker);
 
     // =====================================================================
@@ -239,8 +239,8 @@ contract ReputationRegistry is Ownable {
         uint256 reputationVal = _reputation < repRemaining ? _reputation : repRemaining;
         users[msg.sender].balance -= reputationVal;
         Project(_projectAddress).stakeReputation(msg.sender, reputationVal);
-        projectRegistry.checkStaked(_projectAddress);
-        emit LogStakedReputation(_projectAddress, _reputation, msg.sender);
+        bool staked = projectRegistry.checkStaked(_projectAddress);
+        emit LogStakedReputation(_projectAddress, _reputation, msg.sender, staked);
     }
 
     /**

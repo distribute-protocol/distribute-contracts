@@ -26,7 +26,7 @@ contract TokenRegistry is Ownable {
     // EVENTS
     // =====================================================================
 
-    event LogStakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address staker);
+    event LogStakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address staker, bool staked);
     event LogUnstakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address unstaker);
     event LogValidateTask(address indexed projectAddress, uint256 validationFee, bool validationState, uint256 taskIndex, address validator);
     event LogRewardValidator(address indexed projectAddress, uint256 index, uint256 weiReward, uint256 returnAmount, address validator);
@@ -212,8 +212,8 @@ contract TokenRegistry is Ownable {
         // the transfer of wei and the updating of DT weiBal happens via the next line
         distributeToken.transferWeiTo(_projectAddress, weiChange);
         distributeToken.transferToEscrow(msg.sender, tokens);
-        projectRegistry.checkStaked(_projectAddress);
-        emit LogStakedTokens(_projectAddress, tokens, weiChange, msg.sender);
+        bool staked = projectRegistry.checkStaked(_projectAddress);
+        emit LogStakedTokens(_projectAddress, tokens, weiChange, msg.sender, staked);
     }
 
     /**
