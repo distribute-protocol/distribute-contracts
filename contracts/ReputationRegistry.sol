@@ -34,6 +34,7 @@ contract ReputationRegistry is Ownable {
         address indexed registree
     );
 
+    event LogProjectCreated(address projectAddress, uint256 weiCost, uint256 reputationCost);
     event LogStakedReputation(address indexed projectAddress, uint256 reputation, address staker, bool staked);
     event LogUnstakedReputation(address indexed projectAddress, uint256 reputation, address unstaker);
 
@@ -188,9 +189,8 @@ contract ReputationRegistry is Ownable {
         totalSupply) /
         10000000000;
         require(users[msg.sender].balance >= proposerReputationCost);
-
         users[msg.sender].balance -= proposerReputationCost;
-        projectRegistry.createProject(
+        address projectAddress = projectRegistry.createProject(
             _cost,
             costProportion,
             _stakingPeriod,
@@ -199,6 +199,7 @@ contract ReputationRegistry is Ownable {
             proposerReputationCost,
             _ipfsHash
         );
+        emit LogProjectCreated(projectAddress, _cost, proposerReputationCost);
     }
 
     /**

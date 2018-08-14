@@ -83,7 +83,6 @@ contract('Propose Projects', function (accounts) {
       assert.equal(ttBal, tokensToMint - proposerCost, 'DT did not set aside appropriate proportion to escrow')
 
       // project contract creation, log checks
-      console.log(tx.logs)
       log = tx.logs[0].args
       projAddr = log.projectAddress.toString()
       PROJ_T = await Project.at(projAddr)
@@ -102,17 +101,16 @@ contract('Propose Projects', function (accounts) {
       // convert _ipfsHash to ascii
       _ipfsHash = hexToAscii(_ipfsHash)
 
-      console.log(TR.address, _TRaddr)
       assert.equal(TR.address, _TRaddr, 'PR stored incorrect token registry address')
-      // assert.equal(PR.address, _PRaddr, 'PR stored incorrect project registry address')
-      // assert.equal(projectCost, _weiCost, 'PR stored incorrect project cost')
-      // assert.equal(repCost, _repCost, 'PR stored incorrect rep cost')
-      // assert.equal(1, _state, 'PR stored incorrect state')
-      // assert.equal(stakingPeriod, _nextDeadline, 'PR stored incorrect staking period')
-      // assert.equal(tokenProposer, _proposer, 'PR stored incorrect proposer address')
-      // assert.equal(1, _proposerType, 'PR stored incorrect proposer type')
-      // assert.equal(proposerCost, _proposerStake, 'PR stored incorrect proposer stake')
-      // assert.equal(ipfsHash, _ipfsHash, 'PR stored incorrect ipfs hash')
+      assert.equal(PR.address, _PRaddr, 'PR stored incorrect project registry address')
+      assert.equal(projectCost * 1.05, _weiCost, 'PR stored incorrect project cost')
+      assert.equal(repCost, _repCost, 'PR stored incorrect rep cost')
+      assert.equal(1, _state, 'PR stored incorrect state')
+      assert.equal(stakingPeriod, _nextDeadline, 'PR stored incorrect staking period')
+      assert.equal(tokenProposer, _proposer, 'PR stored incorrect proposer address')
+      assert.equal(1, _proposerType, 'PR stored incorrect proposer type')
+      assert.equal(proposerCost, _proposerStake, 'PR stored incorrect proposer stake')
+      assert.equal(ipfsHash, _ipfsHash, 'PR stored incorrect ipfs hash')
     })
 
     it('Proposer can propose project with reputation', async () => {
@@ -152,7 +150,7 @@ contract('Propose Projects', function (accounts) {
 
       assert.equal(TR.address, _TRaddr, 'PR stored incorrect token registry address')
       assert.equal(PR.address, _PRaddr, 'PR stored incorrect project registry address')
-      assert.equal(projectCost, _weiCost, 'PR stored incorrect project cost')
+      assert.equal(projectCost * 1.05, _weiCost, 'PR stored incorrect project cost')
       assert.equal(repCost, _repCost, 'PR stored incorrect rep cost')
       assert.equal(1, _state, 'PR stored incorrect state')
       assert.equal(stakingPeriod, _nextDeadline, 'PR stored incorrect staking period')
