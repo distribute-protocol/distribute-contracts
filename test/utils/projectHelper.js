@@ -169,11 +169,11 @@ module.exports = function projectHelper (accounts) {
   }
 
   obj.utils.getRepBalance = async function (_user, _unadulterated) {
-    let bal = await obj.contracts.RR.users(_user)[0]
+    let bal = await obj.contracts.RR.users(_user)
     if (_unadulterated === true) {
-      return bal
+      return bal[0]
     } else {
-      return bal.toNumber()
+      return bal[0].toNumber()
     }
   }
 
@@ -522,8 +522,6 @@ module.exports = function projectHelper (accounts) {
 
     // propose project
     let tx = await obj.contracts.TR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.tokenProposer})
-    console.log('LINE 524')
-    console.log(tx.receipt.logs[0].address, 'loggy')
     return tx.receipt.logs[0].address // return project address
   }
 
