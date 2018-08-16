@@ -210,7 +210,7 @@ contract TokenRegistry is Ownable {
             ? ((weiRemaining/currentPrice) + 1)     // round up to prevent loophole where user can stake without losing tokens
             : _tokens;
         // updating of P weiBal happens via the next line
-        project.stakeTokens(msg.sender, _tokens, weiChange);
+        project.stakeTokens(msg.sender, tokens, weiChange);
         // the transfer of wei and the updating of DT weiBal happens via the next line
         distributeToken.transferWeiTo(_projectAddress, weiChange);
         distributeToken.transferToEscrow(msg.sender, tokens);

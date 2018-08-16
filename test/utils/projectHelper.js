@@ -260,6 +260,16 @@ module.exports = function projectHelper (accounts) {
     }
   }
 
+  obj.project.getProposedWeiCost = async function (_projAddr, _unadulterated) {
+    let PROJ = await Project.at(_projAddr)
+    let weiCost = await PROJ.proposedCost()
+    if (_unadulterated === true) {
+      return weiCost
+    } else {
+      return weiCost.toNumber()
+    }
+  }
+
   obj.project.getWeiBal = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let weiBal = await PROJ.weiBal()
@@ -271,9 +281,9 @@ module.exports = function projectHelper (accounts) {
   }
 
   obj.project.getWeiRemaining = async function (_projAddr) {
-    let weiCost = await obj.project.getWeiCost(_projAddr)
-    let weiBal = await obj.project.getWeiBal(_projAddr)
-    return weiCost - weiBal
+    let weiCost = await obj.project.getWeiCost(_projAddr, true)
+    let weiBal = await obj.project.getWeiBal(_projAddr, true)
+    return weiCost.minus(weiBal)
   }
 
   obj.project.getRepCost = async function (_projAddr, _unadulterated) {
@@ -288,8 +298,8 @@ module.exports = function projectHelper (accounts) {
 
   obj.project.calculateRequiredTokens = async function (_projAddr) {
     let weiRemaining = await obj.project.getWeiRemaining(_projAddr)
-    let currentPrice = await obj.utils.getCurrentPrice()
-    let requiredTokens = Math.ceil(weiRemaining / currentPrice)
+    let currentPrice = await obj.utils.getCurrentPrice(true)
+    let requiredTokens = Math.ceil(weiRemaining.div(currentPrice))
     return requiredTokens
   }
 
