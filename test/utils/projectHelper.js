@@ -452,25 +452,33 @@ module.exports = function projectHelper (accounts) {
     return claimer
   }
 
-  obj.task.getTotalValidate = async function (_projAddr, _index, _valVal, _unadulterated) {
+  obj.task.getValidationEntryFee = async function (_projAddr, _index) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
-    let valBal
-    if (_valVal === true) {
-      valBal = await TASK.totalValidateAffirmative()
-    } else if (_valVal === false) {
-      valBal = await TASK.totalValidateNegative()
-    }
-    if (_unadulterated === true) {
-      return valBal
-    } else {
-      return valBal.toNumber()
-    }
+    let validationEntryFee = await TASK.validationEntryFee()
+    return validationEntryFee
   }
+
+  // obj.task.getTotalValidate = async function (_projAddr, _index, _valVal, _unadulterated) {
+  //   let taskAddr = await obj.project.getTasks(_projAddr, _index)
+  //   let TASK = await Task.at(taskAddr)
+  //   let valBal
+  //   if (_valVal === true) {
+  //     valBal = await TASK.totalValidateAffirmative()
+  //   } else if (_valVal === false) {
+  //     valBal = await TASK.totalValidateNegative()
+  //   }
+  //   if (_unadulterated === true) {
+  //     return valBal
+  //   } else {
+  //     return valBal.toNumber()
+  //   }
+  // }
 
   obj.task.getValDetails = async function (_projAddr, _index, _user) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
+    // struct elements: status, index, initialized
     let valBal = await TASK.validators(_user)
     return valBal
   }
