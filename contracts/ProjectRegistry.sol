@@ -441,9 +441,11 @@ contract ProjectRegistry is Ownable {
         require(project.state() == 2);
         ReputationRegistry rr = ReputationRegistry(reputationRegistryAddress);
         TokenRegistry tr = TokenRegistry(tokenRegistryAddress);
-        uint256 stakerWeight = (rr.calculateWeightOfAddress(msg.sender) + tr.calculateWeightOfAddress(msg.sender)) / 2;
-        stakedTaskHash(_projectAddress, msg.sender, _taskHash, stakerWeight);
-        emit LogTaskHashSubmitted(_projectAddress, _taskHash, msg.sender, stakerWeight);
+        uint256 networkWeight = (rr.calculateWeightOfAddress(msg.sender) + tr.calculateWeightOfAddress(msg.sender)) / 2;
+        uint256 stakerWeight = _projectAddress.calculateWeightOfAddress(msg.sender);
+        uint256 totalWeight = (networkWeight + stakerWeight) / 2;
+        stakedTaskHash(_projectAddress, msg.sender, _taskHash, totalWeight);
+        emit LogTaskHashSubmitted(_projectAddress, _taskHash, msg.sender, totalWeight);
     }
 
     /**
