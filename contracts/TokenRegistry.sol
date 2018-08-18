@@ -175,6 +175,18 @@ contract TokenRegistry is Ownable {
         distributeToken.transferWeiTo(msg.sender, proposerVals[0] / (100));
     }
 
+    /**
+    @notice Rewards the originator of a project plan in tokens.
+    @param _rewardee Address of the project
+    @param _amount Address of the project
+    */
+    function rewardOriginator(
+      address _rewardee
+      uint _amount
+    ) external onlyPR {
+      DistributeToken(distributeTokenAddress).transferWeiTo(_rewardee, _amount);
+    }
+
     // =====================================================================
     // STAKE
     // =====================================================================

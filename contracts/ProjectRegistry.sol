@@ -57,6 +57,7 @@ contract ProjectRegistry is Ownable {
         bytes32 topTaskHash;
         mapping(address => bytes32) taskHashSubmissions;
         mapping(bytes32 => uint256) numSubmissionsByWeight;
+        mapping(bytes32 => address) originator;
     }
 
     mapping (address => StakedState) public stakedProjects;
@@ -470,11 +471,29 @@ contract ProjectRegistry is Ownable {
         }
         ss.numSubmissionsByWeight[_taskHash] += _stakerWeight;
         ss.taskHashSubmissions[_staker] = _taskHash;
+        if (ss.originator[_taskHash] == 0) {
+          ss.originator[_taskHash] = _staker;
+        }
         if(ss.numSubmissionsByWeight[_taskHash] > ss.numSubmissionsByWeight[ss.topTaskHash]) {
             ss.topTaskHash = _taskHash;
         }
     }
+    /**
+    @notice Rewards the originator of a project plan in tokens.
+    @param _projectAddress Address of the project
+    */
+    function rewardOriginator(
+      address _projectAddress
+    ) external {
+      Project project =  Project(_projectAddress);
+      require(project.state() == 6);
+      StakedState storage ss = stakedProjects[_projectAddress];
+      require(msg.sender == ss.originator[ss.topTaskHash]);
+      ss.originator[ss.topTaskHash] = 0;
+      uint amount == Project(_projectAddress).proposedCost() + DistributeToken(distributeTokenAddress).weiBal()) / 2;
+      TokenRegistry(tokenRegistryAddress).rewardOriginator(msg.sender, amount);
 
+    }
     // =====================================================================
     // ACTIVE
     // =====================================================================

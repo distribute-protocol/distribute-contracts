@@ -30,7 +30,6 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     address reputationRegistryAddress;
 
     uint256 public weiBal;
-    uint256 public totalSupply;
 
     // .00005 ether
     uint256 public baseCost = 50000000000000;
