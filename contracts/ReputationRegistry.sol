@@ -261,6 +261,22 @@ contract ReputationRegistry is Ownable {
         emit LogUnstakedReputation(_projectAddress, _reputation, msg.sender);
     }
 
+    /**
+    @notice Calculates the relative weight of an `_address`.
+    Weighting is calculated by the proportional amount of both reputation and tokens that have been
+    staked on the project.
+    @dev Returns an average of the token staking and reputation staking to understand the relative influence of a staker
+
+    @param _address Address of the staker
+    @return The relative weight of a staker as a whole integer
+    */
+    function calculateWeightOfAddress(
+        address _address
+    ) public view returns (uint256) {
+        return Division.percent(users[_address].balance, totalSupply, 15);
+    }
+
+
     // =====================================================================
     // TASK
     // =====================================================================

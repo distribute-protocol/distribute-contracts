@@ -437,11 +437,11 @@ contract ProjectRegistry is Ownable {
         require(!freeze);
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
-        require(_projectAddress.isStaker(msg.sender) == true);
         checkActive(_projectAddress);
         require(project.state() == 2);
-
-        uint256 stakerWeight = _projectAddress.calculateWeightOfAddress(msg.sender);
+        ReputationRegistry rr = ReputationRegistry(reputationRegistryAddress);
+        TokenRegistry tr = TokenRegistry(tokenRegistryAddress);
+        uint256 stakerWeight = (rr.calculateWeightOfAddress(msg.sender) + tr.calculateWeightOfAddress(msg.sender)) / 2;
         stakedTaskHash(_projectAddress, msg.sender, _taskHash, stakerWeight);
         emit LogTaskHashSubmitted(_projectAddress, _taskHash, msg.sender, stakerWeight);
     }

@@ -236,6 +236,18 @@ contract TokenRegistry is Ownable {
         emit LogUnstakedTokens(_projectAddress, _tokens, weiVal, msg.sender);
     }
 
+    /**
+    @notice Calculates the relative weight of an `_address`.
+    Weighting is calculated by the proportional amount of tokens a user possess in relation to the total supply.
+    @param _address Address of the staker
+    @return The relative weight of a staker as a whole integer
+    */
+    function calculateWeightOfAddress(
+        address _address
+    ) public view returns (uint256) {
+        return Division.percent(distributeToken.balanceOf(_address), distributeToken.totalSupply(), 15);
+    }
+
     // =====================================================================
     // VALIDATION
     // =====================================================================
