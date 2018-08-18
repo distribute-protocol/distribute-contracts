@@ -434,7 +434,7 @@ contract ProjectRegistry is Ownable {
     @param _projectAddress Address of the project
     @param _taskHash Hash of the task list
     */
-    function addTaskHash(address _projectAddress, bytes32 _taskHash) external  {      // format of has should be 'description', 'percentage', check via js that percentages add up to 100 prior to calling contract
+    function addTaskHash(address _projectAddress, bytes32 _taskHash) external  { // format of has should be 'description', 'percentage', check via js that percentages add up to 100 prior to calling contract
         require(!freeze);
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
@@ -445,6 +445,7 @@ contract ProjectRegistry is Ownable {
         uint256 networkWeight = (rr.calculateWeightOfAddress(msg.sender) + tr.calculateWeightOfAddress(msg.sender)) / 2;
         uint256 stakerWeight = _projectAddress.calculateWeightOfAddress(msg.sender);
         uint256 totalWeight = (networkWeight + stakerWeight) / 2;
+        require(totalWeight > 0);
         stakedTaskHash(_projectAddress, msg.sender, _taskHash, totalWeight);
         emit LogTaskHashSubmitted(_projectAddress, _taskHash, msg.sender, totalWeight);
     }
