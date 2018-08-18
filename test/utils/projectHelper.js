@@ -169,11 +169,11 @@ module.exports = function projectHelper (accounts) {
   }
 
   obj.utils.getRepBalance = async function (_user, _unadulterated) {
-    let bal = await obj.contracts.RR.users(_user)[0]
+    let bal = await obj.contracts.RR.users(_user)
     if (_unadulterated === true) {
-      return bal
+      return bal[0]
     } else {
-      return bal.toNumber()
+      return bal[0].toNumber()
     }
   }
 
@@ -260,6 +260,16 @@ module.exports = function projectHelper (accounts) {
     }
   }
 
+  obj.project.getProposedWeiCost = async function (_projAddr, _unadulterated) {
+    let PROJ = await Project.at(_projAddr)
+    let weiCost = await PROJ.proposedCost()
+    if (_unadulterated === true) {
+      return weiCost
+    } else {
+      return weiCost.toNumber()
+    }
+  }
+
   obj.project.getWeiBal = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let weiBal = await PROJ.weiBal()
@@ -271,9 +281,9 @@ module.exports = function projectHelper (accounts) {
   }
 
   obj.project.getWeiRemaining = async function (_projAddr) {
-    let weiCost = await obj.project.getWeiCost(_projAddr)
-    let weiBal = await obj.project.getWeiBal(_projAddr)
-    return weiCost - weiBal
+    let weiCost = await obj.project.getWeiCost(_projAddr, true)
+    let weiBal = await obj.project.getWeiBal(_projAddr, true)
+    return weiCost.minus(weiBal)
   }
 
   obj.project.getRepCost = async function (_projAddr, _unadulterated) {
@@ -288,8 +298,8 @@ module.exports = function projectHelper (accounts) {
 
   obj.project.calculateRequiredTokens = async function (_projAddr) {
     let weiRemaining = await obj.project.getWeiRemaining(_projAddr)
-    let currentPrice = await obj.utils.getCurrentPrice()
-    let requiredTokens = Math.ceil(weiRemaining / currentPrice)
+    let currentPrice = await obj.utils.getCurrentPrice(true)
+    let requiredTokens = Math.ceil(weiRemaining.div(currentPrice))
     return requiredTokens
   }
 
@@ -366,14 +376,14 @@ module.exports = function projectHelper (accounts) {
   }
 
   obj.project.calculateWeiVal = async function (_projAddr, _weighting) {
-    let weiCost = await obj.project.getWeiCost(_projAddr, true)
-    let weiVal = Math.round((weiCost.times(_weighting).div(100)))
+    let weiCost = await obj.project.getProposedWeiCost(_projAddr, true)
+    let weiVal = Math.floor((weiCost.times(_weighting).div(100)))
     return weiVal
   }
 
   obj.project.calculateRepVal = async function (_projAddr, _weighting) {
     let repCost = await obj.project.getRepCost(_projAddr, true)
-    let repVal = Math.round((repCost.times(_weighting).div(100)))
+    let repVal = Math.floor((repCost.times(_weighting).div(100)))
     return repVal
   }
 
@@ -442,25 +452,33 @@ module.exports = function projectHelper (accounts) {
     return claimer
   }
 
-  obj.task.getTotalValidate = async function (_projAddr, _index, _valVal, _unadulterated) {
+  obj.task.getValidationEntryFee = async function (_projAddr, _index) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
-    let valBal
-    if (_valVal === true) {
-      valBal = await TASK.totalValidateAffirmative()
-    } else if (_valVal === false) {
-      valBal = await TASK.totalValidateNegative()
-    }
-    if (_unadulterated === true) {
-      return valBal
-    } else {
-      return valBal.toNumber()
-    }
+    let validationEntryFee = await TASK.validationEntryFee()
+    return validationEntryFee
   }
+
+  // obj.task.getTotalValidate = async function (_projAddr, _index, _valVal, _unadulterated) {
+  //   let taskAddr = await obj.project.getTasks(_projAddr, _index)
+  //   let TASK = await Task.at(taskAddr)
+  //   let valBal
+  //   if (_valVal === true) {
+  //     valBal = await TASK.totalValidateAffirmative()
+  //   } else if (_valVal === false) {
+  //     valBal = await TASK.totalValidateNegative()
+  //   }
+  //   if (_unadulterated === true) {
+  //     return valBal
+  //   } else {
+  //     return valBal.toNumber()
+  //   }
+  // }
 
   obj.task.getValDetails = async function (_projAddr, _index, _user) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
+    // struct elements: status, index, initialized
     let valBal = await TASK.validators(_user)
     return valBal
   }
@@ -522,8 +540,6 @@ module.exports = function projectHelper (accounts) {
 
     // propose project
     let tx = await obj.contracts.TR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.tokenProposer})
-    console.log('LINE 524')
-    console.log(tx.receipt.logs[0].address, 'loggy')
     return tx.receipt.logs[0].address // return project address
   }
 

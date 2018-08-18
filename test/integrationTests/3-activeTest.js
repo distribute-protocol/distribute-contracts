@@ -236,22 +236,21 @@ contract('Active State', (accounts) => {
       await RR.claimTask(projAddrR, indexNoReclaimPre, description, weighting, {from: worker1})
 
       // take stock of variables after
-      // let workerRepBalAfter = await utils.getRepBalance(worker1)
+      let workerRepBalAfter = await utils.getRepBalance(worker1)
       let taskWeightingAfter = await task.getWeighting(projAddrR, indexNoReclaimPre)
       let taskWeiRewardAfter = await task.getWeiReward(projAddrR, indexNoReclaimPre)
-      // let taskRepRewardAfter = await task.getRepReward(projAddrR, indexNoReclaimPre)
+      let taskRepRewardAfter = await task.getRepReward(projAddrR, indexNoReclaimPre)
       let taskCompleteAfter = await task.getComplete(projAddrR, indexNoReclaimPre)
       let taskClaimerAfter = await task.getClaimer(projAddrR, indexNoReclaimPre)
 
       // checks
-      // COMMENTED OUT ASSERTS ARE OFF BY 1 REPUTATION
-      // assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
+      assert.equal(workerRepBalBefore - repVal, workerRepBalAfter, 'worker rep balance updated incorrectly')
       assert.equal(taskWeightingBefore, 0, 'task should not have weighting before claimed')
       assert.equal(taskWeightingAfter, weighting, 'task given incorrect weighting')
       assert.equal(taskWeiRewardBefore, 0, 'task should not have wei reward before claimed')
       assert.equal(taskWeiRewardAfter, weiVal, 'task given incorrect wei reward')
       assert.equal(taskRepRewardBefore, 0, 'task should not have rep reward before claimed')
-      // assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
+      assert.equal(taskRepRewardAfter, repVal, 'task given incorrect rep reward')
       assert.equal(taskCompleteBefore, false, 'task should not be complete before claiming')
       assert.equal(taskCompleteAfter, false, 'task should not be complete after claiming')
       assert.equal(taskClaimerBefore, 0, 'task should not have claimer before claimed')

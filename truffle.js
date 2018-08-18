@@ -1,4 +1,4 @@
-const HDWalletProvider = require('truffle-hdwallet-provider')
+// const HDWalletProvider = require('truffle-hdwallet-provider')
 const fs = require('fs')
 
 // first read in the secrets.json to get our mnemonic
@@ -23,10 +23,10 @@ module.exports = {
       host: 'ganachecli',
       port: 8545
     },
-    rinkeby: {
-      provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/'),
-      network_id: '*'
-    },
+    // rinkeby: {
+    //   provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/'),
+    //   network_id: '*'
+    // },
     mocha: {
       reporter: 'eth-gas-reporter',
       reporterOptions: {
