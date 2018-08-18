@@ -490,7 +490,7 @@ contract ProjectRegistry is Ownable {
       StakedState storage ss = stakedProjects[_projectAddress];
       require(msg.sender == ss.originator[ss.topTaskHash]);
       ss.originator[ss.topTaskHash] = 0;
-      uint amount == Project(_projectAddress).proposedCost() + DistributeToken(distributeTokenAddress).weiBal()) / 2;
+      uint amount = (Project(_projectAddress).proposedCost() + DistributeToken(distributeTokenAddress).weiBal()) / 2;
       TokenRegistry(tokenRegistryAddress).rewardOriginator(msg.sender, amount);
 
     }

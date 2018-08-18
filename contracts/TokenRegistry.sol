@@ -184,7 +184,8 @@ contract TokenRegistry is Ownable {
       address _rewardee,
       uint _amount
     ) external onlyPR {
-      DistributeToken(distributeTokenAddress).transferWeiTo(_rewardee, _amount);
+      require(!freeze);
+      distributeToken.transferWeiTo(_rewardee, _amount);
     }
 
     // =====================================================================
