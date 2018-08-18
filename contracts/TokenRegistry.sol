@@ -26,6 +26,7 @@ contract TokenRegistry is Ownable {
     // EVENTS
     // =====================================================================
 
+    event LogProjectCreated(address projectAddress, uint256 weiCost, uint256 tokenCost);
     event LogStakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address staker, bool staked);
     event LogUnstakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address unstaker);
     event LogValidateTask(address indexed projectAddress, uint256 validationFee, bool validationState, uint256 taskIndex, address validator);
@@ -147,7 +148,7 @@ contract TokenRegistry is Ownable {
         require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
 
         distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
-        projectRegistry.createProject(
+        address projectAddress = projectRegistry.createProject(
             _cost,
             costProportion,
             _stakingPeriod,
@@ -156,6 +157,7 @@ contract TokenRegistry is Ownable {
             proposerTokenCost,
             _ipfsHash
         );
+        emit LogProjectCreated(projectAddress, _cost, proposerTokenCost);
     }
 
     /**
@@ -222,7 +224,7 @@ contract TokenRegistry is Ownable {
             ? ((weiRemaining/currentPrice) + 1)     // round up to prevent loophole where user can stake without losing tokens
             : _tokens;
         // updating of P weiBal happens via the next line
-        project.stakeTokens(msg.sender, _tokens, weiChange);
+        project.stakeTokens(msg.sender, tokens, weiChange);
         // the transfer of wei and the updating of DT weiBal happens via the next line
         distributeToken.transferWeiTo(_projectAddress, weiChange);
         distributeToken.transferToEscrow(msg.sender, tokens);

@@ -34,6 +34,7 @@ contract ReputationRegistry is Ownable {
         address indexed registree
     );
 
+    event LogProjectCreated(address projectAddress, uint256 weiCost, uint256 reputationCost);
     event LogStakedReputation(address indexed projectAddress, uint256 reputation, address staker, bool staked);
     event LogUnstakedReputation(address indexed projectAddress, uint256 reputation, address unstaker);
 
@@ -188,9 +189,8 @@ contract ReputationRegistry is Ownable {
         totalSupply) /
         10000000000;
         require(users[msg.sender].balance >= proposerReputationCost);
-
         users[msg.sender].balance -= proposerReputationCost;
-        projectRegistry.createProject(
+        address projectAddress = projectRegistry.createProject(
             _cost,
             costProportion,
             _stakingPeriod,
@@ -199,6 +199,7 @@ contract ReputationRegistry is Ownable {
             proposerReputationCost,
             _ipfsHash
         );
+        emit LogProjectCreated(projectAddress, _cost, proposerReputationCost);
     }
 
     /**
@@ -211,6 +212,7 @@ contract ReputationRegistry is Ownable {
         Project project = Project(_projectAddress);                                         //called by proposer to get refund once project is active
         require(project.proposer() == msg.sender);
         require(project.proposerType() == 2);
+
         uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);   //call project to "send back" staked tokens to put in proposer's balances
         users[msg.sender].balance += proposerVals[1];
         distributeToken.transferWeiTo(msg.sender, proposerVals[0] / 20);

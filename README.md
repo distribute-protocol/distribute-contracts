@@ -1,4 +1,3 @@
-# !!!!!!!!!!!!!!OUTDATED!!!!!!!!!!!!!!!!
 # Contract Docs
 
 ## What is the Distribute Protocol
@@ -31,10 +30,8 @@ The reputation registry is the central contract for the Distribute Protocol to m
 #### ProjectRegistry.sol
 The project registry manages and records the state of projects and allows for the user to interact with projects by creating projects, add tasks after the project has been staked, submit hashed task lists to finalize the tasks for a project, claim tasks, and submit completed tasks for validation. The project registry contract provides a way for the user to manage the information in each project and return information to the token and reputation registries. The project registry does not initialize any projects, just handles the information within a project and the state of the projects. ProjectRegistry.sol calls ProjectLibrary.sol to check what stage a project is in and tell the token registry or reputation registry to burn tokens and reputation if needed.
 
-
 #### ProjectLibrary.sol
 The project library manages interactions with a project by acting as library with functions that can be imported. ProjectLibrary.sol records how a project is staked, the time a project has till it expires, the staking power a user has on an individual project, supports validation functionality, allows for a worker to claim their reward after completing a task, and refunds any user who staked reputation or capital tokens. Along with providing these function, the project library has functions that do the actual state checking of a project to return to the project registry.
-
 
 #### Project.sol
 The project contract manages each individual project and holds in the information recorded from ProjectRegistry.sol. As a project is proposed a new project contract is created to manage interactions with a unique project. Nothing in Project.sol can be directly called by the user and instead all calls go through the three registries. As staking, task claiming, and validation occurs, the users participating in these actions are recorded on each project with the amount of tokens or reputation staked by them.
@@ -245,6 +242,8 @@ projectRegistry.checkValidate(_projectAddress)
 ```
 [put diagram here eventually]
 
+---
+# !!!!!!!!!!!!!!OUTDATED!!!!!!!!!!!!!!!!
 #### 4 - Validating
 
 ##### Validate Yes/No w/Tokens
@@ -325,7 +324,6 @@ projectRegistry.checkEnd(_projectAddress)
 #### 6 - Complete
 When a project reaches stage 6- Complete, all stakers (reputation and token holders) regain their stake, and the positive validators are rewarded for their validation.
 
-
 ##### Stakers Can Pull Their Stakes and be Rewarded
 ```
 let _projectAddress = '0x0b239F63eC6248162c7F19B0B2956186725eb321'
@@ -367,6 +365,7 @@ let _index = 0
 reputationRegistry.rewardTask(_projectAddress, _index)
 ```
 [put diagram here eventually]
+---
 
 #### 7 - Failed
 If a **task** fails, the associated wei needed to complete it is returned to the collective pool from the project balance. Validators who correctly marked the task as incomplete are rewarded. The reputation tokens staked by the worker who failed to complete the task are burned.

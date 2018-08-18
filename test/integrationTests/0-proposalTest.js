@@ -103,7 +103,7 @@ contract('Propose Projects', function (accounts) {
 
       assert.equal(TR.address, _TRaddr, 'PR stored incorrect token registry address')
       assert.equal(PR.address, _PRaddr, 'PR stored incorrect project registry address')
-      assert.equal(projectCost, _weiCost, 'PR stored incorrect project cost')
+      assert.equal(projectCost * 1.05, _weiCost, 'PR stored incorrect project cost')
       assert.equal(repCost, _repCost, 'PR stored incorrect rep cost')
       assert.equal(1, _state, 'PR stored incorrect state')
       assert.equal(stakingPeriod, _nextDeadline, 'PR stored incorrect staking period')
@@ -150,7 +150,7 @@ contract('Propose Projects', function (accounts) {
 
       assert.equal(TR.address, _TRaddr, 'PR stored incorrect token registry address')
       assert.equal(PR.address, _PRaddr, 'PR stored incorrect project registry address')
-      assert.equal(projectCost, _weiCost, 'PR stored incorrect project cost')
+      assert.equal(projectCost * 1.05, _weiCost, 'PR stored incorrect project cost')
       assert.equal(repCost, _repCost, 'PR stored incorrect rep cost')
       assert.equal(1, _state, 'PR stored incorrect state')
       assert.equal(stakingPeriod, _nextDeadline, 'PR stored incorrect staking period')
