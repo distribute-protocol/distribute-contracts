@@ -172,7 +172,7 @@ contract TokenRegistry is Ownable {
 
         uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);        //call project to "send back" staked tokens to put in proposer's balances
         distributeToken.transferFromEscrow(msg.sender, proposerVals[1]);
-        distributeToken.transferWeiTo(msg.sender, proposerVals[0] / (100));
+        distributeToken.transferWeiTo(msg.sender, proposerVals[0] / (20));
     }
 
     /**
@@ -181,7 +181,7 @@ contract TokenRegistry is Ownable {
     @param _amount Address of the project
     */
     function rewardOriginator(
-      address _rewardee
+      address _rewardee,
       uint _amount
     ) external onlyPR {
       DistributeToken(distributeTokenAddress).transferWeiTo(_rewardee, _amount);
@@ -419,6 +419,7 @@ contract TokenRegistry is Ownable {
 
         Project(_projectAddress).clearTokenStake(msg.sender);
         distributeToken.transferFromEscrow(msg.sender, refund);
+        distributeToken.transferTokensTo(msg.sender, refund / 20);
     }
 
     /**
