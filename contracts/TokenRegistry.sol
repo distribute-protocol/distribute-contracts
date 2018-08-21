@@ -185,9 +185,9 @@ contract TokenRegistry is Ownable {
     function rewardOriginator(
       address _rewardee,
       uint _amount
-    ) external {
-    /* ) external onlyPR { */
-      /* require(!freeze); */
+    /* ) external { */
+    ) external onlyPR {
+      require(!freeze);
       distributeToken.transferWeiTo(_rewardee, _amount);
     }
 

@@ -5,7 +5,7 @@ import "./ReputationRegistry.sol";
 import "./DistributeToken.sol";
 import "./ProjectLibrary.sol";
 import "./Task.sol";
-import "bytes/BytesLib.sol";
+import "./bytes/BytesLib.sol";
 import "./library/SafeMath.sol";
 import "./library/Ownable.sol";
 
