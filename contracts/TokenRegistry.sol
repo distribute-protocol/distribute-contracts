@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "./ProjectRegistry.sol";
 import "./DistributeToken.sol";
@@ -185,9 +185,9 @@ contract TokenRegistry is Ownable {
     function rewardOriginator(
       address _rewardee,
       uint _amount
-    ) external {
-    /* ) external onlyPR { */
-      /* require(!freeze); */
+    /* ) external { */
+    ) external onlyPR {
+      require(!freeze);
       distributeToken.transferWeiTo(_rewardee, _amount);
     }
 
