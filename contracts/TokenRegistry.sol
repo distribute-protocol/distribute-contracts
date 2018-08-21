@@ -360,7 +360,7 @@ contract TokenRegistry is Ownable {
     function voteCommit(
         address _projectAddress,
         uint256 _index,
-        uint256 _tokens,
+        uint256 _votes,
         bytes32 _secretHash,
         uint256 _prevPollID
     ) external {     // _secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
@@ -368,15 +368,20 @@ contract TokenRegistry is Ownable {
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         // calculate available tokens for voting
-        uint256 availableTokens = plcrVoting.getAvailableTokens(msg.sender, 1);
+        uint256 availableVotes = plcrVoting.getAvailableTokens(msg.sender, 1);
         // make sure msg.sender has tokens available in PLCR contract
         // if not, request voting rights for token holder
-        if (availableTokens < _tokens) {
-            require(distributeToken.balanceOf(msg.sender) >= _tokens - availableTokens);
-            distributeToken.transferToEscrow(msg.sender, _tokens - availableTokens);
-            plcrVoting.requestVotingRights(msg.sender, _tokens - availableTokens);
+        if (availableVotes < _votes) {
+            uint votesCost = squared(_votes) - squared(availableVotes);
+            require(distributeToken.balanceOf(msg.sender) >= votesCost);
+            distributeToken.transferToEscrow(msg.sender, votesCost);
+            plcrVoting.requestVotingRights(msg.sender, _votes - availableVotes);
         }
-        plcrVoting.commitVote(msg.sender, pollId, _secretHash, _tokens, _prevPollID);
+        plcrVoting.commitVote(msg.sender, pollId, _secretHash, _votes, _prevPollID);
+    }
+
+    function squared(uint _amount) external returns (uint) {
+      return _amount * _amount;
     }
 
     /**
@@ -401,10 +406,12 @@ contract TokenRegistry is Ownable {
     @notice Refunds staked tokens, thus also withdrawing voting rights from PLCR Contract
     @param _tokens Amount of tokens to withdraw
     */
-    function refundVotingTokens(uint256 _tokens) external {
+    function refundVotingTokens(uint256 _votes) external {
         require(!freeze);
-        plcrVoting.withdrawVotingRights(msg.sender, _tokens);
-        distributeToken.transferFromEscrow(msg.sender, _tokens);
+        uint userVotes = plcrVoting.getAvailableTokens(msg.sender, 1)
+        uint votesPrice = squared(userVotes) - squared(userVotes - _votes);
+        plcrVoting.withdrawVotingRights(msg.sender, _votes);
+        distributeToken.transferFromEscrow(msg.sender, votesPrice);
     }
 
     // =====================================================================
