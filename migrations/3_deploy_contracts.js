@@ -36,10 +36,11 @@ module.exports = function (deployer) {
     let RRInstance = await ReputationRegistry.deployed()
     // PRInstance.init(DistributeToken.address, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address, Project.address, Task.address, ProxyFactory.address),
 
-    return Promise.all([
-      PRInstance.init(DistributeToken.address, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address, Project.address, Task.address),
-      TRInstance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address),
-      RRInstance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address)
-    ])
+    await PRInstance.init(DistributeToken.address, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address, Project.address, Task.address),
+    await TRInstance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address),
+    await RRInstance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address)
+    // return Promise.all([
+    //
+    // ])
   })
 }

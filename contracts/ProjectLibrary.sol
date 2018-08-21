@@ -1,8 +1,7 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "./Project.sol";
 import "./TokenRegistry.sol";
-import "./ProjectRegistry.sol";
 import "./ReputationRegistry.sol";
 import "./Task.sol";
 import "./library/SafeMath.sol";
@@ -81,15 +80,18 @@ library ProjectLibrary {
         uint256 reputationWeight;
         uint256 tokenWeight;
         Project project = Project(_projectAddress);
-        project.reputationStaked() != 0
-            ? reputationWeight = Division.percent(
-                project.reputationBalances(_address),
-                project.reputationStaked(), 2)
-            : reputationWeight = 0;
-        project.tokensStaked() != 0
-            ? tokenWeight = Division.percent(project.tokenBalances(_address), project.tokensStaked(), 2)
-            : tokenWeight = 0;
-        return (reputationWeight + tokenWeight) / 2;
+        if(isStaker(_projectAddress, _address)){
+          project.reputationStaked() != 0
+              ? reputationWeight = Division.percent(
+                  project.reputationBalances(_address),
+                  project.reputationStaked(), 15)
+              : reputationWeight = 0;
+          project.tokensStaked() != 0
+              ? tokenWeight = Division.percent(project.tokenBalances(_address), project.tokensStaked(), 15)
+              : tokenWeight = 0;
+          return (reputationWeight + tokenWeight) / 2;
+        }
+        return 0;
     }
 
     // =====================================================================

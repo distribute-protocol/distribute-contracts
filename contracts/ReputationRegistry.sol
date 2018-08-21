@@ -1,8 +1,8 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "./Project.sol";
 import "./ProjectLibrary.sol";
-import "./ProjectRegistry.sol";
+import "./ProjectRegistryInterface.sol";
 import "./DistributeToken.sol";
 import "./Task.sol";
 import "./library/PLCRVoting.sol";
@@ -43,7 +43,7 @@ contract ReputationRegistry is Ownable {
     // =====================================================================
 
     DistributeToken distributeToken;
-    ProjectRegistry projectRegistry;
+    ProjectRegistryInterface projectRegistry;
     PLCRVoting plcrVoting;
 
     struct User {
@@ -89,7 +89,7 @@ contract ReputationRegistry is Ownable {
             address(projectRegistry) == 0 &&
             address(plcrVoting) == 0
         );
-        projectRegistry = ProjectRegistry(_projectRegistry);
+        projectRegistry = ProjectRegistryInterface(_projectRegistry);
         plcrVoting = PLCRVoting(_plcrVoting);
         distributeToken = DistributeToken(_distributeToken);
     }
@@ -145,7 +145,7 @@ contract ReputationRegistry is Ownable {
      * @param _newProjectRegistry Address of the new project contract
      */
     function updateProjectRegistry(address _newProjectRegistry) external onlyOwner {
-      projectRegistry = ProjectRegistry(_newProjectRegistry);
+      projectRegistry = ProjectRegistryInterface(_newProjectRegistry);
     }
 
 
@@ -215,7 +215,7 @@ contract ReputationRegistry is Ownable {
 
         uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);   //call project to "send back" staked tokens to put in proposer's balances
         users[msg.sender].balance += proposerVals[1];
-        distributeToken.transferWeiTo(msg.sender, proposerVals[0] / (100));
+        distributeToken.transferWeiTo(msg.sender, proposerVals[0] / 20);
     }
 
     // =====================================================================
@@ -262,6 +262,22 @@ contract ReputationRegistry is Ownable {
         Project(_projectAddress).unstakeReputation(msg.sender, _reputation);
         emit LogUnstakedReputation(_projectAddress, _reputation, msg.sender);
     }
+
+    /**
+    @notice Calculates the relative weight of an `_address`.
+    Weighting is calculated by the proportional amount of both reputation and tokens that have been
+    staked on the project.
+    @dev Returns an average of the token staking and reputation staking to understand the relative influence of a staker
+
+    @param _address Address of the staker
+    @return The relative weight of a staker as a whole integer
+    */
+    function calculateWeightOfAddress(
+        address _address
+    ) public view returns (uint256) {
+        return Division.percent(users[_address].balance, totalSupply, 15);
+    }
+
 
     // =====================================================================
     // TASK

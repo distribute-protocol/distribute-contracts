@@ -1,6 +1,6 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
-import "./library/PLCRVoting.sol";
+/* import "./library/PLCRVoting.sol"; */
 import "./ReputationRegistry.sol";
 import "./DistributeToken.sol";
 import "./ProjectLibrary.sol";
@@ -8,6 +8,7 @@ import "./Task.sol";
 import "bytes/BytesLib.sol";
 import "./library/SafeMath.sol";
 import "./library/Ownable.sol";
+import "./ProjectRegistryInterface.sol";
 
 /**
 @title Project Registry for Distribute Network
@@ -16,7 +17,7 @@ import "./library/Ownable.sol";
 @dev This contract must be initialized with the address of a valid Token Registry, Reputation Registry
 and Distribute Token
 */
-contract ProjectRegistry is Ownable {
+contract ProjectRegistry is Ownable, ProjectRegistryInterface {
 
     using ProjectLibrary for address;
     using BytesLib for bytes;
@@ -42,7 +43,7 @@ contract ProjectRegistry is Ownable {
     // STATE VARIABLES
     // =====================================================================
 
-    PLCRVoting plcrVoting;
+    /* PLCRVoting plcrVoting;
     address tokenRegistryAddress;
     address reputationRegistryAddress;
     address distributeTokenAddress;
@@ -53,17 +54,18 @@ contract ProjectRegistry is Ownable {
     mapping (uint => address) public projectsList;
     mapping (address => bool) public projects;
 
-    struct StakedState {
+    /* struct StakedState {
         bytes32 topTaskHash;
         mapping(address => bytes32) taskHashSubmissions;
         mapping(bytes32 => uint256) numSubmissionsByWeight;
-    }
+        mapping(bytes32 => address) originator;
+    } */
 
-    mapping (address => StakedState) public stakedProjects;
+    /* mapping (address => StakedState) public stakedProjects;
 
     uint[5] public validationRewardWeightings = [36, 24, 17, 13, 10];
 
-    bool freeze;
+    bool freeze; */
 
     // =====================================================================
     // MODIFIERS
@@ -433,17 +435,20 @@ contract ProjectRegistry is Ownable {
     @param _projectAddress Address of the project
     @param _taskHash Hash of the task list
     */
-    function addTaskHash(address _projectAddress, bytes32 _taskHash) external  {      // format of has should be 'description', 'percentage', check via js that percentages add up to 100 prior to calling contract
+    function addTaskHash(address _projectAddress, bytes32 _taskHash) external  { // format of has should be 'description', 'percentage', check via js that percentages add up to 100 prior to calling contract
         require(!freeze);
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
-        require(_projectAddress.isStaker(msg.sender) == true);
         checkActive(_projectAddress);
         require(project.state() == 2);
-
+        ReputationRegistry rr = ReputationRegistry(reputationRegistryAddress);
+        TokenRegistry tr = TokenRegistry(tokenRegistryAddress);
+        uint256 networkWeight = (rr.calculateWeightOfAddress(msg.sender) + tr.calculateWeightOfAddress(msg.sender)) / 2;
         uint256 stakerWeight = _projectAddress.calculateWeightOfAddress(msg.sender);
-        stakedTaskHash(_projectAddress, msg.sender, _taskHash, stakerWeight);
-        emit LogTaskHashSubmitted(_projectAddress, _taskHash, msg.sender, stakerWeight);
+        uint256 totalWeight = (networkWeight + stakerWeight) / 2;
+        require(totalWeight > 0);
+        stakedTaskHash(_projectAddress, msg.sender, _taskHash, totalWeight);
+        emit LogTaskHashSubmitted(_projectAddress, _taskHash, msg.sender, totalWeight);
     }
 
     /**
@@ -468,11 +473,29 @@ contract ProjectRegistry is Ownable {
         }
         ss.numSubmissionsByWeight[_taskHash] += _stakerWeight;
         ss.taskHashSubmissions[_staker] = _taskHash;
+        if (ss.originator[_taskHash] == 0) {
+          ss.originator[_taskHash] = _staker;
+        }
         if(ss.numSubmissionsByWeight[_taskHash] > ss.numSubmissionsByWeight[ss.topTaskHash]) {
             ss.topTaskHash = _taskHash;
         }
     }
+    /**
+    @notice Rewards the originator of a project plan in tokens.
+    @param _projectAddress Address of the project
+    */
+    function rewardOriginator(
+      address _projectAddress
+    ) external {
+      Project project =  Project(_projectAddress);
+      require(project.state() == 6);
+      StakedState storage ss = stakedProjects[_projectAddress];
+      require(msg.sender == ss.originator[ss.topTaskHash]);
+      ss.originator[ss.topTaskHash] = 0;
+      uint amount = (Project(_projectAddress).proposedCost() + DistributeToken(distributeTokenAddress).weiBal()) / 2;
+      /* TokenRegistry(tokenRegistryAddress).rewardOriginator(msg.sender, amount); */
 
+    }
     // =====================================================================
     // ACTIVE
     // =====================================================================
