@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-import "./library/PLCRVoting.sol";
+/* import "./library/PLCRVoting.sol"; */
 import "./ReputationRegistry.sol";
 import "./DistributeToken.sol";
 import "./ProjectLibrary.sol";
@@ -8,6 +8,7 @@ import "./Task.sol";
 import "bytes/BytesLib.sol";
 import "./library/SafeMath.sol";
 import "./library/Ownable.sol";
+import "./ProjectRegistryInterface.sol";
 
 /**
 @title Project Registry for Distribute Network
@@ -16,7 +17,7 @@ import "./library/Ownable.sol";
 @dev This contract must be initialized with the address of a valid Token Registry, Reputation Registry
 and Distribute Token
 */
-contract ProjectRegistry is Ownable {
+contract ProjectRegistry is Ownable, ProjectRegistryInterface {
 
     using ProjectLibrary for address;
     using BytesLib for bytes;
@@ -42,7 +43,7 @@ contract ProjectRegistry is Ownable {
     // STATE VARIABLES
     // =====================================================================
 
-    PLCRVoting plcrVoting;
+    /* PLCRVoting plcrVoting;
     address tokenRegistryAddress;
     address reputationRegistryAddress;
     address distributeTokenAddress;
@@ -53,18 +54,18 @@ contract ProjectRegistry is Ownable {
     mapping (uint => address) public projectsList;
     mapping (address => bool) public projects;
 
-    struct StakedState {
+    /* struct StakedState {
         bytes32 topTaskHash;
         mapping(address => bytes32) taskHashSubmissions;
         mapping(bytes32 => uint256) numSubmissionsByWeight;
         mapping(bytes32 => address) originator;
-    }
+    } */
 
-    mapping (address => StakedState) public stakedProjects;
+    /* mapping (address => StakedState) public stakedProjects;
 
     uint[5] public validationRewardWeightings = [36, 24, 17, 13, 10];
 
-    bool freeze;
+    bool freeze; */
 
     // =====================================================================
     // MODIFIERS
@@ -492,7 +493,7 @@ contract ProjectRegistry is Ownable {
       require(msg.sender == ss.originator[ss.topTaskHash]);
       ss.originator[ss.topTaskHash] = 0;
       uint amount = (Project(_projectAddress).proposedCost() + DistributeToken(distributeTokenAddress).weiBal()) / 2;
-      TokenRegistry(tokenRegistryAddress).rewardOriginator(msg.sender, amount);
+      /* TokenRegistry(tokenRegistryAddress).rewardOriginator(msg.sender, amount); */
 
     }
     // =====================================================================

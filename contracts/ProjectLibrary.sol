@@ -2,7 +2,6 @@ pragma solidity ^0.4.24;
 
 import "./Project.sol";
 import "./TokenRegistry.sol";
-import "./ProjectRegistry.sol";
 import "./ReputationRegistry.sol";
 import "./Task.sol";
 import "./library/SafeMath.sol";

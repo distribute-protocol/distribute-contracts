@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 
 import "./Project.sol";
 import "./ProjectLibrary.sol";
-import "./ProjectRegistry.sol";
+import "./ProjectRegistryInterface.sol";
 import "./DistributeToken.sol";
 import "./Task.sol";
 import "./library/PLCRVoting.sol";
@@ -43,7 +43,7 @@ contract ReputationRegistry is Ownable {
     // =====================================================================
 
     DistributeToken distributeToken;
-    ProjectRegistry projectRegistry;
+    ProjectRegistryInterface projectRegistry;
     PLCRVoting plcrVoting;
 
     struct User {
@@ -89,7 +89,7 @@ contract ReputationRegistry is Ownable {
             address(projectRegistry) == 0 &&
             address(plcrVoting) == 0
         );
-        projectRegistry = ProjectRegistry(_projectRegistry);
+        projectRegistry = ProjectRegistryInterface(_projectRegistry);
         plcrVoting = PLCRVoting(_plcrVoting);
         distributeToken = DistributeToken(_distributeToken);
     }
@@ -145,7 +145,7 @@ contract ReputationRegistry is Ownable {
      * @param _newProjectRegistry Address of the new project contract
      */
     function updateProjectRegistry(address _newProjectRegistry) external onlyOwner {
-      projectRegistry = ProjectRegistry(_newProjectRegistry);
+      projectRegistry = ProjectRegistryInterface(_newProjectRegistry);
     }
 
 
