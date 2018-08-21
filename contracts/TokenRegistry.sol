@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-import "./ProjectRegistry.sol";
+import "./ProjectRegistryInterface.sol";
 import "./DistributeToken.sol";
 import "./Project.sol";
 import "./ProjectLibrary.sol";
@@ -36,10 +36,12 @@ contract TokenRegistry is Ownable {
     // STATE VARIABLES
     // =====================================================================
 
-    ProjectRegistry projectRegistry;
+    /* ProjectRegistryInterface projectRegistry; */
+
     DistributeToken distributeToken;
     PLCRVoting plcrVoting;
 
+    address projectRegistryAddress;
     uint256 proposeProportion = 200000000000;  // tokensupply/proposeProportion is the number of tokens the proposer must stake
     uint256 rewardProportion = 100;
 
@@ -50,7 +52,7 @@ contract TokenRegistry is Ownable {
     // =====================================================================
 
     modifier onlyPR() {
-        require(msg.sender == address(projectRegistry));
+        require(msg.sender == projectRegistryAddress);
         _;
     }
 
@@ -68,12 +70,12 @@ contract TokenRegistry is Ownable {
     function init(address _distributeToken, address _projectRegistry, address _plcrVoting) public { //contract is created
         require(
             address(distributeToken) == 0 &&
-            address(projectRegistry) == 0 &&
+            projectRegistryAddress == 0 &&
             address(plcrVoting) == 0
         );
 
         distributeToken = DistributeToken(_distributeToken);
-        projectRegistry = ProjectRegistry(_projectRegistry);
+        /* projectRegistry = ProjectRegistryInterface(_projectRegistry); */
         plcrVoting = PLCRVoting(_plcrVoting);
     }
 
@@ -116,7 +118,7 @@ contract TokenRegistry is Ownable {
      * @param _newProjectRegistry Address of the new project contract
      */
     function updateProjectRegistry(address _newProjectRegistry) external onlyOwner {
-      projectRegistry = ProjectRegistry(_newProjectRegistry);
+      projectRegistry = ProjectRegistryInterface(_newProjectRegistry);
     }
 
     // =====================================================================
