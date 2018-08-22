@@ -148,6 +148,9 @@ contract ReputationRegistry is Ownable {
       projectRegistry = ProjectRegistry(_newProjectRegistry);
     }
 
+    function squaredAmount(uint _amount) internal returns (uint) {
+      return _amount * _amount;
+    }
 
     // =====================================================================
     // START UP
@@ -340,7 +343,7 @@ contract ReputationRegistry is Ownable {
     which is a tightly packed hash of the voters choice and their salt
     @param _projectAddress Address of the project
     @param _index Index of the task
-    @param _reputation Reputation to vote with
+    @param _votes Reputation to vote with
     @param _secretHash Secret Hash of voter choice and salt
     @param _prevPollID The nonce of the previous poll. This is stored off chain
     */
@@ -359,16 +362,12 @@ contract ReputationRegistry is Ownable {
         //make sure msg.sender has tokens available in PLCR contract
         //if not, request voting rights for token holder
         if (availableVotes < _votes) {
-            uint votesCost = squared(_votes) - squared(availableVotes);
+            uint votesCost = squaredAmount(_votes) - squaredAmount(availableVotes);
             require(users[msg.sender].balance >= votesCost);
             users[msg.sender].balance -= votesCost;
             plcrVoting.requestVotingRights(msg.sender, _votes - availableVotes);
         }
         plcrVoting.commitVote(msg.sender, pollId, _secretHash, _votes, _prevPollID);
-    }
-
-    function squared(uint _amount) external returns (uint) {
-      return _amount * _amount;
     }
 
     /**
@@ -393,12 +392,12 @@ contract ReputationRegistry is Ownable {
 
     /**
     @notice Withdraw voting rights from PLCR Contract
-    @param _reputation Amount of reputation to withdraw
+    @param _votes Amount of reputation to withdraw
     */
     function refundVotingReputation(uint256 _votes) external {
         require(!freeze);
-        uint userVotes = plcrVoting.getAvailableTokens(msg.sender, 2)
-        uint votesPrice = squared(userVotes) - squared(userVotes - _votes);
+        uint userVotes = plcrVoting.getAvailableTokens(msg.sender, 2);
+        uint votesPrice = squaredAmount(userVotes) - squaredAmount(userVotes - _votes);
         users[msg.sender].balance += _votes;
         plcrVoting.withdrawVotingRights(msg.sender, _votes);
     }
