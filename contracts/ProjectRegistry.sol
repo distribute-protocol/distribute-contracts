@@ -35,6 +35,7 @@ contract ProjectRegistry is Ownable {
     event LogSubmitTaskComplete(address projectAddress, uint256 index, uint256 validationFee);
     event LogProjectValidate(address projectAddress, bool validate);
     event LogProjectVoting(address projectAddress, bool vote);
+    event LogProjectEnd(address projectAddress, uint end);
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */
 
@@ -345,12 +346,13 @@ contract ProjectRegistry is Ownable {
     @notice Calls the project library checkEnd function. Burns tokens and reputation if the project fails
     @dev Used to create the correct msg.sender to manage control
     @param _projectAddress Address of the project
-    @return Boolean representing Final Status
+    @return uint representing Final Status
     */
     function checkEnd(address _projectAddress) external {
         require(!freeze);
         require(projects[_projectAddress] == true);
-        _projectAddress.checkEnd(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting), reputationRegistryAddress);
+        uint end = _projectAddress.checkEnd(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting), reputationRegistryAddress);
+        emit LogProjectEnd(_projectAddress, end);
     }
 
     // =====================================================================
