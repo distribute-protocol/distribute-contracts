@@ -169,8 +169,6 @@ contract Project {
         validationReward = _cost * 5 / 100;
         proposedCost = _cost;
         weiCost = proposedCost + validationReward;
-
-        // This is broken math
         reputationCost = _costProportion * ReputationRegistry(_reputationRegistry).totalSupply() / 10000000000;
         state = 1;
         nextDeadline = _stakingPeriod;

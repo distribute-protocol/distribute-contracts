@@ -242,6 +242,7 @@ library ProjectLibrary {
                     }
                 }
             }
+            return true;
         }
         return false;
     }
@@ -267,7 +268,7 @@ library ProjectLibrary {
         address _distributeTokenAddress,
         address _plcrVoting,
         address _reputationRegistryAddress
-    ) public returns (bool) {
+    ) public returns (uint) {
         Project project = Project(_projectAddress);
         require(project.state() == 5);
 
@@ -292,15 +293,16 @@ library ProjectLibrary {
             calculatePassAmount(_projectAddress);
             if (project.passAmount() >= project.passThreshold()) {
               project.setState(6, 0);
+              return 1;
             } else {
               project.setState(7, 0);
               TokenRegistry(_tokenRegistryAddress).burnTokens(project.tokensStaked());
               ReputationRegistry(_reputationRegistryAddress).burnReputation(project.reputationStaked());
               project.clearStake();
+              return 2;
             }
-            return true;
         }
-        return false;
+        return 0;
     }
 
     // =====================================================================

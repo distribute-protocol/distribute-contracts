@@ -37,6 +37,9 @@ contract ReputationRegistry is Ownable {
     event LogProjectCreated(address projectAddress, uint256 weiCost, uint256 reputationCost);
     event LogStakedReputation(address indexed projectAddress, uint256 reputation, address staker, bool staked);
     event LogUnstakedReputation(address indexed projectAddress, uint256 reputation, address unstaker);
+    event LogReputationVoteCommitted(address indexed projectAddress, uint256 index, uint256 tokens, bytes32 secretHash, uint256 pollId, address voter);
+    event LogReputationVoteRevealed(address indexed projectAddress, uint256 index, uint256 voteOption, uint256 salt, address voter);
+    event LogReputationVoteRescued(address indexed projectAddress, uint256 index, uint256 pollId, address voter);
 
     // =====================================================================
     // STATE VARIABLES
@@ -368,6 +371,7 @@ contract ReputationRegistry is Ownable {
             plcrVoting.requestVotingRights(msg.sender, _votes - availableVotes);
         }
         plcrVoting.commitVote(msg.sender, pollId, _secretHash, _votes, _prevPollID);
+        emit LogReputationVoteCommitted(_projectAddress, _index, _votes, _secretHash, pollId, msg.sender);
     }
 
     /**
@@ -388,6 +392,7 @@ contract ReputationRegistry is Ownable {
         Project project = Project(_projectAddress);
         uint256 pollId = Task(project.tasks(_index)).pollId();
         plcrVoting.revealVote(msg.sender, pollId, _voteOption, _salt);
+        emit LogReputationVoteRevealed(_projectAddress, _index, _voteOption, _salt, msg.sender);
     }
 
     /**
@@ -430,6 +435,7 @@ contract ReputationRegistry is Ownable {
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         plcrVoting.rescueTokens(msg.sender, pollId);
+        emit LogReputationVoteRescued(_projectAddress, _index, pollId, msg.sender);
     }
 
 
