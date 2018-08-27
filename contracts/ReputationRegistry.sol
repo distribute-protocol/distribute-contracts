@@ -151,6 +151,9 @@ contract ReputationRegistry is Ownable {
       projectRegistry = ProjectRegistry(_newProjectRegistry);
     }
 
+    function squaredAmount(uint _amount) internal returns (uint) {
+      return _amount * _amount;
+    }
 
     // =====================================================================
     // START UP
@@ -343,14 +346,14 @@ contract ReputationRegistry is Ownable {
     which is a tightly packed hash of the voters choice and their salt
     @param _projectAddress Address of the project
     @param _index Index of the task
-    @param _reputation Reputation to vote with
+    @param _votes Reputation to vote with
     @param _secretHash Secret Hash of voter choice and salt
     @param _prevPollID The nonce of the previous poll. This is stored off chain
     */
     function voteCommit(
         address _projectAddress,
         uint256 _index,
-        uint256 _reputation,
+        uint256 _votes,
         bytes32 _secretHash,
         uint256 _prevPollID
     ) external {     //_secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
@@ -358,16 +361,17 @@ contract ReputationRegistry is Ownable {
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         //calculate available tokens for voting
-        uint256 availableTokens = plcrVoting.getAvailableTokens(msg.sender, 2);
+        uint256 availableVotes = plcrVoting.getAvailableTokens(msg.sender, 2);
         //make sure msg.sender has tokens available in PLCR contract
         //if not, request voting rights for token holder
-        if (availableTokens < _reputation) {
-            require(users[msg.sender].balance >= _reputation - availableTokens);
-            users[msg.sender].balance -= (_reputation - availableTokens);
-            plcrVoting.requestVotingRights(msg.sender, _reputation - availableTokens);
+        if (availableVotes < _votes) {
+            uint votesCost = squaredAmount(_votes) - squaredAmount(availableVotes);
+            require(users[msg.sender].balance >= votesCost);
+            users[msg.sender].balance -= votesCost;
+            plcrVoting.requestVotingRights(msg.sender, _votes - availableVotes);
         }
-        plcrVoting.commitVote(msg.sender, pollId, _secretHash, _reputation, _prevPollID);
-        emit LogReputationVoteCommitted(_projectAddress, _index, _reputation, _secretHash, pollId, msg.sender);
+        plcrVoting.commitVote(msg.sender, pollId, _secretHash, _votes, _prevPollID);
+        emit LogReputationVoteCommitted(_projectAddress, _index, _votes, _secretHash, pollId, msg.sender);
     }
 
     /**
@@ -393,12 +397,14 @@ contract ReputationRegistry is Ownable {
 
     /**
     @notice Withdraw voting rights from PLCR Contract
-    @param _reputation Amount of reputation to withdraw
+    @param _votes Amount of reputation to withdraw
     */
-    function refundVotingReputation(uint256 _reputation) external {
+    function refundVotingReputation(uint256 _votes) external {
         require(!freeze);
-        users[msg.sender].balance += _reputation;
-        plcrVoting.withdrawVotingRights(msg.sender, _reputation);
+        uint userVotes = plcrVoting.getAvailableTokens(msg.sender, 2);
+        uint votesPrice = squaredAmount(userVotes) - squaredAmount(userVotes - _votes);
+        users[msg.sender].balance += _votes;
+        plcrVoting.withdrawVotingRights(msg.sender, _votes);
     }
 
     // =====================================================================

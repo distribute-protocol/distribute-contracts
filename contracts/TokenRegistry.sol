@@ -122,6 +122,11 @@ contract TokenRegistry is Ownable {
       projectRegistry = ProjectRegistry(_newProjectRegistry);
     }
 
+    function squaredAmount(uint _amount) internal returns (uint) {
+      return _amount * _amount;
+    }
+
+
     // =====================================================================
     // FALLBACK
     // =====================================================================
@@ -356,14 +361,14 @@ contract TokenRegistry is Ownable {
     which is a tightly packed hash of the voters choice and their salt
     @param _projectAddress Address of the project
     @param _index Index of the task
-    @param _tokens Tokens to vote with
+    @param _votes Tokens to vote with
     @param _secretHash Secret Hash of voter choice and salt
     @param _prevPollID The nonce of the previous poll. This is stored off chain
     */
     function voteCommit(
         address _projectAddress,
         uint256 _index,
-        uint256 _tokens,
+        uint256 _votes,
         bytes32 _secretHash,
         uint256 _prevPollID
     ) external {     // _secretHash Commit keccak256 hash of voter's choice and salt (tightly packed in this order), done off-chain
@@ -371,17 +376,17 @@ contract TokenRegistry is Ownable {
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         // calculate available tokens for voting
-        uint256 availableTokens = plcrVoting.getAvailableTokens(msg.sender, 1);
+        uint256 availableVotes = plcrVoting.getAvailableTokens(msg.sender, 1);
         // make sure msg.sender has tokens available in PLCR contract
         // if not, request voting rights for token holder
-        if (availableTokens < _tokens) {
-            require(distributeToken.balanceOf(msg.sender) >= _tokens - availableTokens);
-            distributeToken.transferToEscrow(msg.sender, _tokens - availableTokens);
-            plcrVoting.requestVotingRights(msg.sender, _tokens - availableTokens);
+        if (availableVotes < _votes) {
+            uint votesCost = squaredAmount(_votes) - squaredAmount(availableVotes);
+            require(distributeToken.balanceOf(msg.sender) >= votesCost);
+            distributeToken.transferToEscrow(msg.sender, votesCost);
+            plcrVoting.requestVotingRights(msg.sender, _votes - availableVotes);
         }
-        plcrVoting.commitVote(msg.sender, pollId, _secretHash, _tokens, _prevPollID);
-        emit LogTokenVoteCommitted(_projectAddress, _index, _tokens, _secretHash, pollId, msg.sender);
-
+        plcrVoting.commitVote(msg.sender, pollId, _secretHash, _votes, _prevPollID);
+        emit LogTokenVoteCommitted(_projectAddress, _index, _votes, _secretHash, pollId, msg.sender);
     }
 
     /**
@@ -405,12 +410,14 @@ contract TokenRegistry is Ownable {
 
     /**
     @notice Refunds staked tokens, thus also withdrawing voting rights from PLCR Contract
-    @param _tokens Amount of tokens to withdraw
+    @param _votes Amount of tokens to withdraw
     */
-    function refundVotingTokens(uint256 _tokens) external {
+    function refundVotingTokens(uint256 _votes) external {
         require(!freeze);
-        plcrVoting.withdrawVotingRights(msg.sender, _tokens);
-        distributeToken.transferFromEscrow(msg.sender, _tokens);
+        uint userVotes = plcrVoting.getAvailableTokens(msg.sender, 1);
+        uint votesPrice = squaredAmount(userVotes) - squaredAmount(userVotes - _votes);
+        plcrVoting.withdrawVotingRights(msg.sender, _votes);
+        distributeToken.transferFromEscrow(msg.sender, votesPrice);
     }
 
     // =====================================================================
