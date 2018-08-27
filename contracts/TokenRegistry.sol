@@ -177,7 +177,21 @@ contract TokenRegistry is Ownable {
 
         uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);        //call project to "send back" staked tokens to put in proposer's balances
         distributeToken.transferFromEscrow(msg.sender, proposerVals[1]);
-        distributeToken.transferWeiTo(msg.sender, proposerVals[0] / (100));
+        distributeToken.transferWeiTo(msg.sender, proposerVals[0] / (20));
+    }
+
+    /**
+    @notice Rewards the originator of a project plan in tokens.
+    @param _rewardee Address of the project
+    @param _amount Address of the project
+    */
+    function rewardOriginator(
+      address _rewardee,
+      uint _amount
+    /* ) external { */
+    ) external onlyPR {
+      require(!freeze);
+      distributeToken.transferWeiTo(_rewardee, _amount);
     }
 
     // =====================================================================
@@ -239,6 +253,18 @@ contract TokenRegistry is Ownable {
         distributeToken.returnWei(weiVal);
         distributeToken.transferFromEscrow(msg.sender, _tokens);
         emit LogUnstakedTokens(_projectAddress, _tokens, weiVal, msg.sender);
+    }
+
+    /**
+    @notice Calculates the relative weight of an `_address`.
+    Weighting is calculated by the proportional amount of tokens a user possess in relation to the total supply.
+    @param _address Address of the staker
+    @return The relative weight of a staker as a whole integer
+    */
+    function calculateWeightOfAddress(
+        address _address
+    ) public view returns (uint256) {
+        return Division.percent(distributeToken.balanceOf(_address), distributeToken.totalSupply(), 15);
     }
 
     // =====================================================================
@@ -403,6 +429,7 @@ contract TokenRegistry is Ownable {
 
         Project(_projectAddress).clearTokenStake(msg.sender);
         distributeToken.transferFromEscrow(msg.sender, refund);
+        distributeToken.transferTokensTo(msg.sender, refund / 20);
     }
 
     /**
