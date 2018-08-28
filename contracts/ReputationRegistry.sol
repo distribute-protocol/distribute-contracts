@@ -148,7 +148,7 @@ contract ReputationRegistry is Ownable {
       projectRegistry = ProjectRegistry(_newProjectRegistry);
     }
 
-    function squaredAmount(uint _amount) internal returns (uint) {
+    function squaredAmount(uint _amount) internal pure returns (uint) {
       return _amount * _amount;
     }
 
@@ -397,8 +397,9 @@ contract ReputationRegistry is Ownable {
     function refundVotingReputation(uint256 _votes) external {
         require(!freeze);
         uint userVotes = plcrVoting.getAvailableTokens(msg.sender, 2);
+        require(_votes <= userVotes);
         uint votesPrice = squaredAmount(userVotes) - squaredAmount(userVotes - _votes);
-        users[msg.sender].balance += _votes;
+        users[msg.sender].balance += votesPrice;
         plcrVoting.withdrawVotingRights(msg.sender, _votes);
     }
 
