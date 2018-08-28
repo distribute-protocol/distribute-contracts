@@ -31,6 +31,9 @@ contract TokenRegistry is Ownable {
     event LogUnstakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address unstaker);
     event LogValidateTask(address indexed projectAddress, uint256 validationFee, bool validationState, uint256 taskIndex, address validator);
     event LogRewardValidator(address indexed projectAddress, uint256 index, uint256 weiReward, uint256 returnAmount, address validator);
+    event LogTokenVoteCommitted(address indexed projectAddress, uint256 index, uint256 tokens, bytes32 secretHash, uint256 pollId, address voter);
+    event LogTokenVoteRevealed(address indexed projectAddress, uint256 index, uint256 voteOption, uint256 salt, address voter);
+    event LogTokenVoteRescued(address indexed projectAddress, uint256 index, uint256 pollId, address voter);
 
     // =====================================================================
     // STATE VARIABLES
@@ -383,6 +386,7 @@ contract TokenRegistry is Ownable {
             plcrVoting.requestVotingRights(msg.sender, _votes - availableVotes);
         }
         plcrVoting.commitVote(msg.sender, pollId, _secretHash, _votes, _prevPollID);
+        emit LogTokenVoteCommitted(_projectAddress, _index, _votes, _secretHash, pollId, msg.sender);
     }
 
     /**
@@ -401,6 +405,7 @@ contract TokenRegistry is Ownable {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         plcrVoting.revealVote(msg.sender, Task(Project(_projectAddress).tasks(_index)).pollId(), _voteOption, _salt);
+        emit LogTokenVoteRevealed(_projectAddress, _index, _voteOption, _salt, msg.sender);
     }
 
     /**
@@ -446,6 +451,7 @@ contract TokenRegistry is Ownable {
         //rescue locked tokens that weren't revealed
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         plcrVoting.rescueTokens(msg.sender, pollId);
+        emit LogTokenVoteRescued(_projectAddress, _index, pollId, msg.sender);
     }
 
     // =====================================================================
