@@ -122,7 +122,7 @@ contract TokenRegistry is Ownable {
       projectRegistry = ProjectRegistry(_newProjectRegistry);
     }
 
-    function squaredAmount(uint _amount) internal returns (uint) {
+    function squaredAmount(uint _amount) internal pure returns (uint) {
       return _amount * _amount;
     }
 

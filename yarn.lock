@@ -3057,6 +3057,10 @@ grouped-queue@^0.3.3:
   dependencies:
     lodash "^4.17.2"
 
+growl@1.10.0:
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/growl/-/growl-1.10.0.tgz#d6f18c34827383bd89fbd3f03131927c3b7159af"
+
 growl@1.10.3:
   version "1.10.3"
   resolved "https://registry.yarnpkg.com/growl/-/growl-1.10.3.tgz#1926ba90cf3edfe2adb4927f5880bc22c66c790f"
@@ -3188,6 +3192,10 @@ hmac-drbg@^1.0.0:
     hash.js "^1.0.3"
     minimalistic-assert "^1.0.0"
     minimalistic-crypto-utils "^1.0.1"
+
+hoek@4.2.1:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/hoek/-/hoek-4.2.1.tgz#9634502aa12c445dd5a7c5734b572bb8738aacbb"
 
 home-or-tmp@^2.0.0:
   version "2.0.0"
