@@ -3,6 +3,8 @@
     "bignumber.js": "^6.0.0",
     "ethereumjs-abi": "^0.6.5",
     "ethers": "^3.0.19",
+    "growl": "1.10.0",
+    "hoek": "4.2.1",
     "lodash": "4.17.10",
     "scrypt": "^6.0.3",
     "sha3": "^1.2.2",
