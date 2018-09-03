@@ -163,7 +163,8 @@ contract TokenRegistry is Ownable {
             msg.sender,
             1,
             proposerTokenCost,
-            _ipfsHash
+            _ipfsHash,
+            proposerTokenCost
         );
         emit LogProjectCreated(projectAddress, _cost, proposerTokenCost);
     }

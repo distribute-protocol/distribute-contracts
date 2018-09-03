@@ -26,7 +26,7 @@ contract ProjectRegistry is Ownable {
     // EVENTS
     // =====================================================================
 
-    event LogProjectCreated(address indexed projectAddress);
+    event LogProjectCreated(address indexed projectAddress, uint256 proposerCost);
     event LogProjectFullyStaked(address projectAddress, bool staked);
     event LogTaskHashSubmitted(address projectAddress, bytes32 taskHash, address submitter, uint weighting);
     event LogProjectActive(address projectAddress, bytes32 topTaskHash, bool active);
@@ -383,7 +383,8 @@ contract ProjectRegistry is Ownable {
         address _proposer,
         uint256 _proposerType,
         uint256 _proposerStake,
-        bytes _ipfsHash
+        bytes _ipfsHash,
+        uint256 _proposerCost
     ) external onlyTRorRR returns (address) {
         require(!freeze);
         address projectAddress = createProxyProject(
@@ -400,7 +401,7 @@ contract ProjectRegistry is Ownable {
         projects[projectAddress] = true;
         projectsList[projectNonce] = projectAddress;
         projectNonce += 1;
-        emit LogProjectCreated(projectAddress);
+        emit LogProjectCreated(projectAddress, _proposerCost);
         return projectAddress;
     }
 
