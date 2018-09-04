@@ -181,7 +181,7 @@ contract TokenRegistry is Ownable {
         require(project.proposer() == msg.sender);
         require(project.proposerType() == 1);
 
-        uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress);        //call project to "send back" staked tokens to put in proposer's balances
+        uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress, msg.sender);        //call project to "send back" staked tokens to put in proposer's balances
         distributeToken.transferFromEscrow(msg.sender, proposerVals[1]);
         distributeToken.transferWeiTo(msg.sender, proposerVals[0] / (20));
     }

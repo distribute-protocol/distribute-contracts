@@ -37,7 +37,7 @@ contract ProjectRegistry is Ownable {
     event LogProjectVoting(address projectAddress, bool vote);
     event LogProjectEnd(address projectAddress, uint end);
     event LogRewardOriginator(address projectAddress, address originator, uint256 reward);
-
+    event LogRefundProposer(address projectAddress, uint256 contractCaller, address proposer, uint256 proposedCost, uint256 proposedStake);
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */
 
@@ -414,17 +414,22 @@ contract ProjectRegistry is Ownable {
     @param _projectAddress Address of the project
     @return An array with the weiCost of the project and the proposers stake
     */
-    function refundProposer(address _projectAddress) external onlyTRorRR returns (uint256[2]) {
+    function refundProposer(address _projectAddress, address proposer) external onlyTRorRR returns (uint256[2]) {
         require(!freeze);
         require(projects[_projectAddress] == true);
-        Project project =  Project(_projectAddress);
+        Project project = Project(_projectAddress);
         require(project.state() > 1 && project.state() != 8);
         require(project.proposerStake() > 0);
+        uint256 contractCaller;
+        msg.sender == tokenRegistryAddress
+          ? contractCaller = 1
+          : contractCaller = 0;
 
         uint256[2] memory returnValues;
         returnValues[0] = project.proposedCost();
         returnValues[1] = project.proposerStake();
         project.clearProposerStake();
+        emit LogRefundProposer(_projectAddress, contractCaller, proposer, returnValues[0], returnValues[1]);
         return returnValues;
     }
 
@@ -496,7 +501,7 @@ contract ProjectRegistry is Ownable {
       StakedState storage ss = stakedProjects[_projectAddress];
       require(msg.sender == ss.originator[ss.topTaskHash]);
       ss.originator[ss.topTaskHash] = 0;
-      uint amount = (Project(_projectAddress).proposedCost() + DistributeToken(distributeTokenAddress).weiBal()) / 2;
+      uint amount = (project.proposedCost() + DistributeToken(distributeTokenAddress).weiBal()) / 2;
       TokenRegistry(tokenRegistryAddress).rewardOriginator(msg.sender, amount);
       emit LogRewardOriginator(_projectAddress, msg.sender, amount);
 
