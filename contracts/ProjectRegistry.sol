@@ -36,6 +36,8 @@ contract ProjectRegistry is Ownable {
     event LogProjectValidate(address projectAddress, bool validate);
     event LogProjectVoting(address projectAddress, bool vote);
     event LogProjectEnd(address projectAddress, uint end);
+    event LogRewardOriginator(address projectAddress, address originator, uint256 reward);
+
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */
 
@@ -496,6 +498,7 @@ contract ProjectRegistry is Ownable {
       ss.originator[ss.topTaskHash] = 0;
       uint amount = (Project(_projectAddress).proposedCost() + DistributeToken(distributeTokenAddress).weiBal()) / 2;
       TokenRegistry(tokenRegistryAddress).rewardOriginator(msg.sender, amount);
+      emit LogRewardOriginator(_projectAddress, msg.sender, amount);
 
     }
     // =====================================================================
