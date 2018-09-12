@@ -27,6 +27,7 @@ library ProjectLibrary {
     event LogTaskVote(address taskAddress, address projectAddress, uint pollNonce);
     event LogTaskValidated(address taskAddress, address projectAddress, bool confirmation);
     event LogClaimTaskReward(address projectAddress, uint256 index, address claimer, uint256 weiReward, uint256 reputationReward);
+    event LogProjectExpired(address projectAddress);
 
     // =====================================================================
     // UTILITY
@@ -117,7 +118,9 @@ library ProjectLibrary {
             return true;
         } else if(timesUp(_projectAddress)) {
             project.setState(8, 0);
-            project.clearProposerStake();
+            // this line bugs for some reason
+            /* project.clearProposerStake(); */
+            emit LogProjectExpired(_projectAddress);
         }
         return false;
     }
