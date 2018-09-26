@@ -170,7 +170,7 @@ contract TokenRegistry is Ownable {
     }
 
     /**
-    @notice Refund a token proposer upon proposal success, transfer 1% of the project cost in
+    @notice Refund a token proposer upon proposal success, transfer 5% of the project cost in
     wei as a reward along with any tokens staked on the project.
     @dev token proposer types are denoted by '1' and reputation proposers by '2'
     @param _projectAddress Address of the project

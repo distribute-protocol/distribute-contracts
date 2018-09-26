@@ -1266,11 +1266,12 @@ contract('Proposed State', (accounts) => {
     // these two tests must come after not proposer refund proposer tests
     it('Refund proposer can be called on TR proposed project after it is fully staked', async () => {
       // take stock of variables
-      let weiCost = await project.getProposedWeiCost(projAddrT2)
+      let proposedWeiCost = await project.getProposedWeiCost(projAddrT2)
 
       let tpBalBefore = await utils.getTokenBalance(tokenProposer)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
       let weiPoolBefore = await utils.getWeiPoolBal()
+      let projWeiBalBefore = await project.getWeiCost(projAddrT2, true)
       let proposerStakeBefore = await project.getProposerStake(projAddrT2)
 
       // call refund proposer
@@ -1280,21 +1281,26 @@ contract('Proposed State', (accounts) => {
       let tpBalAfter = await utils.getTokenBalance(tokenProposer)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
       let weiPoolAfter = await utils.getWeiPoolBal()
+      let projWeiBalAfter = await project.getWeiCost(projAddrT2, true)
       let proposerStakeAfter = await project.getProposerStake(projAddrT2)
+
+      let projWeiCostDifference = projWeiBalBefore.minus(projWeiBalAfter).toNumber()
 
       // checks
       assert.equal(tpBalBefore + proposerStakeBefore, tpBalAfter, 'tokenProposer balance updated incorrectly')
       assert.equal(TRBalBefore, TRBalAfter + proposerStakeBefore, 'TR balance updated incorrectly')
-      assert.equal(weiPoolBefore, weiPoolAfter + Math.floor(weiCost / 100), 'incorrect wei reward returned')
+      assert.equal(weiPoolBefore - Math.floor(proposedWeiCost / 20), weiPoolAfter, 'wei pool should be 5% of the project\'s proposed cost less')
+      assert.equal(projWeiCostDifference, 0, 'project wei cost should remain the same')
       assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
     })
 
     it('Refund proposer can be called on RR proposed project after it is fully staked', async () => {
       // take stock of variables
-      let weiCost = await project.getProposedWeiCost(projAddrR2)
+      let proposedWeiCost = await project.getProposedWeiCost(projAddrR2)
 
       let rpBalBefore = await utils.getRepBalance(repProposer)
       let weiPoolBefore = await utils.getWeiPoolBal()
+      let projWeiBalBefore = await project.getWeiCost(projAddrR2, true)
       let proposerStakeBefore = await project.getProposerStake(projAddrR2)
 
       // call refund proposer
@@ -1303,18 +1309,22 @@ contract('Proposed State', (accounts) => {
       // take stock of variables
       let rpBalAfter = await utils.getRepBalance(repProposer)
       let weiPoolAfter = await utils.getWeiPoolBal()
+      let projWeiBalAfter = await project.getWeiCost(projAddrR2, true)
       let proposerStakeAfter = await project.getProposerStake(projAddrR2)
 
+      let projWeiCostDifference = projWeiBalBefore.minus(projWeiBalAfter).toNumber()
+
       // checks
-      assert.equal(rpBalBefore + proposerStakeBefore, rpBalAfter, 'repProposer balance updated incorrectly')
-      assert.equal(weiPoolBefore, weiPoolAfter + Math.floor(weiCost / 100), 'incorrect wei reward returned')
+      assert.equal(rpBalBefore + proposerStakeBefore, rpBalAfter, 'tokenProposer balance updated incorrectly')
+      assert.equal(weiPoolBefore - Math.floor(proposedWeiCost / 20), weiPoolAfter, 'wei pool should be 5% of the project\'s proposed cost less')
+      assert.equal(projWeiCostDifference, 0, 'project wei cost should remain the same')
       assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
     })
 
     it('Proposer can\'t call refund proposer multiple times from token registry', async () => {
       errorThrown = false
       try {
-        await TR.refundProposer(projAddrR2, {from: tokenProposer})
+        await TR.refundProposer(projAddrT2, {from: tokenProposer})
       } catch (e) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
@@ -1325,7 +1335,7 @@ contract('Proposed State', (accounts) => {
     it('Proposer can\'t call refund proposer multiple times from reputation registry', async () => {
       errorThrown = false
       try {
-        await RR.refundProposer(projAddrR2, {from: notProposer})
+        await RR.refundProposer(projAddrR2, {from: repProposer})
       } catch (e) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true

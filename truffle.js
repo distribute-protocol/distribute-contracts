@@ -33,8 +33,7 @@ module.exports = {
         currency: 'ETH',
         gasPrice: 21
       }
-    },
-
+    }
   },
   solc: {
     optimizer: {

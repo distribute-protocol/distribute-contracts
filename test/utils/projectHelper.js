@@ -339,6 +339,12 @@ module.exports = function projectHelper (accounts) {
     return propStake.toNumber()
   }
 
+  obj.project.getProposerType = async function (_projAddr) {
+    let PROJ = await Project.at(_projAddr)
+    let propStake = await PROJ.proposerType()
+    return propStake.toNumber()
+  }
+
   obj.project.getNextDeadline = async function (_projAddr) {
     let PROJ = await Project.at(_projAddr)
     let nextDeadline = await PROJ.nextDeadline()
