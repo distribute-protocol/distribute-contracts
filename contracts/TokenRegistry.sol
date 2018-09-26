@@ -152,7 +152,8 @@ contract TokenRegistry is Ownable {
         uint256 proposerTokenCost = (
             Division.percent(costProportion, proposeProportion, 10) *
             distributeToken.totalSupply()) /
-            10000000000;           //divide by 20 to get 5 percent of tokens
+            10000000000;
+            //divide by 20 to get 5 percent of tokens
         require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
 
         distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
@@ -163,8 +164,7 @@ contract TokenRegistry is Ownable {
             msg.sender,
             1,
             proposerTokenCost,
-            _ipfsHash,
-            proposerTokenCost
+            _ipfsHash
         );
         emit LogProjectCreated(projectAddress, _cost, proposerTokenCost);
     }

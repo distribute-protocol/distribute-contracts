@@ -385,9 +385,8 @@ contract ProjectRegistry is Ownable {
         address _proposer,
         uint256 _proposerType,
         uint256 _proposerStake,
-        bytes _ipfsHash,
-        uint256 _proposerCost
-    ) external onlyTRorRR returns (address) {
+        bytes _ipfsHash
+        ) external onlyTRorRR returns (address) {
         require(!freeze);
         address projectAddress = createProxyProject(
             _cost,
@@ -403,7 +402,7 @@ contract ProjectRegistry is Ownable {
         projects[projectAddress] = true;
         projectsList[projectNonce] = projectAddress;
         projectNonce += 1;
-        emit LogProjectCreated(projectAddress, _proposerCost);
+        emit LogProjectCreated(projectAddress, _proposerStake);
         return projectAddress;
     }
 

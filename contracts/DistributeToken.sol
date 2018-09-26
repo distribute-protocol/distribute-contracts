@@ -253,7 +253,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
         require(!freeze);
         require(balances[_owner] >= _tokens);
         balances[_owner] -= _tokens;
-        balances[msg.sender] += _tokens;
+        balances[tokenRegistryAddress] += _tokens;
         return true;
     }
 

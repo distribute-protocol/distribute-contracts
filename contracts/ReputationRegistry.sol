@@ -203,8 +203,7 @@ contract ReputationRegistry is Ownable {
             msg.sender,
             2,
             proposerReputationCost,
-            _ipfsHash,
-            proposerReputationCost
+            _ipfsHash
         );
         emit LogProjectCreated(projectAddress, _cost, proposerReputationCost);
     }
