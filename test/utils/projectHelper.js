@@ -639,6 +639,7 @@ module.exports = function projectHelper (accounts) {
       assert.equal(stateT, 3, 'project is not in active state')
       assert.equal(stateR, 3, 'project is not in active state')
     }
+    console.log(_numSets * 2 + ' active projects have been generated successfully.')
 
     return projArray
   }
