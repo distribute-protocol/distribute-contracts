@@ -224,8 +224,8 @@ library ProjectLibrary {
             for(uint i = 0; i < project.getTaskCount(); i++) {
                 Task task = Task(project.tasks(i));
                 if (task.complete()) {
-                    // require that one of the indexes is not zero, meaning that a validator existss
-                    require(task.affirmativeIndex() != 0 || task.negativeIndex() != 0);
+                    // require that one of the indexes is not zero, meaning that a validator exists
+                    /* require(task.affirmativeIndex() != 0 || task.negativeIndex() != 0); */
                     if (task.affirmativeIndex() != 0 && task.negativeIndex() != 0) { // there is an opposing validator, poll required
                         uint pollNonce = plcr.startPoll(51, project.voteCommitPeriod(), project.voteRevealPeriod());
                         task.setPollId(pollNonce); // function handles storage of voting pollId

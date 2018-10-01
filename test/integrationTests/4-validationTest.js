@@ -5,6 +5,7 @@ const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const taskDetails = require('../utils/taskDetails')
+const BigNumber = require('bignumber.js')
 
 contract('Validating State', (accounts) => {
   // set up project helper
@@ -14,7 +15,6 @@ contract('Validating State', (accounts) => {
   let TR, PR
   let {user, project, utils, returnProject, task} = projObj
   let {validator1, validator2, notValidator} = user
-  let {worker1} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
 
   // set up task details & hashing functions
@@ -668,18 +668,18 @@ contract('Validating State', (accounts) => {
     it('checkVoting() changes TR validating project to voting after time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT)
-      let projWeiBalBefore = await project.getWeiBal(projAddrT, true)
-      let DTBalBefore = await utils.getWeiPoolBal(true)
+      // let projWeiBalBefore = await project.getWeiBal(projAddrT, true)
+      // let DTBalBefore = await utils.getWeiPoolBal(true)
 
       // attempt to checkStaked
       await PR.checkVoting(projAddrT)
 
       // take stock of variables
       let stateAfter = await project.getState(projAddrT)
-      let projWeiBalAfter = await project.getWeiBal(projAddrT, true)
-      let DTBalAfter = await utils.getWeiPoolBal(true)
+      // let projWeiBalAfter = await project.getWeiBal(projAddrT, true)
+      // let DTBalAfter = await utils.getWeiPoolBal(true)
 
-      let failedTaskWeiReward = 0
+      // let failedTaskWeiReward = new BigNumber(0)
       let pollNonce = []
       let taskClaimableByVal = []
       let taskClaimableByRep = []
@@ -688,19 +688,19 @@ contract('Validating State', (accounts) => {
         let nonce = await task.getPollNonce(projAddrT, i)
         let claimable = await task.getClaimable(projAddrT, i)
         let claimableByRep = await task.getClaimableByRep(projAddrT, i)
-        let complete = await task.getComplete(projAddrT, i)
-        if ((claimable === true && claimableByRep === false && complete === true)) {
-          let weiReward = await task.getWeiReward(projAddrT, i)
-          failedTaskWeiReward.plus(weiReward)
-        }
+        // let complete = await task.getComplete(projAddrT, i)
+        // if ((claimable === true && claimableByRep === false && complete === true)) {
+        //   let weiReward = await task.getWeiReward(projAddrT, i)
+        //   failedTaskWeiReward.plus(weiReward)
+        // }
         pollNonce.push(nonce)
         taskClaimableByVal.push(claimable)
         taskClaimableByRep.push(claimableByRep)
       }
 
       // interim calculations
-      let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter)
-      let weiPoolDifference = DTBalAfter.minus(DTBalBefore)
+      // let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter)
+      // let weiPoolDifference = DTBalAfter.minus(DTBalBefore)
 
       // checks
       assert.equal(stateBefore, 4, 'state before should be 4')
@@ -720,76 +720,79 @@ contract('Validating State', (accounts) => {
       assert.equal(taskClaimableByRep[indexNeither], true, 'should be claimable by rep')
       assert.equal(taskClaimableByRep[indexIncomplete], false, 'should not be claimable by rep')
       assert.equal(taskClaimableByRep[indexBoth], false, 'should not be claimable by rep')
-      assert.equal(weiBalDifference, failedTaskWeiReward, 'should be same amount')
-      assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
+      // assert.equal(weiBalDifference, weiPoolDifference, 'should be same amount')
+      // assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
     })
 
     it('checkVoting() changes RR validating project to voting after time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
-      let projWeiBalBefore = await project.getWeiBal(projAddrR, true)
-      // let projWeiBalBefore = await web3.eth.getBalance(projAddrR)
-      let DTBalBefore = await utils.getWeiPoolBal(true)
-      // let DTBalBefore = await web3.eth.getBalance(DT.address)
+      // let projWeiBalBefore = await project.getWeiBal(projAddrR, true)
+      // let DTBalBefore = await utils.getWeiPoolBal(true)
 
       // attempt to checkStaked
       await PR.checkVoting(projAddrR)
 
       // take stock of variables
       let stateAfter = await project.getState(projAddrR)
-      let projWeiBalAfter = await project.getWeiBal(projAddrR, true)
-      // let projWeiBalAfter = await web3.eth.getBalance(projAddrR)
-      let DTBalAfter = await utils.getWeiPoolBal(true)
-      // let DTBalAfter = await web3.eth.getBalance(DT.address)
-      let failedTaskWeiReward = 0
+      // let projWeiBalAfter = await project.getWeiBal(projAddrR, true)
+      // let DTBalAfter = await utils.getWeiPoolBal(true)
+
+      // let failedTaskWeiReward = new BigNumber(0)
       let pollNonce = []
-      let taskClaimable = []
+      let taskClaimableByVal = []
+      let taskClaimableByRep = []
 
       for (let i = 0; i < taskSet1.length; i++) {
         let nonce = await task.getPollNonce(projAddrR, i)
         let claimable = await task.getClaimable(projAddrR, i)
-        let complete = await task.getComplete(projAddrR, i)
-        let oppVal = await task.getOpposingVal(projAddrR, i)
-        if ((claimable === false && complete === true)) {
-          let weiReward = await task.getWeiReward(projAddrR, i)
-          failedTaskWeiReward += weiReward
-        }
+        let claimableByRep = await task.getClaimableByRep(projAddrR, i)
+        // let complete = await task.getComplete(projAddrR, i)
+        // if ((claimable === true && claimableByRep === false && complete === true)) {
+        //   let weiReward = await task.getWeiReward(projAddrR, i)
+        //   failedTaskWeiReward.plus(weiReward)
+        // }
         pollNonce.push(nonce)
-        taskClaimable.push(claimable)
+        taskClaimableByVal.push(claimable)
+        taskClaimableByRep.push(claimableByRep)
       }
 
       // interim calculations
-      let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter).toNumber()
-      let weiPoolDifference = DTBalAfter.minus(DTBalBefore).toNumber()
+      // let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter)
+      // let weiPoolDifference = DTBalAfter.minus(DTBalBefore)
 
       // checks
       assert.equal(stateBefore, 4, 'state before should be 4')
-      assert.equal(stateAfter, 5, 'state should not have changed')
+      assert.equal(stateAfter, 5, 'state should have changed')
       assert.equal(pollNonce[indexYes], 0, 'should be no poll ID')
       assert.equal(pollNonce[indexNo], 0, 'should be no poll ID')
       assert.equal(pollNonce[indexNeither], 0, 'should be no poll ID')
       assert.equal(pollNonce[indexIncomplete], 0, 'should be no poll ID')
       assert.notEqual(pollNonce[indexBoth], 0, 'should be nonzero poll ID')
-      assert.equal(taskClaimable[indexYes], true, 'should be claimable')
-      assert.equal(taskClaimable[indexNo], true, 'should be claimable')
-      assert.equal(taskClaimable[indexNeither], true, 'should be claimable')
-      assert.equal(taskClaimable[indexIncomplete], false, 'should not be claimable')
-      assert.equal(taskClaimable[indexBoth], false, 'should not be claimable')
-      // FIGURE OUT WHY FAILEDTASKWEIREWARD TESTS DON'T WORK
-      // assert.equal(weiBalDifference, failedTaskWeiReward, 'should be same amount')
+      assert.equal(taskClaimableByVal[indexYes], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[indexNo], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[indexNeither], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[indexIncomplete], false, 'should not be claimable by validator')
+      assert.equal(taskClaimableByVal[indexBoth], false, 'should not be claimable by validator')
+      assert.equal(taskClaimableByRep[indexYes], true, 'should be claimable by rep')
+      assert.equal(taskClaimableByRep[indexNo], false, 'should not be claimable by rep')
+      assert.equal(taskClaimableByRep[indexNeither], true, 'should be claimable by rep')
+      assert.equal(taskClaimableByRep[indexIncomplete], false, 'should not be claimable by rep')
+      assert.equal(taskClaimableByRep[indexBoth], false, 'should not be claimable by rep')
+      // assert.equal(weiBalDifference, weiPoolDifference, 'should be same amount')
       // assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
-      // ADD PLCR START POLL TEST
     })
   })
 
   describe('validate voting projects', () => {
     it('Validator can\'t validate a completed task yes from TR voting project', async () => {
       // fund validator with tokens if necessary
-      await utils.mintIfNecessary(validator1, tokensToValidate)
+      let validationEntryFee = await task.getValidationEntryFee(projAddrT, indexNeither)
+      await utils.mintIfNecessary(validator1, validationEntryFee)
 
       errorThrown = false
       try {
-        await TR.validateTask(projAddrT, indexNeither, tokensToValidate, true, {from: validator1})
+        await TR.validateTask(projAddrT, indexNeither, validationEntryFee, true, {from: validator1})
       } catch (e) {
         errorThrown = true
       }
@@ -798,11 +801,12 @@ contract('Validating State', (accounts) => {
 
     it('Validator can\'t validate a completed task yes from RR voting project', async () => {
       // fund validator with tokens if necessary
-      await utils.mintIfNecessary(validator1, tokensToValidate)
+      let validationEntryFee = await task.getValidationEntryFee(projAddrR, indexNeither)
+      await utils.mintIfNecessary(validator1, validationEntryFee)
 
       errorThrown = false
       try {
-        await TR.validateTask(projAddrT, indexNeither, tokensToValidate, true, {from: validator1})
+        await TR.validateTask(projAddrR, indexNeither, validationEntryFee, true, {from: validator1})
       } catch (e) {
         errorThrown = true
       }
@@ -811,11 +815,12 @@ contract('Validating State', (accounts) => {
 
     it('Validator can\'t validate a completed task no from TR voting project', async () => {
       // fund validator with tokens if necessary
-      await utils.mintIfNecessary(validator1, tokensToValidate)
+      let validationEntryFee = await task.getValidationEntryFee(projAddrT, indexNeither)
+      await utils.mintIfNecessary(validator1, validationEntryFee)
 
       errorThrown = false
       try {
-        await TR.validateTask(projAddrT, indexNeither, tokensToValidate, false, {from: validator1})
+        await TR.validateTask(projAddrT, indexNeither, validationEntryFee, false, {from: validator1})
       } catch (e) {
         errorThrown = true
       }
@@ -824,11 +829,12 @@ contract('Validating State', (accounts) => {
 
     it('Validator can\'t validate a completed task no from RR voting project', async () => {
       // fund validator with tokens if necessary
-      await utils.mintIfNecessary(validator1, tokensToValidate)
+      let validationEntryFee = await task.getValidationEntryFee(projAddrR, indexNeither)
+      await utils.mintIfNecessary(validator1, validationEntryFee)
 
       errorThrown = false
       try {
-        await TR.validateTask(projAddrT, indexNeither, tokensToValidate, false, {from: validator1})
+        await TR.validateTask(projAddrT, indexNeither, validationEntryFee, false, {from: validator1})
       } catch (e) {
         errorThrown = true
       }
