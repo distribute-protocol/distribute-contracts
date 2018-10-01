@@ -483,14 +483,13 @@ module.exports = function projectHelper (accounts) {
     return index.toNumber()
   }
 
-  obj.task.getValidatorAtIndex = async function (_projAddr, _index, _bool) {
-    let taskAddr = await obj.project.getTasks(_projAddr, _index)
+  obj.task.getValidatorAtIndex = async function (_projAddr, _taskIndex, _valIndex, _bool) {
+    let taskAddr = await obj.project.getTasks(_projAddr, _taskIndex)
     let TASK = await Task.at(taskAddr)
     let valAtIndex
-    _bool === true
-      ? valAtIndex = await TASK.affirmativeValidators(_index)
-      : valAtIndex = await TASK.negativeValidators(_index)
-    console.log(_bool, valAtIndex)
+    _bool
+      ? valAtIndex = await TASK.affirmativeValidators(_valIndex)
+      : valAtIndex = await TASK.negativeValidators(_valIndex)
     return valAtIndex
   }
 

@@ -61,8 +61,8 @@ contract('Validating State', (accounts) => {
       let validationEntryFee = await task.getValidationEntryFee(projAddrT, indexYes)
       let affirmativeIndexBefore = await task.getValidationIndex(projAddrT, indexYes, true)
       let negativeIndexBefore = await task.getValidationIndex(projAddrT, indexYes, false)
-      let affirmativeValidatorBefore = await task.getValidatorAtIndex(projAddrT, affirmativeIndexBefore, true)
-      let negativeValidatorBefore = await task.getValidatorAtIndex(projAddrT, negativeIndexBefore, false)
+      let affirmativeValidatorBefore = await task.getValidatorAtIndex(projAddrT, indexYes, affirmativeIndexBefore, true)
+      let negativeValidatorBefore = await task.getValidatorAtIndex(projAddrT, indexYes, negativeIndexBefore, false)
 
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, validationEntryFee)
@@ -76,8 +76,8 @@ contract('Validating State', (accounts) => {
       let taskValDetailsAfter = await task.getValDetails(projAddrT, indexYes, validator1)
       let affirmativeIndexAfter = await task.getValidationIndex(projAddrT, indexYes, true)
       let negativeIndexAfter = await task.getValidationIndex(projAddrT, indexYes, false)
-      let affirmativeValidatorAfter = await task.getValidatorAtIndex(projAddrT, affirmativeIndexBefore, true)
-      let negativeValidatorAfter = await task.getValidatorAtIndex(projAddrT, negativeIndexBefore, false)
+      let affirmativeValidatorAfter = await task.getValidatorAtIndex(projAddrT, indexYes, affirmativeIndexBefore, true)
+      let negativeValidatorAfter = await task.getValidatorAtIndex(projAddrT, indexYes, negativeIndexBefore, false)
 
       // checks
       assert.equal(valBalBefore - validationEntryFee, valBalAfter, 'token addition/subtraction incorrect')
@@ -103,8 +103,8 @@ contract('Validating State', (accounts) => {
       let validationEntryFee = await task.getValidationEntryFee(projAddrR, indexYes)
       let affirmativeIndexBefore = await task.getValidationIndex(projAddrR, indexYes, true)
       let negativeIndexBefore = await task.getValidationIndex(projAddrR, indexYes, false)
-      let affirmativeValidatorBefore = await task.getValidatorAtIndex(projAddrR, affirmativeIndexBefore, true)
-      let negativeValidatorBefore = await task.getValidatorAtIndex(projAddrR, negativeIndexBefore, false)
+      let affirmativeValidatorBefore = await task.getValidatorAtIndex(projAddrR, indexYes, affirmativeIndexBefore, true)
+      let negativeValidatorBefore = await task.getValidatorAtIndex(projAddrR, indexYes, negativeIndexBefore, false)
 
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, validationEntryFee)
@@ -118,8 +118,8 @@ contract('Validating State', (accounts) => {
       let taskValDetailsAfter = await task.getValDetails(projAddrR, indexYes, validator1)
       let affirmativeIndexAfter = await task.getValidationIndex(projAddrR, indexYes, true)
       let negativeIndexAfter = await task.getValidationIndex(projAddrR, indexYes, false)
-      let affirmativeValidatorAfter = await task.getValidatorAtIndex(projAddrR, affirmativeIndexBefore, true)
-      let negativeValidatorAfter = await task.getValidatorAtIndex(projAddrR, negativeIndexBefore, false)
+      let affirmativeValidatorAfter = await task.getValidatorAtIndex(projAddrR, indexYes, affirmativeIndexBefore, true)
+      let negativeValidatorAfter = await task.getValidatorAtIndex(projAddrR, indexYes, negativeIndexBefore, false)
 
       // checks
       assert.equal(valBalBefore - validationEntryFee, valBalAfter, 'token addition/subtraction incorrect')
@@ -145,8 +145,8 @@ contract('Validating State', (accounts) => {
       let validationEntryFee = await task.getValidationEntryFee(projAddrT, indexNo)
       let affirmativeIndexBefore = await task.getValidationIndex(projAddrT, indexNo, true)
       let negativeIndexBefore = await task.getValidationIndex(projAddrT, indexNo, false)
-      let affirmativeValidatorBefore = await task.getValidatorAtIndex(projAddrT, affirmativeIndexBefore, true)
-      let negativeValidatorBefore = await task.getValidatorAtIndex(projAddrT, negativeIndexBefore, false)
+      let affirmativeValidatorBefore = await task.getValidatorAtIndex(projAddrT, indexNo, affirmativeIndexBefore, true)
+      let negativeValidatorBefore = await task.getValidatorAtIndex(projAddrT, indexNo, negativeIndexBefore, false)
 
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, validationEntryFee)
@@ -160,8 +160,8 @@ contract('Validating State', (accounts) => {
       let taskValDetailsAfter = await task.getValDetails(projAddrT, indexNo, validator1)
       let affirmativeIndexAfter = await task.getValidationIndex(projAddrT, indexNo, true)
       let negativeIndexAfter = await task.getValidationIndex(projAddrT, indexNo, false)
-      let affirmativeValidatorAfter = await task.getValidatorAtIndex(projAddrT, affirmativeIndexBefore, true)
-      let negativeValidatorAfter = await task.getValidatorAtIndex(projAddrT, negativeIndexBefore, false)
+      let affirmativeValidatorAfter = await task.getValidatorAtIndex(projAddrT, indexNo, affirmativeIndexBefore, true)
+      let negativeValidatorAfter = await task.getValidatorAtIndex(projAddrT, indexNo, negativeIndexAfter - 1, false)
 
       // checks
       assert.equal(valBalBefore - validationEntryFee, valBalAfter, 'token addition/subtraction incorrect')
@@ -175,7 +175,7 @@ contract('Validating State', (accounts) => {
       assert.equal(affirmativeIndexBefore, affirmativeIndexAfter, 'affirmative validation index should not change')
       assert.equal(negativeIndexBefore + 1, negativeIndexAfter, 'negative validation index should increment by 1')
       assert.equal(negativeValidatorBefore, 0, 'negative validator at this index should be zero address before validation')
-      // assert.equal(negativeValidatorAfter, validator1, 'negative validator at this index should be validator1 after validation')
+      assert.equal(negativeValidatorAfter, validator1, 'negative validator at this index should be validator1 after validation')
       assert.equal(affirmativeValidatorBefore, affirmativeValidatorAfter, 'affirmative validator at this index should not change')
     })
 
@@ -187,8 +187,8 @@ contract('Validating State', (accounts) => {
       let validationEntryFee = await task.getValidationEntryFee(projAddrR, indexNo)
       let affirmativeIndexBefore = await task.getValidationIndex(projAddrR, indexNo, true)
       let negativeIndexBefore = await task.getValidationIndex(projAddrR, indexNo, false)
-      let affirmativeValidatorBefore = await task.getValidatorAtIndex(projAddrR, affirmativeIndexBefore, true)
-      let negativeValidatorBefore = await task.getValidatorAtIndex(projAddrR, negativeIndexBefore, false)
+      let affirmativeValidatorBefore = await task.getValidatorAtIndex(projAddrR, indexNo, affirmativeIndexBefore, true)
+      let negativeValidatorBefore = await task.getValidatorAtIndex(projAddrR, indexNo, negativeIndexBefore, false)
 
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, validationEntryFee)
@@ -202,8 +202,8 @@ contract('Validating State', (accounts) => {
       let taskValDetailsAfter = await task.getValDetails(projAddrR, indexNo, validator1)
       let affirmativeIndexAfter = await task.getValidationIndex(projAddrR, indexNo, true)
       let negativeIndexAfter = await task.getValidationIndex(projAddrR, indexNo, false)
-      let affirmativeValidatorAfter = await task.getValidatorAtIndex(projAddrR, affirmativeIndexBefore, true)
-      let negativeValidatorAfter = await task.getValidatorAtIndex(projAddrR, negativeIndexBefore, false)
+      let affirmativeValidatorAfter = await task.getValidatorAtIndex(projAddrR, indexNo, affirmativeIndexBefore, true)
+      let negativeValidatorAfter = await task.getValidatorAtIndex(projAddrR, indexNo, negativeIndexBefore, false)
 
       // checks
       assert.equal(valBalBefore - validationEntryFee, valBalAfter, 'token addition/subtraction incorrect')
