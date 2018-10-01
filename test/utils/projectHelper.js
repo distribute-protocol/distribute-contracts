@@ -434,7 +434,7 @@ module.exports = function projectHelper (accounts) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
     let weiReward = await TASK.weiReward()
-    return weiReward.toNumber()
+    return weiReward
   }
 
   obj.task.getRepReward = async function (_projAddr, _index) {
@@ -497,6 +497,13 @@ module.exports = function projectHelper (accounts) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
     let claimable = await TASK.claimable()
+    return claimable
+  }
+
+  obj.task.getClaimableByRep = async function (_projAddr, _index) {
+    let taskAddr = await obj.project.getTasks(_projAddr, _index)
+    let TASK = await Task.at(taskAddr)
+    let claimable = await TASK.claimableByRep()
     return claimable
   }
 
