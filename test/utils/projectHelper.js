@@ -465,22 +465,6 @@ module.exports = function projectHelper (accounts) {
     return validationEntryFee
   }
 
-  // obj.task.getTotalValidate = async function (_projAddr, _index, _valVal, _unadulterated) {
-  //   let taskAddr = await obj.project.getTasks(_projAddr, _index)
-  //   let TASK = await Task.at(taskAddr)
-  //   let valBal
-  //   if (_valVal === true) {
-  //     valBal = await TASK.totalValidateAffirmative()
-  //   } else if (_valVal === false) {
-  //     valBal = await TASK.totalValidateNegative()
-  //   }
-  //   if (_unadulterated === true) {
-  //     return valBal
-  //   } else {
-  //     return valBal.toNumber()
-  //   }
-  // }
-
   obj.task.getValDetails = async function (_projAddr, _index, _user) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
@@ -489,11 +473,24 @@ module.exports = function projectHelper (accounts) {
     return valBal
   }
 
-  obj.task.getOpposingVal = async function (_projAddr, _index) {
+  obj.task.getValidationIndex = async function (_projAddr, _index, _bool) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
-    let oppVal = await TASK.opposingValidator()
-    return oppVal
+    let index
+    _bool === true
+      ? index = await TASK.affirmativeIndex()
+      : index = await TASK.negativeIndex()
+    return index.toNumber()
+  }
+
+  obj.task.getValidatorAtIndex = async function (_projAddr, _index, _bool) {
+    let taskAddr = await obj.project.getTasks(_projAddr, _index)
+    let TASK = await Task.at(taskAddr)
+    let valAtIndex
+    _bool === true
+      ? valAtIndex = await TASK.affirmativeValidators(_index)
+      : valAtIndex = await TASK.negativeValidators(_index)
+    return valAtIndex
   }
 
   obj.task.getClaimable = async function (_projAddr, _index) {

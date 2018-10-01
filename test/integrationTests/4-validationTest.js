@@ -59,6 +59,11 @@ contract('Validating State', (accounts) => {
       let TRBalBefore = await utils.getTokenBalance(TR.address)
       let taskValDetailsBefore = await task.getValDetails(projAddrT, indexYes, validator1)
       let validationEntryFee = await task.getValidationEntryFee(projAddrT, indexYes)
+      let affirmativeIndexBefore = await task.getValidationIndex(projAddrT, indexYes, true)
+      let negativeIndexBefore = await task.getValidationIndex(projAddrT, indexYes, false)
+      // this validation will add to the affirmative validators array
+      let affirmativeValidatorBefore = await task.getValidatorAtIndex(projAddrT, affirmativeIndexBefore, true)
+      let negativeValidatorBefore = await task.getValidatorAtIndex(projAddrT, negativeIndexBefore, false)
 
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, validationEntryFee)
@@ -70,19 +75,26 @@ contract('Validating State', (accounts) => {
       let valBalAfter = await utils.getTokenBalance(validator1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
       let taskValDetailsAfter = await task.getValDetails(projAddrT, indexYes, validator1)
+      let affirmativeIndexAfter = await task.getValidationIndex(projAddrT, indexYes, true)
+      let negativeIndexAfter = await task.getValidationIndex(projAddrT, indexYes, false)
+      let affirmativeValidatorAfter = await task.getValidatorAtIndex(projAddrT, affirmativeIndexBefore, true)
+      let negativeValidatorAfter = await task.getValidatorAtIndex(projAddrT, negativeIndexBefore, false)
 
       // checks
       assert.equal(valBalBefore - validationEntryFee, valBalAfter, 'token addition/subtraction incorrect')
       assert.equal(TRBalAfter - validationEntryFee, TRBalBefore, 'token addition/subtraction incorrect')
       assert.equal(taskValDetailsBefore[0], false, 'validation status before should be false')
-      assert.equal(taskValDetailsAfter[0], true, 'validation status after should be false')
+      assert.equal(taskValDetailsAfter[0], true, 'validation status after should be true')
       assert.equal(taskValDetailsBefore[1], 0, 'validation index before should be 0')
-      assert.equal(taskValDetailsBefore[1], 0, 'validation index after should be 0')
-      // check validators[_validator] is empty before and correct after
-      // check affirmative index increases by one
-      // check negative index doesn't change
-      // check affirmativeValidators array is populated correctly after
-      // check negativeValidators array doesn't change
+      assert.equal(taskValDetailsAfter[1], 0, 'validation index after should still be 0')
+      assert.equal(taskValDetailsBefore[2], false, 'validation initialized before should be false')
+      assert.equal(taskValDetailsAfter[2], true, 'validation initialized after should be true')
+      assert.equal(affirmativeIndexBefore + 1, affirmativeIndexAfter, 'affirmative validation index should increment by 1')
+      assert.equal(negativeIndexBefore, negativeIndexAfter, 'negative validation index should not change')
+      assert.equal(affirmativeValidatorBefore, 0, 'affirmative validator at this index should be zero address before validation')
+      assert.equal(affirmativeValidatorAfter, validator1, 'affirmative validator at this index should be validator1 after validation')
+      assert.equal(negativeValidatorBefore, 0, 'negative validator at this index should be zero address before validation')
+      assert.equal(negativeValidatorAfter, 0, 'negative validator at this index should be zero address before validation')
     })
 
     it('Validator can validate a completed task yes from RR validating project', async () => {

@@ -48,10 +48,6 @@ contract Task {
         bool initialized;
     }
 
-    /* bool public opposingValidator = false;
-    uint256 public totalValidateAffirmative;
-    uint256 public totalValidateNegative; */
-
     // =====================================================================
     // MODIFIERS
     // =====================================================================
