@@ -61,7 +61,6 @@ contract('Validating State', (accounts) => {
       let validationEntryFee = await task.getValidationEntryFee(projAddrT, indexYes)
       let affirmativeIndexBefore = await task.getValidationIndex(projAddrT, indexYes, true)
       let negativeIndexBefore = await task.getValidationIndex(projAddrT, indexYes, false)
-      // this validation will add to the affirmative validators array
       let affirmativeValidatorBefore = await task.getValidatorAtIndex(projAddrT, affirmativeIndexBefore, true)
       let negativeValidatorBefore = await task.getValidatorAtIndex(projAddrT, negativeIndexBefore, false)
 
@@ -71,7 +70,7 @@ contract('Validating State', (accounts) => {
       // validate task
       await TR.validateTask(projAddrT, indexYes, true, {from: validator1})
 
-      // task stock of variables after
+      // take stock of variables after
       let valBalAfter = await utils.getTokenBalance(validator1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
       let taskValDetailsAfter = await task.getValDetails(projAddrT, indexYes, validator1)
@@ -93,19 +92,19 @@ contract('Validating State', (accounts) => {
       assert.equal(negativeIndexBefore, negativeIndexAfter, 'negative validation index should not change')
       assert.equal(affirmativeValidatorBefore, 0, 'affirmative validator at this index should be zero address before validation')
       assert.equal(affirmativeValidatorAfter, validator1, 'affirmative validator at this index should be validator1 after validation')
-      assert.equal(negativeValidatorBefore, 0, 'negative validator at this index should be zero address before validation')
-      assert.equal(negativeValidatorAfter, 0, 'negative validator at this index should be zero address before validation')
+      assert.equal(negativeValidatorBefore, negativeValidatorAfter, 'negative validator at this index should not change')
     })
 
     it('Validator can validate a completed task yes from RR validating project', async () => {
       // take stock of variables before
       let valBalBefore = await utils.getTokenBalance(validator1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
-      // let taskValNegBefore = await task.getTotalValidate(projAddrR, indexYes, false)
-      // let taskValPosBefore = await task.getTotalValidate(projAddrR, indexYes, true)
-      let taskOpposingValBefore = await task.getOpposingVal(projAddrR, indexYes)
       let taskValDetailsBefore = await task.getValDetails(projAddrR, indexYes, validator1)
       let validationEntryFee = await task.getValidationEntryFee(projAddrR, indexYes)
+      let affirmativeIndexBefore = await task.getValidationIndex(projAddrR, indexYes, true)
+      let negativeIndexBefore = await task.getValidationIndex(projAddrR, indexYes, false)
+      let affirmativeValidatorBefore = await task.getValidatorAtIndex(projAddrR, affirmativeIndexBefore, true)
+      let negativeValidatorBefore = await task.getValidatorAtIndex(projAddrR, negativeIndexBefore, false)
 
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, validationEntryFee)
@@ -113,38 +112,41 @@ contract('Validating State', (accounts) => {
       // validate task
       await TR.validateTask(projAddrR, indexYes, true, {from: validator1})
 
-      // task stock of variables after
+      // take stock of variables after
       let valBalAfter = await utils.getTokenBalance(validator1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
-      // let taskValNegAfter = await task.getTotalValidate(projAddrR, indexYes, false)
-      // let taskValPosAfter = await task.getTotalValidate(projAddrR, indexYes, true)
-      let taskOpposingValAfter = await task.getOpposingVal(projAddrR, indexYes)
       let taskValDetailsAfter = await task.getValDetails(projAddrR, indexYes, validator1)
+      let affirmativeIndexAfter = await task.getValidationIndex(projAddrR, indexYes, true)
+      let negativeIndexAfter = await task.getValidationIndex(projAddrR, indexYes, false)
+      let affirmativeValidatorAfter = await task.getValidatorAtIndex(projAddrR, affirmativeIndexBefore, true)
+      let negativeValidatorAfter = await task.getValidatorAtIndex(projAddrR, negativeIndexBefore, false)
 
       // checks
       assert.equal(valBalBefore - validationEntryFee, valBalAfter, 'token addition/subtraction incorrect')
       assert.equal(TRBalAfter - validationEntryFee, TRBalBefore, 'token addition/subtraction incorrect')
-      assert.equal(taskValNegBefore, 0, 'should be 0')
-      assert.equal(taskValNegAfter, taskValNegBefore, 'shouldn\'t change')
-      assert.equal(taskValPosBefore, 0, 'should be 0')
-      assert.equal(taskValPosAfter, validationEntryFee, 'task contract updated incorrectly')
-      assert.equal(taskOpposingValBefore, false, 'should be false')
-      assert.equal(taskOpposingValAfter, taskOpposingValBefore, 'shouldn\'t change')
-      assert.equal(taskValDetailsBefore[0], 0, 'status should be 0')
-      assert.equal(taskValDetailsBefore[1], 0, 'stake should be 0')
-      assert.equal(taskValDetailsAfter[0], 1, 'status after should be true')
-      assert.equal(taskValDetailsAfter[1], validationEntryFee, 'stake after should be validationEntryFee')
+      assert.equal(taskValDetailsBefore[0], false, 'validation status before should be false')
+      assert.equal(taskValDetailsAfter[0], true, 'validation status after should be true')
+      assert.equal(taskValDetailsBefore[1], 0, 'validation index before should be 0')
+      assert.equal(taskValDetailsAfter[1], 0, 'validation index after should still be 0')
+      assert.equal(taskValDetailsBefore[2], false, 'validation initialized before should be false')
+      assert.equal(taskValDetailsAfter[2], true, 'validation initialized after should be true')
+      assert.equal(affirmativeIndexBefore + 1, affirmativeIndexAfter, 'affirmative validation index should increment by 1')
+      assert.equal(negativeIndexBefore, negativeIndexAfter, 'negative validation index should not change')
+      assert.equal(affirmativeValidatorBefore, 0, 'affirmative validator at this index should be zero address before validation')
+      assert.equal(affirmativeValidatorAfter, validator1, 'affirmative validator at this index should be validator1 after validation')
+      assert.equal(negativeValidatorBefore, negativeValidatorAfter, 'negative validator at this index should not change')
     })
 
     it('Validator can validate a completed task no from TR validating project', async () => {
       // take stock of variables before
       let valBalBefore = await utils.getTokenBalance(validator1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
-      // let taskValNegBefore = await task.getTotalValidate(projAddrT, indexNo, false)
-      // let taskValPosBefore = await task.getTotalValidate(projAddrT, indexNo, true)
-      let taskOpposingValBefore = await task.getOpposingVal(projAddrT, indexNo)
       let taskValDetailsBefore = await task.getValDetails(projAddrT, indexNo, validator1)
       let validationEntryFee = await task.getValidationEntryFee(projAddrT, indexNo)
+      let affirmativeIndexBefore = await task.getValidationIndex(projAddrT, indexNo, true)
+      let negativeIndexBefore = await task.getValidationIndex(projAddrT, indexNo, false)
+      let affirmativeValidatorBefore = await task.getValidatorAtIndex(projAddrT, affirmativeIndexBefore, true)
+      let negativeValidatorBefore = await task.getValidatorAtIndex(projAddrT, negativeIndexBefore, false)
 
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, validationEntryFee)
@@ -152,38 +154,41 @@ contract('Validating State', (accounts) => {
       // validate task
       await TR.validateTask(projAddrT, indexNo, false, {from: validator1})
 
-      // task stock of variables after
+      // take stock of variables after
       let valBalAfter = await utils.getTokenBalance(validator1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
-      // let taskValNegAfter = await task.getTotalValidate(projAddrT, indexNo, false)
-      // let taskValPosAfter = await task.getTotalValidate(projAddrT, indexNo, true)
-      let taskOpposingValAfter = await task.getOpposingVal(projAddrT, indexNo)
       let taskValDetailsAfter = await task.getValDetails(projAddrT, indexNo, validator1)
+      let affirmativeIndexAfter = await task.getValidationIndex(projAddrT, indexNo, true)
+      let negativeIndexAfter = await task.getValidationIndex(projAddrT, indexNo, false)
+      let affirmativeValidatorAfter = await task.getValidatorAtIndex(projAddrT, affirmativeIndexBefore, true)
+      let negativeValidatorAfter = await task.getValidatorAtIndex(projAddrT, negativeIndexBefore, false)
 
       // checks
       assert.equal(valBalBefore - validationEntryFee, valBalAfter, 'token addition/subtraction incorrect')
       assert.equal(TRBalAfter - validationEntryFee, TRBalBefore, 'token addition/subtraction incorrect')
-      assert.equal(taskValPosBefore, 0, 'should be 0')
-      assert.equal(taskValPosAfter, taskValPosBefore, 'shouldn\'t change')
-      assert.equal(taskValNegBefore, 0, 'should be 0')
-      assert.equal(taskValNegAfter, validationEntryFee, 'task contract updated incorrectly')
-      assert.equal(taskOpposingValBefore, false, 'should be false')
-      assert.equal(taskOpposingValAfter, taskOpposingValBefore, 'shouldn\'t change')
-      assert.equal(taskValDetailsBefore[0], 0, 'status should be 0')
-      assert.equal(taskValDetailsBefore[1], 0, 'stake should be 0')
-      assert.equal(taskValDetailsAfter[0], 0, 'status after should be false')
-      assert.equal(taskValDetailsAfter[1], validationEntryFee, 'stake after should be validationEntryFee')
+      assert.equal(taskValDetailsBefore[0], false, 'validation status before should be false')
+      assert.equal(taskValDetailsAfter[0], false, 'validation status after should be false')
+      assert.equal(taskValDetailsBefore[1], 0, 'validation index before should be 0')
+      assert.equal(taskValDetailsAfter[1], 0, 'validation index after should still be 0')
+      assert.equal(taskValDetailsBefore[2], false, 'validation initialized before should be false')
+      assert.equal(taskValDetailsAfter[2], true, 'validation initialized after should be true')
+      assert.equal(affirmativeIndexBefore, affirmativeIndexAfter, 'affirmative validation index should not change')
+      assert.equal(negativeIndexBefore + 1, negativeIndexAfter, 'negative validation index should increment by 1')
+      assert.equal(negativeValidatorBefore, 0, 'negative validator at this index should be zero address before validation')
+      // assert.equal(negativeValidatorAfter, validator1, 'negative validator at this index should be validator1 after validation')
+      assert.equal(affirmativeValidatorBefore, affirmativeValidatorAfter, 'affirmative validator at this index should not change')
     })
 
     it('Validator can validate a completed task no from RR validating project', async () => {
       // take stock of variables before
       let valBalBefore = await utils.getTokenBalance(validator1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
-      // let taskValNegBefore = await task.getTotalValidate(projAddrR, indexNo, false)
-      // let taskValPosBefore = await task.getTotalValidate(projAddrR, indexNo, true)
-      let taskOpposingValBefore = await task.getOpposingVal(projAddrR, indexNo)
       let taskValDetailsBefore = await task.getValDetails(projAddrR, indexNo, validator1)
       let validationEntryFee = await task.getValidationEntryFee(projAddrR, indexNo)
+      let affirmativeIndexBefore = await task.getValidationIndex(projAddrR, indexNo, true)
+      let negativeIndexBefore = await task.getValidationIndex(projAddrR, indexNo, false)
+      let affirmativeValidatorBefore = await task.getValidatorAtIndex(projAddrR, affirmativeIndexBefore, true)
+      let negativeValidatorBefore = await task.getValidatorAtIndex(projAddrR, negativeIndexBefore, false)
 
       // fund validator with tokens if necessary
       await utils.mintIfNecessary(validator1, validationEntryFee)
@@ -191,27 +196,29 @@ contract('Validating State', (accounts) => {
       // validate task
       await TR.validateTask(projAddrR, indexNo, false, {from: validator1})
 
-      // task stock of variables after
+      // take stock of variables after
       let valBalAfter = await utils.getTokenBalance(validator1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
-      // let taskValNegAfter = await task.getTotalValidate(projAddrR, indexNo, false)
-      // let taskValPosAfter = await task.getTotalValidate(projAddrR, indexNo, true)
-      let taskOpposingValAfter = await task.getOpposingVal(projAddrR, indexNo)
       let taskValDetailsAfter = await task.getValDetails(projAddrR, indexNo, validator1)
+      let affirmativeIndexAfter = await task.getValidationIndex(projAddrR, indexNo, true)
+      let negativeIndexAfter = await task.getValidationIndex(projAddrR, indexNo, false)
+      let affirmativeValidatorAfter = await task.getValidatorAtIndex(projAddrR, affirmativeIndexBefore, true)
+      let negativeValidatorAfter = await task.getValidatorAtIndex(projAddrR, negativeIndexBefore, false)
 
       // checks
       assert.equal(valBalBefore - validationEntryFee, valBalAfter, 'token addition/subtraction incorrect')
       assert.equal(TRBalAfter - validationEntryFee, TRBalBefore, 'token addition/subtraction incorrect')
-      assert.equal(taskValPosBefore, 0, 'should be 0')
-      assert.equal(taskValPosAfter, taskValPosBefore, 'shouldn\'t change')
-      assert.equal(taskValNegBefore, 0, 'should be 0')
-      assert.equal(taskValNegAfter, validationEntryFee, 'task contract updated incorrectly')
-      assert.equal(taskOpposingValBefore, false, 'should be false')
-      assert.equal(taskOpposingValAfter, taskOpposingValBefore, 'shouldn\'t change')
-      assert.equal(taskValDetailsBefore[0], 0, 'status should be 0')
-      assert.equal(taskValDetailsBefore[1], 0, 'stake should be 0')
-      assert.equal(taskValDetailsAfter[0], 0, 'status after should be false')
-      assert.equal(taskValDetailsAfter[1], validationEntryFee, 'stake after should be validationEntryFee')
+      assert.equal(taskValDetailsBefore[0], false, 'validation status before should be false')
+      assert.equal(taskValDetailsAfter[0], false, 'validation status after should be false')
+      assert.equal(taskValDetailsBefore[1], 0, 'validation index before should be 0')
+      assert.equal(taskValDetailsAfter[1], 0, 'validation index after should still be 0')
+      assert.equal(taskValDetailsBefore[2], false, 'validation initialized before should be false')
+      assert.equal(taskValDetailsAfter[2], true, 'validation initialized after should be true')
+      assert.equal(affirmativeIndexBefore, affirmativeIndexAfter, 'affirmative validation index should not change')
+      assert.equal(negativeIndexBefore + 1, negativeIndexAfter, 'negative validation index should increment by 1')
+      assert.equal(negativeValidatorBefore, 0, 'negative validator at this index should be zero address before validation')
+      assert.equal(negativeValidatorAfter, validator1, 'negative validator at this index should be validator1 after validation')
+      assert.equal(affirmativeValidatorBefore, affirmativeValidatorAfter, 'affirmative validator at this index should not change')
     })
 
     it('Different validator can also validate a yes validated completed task yes from TR validating project', async () => {

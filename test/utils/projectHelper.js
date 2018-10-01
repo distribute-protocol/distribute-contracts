@@ -477,7 +477,7 @@ module.exports = function projectHelper (accounts) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
     let index
-    _bool === true
+    _bool
       ? index = await TASK.affirmativeIndex()
       : index = await TASK.negativeIndex()
     return index.toNumber()
@@ -490,6 +490,7 @@ module.exports = function projectHelper (accounts) {
     _bool === true
       ? valAtIndex = await TASK.affirmativeValidators(_index)
       : valAtIndex = await TASK.negativeValidators(_index)
+    console.log(_bool, valAtIndex)
     return valAtIndex
   }
 

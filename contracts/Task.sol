@@ -36,11 +36,11 @@ contract Task {
 
     mapping (address => Validator) public validators;
     uint256 public validateReward;
-    uint public validationEntryFee;
+    uint256 public validationEntryFee;
+    uint256 public affirmativeIndex;
+    uint256 public negativeIndex;
     address[5] public affirmativeValidators;
-    uint public affirmativeIndex;
     address[5] public negativeValidators;
-    uint public negativeIndex;
 
     struct Validator {
         uint256 status;
@@ -141,13 +141,12 @@ contract Task {
     */
     function setValidator(address _validator, uint256 _validationVal) external onlyTR {
         require(!validators[_validator].initialized);
-        require(_validationVal == 1 || _validationVal == 0);
         if (_validationVal == 1) {
           require(affirmativeIndex < 5);
           affirmativeValidators[affirmativeIndex] = _validator;
           validators[_validator] = Validator(_validationVal, affirmativeIndex, true);
           affirmativeIndex += 1;
-        } else {
+        } else if (_validationVal == 0) {
           require(negativeIndex < 5);
           negativeValidators[negativeIndex] = _validator;
           validators[_validator] = Validator(_validationVal, negativeIndex, true);
