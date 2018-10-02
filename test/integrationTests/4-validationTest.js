@@ -5,7 +5,7 @@ const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const taskDetails = require('../utils/taskDetails')
-const BigNumber = require('bignumber.js')
+// const BigNumber = require('bignumber.js')
 
 contract('Validating State', (accounts) => {
   // set up project helper

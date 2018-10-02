@@ -41,40 +41,40 @@ module.exports = function projectHelper (accounts) {
 
   obj.user.tokenProposer = accounts[1]
   obj.user.repProposer = accounts[2]
-  obj.user.notProposer = accounts[8]
+  obj.user.notProposer = accounts[3]
 
-  obj.user.tokenStaker1 = accounts[2]
-  obj.user.tokenStaker2 = accounts[3]
-  obj.user.repStaker1 = accounts[4]
-  obj.user.repStaker2 = accounts[5]
+  obj.user.tokenStaker1 = accounts[4]
+  obj.user.tokenStaker2 = accounts[5]
+  obj.user.repStaker1 = accounts[6]
+  obj.user.repStaker2 = accounts[7]
   obj.user.notStaker = accounts[8]
 
-  obj.user.worker1 = accounts[6]
-  obj.user.worker2 = accounts[7]
-  obj.user.notWorker = accounts[8]
+  obj.user.worker1 = accounts[9]
+  obj.user.worker2 = accounts[10]
+  obj.user.notWorker = accounts[11]
 
-  obj.user.validator1 = accounts[1]
-  obj.user.validator2 = accounts[2]
-  obj.user.notValidator = accounts[8]
+  obj.user.validator1 = accounts[12]
+  obj.user.validator2 = accounts[13]
+  obj.user.validator3 = accounts[14]
+  obj.user.notValidator = accounts[15]
 
-  obj.user.repYesVoter = accounts[1]
-  obj.user.repNoVoter = accounts[2]
-  obj.user.tokenYesVoter = accounts[3]
-  obj.user.tokenNoVoter = accounts[4]
-  obj.user.cheekyYesVoter = accounts[5]
-  obj.user.cheekyNoVoter = accounts[6]
-  obj.user.notVoter = accounts[8]
+  obj.user.repYesVoter = accounts[16]
+  obj.user.repNoVoter = accounts[17]
+  obj.user.tokenYesVoter = accounts[18]
+  obj.user.tokenNoVoter = accounts[19]
+  obj.user.cheekyYesVoter = accounts[20]
+  obj.user.cheekyNoVoter = accounts[21]
+  obj.user.notVoter = accounts[22]
 
-  obj.user.notProject = accounts[8]
+  obj.user.notProject = accounts[23]
 
   // these will only be used in unit tests
-  // make sure overlap is fine
-  obj.spoofed.spoofedDT = accounts[9]
-  obj.spoofed.spoofedTR = accounts[8]
-  obj.spoofed.spoofedRR = accounts[7]
-  obj.spoofed.spoofedPR = accounts[6]
+  obj.spoofed.spoofedDT = accounts[24]
+  obj.spoofed.spoofedTR = accounts[25]
+  obj.spoofed.spoofedRR = accounts[26]
+  obj.spoofed.spoofedPR = accounts[27]
   obj.spoofed.anyAddress = accounts[0]
-  obj.spoofed.spoofedPLCRVoting = accounts[4]
+  obj.spoofed.spoofedPLCRVoting = accounts[28]
 
   obj.spoofed.weiToReturn = 10000000000000000000
 
@@ -210,7 +210,7 @@ module.exports = function projectHelper (accounts) {
     let weiBal = await obj.utils.getWeiPoolBal()
     let totalSupply = await obj.utils.getTotalTokens()
     let price = Math.round(weiBal / totalSupply)
-    if ((price < baseCost) ) {
+    if ((price < baseCost)) {
       price = baseCost
     }
     return price
@@ -708,29 +708,38 @@ module.exports = function projectHelper (accounts) {
     // get array of validating projects
     let projArray = await obj.returnProject.validating(_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete)
 
-    let tokensToValidate = 100
-    let tokensToValidateMore = 150
-
     for (let j = 0; j < _numComplete; j++) {
-      if (_valType[j] == 0) {
-        await obj.contracts.TR.validateTask(projArray[0][0], j, tokensToValidate, true, {from: obj.user.validator1})
-        await obj.contracts.TR.validateTask(projArray[0][1], j, tokensToValidate, true, {from: obj.user.validator1})
-      }
-      if (_valType[j] == 1) {
-        await obj.contracts.TR.validateTask(projArray[0][0], j, tokensToValidate, false, {from: obj.user.validator1})
-        await obj.contracts.TR.validateTask(projArray[0][1], j, tokensToValidate, false, {from: obj.user.validator1})
-      }
-      if (_valType[j] == 2) {
-        await obj.contracts.TR.validateTask(projArray[0][0], j, tokensToValidateMore, true, {from: obj.user.validator1})
-        await obj.contracts.TR.validateTask(projArray[0][1], j, tokensToValidateMore, true, {from: obj.user.validator1})
-        await obj.contracts.TR.validateTask(projArray[0][0], j, tokensToValidate, false, {from: obj.user.validator2})
-        await obj.contracts.TR.validateTask(projArray[0][1], j, tokensToValidate, false, {from: obj.user.validator2})
-      }
-      if (_valType[j] == 3) {
-        await obj.contracts.TR.validateTask(projArray[0][0], j, tokensToValidate, true, {from: obj.user.validator1})
-        await obj.contracts.TR.validateTask(projArray[0][1], j, tokensToValidate, true, {from: obj.user.validator1})
-        await obj.contracts.TR.validateTask(projArray[0][0], j, tokensToValidateMore, false, {from: obj.user.validator2})
-        await obj.contracts.TR.validateTask(projArray[0][1], j, tokensToValidateMore, false, {from: obj.user.validator2})
+      let validationEntryFee1 = parseInt(await obj.task.getValidationEntryFee(projArray[0][0], j))
+      let validationEntryFee2 = parseInt(await obj.task.getValidationEntryFee(projArray[0][1], j))
+      let totalValEntryFee = validationEntryFee1 + validationEntryFee2
+      await obj.utils.mintIfNecessary(obj.user.validator1, totalValEntryFee * 21)
+      await obj.utils.mintIfNecessary(obj.user.validator2, totalValEntryFee * 21)
+      await obj.utils.mintIfNecessary(obj.user.validator3, totalValEntryFee * 21)
+
+      if (_valType[j] === 0) {
+        console.log(j, _valType[j] === 0, _valType[j] === 1, _valType[j] === 2, _valType[j] === 3)
+        await obj.contracts.TR.validateTask(projArray[0][0], j, true, {from: obj.user.validator1})
+        await obj.contracts.TR.validateTask(projArray[0][1], j, true, {from: obj.user.validator1})
+      } else if (_valType[j] === 1) {
+        console.log(j, _valType[j] === 0, _valType[j] === 1, _valType[j] === 2, _valType[j] === 3)
+        await obj.contracts.TR.validateTask(projArray[0][0], j, false, {from: obj.user.validator1})
+        await obj.contracts.TR.validateTask(projArray[0][1], j, false, {from: obj.user.validator1})
+      } else if (_valType[j] === 2) {
+        console.log(j, _valType[j] === 0, _valType[j] === 1, _valType[j] === 2, _valType[j] === 3)
+        await obj.contracts.TR.validateTask(projArray[0][0], j, true, {from: obj.user.validator1})
+        await obj.contracts.TR.validateTask(projArray[0][1], j, true, {from: obj.user.validator1})
+        await obj.contracts.TR.validateTask(projArray[0][0], j, false, {from: obj.user.validator2})
+        await obj.contracts.TR.validateTask(projArray[0][1], j, false, {from: obj.user.validator2})
+        await obj.contracts.TR.validateTask(projArray[0][0], j, true, {from: obj.user.validator3})
+        await obj.contracts.TR.validateTask(projArray[0][1], j, true, {from: obj.user.validator3})
+      } else if (_valType[j] === 3) {
+        console.log(j, _valType[j] === 0, _valType[j] === 1, _valType[j] === 2, _valType[j] === 3)
+        await obj.contracts.TR.validateTask(projArray[0][0], j, true, {from: obj.user.validator1})
+        await obj.contracts.TR.validateTask(projArray[0][1], j, true, {from: obj.user.validator1})
+        await obj.contracts.TR.validateTask(projArray[0][0], j, false, {from: obj.user.validator2})
+        await obj.contracts.TR.validateTask(projArray[0][1], j, false, {from: obj.user.validator2})
+        await obj.contracts.TR.validateTask(projArray[0][0], j, false, {from: obj.user.validator3})
+        await obj.contracts.TR.validateTask(projArray[0][1], j, false, {from: obj.user.validator3})
       }
     }
 
@@ -743,8 +752,8 @@ module.exports = function projectHelper (accounts) {
     // assert that project is in state 4
     let stateT = await obj.project.getState(projArray[0][0])
     let stateR = await obj.project.getState(projArray[0][1])
-    assert.equal(stateT, 5, 'project T not in validating state')
-    assert.equal(stateR, 5, 'project R not in validating state')
+    assert.equal(stateT, 5, 'project T not in voting state')
+    assert.equal(stateR, 5, 'project R not in voting state')
 
     return projArray
   }

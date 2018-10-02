@@ -35,7 +35,6 @@ contract('Voting State', (accounts) => {
 
   let valType = [valTrueOnly, valFalseOnly, valTrueMore, valFalseMore, valNeither]
 
-  // CHANGE THIS BACK TO 9 WHEN RUNNING WITH ALL THE TESTS
   let fastForwards = 9 // ganache 9 weeks ahead at this point from previous tests' evmIncreaseTime()
 
   let secretSalt = 10000
@@ -56,6 +55,8 @@ contract('Voting State', (accounts) => {
     // get voting projects
     // moves ganache forward 4 more weeks
     projArray = await returnProject.voting(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet1, taskSet1.length - 1, valType)
+    console.log(projArray)
+
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
 
@@ -237,7 +238,7 @@ contract('Voting State', (accounts) => {
       assert.equal(pollMapAfter[4], 0, 'votes no shouldn\'t change')
     })
 
-    it('token voter cannot commit a yes vote to a task validated only yes from TR voting project', async () => {
+    it('token voter cannot commit a yes vote to a task validated only yes from TR truff project', async () => {
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenYesVoter)
 
