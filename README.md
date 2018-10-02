@@ -1,8 +1,8 @@
 # Contract Docs
 
 ## Table of Contents
-1. [Protocol Overview](#protocol-overview)
-2. [Contracts](#contracts)
+* [Protocol Overview](#protocol-overview)
+* [Contracts](#contracts)
   * [Main Contract Summaries](#main-contract-summaries)
     * [DistributeToken.sol](#distributeToken.sol)
     * [TokenRegistry.sol](#tokenRegistry.sol)
@@ -19,7 +19,7 @@
     * [ProjectLibrary.sol](#ProjectLibrary.sol)
     * [Project.sol](#project.sol)
     * [Task.sol](#task.sol)
-3. [Actions](#actions)
+* [Actions](#actions)
   * [General Actions](#general-actions)
     * [Minting Tokens](#minting-tokens)
     * [Selling Tokens](#selling-tokens)
@@ -57,7 +57,7 @@
     * [7 - Failed Project](#7---failed-project)
     * [8 - Expired Project](#8---expired-project)
       * [Refund Staker](#refund-staker)
-4. [Running Tests](#running-tests)
+* [Running Tests](#running-tests)
 
 ## Protocol Overview
 
