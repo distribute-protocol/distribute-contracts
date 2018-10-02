@@ -41,8 +41,8 @@ contract('Voting State', (accounts) => {
   let voteYes = 1
   let voteNo = 0
 
-  let voteAmount = 100
-  let voteAmountMore = 150
+  let voteAmount = 10
+  let voteAmountMore = 15
 
   before(async () => {
     // get contract
@@ -55,7 +55,6 @@ contract('Voting State', (accounts) => {
     // get voting projects
     // moves ganache forward 4 more weeks
     projArray = await returnProject.voting(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet1, taskSet1.length - 1, valType)
-    console.log(projArray)
 
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
@@ -507,7 +506,6 @@ contract('Voting State', (accounts) => {
     })
 
     it('token voter cannot commit a no vote to a task validated only yes from TR voting project', async () => {
-
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
@@ -524,7 +522,6 @@ contract('Voting State', (accounts) => {
     })
 
     it('token voter cannot commit a no vote to a task validated only yes from RR voting project', async () => {
-
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
@@ -539,8 +536,8 @@ contract('Voting State', (accounts) => {
       }
       assertThrown(errorThrown, 'An error should have been thrown')
     })
-    it('token voter cannot commit a no vote to a task validated only no from TR voting project', async function () {
 
+    it('token voter cannot commit a no vote to a task validated only no from TR voting project', async function () {
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
@@ -557,7 +554,6 @@ contract('Voting State', (accounts) => {
     })
 
     it('token voter cannot commit a no vote to a task validated only no from RR voting project', async function () {
-
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
@@ -571,11 +567,9 @@ contract('Voting State', (accounts) => {
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
-
     })
 
     it('token voter cannot commit a no vote to a task not validated from TR voting project', async function () {
-
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
@@ -592,7 +586,6 @@ contract('Voting State', (accounts) => {
     })
 
     it('token voter cannot commit a no vote to a task not validated from RR voting project', async function () {
-
       // fund voter with tokens if necessary
       await utils.mintIfNecessary(tokenNoVoter, voteAmount)
 
@@ -1091,6 +1084,7 @@ contract('Voting State', (accounts) => {
       }
       assertThrown(errorThrown, 'An error should have been thrown')
     })
+
     it('reputation voter cannot commit a no vote to a task not validated from RR voting project', async function () {
       // make commit hash
       let secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
