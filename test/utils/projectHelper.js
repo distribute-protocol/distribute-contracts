@@ -712,20 +712,20 @@ module.exports = function projectHelper (accounts) {
       let validationEntryFee1 = parseInt(await obj.task.getValidationEntryFee(projArray[0][0], j))
       let validationEntryFee2 = parseInt(await obj.task.getValidationEntryFee(projArray[0][1], j))
       let totalValEntryFee = validationEntryFee1 + validationEntryFee2
-      await obj.utils.mintIfNecessary(obj.user.validator1, totalValEntryFee * 21)
-      await obj.utils.mintIfNecessary(obj.user.validator2, totalValEntryFee * 21)
-      await obj.utils.mintIfNecessary(obj.user.validator3, totalValEntryFee * 21)
+      await obj.utils.mintIfNecessary(obj.user.validator1, totalValEntryFee * 20)
+      await obj.utils.mintIfNecessary(obj.user.validator2, totalValEntryFee * 20)
+      await obj.utils.mintIfNecessary(obj.user.validator3, totalValEntryFee * 20)
 
       if (_valType[j] === 0) {
-        console.log(j, _valType[j] === 0, _valType[j] === 1, _valType[j] === 2, _valType[j] === 3)
+        // console.log(j, _valType[j] === 0, _valType[j] === 1, _valType[j] === 2, _valType[j] === 3)
         await obj.contracts.TR.validateTask(projArray[0][0], j, true, {from: obj.user.validator1})
         await obj.contracts.TR.validateTask(projArray[0][1], j, true, {from: obj.user.validator1})
       } else if (_valType[j] === 1) {
-        console.log(j, _valType[j] === 0, _valType[j] === 1, _valType[j] === 2, _valType[j] === 3)
+        // console.log(j, _valType[j] === 0, _valType[j] === 1, _valType[j] === 2, _valType[j] === 3)
         await obj.contracts.TR.validateTask(projArray[0][0], j, false, {from: obj.user.validator1})
         await obj.contracts.TR.validateTask(projArray[0][1], j, false, {from: obj.user.validator1})
       } else if (_valType[j] === 2) {
-        console.log(j, _valType[j] === 0, _valType[j] === 1, _valType[j] === 2, _valType[j] === 3)
+        // console.log(j, _valType[j] === 0, _valType[j] === 1, _valType[j] === 2, _valType[j] === 3)
         await obj.contracts.TR.validateTask(projArray[0][0], j, true, {from: obj.user.validator1})
         await obj.contracts.TR.validateTask(projArray[0][1], j, true, {from: obj.user.validator1})
         await obj.contracts.TR.validateTask(projArray[0][0], j, false, {from: obj.user.validator2})
@@ -733,7 +733,7 @@ module.exports = function projectHelper (accounts) {
         await obj.contracts.TR.validateTask(projArray[0][0], j, true, {from: obj.user.validator3})
         await obj.contracts.TR.validateTask(projArray[0][1], j, true, {from: obj.user.validator3})
       } else if (_valType[j] === 3) {
-        console.log(j, _valType[j] === 0, _valType[j] === 1, _valType[j] === 2, _valType[j] === 3)
+        // console.log(j, _valType[j] === 0, _valType[j] === 1, _valType[j] === 2, _valType[j] === 3)
         await obj.contracts.TR.validateTask(projArray[0][0], j, true, {from: obj.user.validator1})
         await obj.contracts.TR.validateTask(projArray[0][1], j, true, {from: obj.user.validator1})
         await obj.contracts.TR.validateTask(projArray[0][0], j, false, {from: obj.user.validator2})
