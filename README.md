@@ -33,20 +33,31 @@
       * [Staking Reputation](#staking-reputation)
       * [Unstaking Tokens](#unstaking-tokens)
       * [Unstaking Reputation](#unstaking-reputation)
-    * [* State Change - Check Staked](-state-change---check-staked)
+      * [* State Change - Check Staked](-state-change---check-staked)
     * [2 - Staked Project](#2---staked-project)
       * [Submit Hashed Task List](#submit-hashed-task-list)
-    * [* State Change - Check Active](-state-change---check-active)
+      * [* State Change - Check Active](-state-change---check-active)
     * [3 - Active Project](#3---active-project)
       * [Submit Task List](#submit-task-list)
       * [Claim/Reclaim Task](#claimreclaim-task)
       * [Mark Task Complete](#mark-task-complete)
-    * [* State Change - Check Validate](-state-change---check-validate)
-    * [4 - Validating Project](#3---validating-project)
-      * [Validate Yes/No with Tokens]
-
-
-
+      * [* State Change - Check Validate](-state-change---check-validate)
+    * [4 - Validating Project](#4---validating-project)
+      * [Validate Yes/No with Tokens](#validate-yesno-with-tokens)
+      * [* State Change - Check Voting](-state-change---check-voting)
+    * [5 - Voting Project](#5---voting-project)
+      * [Vote Yes/No with Tokens](#vote-yesno-with-tokens)
+      * [Vote Yes/No with Reputation](#vote-yesno-with-reputation)
+      * [* State Change - Check End](-state-change---check-end)
+    * [6 - Complete Project](#6---complete-project)
+      * [Refund Staker](#refund-staker)
+      * [Reward Validator](#reward-validator)
+      * [Refund Voting Tokens/Reputation](#refund-voting-tokensreputation)
+      * [Reward Worker](#reward-worker)
+    * [7 - Failed Project](#7---failed-project)
+    * [8 - Expired Project](#8---expired-project)
+      * [Refund Staker](#refund-staker)
+4. [Running Tests](#running-tests)
 
 ## Protocol Overview
 
@@ -361,10 +372,10 @@ projectRegistry.checkEnd(_projectAddress)
 ```
 [diagram TBD]
 
-#### 6 - Complete
-When a project reaches stage 6- Complete, all stakers (reputation and token holders) regain their stake, and the positive validators are rewarded for their validation.
+#### 6 - Complete Project
+When a project reaches stage 6- Complete, all stakers (reputation and token holders) regain their stake, and the positive validators are rewarded for correct validation of tasks.
 
-##### Stakers May Reclaim their Stakes and a Reward
+##### Refund Staker
 ```
 let _projectAddress = '0x0b239F63eC6248162c7F19B0B2956186725eb321'
 tokenRegistry.refundStaker(_projectAddress)
@@ -377,7 +388,7 @@ reputationRegistry.refundStaker(_projectAddress)
 ```
 [diagram TBD]
 
-##### Validators Get Rewarded for Each Correctly Validated Task
+##### Reward Validator
 ```
 let _projectAddress = '0x0b239F63eC6248162c7F19B0B2956186725eb321'
 let _index = 0
@@ -385,7 +396,7 @@ tokenRegistry.rewardValidator(_projectAddress, _index)
 ```
 [diagram TBD]
 
-##### Voters May Reclaim their Capital and reputation
+##### Refund Voting Tokens/Reputation
 ```
 let _tokens = 100
 tokenRegistry.refundVotingTokens(_tokens)
@@ -398,7 +409,7 @@ reputationRegistry.refundVotingReputation(_reputation)
 ```
 [diagram TBD]
 
-##### Workers Who Completed Tasks are Rewarded
+##### Reward Worker
 ```
 let _projectAddress = '0x0b239F63eC6248162c7F19B0B2956186725eb321'
 let _index = 0
@@ -406,21 +417,37 @@ reputationRegistry.rewardTask(_projectAddress, _index)
 ```
 [diagram TBD]
 
-#### 7 - Failed
-If a **task** fails, the associated wei needed to complete it is returned to the collective pool from the project balance. Validators who correctly marked the task as incomplete are rewarded. The reputation staked by the worker who failed to complete the task are burned.
+#### 7 - Failed Project
+Some of the actions in stage 6 still apply.
+
+If a **task** fails, the associated wei needed to complete it is returned to the collective pool from the project contract's balance. Validators who correctly marked the task as incomplete are rewarded. The reputation staked by the worker who failed to complete the task are burned.
 
 If a **project** fails, validators who validated tasks correctly and workers who completed their tasks still receive rewards. However, all the stakers' tokens are burned.
 
-#### 8 - Expired
+#### 8 - Expired Project
 If a project does not receive enough stakes before the set deadline, then the project expires. The proposer who put tokens or reputation as collateral lose them, but stakers on the project can retrieve their stakes.  
 
-##### Stakers May Reclaim their Stakes
+##### Refund Staker
 ```
 let _projectAddress = '0x0b239F63eC6248162c7F19B0B2956186725eb321'
 tokenRegistry.refundStaker(_projectAddress)
 ```
 [diagram TBD]
 
-##### Proposer's Staked Tokens are Burned
+## Running Tests
 
-no associated user code, proposer cannot call `tokenRegistry.refundProposer(_projAddr)` or `reputationRegistry.refundProposer(_projAddr)`
+To run the tests, open a tab and run
+```
+ganache-cli -e 1000 -a 30
+```
+This will create 30 Ethereum accounts, each loaded with 1000 ether. This is due to the large number of workers, stakers, validators, voters, etc required to run these tests.
+
+To run the full test suite, open another tab and run
+```
+truffle test
+```
+
+To run an individual test, restart ganache-cli and run
+```
+truffle test test/<path_to_test>
+```
