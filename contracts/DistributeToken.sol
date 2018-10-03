@@ -163,9 +163,9 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
         uint256 weiRequiredVal = weiRequired(_tokens);
         require(msg.value >= weiRequiredVal);
 
-        totalSupply += _tokens;
-        balances[msg.sender] += _tokens;
-        weiBal += weiRequiredVal;
+        totalSupply = totalSupply.add(_tokens);
+        balances[msg.sender] = balances[msg.sender].add(_tokens);
+        weiBal = weiBal.add(weiRequiredVal);
         emit LogMint(_tokens, weiRequiredVal, msg.sender);
         uint256 fundsLeft = msg.value - weiRequiredVal;
         if (fundsLeft > 0) { msg.sender.transfer(fundsLeft); }
@@ -180,8 +180,8 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     function burn(uint256 _tokens) external onlyTR {
         require(!freeze);
         require(_tokens <= totalSupply && _tokens > 0);
-        balances[msg.sender] -= _tokens;
-        totalSupply -= _tokens;
+        balances[msg.sender] = balances[msg.sender].sub(_tokens);
+        totalSupply = totalSupply.sub(_tokens);
     }
 
     /**
@@ -194,9 +194,9 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
         require(_tokens > 0 && (_tokens <= balances[msg.sender]));
 
         uint256 weiVal = _tokens * currentPrice();
-        balances[msg.sender] -= _tokens;
+        balances[msg.sender] = balances[msg.sender].sub(_tokens);
         totalSupply = totalSupply.sub(_tokens);
-        weiBal -= weiVal;
+        weiBal = weiBal.sub(weiVal);
         emit LogWithdraw(_tokens, weiVal, msg.sender);
         msg.sender.transfer(weiVal);
     }
@@ -215,7 +215,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     function transferWeiTo(address _address, uint256 _weiValue) external onlyTRorRR {
         require(!freeze);
         require(_weiValue <= weiBal);
-        weiBal -= _weiValue;
+        weiBal = weiBal.sub(_weiValue);
         _address.transfer(_weiValue);
     }
 
@@ -227,9 +227,8 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     */
 
     function transferTokensTo(address _address, uint256 _tokens) external onlyTR {
-        // check for overflow
-        totalSupply += _tokens;
-        balances[_address] += _tokens;
+        totalSupply = totalSupply.add(_tokens);
+        balances[_address] = balances[_address].add(_tokens);
     }
 
     /**
@@ -239,8 +238,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     */
     function returnWei(uint _weiValue) external onlyTR {
         require(!freeze);
-        // check for overflow
-        weiBal += _weiValue;
+        weiBal = weiBal.add(_weiValue);
     }
 
     /**
@@ -252,8 +250,8 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     function transferToEscrow(address _owner, uint256 _tokens) external onlyTR returns (bool) {
         require(!freeze);
         require(balances[_owner] >= _tokens);
-        balances[_owner] -= _tokens;
-        balances[tokenRegistryAddress] += _tokens;
+        balances[_owner] = balances[_owner].sub(_tokens);
+        balances[tokenRegistryAddress] = balances[tokenRegistryAddress].add(_tokens);
         return true;
     }
 

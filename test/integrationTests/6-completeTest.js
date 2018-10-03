@@ -13,9 +13,9 @@ contract('Complete State', (accounts) => {
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let TR, RR, PR, PLCR
+  let TR, RR, DT, PR, PLCR
   let {user, project, utils, returnProject, task} = projObj
-  let {proposer} = user
+  let {tokenStaker1, tokenStaker2, notStaker} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
 
   // set up task details & hashing functions
@@ -52,6 +52,7 @@ contract('Complete State', (accounts) => {
     TR = projObj.contracts.TR
     RR = projObj.contracts.RR
     PR = projObj.contracts.PR
+    DT = projObj.contracts.DT
 
     // get finished - complete projects
     // moves ganache forward 6 more weeks
@@ -61,9 +62,64 @@ contract('Complete State', (accounts) => {
     projAddrR = projArray[0][1]
   })
 
-  describe('committing yes votes with tokens', () => {
-    it('token voter can commit a yes vote to a task validated more yes from TR voting project', async () => {
+  describe('refund stakers', () => {
+    it('token staker can ask for refund from TR complete project', async () => {
+      // take stock of variables before
+      let totalTokensBefore = await utils.getTotalTokens()
+      let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
+      let DTBalBefore = await utils.getTokenBalance(DT.address)
+      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT)
+      let passAmount = await project.getPassAmount(projAddrT)
 
+      // calculate refund & reward
+      let refund = Math.floor((tsBalBefore * passAmount) / 100)
+      let reward = Math.floor(refund / 20)
+
+      // refund staker
+      await TR.refundStaker(projAddrT, {from: tokenStaker1})
+
+      // take stock of variables after
+      let totalTokensAfter = await utils.getTotalTokens()
+      let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
+      let DTBalAfter = await utils.getTokenBalance(DT.address)
+      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker1, projAddrT)
+
+      // checks
+      assert.equal(totalTokensBefore + reward, totalTokensAfter, 'incorrect token reward minted')
+      assert.equal(tsBalBefore + reward + refund, tsBalAfter, 'incorrect token staker balance post-refund')
+      assert.equal(DTBalAfter + refund, DTBalBefore, 'incorrect token staker balance post-refund')
+      assert.equal(tsProjBalBefore, refund, 'incorrect refund calculation')
+      assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
+    })
+
+    it('token staker can ask for refund from RR complete project', async () => {
+      // take stock of variables before
+      let totalTokensBefore = await utils.getTotalTokens()
+      let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
+      let DTBalBefore = await utils.getTokenBalance(DT.address)
+      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker1, projAddrR)
+      let passAmount = await project.getPassAmount(projAddrR)
+
+      // calculate refund & reward
+      let refund = Math.floor((tsBalBefore * passAmount) / 100)
+      let reward = Math.floor(refund / 20)
+      console.log(refund, passAmount.toNumber(), tsBalBefore, reward)
+
+      // refund staker
+      await TR.refundStaker(projAddrR, {from: tokenStaker1})
+
+      // take stock of variables after
+      let totalTokensAfter = await utils.getTotalTokens()
+      let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
+      let DTBalAfter = await utils.getTokenBalance(DT.address)
+      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR)
+
+      // checks
+      assert.equal(totalTokensBefore + reward, totalTokensAfter, 'incorrect token reward minted')
+      assert.equal(tsBalBefore + reward + refund, tsBalAfter, 'incorrect token staker balance post-refund')
+      assert.equal(DTBalAfter + refund, DTBalBefore, 'incorrect token staker balance post-refund')
+      assert.equal(tsProjBalBefore, refund, 'incorrect refund calculation')
+      assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
   })
 })

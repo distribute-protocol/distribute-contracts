@@ -417,7 +417,7 @@ library ProjectLibrary {
         uint256 refund;
         // account for proportion of successful tasks
         if(_project.tokensStaked() != 0) {
-            refund = _project.tokenBalances(_staker) * _project.passAmount() / 100;
+            refund = _project.tokenBalances(_staker).mul( _project.passAmount()).div(100);
         }
         emit TokenRefund(_staker, refund);
         return refund;
@@ -433,7 +433,7 @@ library ProjectLibrary {
     function handleReputationStaker(Project _project, address _staker) internal returns (uint256) {
         uint256 refund;
         if(_project.reputationStaked() != 0) {
-            refund = _project.reputationBalances(_staker) * _project.passAmount() / 100;
+            refund = _project.reputationBalances(_staker).mul(_project.passAmount()).div(100);
         }
         emit ReputationRefund(address(_project), _staker, refund);
         return refund;

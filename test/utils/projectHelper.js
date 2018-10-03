@@ -406,6 +406,12 @@ module.exports = function projectHelper (accounts) {
     return taskCount
   }
 
+  obj.project.getPassAmount = async function (_projAddr) {
+    let PROJ = await Project.at(_projAddr)
+    let passAmount = await PROJ.passAmount()
+    return passAmount
+  }
+
   obj.task.getTaskHash = async function (_taskAddr) {
     let TASK = await Task.at(_taskAddr)
     let taskHash = await TASK.taskHash()
@@ -783,6 +789,8 @@ module.exports = function projectHelper (accounts) {
       let secretHash
       await obj.utils.mintIfNecessary(obj.user.tokenYesVoter)
       await obj.utils.mintIfNecessary(obj.user.tokenNoVoter)
+      await obj.utils.register(obj.user.repYesVoter)
+      await obj.utils.register(obj.user.repNoVoter)
 
       if (_voteType[j] === 0) {
         // do nothing
