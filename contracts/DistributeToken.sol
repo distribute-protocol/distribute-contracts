@@ -144,7 +144,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     */
     function targetPrice(uint _tokens) internal view returns (uint256) {
         uint256 cp = currentPrice();
-        uint256 newSupply = totalSupply + _tokens;
+        uint256 newSupply = totalSupply.add(_tokens);
         return cp * (1000 + Division.percent(_tokens, newSupply, 3)) / 1000;    // does this need SafeMath?
     }
 
@@ -167,7 +167,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
         balances[msg.sender] = balances[msg.sender].add(_tokens);
         weiBal = weiBal.add(weiRequiredVal);
         emit LogMint(_tokens, weiRequiredVal, msg.sender);
-        uint256 fundsLeft = msg.value - weiRequiredVal;
+        uint256 fundsLeft = msg.value.minus(weiRequiredVal);
         if (fundsLeft > 0) { msg.sender.transfer(fundsLeft); }
     }
 

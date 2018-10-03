@@ -115,7 +115,7 @@ contract('Complete State', (accounts) => {
       let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR)
 
       // checks
-      assert.equal(totalTokensBefore + reward, totalTokensAfter, 'incorrect token reward minted')
+      assert.equal(totalTokensBefore, totalTokensAfter, 'incorrect token reward minted')
       assert.equal(tsBalBefore + reward + refund, tsBalAfter, 'incorrect token staker balance post-refund')
       assert.equal(DTBalAfter + refund, DTBalBefore, 'incorrect token staker balance post-refund')
       assert.equal(tsProjBalBefore, refund, 'incorrect refund calculation')
