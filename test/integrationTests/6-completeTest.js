@@ -15,11 +15,11 @@ contract('Complete State', (accounts) => {
   // get project helper variables
   let TR, RR, PR, PLCR
   let {user, project, utils, returnProject, task} = projObj
-  let {repYesVoter, repNoVoter, tokenYesVoter, tokenNoVoter, notVoter, cheekyYesVoter, cheekyNoVoter} = user
+  let {proposer} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
 
   // set up task details & hashing functions
-  let {taskSet1} = taskDetails
+  let {taskSet4} = taskDetails
 
   // local test variables
   let projArray
@@ -28,21 +28,21 @@ contract('Complete State', (accounts) => {
 
   // define validaton indices
   let valTrueOnly = 0
-  let valFalseOnly = 1
+  // let valFalseOnly = 1
   let valTrueMore = 2
   let valFalseMore = 3
-  let valNeither = 4
+  // let valNeither = 4
 
-  let valType = [valTrueOnly, valTrueOnly, valTrueMore, valFalseMore, valNeither]
+  let valType = [valTrueOnly, valTrueMore, valFalseMore]
 
   // define voting indices
-  let voteTrueOnly = 0
-  let voteFalseOnly = 1
-  let voteTrueMore = 2
-  let voteFalseMore = 3
-  let voteNeither = 4
+  let voteNeither = 0
+  // let voteTrueOnly = 1
+  // let voteFalseOnly = 2
+  let voteTrueMore = 3
+  // let voteFalseMore = 4
 
-  let voteType = []
+  let voteType = [voteNeither, voteTrueMore, voteTrueMore]
 
   let fastForwards = 14 // ganache 14 weeks ahead at this point from previous tests' evmIncreaseTime()
 
@@ -52,15 +52,13 @@ contract('Complete State', (accounts) => {
     TR = projObj.contracts.TR
     RR = projObj.contracts.RR
     PR = projObj.contracts.PR
-    PLCR = projObj.contracts.PLCR
 
     // get finished - complete projects
     // moves ganache forward 6 more weeks
-    projArray = await returnProject.finished(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet1, taskSet1.length, valType)
+    projArray = await returnProject.finished(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet4, taskSet4.length, valType, voteType, 6)
 
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
-
   })
 
   describe('committing yes votes with tokens', () => {

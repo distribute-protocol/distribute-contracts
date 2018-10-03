@@ -11,8 +11,7 @@ const Task = artifacts.require('Task')
 
 const evmIncreaseTime = require('./evmIncreaseTime')
 const keccakHashes = require('../utils/keccakHashes')
-const taskDetails = require('../utils/taskDetails')
-// const web3 = require('web3-utils')
+const ethers = require('ethers')
 
 module.exports = function projectHelper (accounts) {
   let obj = {}
@@ -27,6 +26,7 @@ module.exports = function projectHelper (accounts) {
   obj.returnProject = {}
   obj.returnProjectHelper = {}
   obj.task = {}
+  obj.voting = {}
 
   // set up user identities
   // accounts[0] - no identity, default user for non-specified contract calls
@@ -104,6 +104,13 @@ module.exports = function projectHelper (accounts) {
   // immutable project details
   obj.project.proposeProportion = 20
   obj.project.proposeReward = 100
+
+  // voting details
+  obj.voting.secretSalt = 10000
+  obj.voting.voteYes = 1
+  obj.voting.voteNo = 0
+  obj.voting.voteAmount = 1
+  obj.voting.voteAmountMore = 2
 
   // contracts
   obj.contracts.setContracts = async () => {
@@ -760,7 +767,7 @@ module.exports = function projectHelper (accounts) {
   }
 
   // return finished projects (addresses) proposed by token holder and reputation holder
-  // takes a list of tasks, a _votTypee array parameter of how voted type, and the intended state of the outcome
+  // takes a list of tasks, a _voteType array parameter of how voted type, and the intended state of the outcome
   // incomplete tasks are left at the end
   // 0: no votes
   // 1: vote true only
@@ -771,13 +778,68 @@ module.exports = function projectHelper (accounts) {
   obj.returnProject.finished = async function (_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete, _valType, _voteType, _intendedState) {
     // get array of voting projects
     let projArray = await obj.returnProject.voting(_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete, _valType)
-
     // vote commit as necessary
+    for (let j = 0; j < _numComplete; j++) {
+      let secretHash
+      await obj.utils.mintIfNecessary(obj.user.tokenYesVoter)
+      await obj.utils.mintIfNecessary(obj.user.tokenNoVoter)
+
+      if (_voteType[j] === 0) {
+        // do nothing
+      } else if (_voteType[j] === 1) {
+        secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [obj.voting.voteYes, obj.voting.secretSalt])
+        await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenYesVoter})
+        await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenYesVoter})
+      } else if (_voteType[j] === 2) {
+        secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [obj.voting.voteNo, obj.voting.secretSalt])
+        await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenNoVoter})
+        await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenNoVoter})
+      } else if (_voteType[j] === 3) {
+        secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [obj.voting.voteYes, obj.voting.secretSalt])
+        await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenYesVoter})
+        await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenYesVoter})
+
+        secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [obj.voting.voteNo, obj.voting.secretSalt])
+        await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.tokenNoVoter})
+        await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.tokenNoVoter})
+      } else if (_voteType[j] === 4) {
+        secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [obj.voting.voteYes, obj.voting.secretSalt])
+        await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.tokenYesVoter})
+        await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.tokenYesVoter})
+
+        secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [obj.voting.voteNo, obj.voting.secretSalt])
+        await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenNoVoter})
+        await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenNoVoter})
+      }
+    }
 
     // increase time 1 week + 1 ms to make sure that reveal vote doesn't bug out
     await evmIncreaseTime((1 * 604800) + 1)
 
     // vote reveal as necessary
+    for (let j = 0; j < _numComplete; j++) {
+      if (_voteType[j] === 0) {
+        // do nothing
+      } else if (_voteType[j] === 1) {
+        await obj.contracts.TR.voteReveal(projArray[0][0], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.tokenYesVoter})
+        await obj.contracts.TR.voteReveal(projArray[0][1], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.tokenYesVoter})
+      } else if (_voteType[j] === 2) {
+        await obj.contracts.TR.voteReveal(projArray[0][0], j, obj.voting.voteMp, obj.voting.secretSalt, {from: obj.user.tokenNoVoter})
+        await obj.contracts.TR.voteReveal(projArray[0][1], j, obj.voting.voteMp, obj.voting.secretSalt, {from: obj.user.tokenNoVoter})
+      } else if (_voteType[j] === 3) {
+        await obj.contracts.TR.voteReveal(projArray[0][0], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.tokenYesVoter})
+        await obj.contracts.TR.voteReveal(projArray[0][1], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.tokenYesVoter})
+
+        await obj.contracts.TR.voteReveal(projArray[0][0], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.tokenNoVoter})
+        await obj.contracts.TR.voteReveal(projArray[0][1], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.tokenNoVoter})
+      } else if (_voteType[j] === 4) {
+        await obj.contracts.TR.voteReveal(projArray[0][0], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.tokenYesVoter})
+        await obj.contracts.TR.voteReveal(projArray[0][1], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.tokenYesVoter})
+
+        await obj.contracts.TR.voteReveal(projArray[0][0], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.tokenNoVoter})
+        await obj.contracts.TR.voteReveal(projArray[0][1], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.tokenNoVoter})
+      }
+    }
 
     // increase time 1 week + 1 ms to make sure that checkEnd() doesn't bug out
     await evmIncreaseTime((1 * 604800) + 1)
@@ -786,7 +848,7 @@ module.exports = function projectHelper (accounts) {
     await obj.contracts.PR.checkEnd(projArray[0][0])
     await obj.contracts.PR.checkEnd(projArray[0][1])
 
-    // assert that project is in state 6 || 7
+    // assert that project is in intended state 6 || 7
     let stateT = await obj.project.getState(projArray[0][0])
     let stateR = await obj.project.getState(projArray[0][1])
     assert.equal(stateT, _intendedState, 'project T not in failed or complete state')
