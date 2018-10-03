@@ -698,6 +698,7 @@ module.exports = function projectHelper (accounts) {
 
   // return voting projects (addresses) proposed by token holder and reputation holder
   // takes a list of tasks and a _valType array parameter of how validated type
+  // incomplete tasks are at the end
   // 0: validate true only
   // 1: validate false only
   // 2: validate both (true > false)
@@ -739,17 +740,54 @@ module.exports = function projectHelper (accounts) {
       }
     }
 
+    // increase time 1 week + 1 ms to make sure that checkVoting() doesn't bug out
     await evmIncreaseTime((1 * 604800) + 1)
 
-    // call check validate for each project
+    // call check voting for each project
     await obj.contracts.PR.checkVoting(projArray[0][0])
     await obj.contracts.PR.checkVoting(projArray[0][1])
 
-    // assert that project is in state 4
+    // assert that project is in state 5
     let stateT = await obj.project.getState(projArray[0][0])
     let stateR = await obj.project.getState(projArray[0][1])
     assert.equal(stateT, 5, 'project T not in voting state')
     assert.equal(stateR, 5, 'project R not in voting state')
+
+    return projArray
+  }
+
+  // return finished projects (addresses) proposed by token holder and reputation holder
+  // takes a list of tasks and a _valVotType array parameter of how validated & voted type
+  // incomplete tasks are at the end
+  // 0: no votes
+  // 1: vote true only
+  // 2: vote false only
+  // 3: vote both (true > false)
+  // 4: vote both (false > true)
+  // moves ganache forward 6 weeks
+  obj.returnProject.finished = async function (_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete, _valType, _votType) {
+    // get array of voting projects
+    let projArray = await obj.returnProject.voting(_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete, _valType)
+
+    // vote commit as necessary
+
+    // increase time 1 week + 1 ms to make sure that reveal vote doesn't bug out
+    await evmIncreaseTime((1 * 604800) + 1)
+
+    // vote reveal as necessary
+
+    // increase time 1 week + 1 ms to make sure that checkEnd() doesn't bug out
+    await evmIncreaseTime((1 * 604800) + 1)
+
+    // call check end for each project
+    await obj.contracts.PR.checkEnd(projArray[0][0])
+    await obj.contracts.PR.checkEnd(projArray[0][1])
+
+    // assert that project is in state 6 || 7
+    let stateT = await obj.project.getState(projArray[0][0])
+    let stateR = await obj.project.getState(projArray[0][1])
+    assert.equal(stateT, 6 || 7, 'project T not in failed or complete state')
+    assert.equal(stateR, 5, 'project R not in failed or complete state')
 
     return projArray
   }

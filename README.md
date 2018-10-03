@@ -1,6 +1,5 @@
 # Contract Docs
 
-## Table of Contents
 * [Protocol Overview](#protocol-overview)
 * [Contracts](#contracts)
   * [Main Contract Summaries](#main-contract-summaries)
