@@ -36,7 +36,7 @@ contract('Voting State', (accounts) => {
   let valFalseMore2 = 5
   let valNeither = 6
 
-  let valType = [valTrueOnly, valFalseOnly, valTrueMore1, valFalseMore1, valTrueMore2, valFalseMore2, valNeither]
+  let valType = [valTrueOnly, valFalseOnly, valTrueMore1, valFalseMore1, valTrueMore1, valFalseMore1, valNeither]
 
   let fastForwards = 9 // ganache 9 weeks ahead at this point from previous tests' evmIncreaseTime()
 
@@ -44,8 +44,8 @@ contract('Voting State', (accounts) => {
   let voteYes = 1
   let voteNo = 0
 
-  let voteAmount = 10
-  let voteAmountMore = 15
+  let voteAmount = 1
+  let voteAmountMore = 2
 
   before(async () => {
     // get contract
@@ -1116,14 +1116,24 @@ contract('Voting State', (accounts) => {
       // commit votes but only reveal yes votes for valTrueMore2 and no votes for valFalseMore2
       secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteYes, secretSalt])
       await TR.voteCommit(projAddrT, valTrueMore2, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      await TR.voteCommit(projAddrR, valTrueMore2, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      await RR.voteCommit(projAddrT, valTrueMore2, voteAmount, secretHash, 0, {from: repYesVoter})
       await RR.voteCommit(projAddrR, valTrueMore2, voteAmount, secretHash, 0, {from: repYesVoter})
+
       await TR.voteCommit(projAddrT, valFalseMore2, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      await TR.voteCommit(projAddrR, valFalseMore2, voteAmount, secretHash, 0, {from: tokenYesVoter})
+      await RR.voteCommit(projAddrT, valFalseMore2, voteAmount, secretHash, 0, {from: repYesVoter})
       await RR.voteCommit(projAddrR, valFalseMore2, voteAmount, secretHash, 0, {from: repYesVoter})
 
       secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [voteNo, secretSalt])
       await TR.voteCommit(projAddrT, valTrueMore2, voteAmount, secretHash, 0, {from: tokenNoVoter})
+      await TR.voteCommit(projAddrR, valTrueMore2, voteAmount, secretHash, 0, {from: tokenNoVoter})
+      await RR.voteCommit(projAddrT, valTrueMore2, voteAmount, secretHash, 0, {from: repNoVoter})
       await RR.voteCommit(projAddrR, valTrueMore2, voteAmount, secretHash, 0, {from: repNoVoter})
+
       await TR.voteCommit(projAddrT, valFalseMore2, voteAmount, secretHash, 0, {from: tokenNoVoter})
+      await TR.voteCommit(projAddrR, valFalseMore2, voteAmount, secretHash, 0, {from: tokenNoVoter})
+      await RR.voteCommit(projAddrT, valFalseMore2, voteAmount, secretHash, 0, {from: repNoVoter})
       await RR.voteCommit(projAddrR, valFalseMore2, voteAmount, secretHash, 0, {from: repNoVoter})
 
       // fast forward time
@@ -1526,7 +1536,7 @@ contract('Voting State', (accounts) => {
   })
 
   describe('state changes before time is up', () => {
-    it('checkEnd() does not change TR voting project to some end state before time is up', async () => {
+    it('checkEnd() does not change TR voting project to failed state before time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT)
 
@@ -1541,7 +1551,7 @@ contract('Voting State', (accounts) => {
       assert.equal(stateAfter, 5, 'state should not have changed')
     })
 
-    it('checkEnd() does not change RR voting project to some end state before time is up', async () => {
+    it('checkEnd() does not change RR voting project to failed state before time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
 
@@ -1558,20 +1568,25 @@ contract('Voting State', (accounts) => {
   })
 
   describe('state changes after time is up', () => {
+    // all will become failed because at least one task fails (val false only, val neither, & val false more 2)
     before(async () => {
       // reveal votes for valTrueMore2
       await TR.voteReveal(projAddrT, valTrueMore2, voteYes, secretSalt, {from: tokenYesVoter})
+      await TR.voteReveal(projAddrR, valTrueMore2, voteYes, secretSalt, {from: tokenYesVoter})
       await RR.voteReveal(projAddrT, valTrueMore2, voteYes, secretSalt, {from: repYesVoter})
+      await RR.voteReveal(projAddrR, valTrueMore2, voteYes, secretSalt, {from: repYesVoter})
 
       // reveal votes for valFalseMore2
       await TR.voteReveal(projAddrT, valFalseMore2, voteNo, secretSalt, {from: tokenNoVoter})
+      await TR.voteReveal(projAddrR, valFalseMore2, voteNo, secretSalt, {from: tokenNoVoter})
       await RR.voteReveal(projAddrT, valFalseMore2, voteNo, secretSalt, {from: repNoVoter})
+      await RR.voteReveal(projAddrR, valFalseMore2, voteNo, secretSalt, {from: repNoVoter})
 
       // fast forward time
       await evmIncreaseTime(604800) // 1 week
     })
 
-    it('checkEnd() changes TR voting project to some end state after time is up', async () => {
+    it('checkEnd() changes TR voting project to failed state after time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT)
 
@@ -1581,12 +1596,41 @@ contract('Voting State', (accounts) => {
       // take stock of variables
       let stateAfter = await project.getState(projAddrT)
 
+      let taskClaimableByVal = []
+      let taskClaimableByRep = []
+      let pollEnded = []
+
+      // only check indices with polls
+      for (let i = 2; i < 6; i++) {
+        let claimable = await task.getClaimable(projAddrT, i)
+        let claimableByRep = await task.getClaimableByRep(projAddrT, i)
+        let ended = await task.pollEnded(projAddrT, i)
+        taskClaimableByVal.push(claimable)
+        taskClaimableByRep.push(claimableByRep)
+        pollEnded.push(ended)
+      }
+
       // checks
       assert.equal(stateBefore, 5, 'state before should be 5')
       assert.equal(stateAfter, 7, 'state after should be 7')
+
+      assert.equal(taskClaimableByVal[valTrueMore1 - 2], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[valTrueMore2 - 2], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[valFalseMore1 - 2], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[valFalseMore2 - 2], true, 'should be claimable by validator')
+
+      assert.equal(taskClaimableByRep[valTrueMore1 - 2], true, 'should be claimable by worker')
+      assert.equal(taskClaimableByRep[valTrueMore2 - 2], true, 'should be claimable by worker')
+      assert.equal(taskClaimableByRep[valFalseMore1 - 2], true, 'should be claimable by worker')
+      assert.equal(taskClaimableByRep[valFalseMore2 - 2], false, 'should not be claimable by worker')
+
+      assert.equal(pollEnded[valTrueMore1 - 2], true, 'poll should be ended')
+      assert.equal(pollEnded[valTrueMore2 - 2], true, 'poll should be ended')
+      assert.equal(pollEnded[valFalseMore1 - 2], true, 'poll should be ended')
+      assert.equal(pollEnded[valFalseMore2 - 2], true, 'poll should be ended')
     })
 
-    it('checkEnd() changes RR voting project to some end state after time is up', async () => {
+    it('checkEnd() changes RR voting project to failed state after time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
 
@@ -1596,9 +1640,37 @@ contract('Voting State', (accounts) => {
       // take stock of variables
       let stateAfter = await project.getState(projAddrR)
 
+      let taskClaimableByVal = []
+      let taskClaimableByRep = []
+      let pollEnded = []
+
+      // only check indices with polls
+      for (let i = 2; i < 6; i++) {
+        let claimable = await task.getClaimable(projAddrR, i)
+        let claimableByRep = await task.getClaimableByRep(projAddrR, i)
+        let ended = await task.pollEnded(projAddrR, i)
+        taskClaimableByVal.push(claimable)
+        taskClaimableByRep.push(claimableByRep)
+        pollEnded.push(ended)
+      }
+
       // checks
       assert.equal(stateBefore, 5, 'state before should be 5')
       assert.equal(stateAfter, 7, 'state after should be 7')
+      assert.equal(taskClaimableByVal[valTrueMore1 - 2], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[valTrueMore2 - 2], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[valFalseMore1 - 2], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[valFalseMore2 - 2], true, 'should be claimable by validator')
+
+      assert.equal(taskClaimableByRep[valTrueMore1 - 2], true, 'should be claimable by worker')
+      assert.equal(taskClaimableByRep[valTrueMore2 - 2], true, 'should be claimable by worker')
+      assert.equal(taskClaimableByRep[valFalseMore1 - 2], true, 'should be claimable by worker')
+      assert.equal(taskClaimableByRep[valFalseMore2 - 2], false, 'should not be claimable by worker')
+
+      assert.equal(pollEnded[valTrueMore1 - 2], true, 'poll should be ended')
+      assert.equal(pollEnded[valTrueMore2 - 2], true, 'poll should be ended')
+      assert.equal(pollEnded[valFalseMore1 - 2], true, 'poll should be ended')
+      assert.equal(pollEnded[valFalseMore2 - 2], true, 'poll should be ended')
     })
   })
 })

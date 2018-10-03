@@ -524,6 +524,12 @@ module.exports = function projectHelper (accounts) {
     return pollMapNumber
   }
 
+  obj.task.pollEnded = async function (_projAddr, _index) {
+    let pollId = await obj.task.getPollNonce(_projAddr, _index)
+    let pollEnded = await obj.contracts.PLCR.pollEnded(pollId)
+    return pollEnded
+  }
+
   // project return functions
   // return project (address) proposed by token holder
   obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash) {
@@ -610,7 +616,7 @@ module.exports = function projectHelper (accounts) {
 
   // return active projects (addresses) proposed by token holder and reputation holder
   // moves ganache forward 1 week
-  obj.returnProject.active = async function (_cost, _stakingPeriod, _ipfsHash, _numSets) {
+  obj.returnProject.active = async function (_cost, _stakingPeriod, _ipfsHash, _numSets, _tasks) {
     // make array of projects
     let projArray = []
 
@@ -622,10 +628,10 @@ module.exports = function projectHelper (accounts) {
 
       // add task hashes to both projects by at least 50% of the stakers
       for (let j = 0; j < 2; j++) {
-        await obj.contracts.PR.addTaskHash(projArray[i][j], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker1})
-        await obj.contracts.PR.addTaskHash(projArray[i][j], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.tokenStaker2})
-        await obj.contracts.PR.addTaskHash(projArray[i][j], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.repStaker1})
-        await obj.contracts.PR.addTaskHash(projArray[i][j], keccakHashes.hashTasksArray(taskDetails.taskSet1), {from: obj.user.repStaker2})
+        await obj.contracts.PR.addTaskHash(projArray[i][j], keccakHashes.hashTasksArray(_tasks), {from: obj.user.tokenStaker1})
+        await obj.contracts.PR.addTaskHash(projArray[i][j], keccakHashes.hashTasksArray(_tasks), {from: obj.user.tokenStaker2})
+        await obj.contracts.PR.addTaskHash(projArray[i][j], keccakHashes.hashTasksArray(_tasks), {from: obj.user.repStaker1})
+        await obj.contracts.PR.addTaskHash(projArray[i][j], keccakHashes.hashTasksArray(_tasks), {from: obj.user.repStaker2})
       }
     }
 
@@ -654,8 +660,7 @@ module.exports = function projectHelper (accounts) {
   obj.returnProject.validating = async function (_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete) {
     // get array of active projects
     // moves ganache forward 1 week
-    let projArray = await obj.returnProject.active(_cost, _stakingPeriod, _ipfsHash, 1)
-
+    let projArray = await obj.returnProject.active(_cost, _stakingPeriod, _ipfsHash, 1, _tasks)
     // register workers
     await obj.utils.register(obj.user.worker1)
     await obj.utils.register(obj.user.worker2)
@@ -663,9 +668,8 @@ module.exports = function projectHelper (accounts) {
     // make worker array
     let workerArray = [obj.user.worker1, obj.user.worker2]
 
-    await obj.contracts.PR.submitHashList(projArray[0][0], keccakHashes.hashTasks(taskDetails.taskSet1), {from: obj.user.repStaker1})
-    await obj.contracts.PR.submitHashList(projArray[0][1], keccakHashes.hashTasks(taskDetails.taskSet1), {from: obj.user.repStaker1})
-
+    await obj.contracts.PR.submitHashList(projArray[0][0], keccakHashes.hashTasks(_tasks), {from: obj.user.repStaker1})
+    await obj.contracts.PR.submitHashList(projArray[0][1], keccakHashes.hashTasks(_tasks), {from: obj.user.repStaker1})
     for (let j = 0; j < _numComplete; j++) {
       // get description and weighting of task with index j
       let description = _tasks[j].description
@@ -679,7 +683,6 @@ module.exports = function projectHelper (accounts) {
       await obj.contracts.PR.submitTaskComplete(projArray[0][0], j, {from: workerArray[j % 2]})
       await obj.contracts.PR.submitTaskComplete(projArray[0][1], j, {from: workerArray[j % 2]})
     }
-
     // increase time 2 weeks + 1 ms to make sure that checkValidating() doesn't bug out
     await evmIncreaseTime((2 * 604800) + 1)
 
