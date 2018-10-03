@@ -26,23 +26,25 @@ contract('Complete State', (accounts) => {
   let errorThrown
   let projAddrT, projAddrR
 
-  // define indices
+  // define validaton indices
   let valTrueOnly = 0
   let valFalseOnly = 1
   let valTrueMore = 2
   let valFalseMore = 3
   let valNeither = 4
 
-  let valType = [valTrueOnly, valFalseOnly, valTrueMore, valFalseMore, valNeither]
+  let valType = [valTrueOnly, valTrueOnly, valTrueMore, valFalseMore, valNeither]
 
-  let fastForwards = 9 // ganache 9 weeks ahead at this point from previous tests' evmIncreaseTime()
+  // define voting indices
+  let voteTrueOnly = 0
+  let voteFalseOnly = 1
+  let voteTrueMore = 2
+  let voteFalseMore = 3
+  let voteNeither = 4
 
-  let secretSalt = 10000
-  let voteYes = 1
-  let voteNo = 0
+  let voteType = []
 
-  let voteAmount = 10
-  let voteAmountMore = 15
+  let fastForwards = 14 // ganache 14 weeks ahead at this point from previous tests' evmIncreaseTime()
 
   before(async () => {
     // get contract
@@ -52,24 +54,13 @@ contract('Complete State', (accounts) => {
     PR = projObj.contracts.PR
     PLCR = projObj.contracts.PLCR
 
-    // get voting projects
-    // moves ganache forward 4 more weeks
-    projArray = await returnProject.voting(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet1, taskSet1.length - 1, valType)
+    // get finished - complete projects
+    // moves ganache forward 6 more weeks
+    projArray = await returnProject.finished(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet1, taskSet1.length, valType)
 
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
 
-    // fund & register voters for successful commit & reveal tests
-    await utils.mintIfNecessary(tokenYesVoter)
-    await utils.mintIfNecessary(tokenNoVoter)
-    await utils.register(repYesVoter)
-    await utils.register(repNoVoter)
-
-    // fund & register voters for failed reveal tests
-    await utils.mintIfNecessary(cheekyYesVoter)
-    await utils.mintIfNecessary(cheekyNoVoter)
-    await utils.register(cheekyYesVoter)
-    await utils.register(cheekyNoVoter)
   })
 
   describe('committing yes votes with tokens', () => {

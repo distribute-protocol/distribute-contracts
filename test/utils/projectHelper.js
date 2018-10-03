@@ -757,15 +757,15 @@ module.exports = function projectHelper (accounts) {
   }
 
   // return finished projects (addresses) proposed by token holder and reputation holder
-  // takes a list of tasks and a _valVotType array parameter of how validated & voted type
-  // incomplete tasks are at the end
+  // takes a list of tasks, a _votTypee array parameter of how voted type, and the intended state of the outcome
+  // incomplete tasks are left at the end
   // 0: no votes
   // 1: vote true only
   // 2: vote false only
   // 3: vote both (true > false)
   // 4: vote both (false > true)
   // moves ganache forward 6 weeks
-  obj.returnProject.finished = async function (_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete, _valType, _votType) {
+  obj.returnProject.finished = async function (_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete, _valType, _voteType, _intendedState) {
     // get array of voting projects
     let projArray = await obj.returnProject.voting(_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete, _valType)
 
@@ -786,8 +786,8 @@ module.exports = function projectHelper (accounts) {
     // assert that project is in state 6 || 7
     let stateT = await obj.project.getState(projArray[0][0])
     let stateR = await obj.project.getState(projArray[0][1])
-    assert.equal(stateT, 6 || 7, 'project T not in failed or complete state')
-    assert.equal(stateR, 5, 'project R not in failed or complete state')
+    assert.equal(stateT, _intendedState, 'project T not in failed or complete state')
+    assert.equal(stateR, _intendedState, 'project R not in failed or complete state')
 
     return projArray
   }
