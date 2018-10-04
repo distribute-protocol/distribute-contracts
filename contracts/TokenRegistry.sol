@@ -432,7 +432,7 @@ contract TokenRegistry is Ownable {
     function refundStaker(address _projectAddress) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
-        uint256 refund = _projectAddress.refundStaker(msg.sender);
+        uint256 refund = _projectAddress.refundStaker(msg.sender, address(this));
         Project(_projectAddress).clearTokenStake(msg.sender);
         distributeToken.transferFromEscrow(msg.sender, refund);
         distributeToken.transferTokensTo(msg.sender, refund / 20);

@@ -16,11 +16,14 @@ contract('Proposed State', (accounts) => {
   let {tokenStaker1, tokenStaker2} = user
   let {repStaker1, repStaker2} = user
   let {notStaker, notProject} = user
+  let {projectCost, stakingPeriod, ipfsHash} = project
 
   // local test variables
   let projAddrT1, projAddrT2, projAddrT3, projAddrT4
   let projAddrR1, projAddrR2, projAddrR3, projAddrR4
   let errorThrown
+
+  let fastForwards = 1 // ganache 1 week ahead at this point from previous test's evmIncreaseTime()
 
   before(async () => {
     // get contracts
@@ -31,20 +34,21 @@ contract('Proposed State', (accounts) => {
 
     // propose projects
     // to check staking below required amount, unstaking
-    projAddrT1 = await returnProject.proposed_T()
-    projAddrR1 = await returnProject.proposed_R()
+
+    projAddrT1 = await returnProject.proposed_T(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
+    projAddrR1 = await returnProject.proposed_R(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
 
     // to check staking extra above required amount & state change to staked
-    projAddrT2 = await returnProject.proposed_T()
-    projAddrR2 = await returnProject.proposed_R()
+    projAddrT2 = await returnProject.proposed_T(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
+    projAddrR2 = await returnProject.proposed_R(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
 
     // to check staking by multiple stakers
-    projAddrT3 = await returnProject.proposed_T()
-    projAddrR3 = await returnProject.proposed_R()
+    projAddrT3 = await returnProject.proposed_T(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
+    projAddrR3 = await returnProject.proposed_R(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
 
     // to check errors and expiration
-    projAddrT4 = await returnProject.proposed_T()
-    projAddrR4 = await returnProject.proposed_R()
+    projAddrT4 = await returnProject.proposed_T(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
+    projAddrR4 = await returnProject.proposed_R(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
 
     // fund token stakers
     await utils.mintIfNecessary(tokenStaker1)

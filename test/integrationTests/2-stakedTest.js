@@ -28,7 +28,7 @@ contract('Staked State', (accounts) => {
   let projAddrR1, projAddrR2
   let errorThrown
 
-  let fastForwards = 1 // ganache 1 week ahead at this point from previous test's evmIncreaseTime()
+  let fastForwards = 2 // ganache 2 week ahead at this point from previous test's evmIncreaseTime()
 
   before(async () => {
     // get contract

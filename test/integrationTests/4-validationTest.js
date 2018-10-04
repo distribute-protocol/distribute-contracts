@@ -33,7 +33,7 @@ contract('Validating State', (accounts) => {
   let indexIncomplete = 4
   let notIndex = 5
 
-  let fastForwards = 5 // ganache 5 weeks ahead at this point from previous test's evmIncreaseTime()
+  let fastForwards = 6 // ganache 6 weeks ahead at this point from previous test's evmIncreaseTime()
 
   before(async () => {
     // get contract

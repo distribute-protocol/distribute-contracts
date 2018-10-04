@@ -393,13 +393,12 @@ library ProjectLibrary {
     @param _staker Address of the staker
     @return The amount to be refunded to the staker.
     */
-    function refundStaker(address _projectAddress, address _staker) public returns (uint256) {
+    function refundStaker(address _projectAddress, address _staker, address _sender) public returns (uint256) {
         Project project = Project(_projectAddress);
         require(project.state() == 6 || project.state() == 8);
-
-        if (project.isTR(msg.sender)) {
+        if (project.isTR(_sender)) {
             return handleTokenStaker(project, _staker);
-        } else if (project.isRR(msg.sender)) {
+        } else if (project.isRR(_sender)) {
             return handleReputationStaker(project, _staker);
         } else {
             return 0;

@@ -35,7 +35,7 @@ contract('Active State', (accounts) => {
   let indexThrowaway = 0 // to test a task that will fail every time it's claimed and marked complete
   let notIndex = 5 // to test a nonexistant task
 
-  let fastForwards = 2 // ganache 2 weeks ahead at this point from previous test's evmIncreaseTime()
+  let fastForwards = 3 // ganache 3 weeks ahead at this point from previous test's evmIncreaseTime()
 
   before(async () => {
     // get contracts

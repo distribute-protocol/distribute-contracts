@@ -38,7 +38,7 @@ contract('Voting State', (accounts) => {
 
   let valType = [valTrueOnly, valFalseOnly, valTrueMore1, valFalseMore1, valTrueMore1, valFalseMore1, valNeither]
 
-  let fastForwards = 9 // ganache 9 weeks ahead at this point from previous tests' evmIncreaseTime()
+  let fastForwards = 10 // ganache 10 weeks ahead at this point from previous tests' evmIncreaseTime()
 
   let secretSalt = 10000
   let voteYes = 1
