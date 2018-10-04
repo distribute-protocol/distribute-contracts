@@ -178,4 +178,46 @@ contract('Complete State', (accounts) => {
       assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
   })
+
+  describe('refund not stakers', () => {
+    it('not staker can\'t ask for token refund from TR complete project', async () => {
+      errorThrown = false
+      try {
+        await TR.refundStaker(projAddrT, {from: notStaker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('not staker can\'t ask for token refund from RR complete project', async () => {
+      errorThrown = false
+      try {
+        await TR.refundStaker(projAddrR, {from: notStaker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('not staker can\'t ask for reputation refund from TR complete project', async () => {
+      errorThrown = false
+      try {
+        await RR.refundStaker(projAddrT, {from: notStaker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('not staker can\'t ask for reputation refund from TR complete project', async () => {
+      errorThrown = false
+      try {
+        await RR.refundStaker(projAddrR, {from: notStaker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+  })
 })
