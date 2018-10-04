@@ -3,19 +3,16 @@
 
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
-const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const taskDetails = require('../utils/taskDetails')
-
-const ethers = require('ethers')
 
 contract('Complete State', (accounts) => {
   // set up project helper
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let TR, RR, DT, PR, PLCR
-  let {user, project, utils, returnProject, task} = projObj
-  let {tokenStaker1, repStaker1, notStaker} = user
+  let TR, RR
+  let {user, project, utils, returnProject} = projObj
+  let {tokenProposer, repProposer, tokenStaker1, repStaker1, notStaker} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
 
   // set up task details & hashing functions
@@ -51,8 +48,6 @@ contract('Complete State', (accounts) => {
     await projObj.contracts.setContracts()
     TR = projObj.contracts.TR
     RR = projObj.contracts.RR
-    PR = projObj.contracts.PR
-    DT = projObj.contracts.DT
 
     // get finished - complete projects
     // moves ganache forward 6 more weeks
@@ -62,7 +57,88 @@ contract('Complete State', (accounts) => {
     projAddrR = projArray[0][1]
   })
 
-  describe('refund token stakers', () => {
+  describe('handle proposer', () => {
+    it('refund proposer can be called on TR complete project', async () => {
+      // take stock of variables
+      let proposedWeiCost = await project.getProposedWeiCost(projAddrT)
+
+      let tpBalBefore = await utils.getTokenBalance(tokenProposer)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let weiPoolBefore = await utils.getWeiPoolBal()
+      let projWeiBalBefore = await project.getWeiCost(projAddrT, true)
+      let proposerStakeBefore = await project.getProposerStake(projAddrT)
+
+      // call refund proposer
+      await TR.refundProposer(projAddrT, {from: tokenProposer})
+
+      // take stock of variables
+      let tpBalAfter = await utils.getTokenBalance(tokenProposer)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let weiPoolAfter = await utils.getWeiPoolBal()
+      let projWeiBalAfter = await project.getWeiCost(projAddrT, true)
+      let proposerStakeAfter = await project.getProposerStake(projAddrT)
+
+      let projWeiCostDifference = projWeiBalBefore.minus(projWeiBalAfter).toNumber()
+
+      // checks
+      assert.equal(tpBalBefore + proposerStakeBefore, tpBalAfter, 'tokenProposer balance updated incorrectly')
+      assert.equal(TRBalBefore, TRBalAfter + proposerStakeBefore, 'TR balance updated incorrectly')
+      assert.equal(weiPoolBefore - Math.floor(proposedWeiCost / 20), weiPoolAfter, 'wei pool should be 5% of the project\'s proposed cost less')
+      assert.equal(projWeiCostDifference, 0, 'project wei cost should remain the same')
+      assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
+    })
+
+    it('refund proposer can be called on RR complete project', async () => {
+      // take stock of variables
+      let proposedWeiCost = await project.getProposedWeiCost(projAddrR)
+
+      let rpBalBefore = await utils.getRepBalance(repProposer)
+      let weiPoolBefore = await utils.getWeiPoolBal()
+      let projWeiBalBefore = await project.getWeiCost(projAddrR, true)
+      let proposerStakeBefore = await project.getProposerStake(projAddrR)
+
+      // call refund proposer
+      await RR.refundProposer(projAddrR, {from: repProposer})
+
+      // take stock of variables
+      let rpBalAfter = await utils.getRepBalance(repProposer)
+      let weiPoolAfter = await utils.getWeiPoolBal()
+      let projWeiBalAfter = await project.getWeiCost(projAddrR, true)
+      let proposerStakeAfter = await project.getProposerStake(projAddrR)
+
+      let projWeiCostDifference = projWeiBalBefore.minus(projWeiBalAfter).toNumber()
+
+      // checks
+      assert.equal(rpBalBefore + proposerStakeBefore, rpBalAfter, 'tokenProposer balance updated incorrectly')
+      assert.equal(weiPoolBefore - Math.floor(proposedWeiCost / 20), weiPoolAfter, 'wei pool should be 5% of the project\'s proposed cost less')
+      assert.equal(projWeiCostDifference, 0, 'project wei cost should remain the same')
+      assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
+    })
+
+    it('proposer can\'t call refund proposer multiple times from token registry', async () => {
+      errorThrown = false
+      try {
+        await TR.refundProposer(projAddrT, {from: tokenProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('proposer can\'t call refund proposer multiple times from reputation registry', async () => {
+      errorThrown = false
+      try {
+        await RR.refundProposer(projAddrR, {from: repProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+  })
+
+  describe('handle stakers', () => {
     it('token staker can ask for refund from TR complete project', async () => {
       // take stock of variables before
       let totalTokensBefore = await utils.getTotalTokens()
@@ -120,9 +196,7 @@ contract('Complete State', (accounts) => {
       assert.equal(tsProjBalBefore, refund, 'incorrect refund calculation')
       assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
-  })
 
-  describe('refund reputation stakers', () => {
     it('reputation staker can ask for refund from TR complete project', async () => {
       // take stock of variables before
       let totalRepBefore = await utils.getTotalRep()
@@ -177,9 +251,7 @@ contract('Complete State', (accounts) => {
       assert.equal(tsProjBalBefore, refund, 'incorrect refund calculation')
       assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
-  })
 
-  describe('refund not stakers', () => {
     it('not staker can\'t ask for token refund from TR complete project', async () => {
       errorThrown = false
       try {
@@ -218,6 +290,92 @@ contract('Complete State', (accounts) => {
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('all stakers can be rewarded from TR complete project', async () => {
+    })
+
+    it('all stakers can be rewarded from RR complete project', async () => {
+    })
+  })
+
+  describe('handle workers', () => {
+    it('worker can ask for reward from TR complete project', async () => {
+    })
+
+    it('worker can ask for reward from RR complete project', async () => {
+    })
+
+    it('not worker can\'t ask for reward from TR complete project', async () => {
+    })
+
+    it('worker can\'t ask for reward from RR complete project', async () => {
+    })
+
+    it('all workers can be rewarded from TR complete project', async () => {
+    })
+
+    it('all workers can be rewarded from RR complete project', async () => {
+    })
+  })
+
+  describe('handle validators', () => {
+    it('yes validator can ask for reward from TR complete project', async () => {
+    })
+
+    it('yes validator can ask for reward from RR complete project', async () => {
+    })
+
+    it('no validator can\'t ask for reward from TR complete project', async () => {
+    })
+
+    it('no validator can\'t ask for reward from RR complete project', async () => {
+    })
+
+    it('not validator can\'t ask for reward from TR complete project', async () => {
+    })
+
+    it('validator can\'t ask for reward from RR complete project', async () => {
+    })
+
+    it('all eligible validators can be rewarded from TR complete project', async () => {
+    })
+
+    it('all eligible validators can be reward from RR complete project', async () => {
+    })
+  })
+
+  describe('handle voters', () => {
+    it('yes voter can ask for refund from TR complete project', async () => {
+    })
+
+    it('yes voter can ask for refund from RR complete project', async () => {
+    })
+
+    it('no voter can ask for refund from TR complete project', async () => {
+    })
+
+    it('no voter can ask for refund from RR complete project', async () => {
+    })
+
+    it('not voter can\'t ask for refund from TR complete project', async () => {
+    })
+
+    it('voter can\'t ask for refund from RR complete project', async () => {
+    })
+
+    it('all eligible voters can be refunded from TR complete project', async () => {
+    })
+
+    it('all eligible voters can be refund from RR complete project', async () => {
+    })
+  })
+
+  describe('project contract empty', () => {
+    it('TR complete project has 0 wei, 0 tokens staked, and 0 reputation staked', async () => {
+    })
+
+    it('RR complete project has 0 wei, 0 tokens staked, and 0 reputation staked', async () => {
     })
   })
 })
