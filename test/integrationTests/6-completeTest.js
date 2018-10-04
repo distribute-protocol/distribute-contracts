@@ -12,7 +12,8 @@ contract('Complete State', (accounts) => {
   // get project helper variables
   let TR, RR
   let {user, project, utils, returnProject} = projObj
-  let {tokenProposer, repProposer, tokenStaker1, repStaker1, notStaker} = user
+  let {tokenProposer, repProposer, notProposer} = user
+  let {tokenStaker1, repStaker1, notStaker} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
 
   // set up task details & hashing functions
@@ -58,6 +59,29 @@ contract('Complete State', (accounts) => {
   })
 
   describe('handle proposer', () => {
+    it('Not proposer can\'t call refund proposer from token registry', async () => {
+      errorThrown = false
+      try {
+        await TR.refundProposer(projAddrT, {from: notProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('Not proposer can\'t call refund proposer from reputation registry', async () => {
+      errorThrown = false
+      try {
+        await RR.refundProposer(projAddrR, {from: notProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    // these two tests must come after not proposer refund proposer tests
     it('refund proposer can be called on TR complete project', async () => {
       // take stock of variables
       let proposedWeiCost = await project.getProposedWeiCost(projAddrT)
