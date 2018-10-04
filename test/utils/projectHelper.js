@@ -595,6 +595,36 @@ module.exports = function projectHelper (accounts) {
     return log.projectAddress.toString()
   }
 
+  // return expired projects (addresses) proposed by token holder and reputation holder
+  // moves ganache forward 1 week
+  obj.returnProject.expired = async function (_cost, _stakingPeriod, _ipfsHash, _numSets) {
+    // make array of projects
+    let projArray = []
+
+    for (let i = 0; i < _numSets; i++) {
+      // get proposed projects
+      let temp1 = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash)
+      let temp2 = await obj.returnProject.proposed_R(_cost, _stakingPeriod, _ipfsHash)
+      projArray.push([temp1, temp2])
+    }
+
+    // increase time 1 week + 1 ms to make sure that checkStaked() doesn't bug out
+    await evmIncreaseTime(604801)
+
+    for (let i = 0; i < _numSets; i++) {
+      // call checkStaked on projects and do checks
+      await obj.contracts.PR.checkStaked(projArray[i][0])
+      await obj.contracts.PR.checkStaked(projArray[i][1])
+
+      // check that the project is in state 8
+      let stateT = await obj.project.getState(projArray[i][0])
+      let stateR = await obj.project.getState(projArray[i][1])
+      assert.equal(stateT, 8, 'project is not in expired state')
+      assert.equal(stateR, 8, 'project is not in expired state')
+    }
+
+    return projArray
+  }
   // return staked project (address) proposed by token holder
   obj.returnProject.staked_T = async function (_cost, _stakingPeriod, _ipfsHash) {
     // get proposed project

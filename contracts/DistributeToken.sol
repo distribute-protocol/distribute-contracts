@@ -167,7 +167,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
         balances[msg.sender] = balances[msg.sender].add(_tokens);
         weiBal = weiBal.add(weiRequiredVal);
         emit LogMint(_tokens, weiRequiredVal, msg.sender);
-        uint256 fundsLeft = msg.value.minus(weiRequiredVal);
+        uint256 fundsLeft = msg.value.sub(weiRequiredVal);
         if (fundsLeft > 0) { msg.sender.transfer(fundsLeft); }
     }
 
