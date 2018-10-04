@@ -419,9 +419,11 @@ contract ReputationRegistry is Ownable {
     function refundStaker(address _projectAddress) external {     //called by worker who staked or voted
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
-        uint256 _refund = _projectAddress.refundStaker(msg.sender, address(this));
-        require(_refund > 0);
-        users[msg.sender].balance += _refund * 3 / 2;
+        uint256 refund = _projectAddress.refundStaker(msg.sender, address(this));
+        require(refund > 0);
+        uint256 reward = refund / 2;
+        users[msg.sender].balance = users[msg.sender].balance.add(refund).add(reward);
+        totalSupply = totalSupply.add(reward);
         Project(_projectAddress).clearReputationStake(msg.sender);
     }
 
