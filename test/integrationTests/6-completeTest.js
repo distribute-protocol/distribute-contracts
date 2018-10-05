@@ -5,15 +5,20 @@ const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 const taskDetails = require('../utils/taskDetails')
 
+const Web3 = require('web3')
+const web3 = new Web3()
+web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'))
+
 contract('Complete State', (accounts) => {
   // set up project helper
   let projObj = projectHelper(accounts)
 
   // get project helper variables
   let TR, RR
-  let {user, project, utils, returnProject} = projObj
+  let {user, project, task, utils, returnProject} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {tokenStaker1, tokenStaker2, repStaker1, repStaker2, notStaker} = user
+  let {worker1, worker2, notWorker} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
 
   // set up task details & hashing functions
@@ -444,15 +449,56 @@ contract('Complete State', (accounts) => {
 
   describe('handle workers', () => {
     it('worker can ask for reward from TR complete project', async () => {
+      let index = 0
+
+      // take stock of variables before
+      let totalRepBefore = await utils.getTotalRep()
+      let rwBalBefore = await utils.getRepBalance(worker1)
+      let rwWeiBalBefore = parseInt(await web3.eth.getBalance(worker1))
+      let projWeiBalVariableBefore = await project.getWeiBal(projAddrT)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
+      let repRewardBefore = await task.getRepReward(projAddrT, index)
+      let weiRewardBefore = await task.getWeiReward(projAddrT, index)
+
+      // reward worker
+      await RR.rewardTask(projAddrT, index, {from: worker1})
+
+      // take stock of variables after
+      let totalRepAfter = await utils.getTotalRep()
+      let rwBalAfter = await utils.getRepBalance(worker1)
+      let rwWeiBalAfter = parseInt(await web3.eth.getBalance(worker1))
+      let projWeiBalVariableAfter = await project.getWeiBal(projAddrT)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
+      let repRewardAfter = await task.getRepReward(projAddrT, index)
+      let weiRewardAfter = await task.getWeiReward(projAddrT, index)
+
+      console.log(worker1)
+      console.log(projWeiBalBefore, projWeiBalAfter, weiRewardBefore, weiRewardAfter)
+      console.log(rwWeiBalBefore, rwWeiBalAfter, weiRewardBefore, weiRewardAfter)
+
+      // checks
+      assert.equal(totalRepBefore, totalRepAfter, 'total reputation should not change')
+      assert.equal(rwBalBefore + repRewardBefore, rwBalAfter, 'incorrect worker rep balance post-refund')
+      // assert.equal(rwWeiBalBefore + weiRewardBefore, rwWeiBalAfter, 'incorrect wei reward sent to worker')
+      assert.equal(projWeiBalVariableBefore, projWeiBalVariableAfter + weiRewardBefore, 'project wei bal variable updated incorrectly')
+      assert.equal(projWeiBalBefore, projWeiBalAfter + weiRewardBefore, 'incorrect wei reward sent from project')
+      assert.equal(repRewardAfter, 0, 'rep reward not zeroed out')
+      assert.equal(weiRewardAfter, 0, 'wei reward not zeroed out')
     })
 
     it('worker can ask for reward from RR complete project', async () => {
     })
 
+    it('worker can\'t ask for reward they\'ve already received from TR complete project', async () => {
+    })
+
+    it('worker can\'t ask for reward they\'ve already received from RR complete project', async () => {
+    })
+
     it('not worker can\'t ask for reward from TR complete project', async () => {
     })
 
-    it('worker can\'t ask for reward from RR complete project', async () => {
+    it('not worker can\'t ask for reward from RR complete project', async () => {
     })
 
     it('all workers can be rewarded from TR complete project', async () => {

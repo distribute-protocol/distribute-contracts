@@ -135,12 +135,9 @@ module.exports = function projectHelper (accounts) {
     await obj.contracts.DT.mint(_numTokens, {from: _user, value: mintingCost})
   }
 
-  obj.utils.sell = async function (_user, _numTokens, _weiVal) {
+  obj.utils.sell = async function (_user, _numTokens) {
     if (_numTokens === undefined) { // use default minting amount
       _numTokens = await obj.utils.getTokenBalance(_user)
-    }
-    if (_weiVal === undefined) {
-      let _weiVal = await obj.contracts.DT.weiRequired(_numTokens, {from: _user})
     }
     await obj.contracts.DT.sell(_numTokens, {from: _user})
   }

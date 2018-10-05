@@ -402,8 +402,7 @@ contract Project {
     @param _reward The amount of wei to transfer.
     */
     function transferWeiReward(address _rewardee, uint _reward) external onlyTRorRR {
-        require(_reward <= weiBal);
-        weiBal -= _reward;
+        weiBal = weiBal.sub(_reward);
         _rewardee.transfer(_reward);
     }
 
