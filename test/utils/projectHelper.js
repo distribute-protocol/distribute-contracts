@@ -447,7 +447,7 @@ module.exports = function projectHelper (accounts) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
     let weiReward = await TASK.weiReward()
-    return weiReward
+    return weiReward.toNumber()
   }
 
   obj.task.getRepReward = async function (_projAddr, _index) {
