@@ -13,7 +13,7 @@ contract('Complete State', (accounts) => {
   let TR, RR
   let {user, project, utils, returnProject} = projObj
   let {tokenProposer, repProposer, notProposer} = user
-  let {tokenStaker1, repStaker1, notStaker} = user
+  let {tokenStaker1, tokenStaker2, repStaker1, repStaker2, notStaker} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
 
   // set up task details & hashing functions
@@ -168,6 +168,7 @@ contract('Complete State', (accounts) => {
       let totalTokensBefore = await utils.getTotalTokens()
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let projTokensBefore = await project.getStakedTokens(projAddrT)
       let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT)
       let passAmount = await project.getPassAmount(projAddrT)
 
@@ -182,6 +183,7 @@ contract('Complete State', (accounts) => {
       let totalTokensAfter = await utils.getTotalTokens()
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let projTokensAfter = await project.getStakedTokens(projAddrT)
       let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker1, projAddrT)
 
       // checks
@@ -189,6 +191,7 @@ contract('Complete State', (accounts) => {
       assert.equal(tsBalBefore + reward + refund, tsBalAfter, 'incorrect token staker balance post-refund')
       assert.equal(TRBalAfter + refund, TRBalBefore, 'incorrect TR balance post-refund')
       assert.equal(tsProjBalBefore, refund, 'incorrect refund calculation')
+      assert.equal(projTokensAfter + refund, projTokensBefore, 'incorrect change in total staked tokens on project')
       assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
 
@@ -197,6 +200,7 @@ contract('Complete State', (accounts) => {
       let totalTokensBefore = await utils.getTotalTokens()
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let projTokensBefore = await project.getStakedTokens(projAddrR)
       let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker1, projAddrR)
       let passAmount = await project.getPassAmount(projAddrR)
 
@@ -211,6 +215,7 @@ contract('Complete State', (accounts) => {
       let totalTokensAfter = await utils.getTotalTokens()
       let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let projTokensAfter = await project.getStakedTokens(projAddrR)
       let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR)
 
       // checks
@@ -218,6 +223,7 @@ contract('Complete State', (accounts) => {
       assert.equal(tsBalBefore + reward + refund, tsBalAfter, 'incorrect token staker balance post-refund')
       assert.equal(TRBalAfter + refund, TRBalBefore, 'incorrect TR balance post-refund')
       assert.equal(tsProjBalBefore, refund, 'incorrect refund calculation')
+      assert.equal(projTokensAfter + refund, projTokensBefore, 'incorrect change in total staked tokens on project')
       assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
 
@@ -225,6 +231,7 @@ contract('Complete State', (accounts) => {
       // take stock of variables before
       let totalRepBefore = await utils.getTotalRep()
       let rsBalBefore = await utils.getRepBalance(repStaker1)
+      let projRepBefore = await project.getStakedRep(projAddrT)
       let rsProjBalBefore = await project.getUserStakedRep(repStaker1, projAddrT)
       let passAmount = await project.getPassAmount(projAddrT)
 
@@ -238,42 +245,44 @@ contract('Complete State', (accounts) => {
       // take stock of variables after
       let totalRepAfter = await utils.getTotalRep()
       let rsBalAfter = await utils.getRepBalance(repStaker1)
+      let projRepAfter = await project.getStakedRep(projAddrT)
       let rsProjBalAfter = await project.getUserStakedRep(repStaker1, projAddrT)
 
       // checks
       assert.equal(totalRepBefore + reward, totalRepAfter, 'incorrect rep reward calculated')
       assert.equal(rsBalBefore + reward + refund, rsBalAfter, 'incorrect reputation staker balance post-refund')
       assert.equal(rsProjBalBefore, refund, 'incorrect refund calculation')
+      assert.equal(projRepAfter + refund, projRepBefore, 'incorrect change in total staked rep on project')
       assert.equal(rsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
 
     it('reputation staker can ask for refund from RR complete project', async () => {
       // take stock of variables before
-      let totalTokensBefore = await utils.getTotalTokens()
-      let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker1, projAddrR)
+      let totalRepBefore = await utils.getTotalRep()
+      let rsBalBefore = await utils.getRepBalance(repStaker1)
+      let projRepBefore = await project.getStakedRep(projAddrR)
+      let rsProjBalBefore = await project.getUserStakedRep(repStaker1, projAddrR)
       let passAmount = await project.getPassAmount(projAddrR)
 
       // calculate refund & reward
-      let refund = Math.floor((tsProjBalBefore * passAmount) / 100)
-      let reward = Math.floor(refund / 20)
+      let refund = Math.floor((rsProjBalBefore * passAmount) / 100)
+      let reward = Math.floor(refund / 2)
 
       // refund staker
       await RR.refundStaker(projAddrR, {from: repStaker1})
 
       // take stock of variables after
-      let totalTokensAfter = await utils.getTotalTokens()
-      let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR)
+      let totalRepAfter = await utils.getTotalRep()
+      let rsBalAfter = await utils.getRepBalance(repStaker1)
+      let projRepAfter = await project.getStakedRep(projAddrR)
+      let rsProjBalAfter = await project.getUserStakedRep(repStaker1, projAddrR)
 
       // checks
-      assert.equal(totalTokensBefore + reward, totalTokensAfter, 'incorrect token reward minted')
-      assert.equal(tsBalBefore + reward + refund, tsBalAfter, 'incorrect token staker balance post-refund')
-      assert.equal(TRBalAfter + refund, TRBalBefore, 'incorrect TR balance post-refund')
-      assert.equal(tsProjBalBefore, refund, 'incorrect refund calculation')
-      assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
+      assert.equal(totalRepBefore + reward, totalRepAfter, 'incorrect rep reward calculated')
+      assert.equal(rsBalBefore + reward + refund, rsBalAfter, 'incorrect reputation staker balance post-refund')
+      assert.equal(rsProjBalBefore, refund, 'incorrect refund calculation')
+      assert.equal(projRepAfter + refund, projRepBefore, 'incorrect change in total staked rep on project')
+      assert.equal(rsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
 
     it('not staker can\'t ask for token refund from TR complete project', async () => {
@@ -317,9 +326,119 @@ contract('Complete State', (accounts) => {
     })
 
     it('all stakers can be rewarded from TR complete project', async () => {
+      // take stock of variables before
+      let totalTokensBefore = await utils.getTotalTokens()
+      let tsBalBefore = await utils.getTokenBalance(tokenStaker2)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let projTokensBefore = await project.getStakedTokens(projAddrT)
+      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker2, projAddrT)
+
+      let totalRepBefore = await utils.getTotalRep()
+      let rsBalBefore = await utils.getRepBalance(repStaker2)
+      let projRepBefore = await project.getStakedRep(projAddrT)
+      let rsProjBalBefore = await project.getUserStakedRep(repStaker2, projAddrT)
+
+      let passAmount = await project.getPassAmount(projAddrT)
+
+      // calculate refund & reward
+      let refundToken = Math.floor((tsProjBalBefore * passAmount) / 100)
+      let rewardToken = Math.floor(refundToken / 20)
+
+      let refundRep = Math.floor((rsProjBalBefore * passAmount) / 100)
+      let rewardRep = Math.floor(refundRep / 2)
+
+      // refund other token staker
+      await TR.refundStaker(projAddrT, {from: tokenStaker2})
+
+      // refund other reputation staker
+      await RR.refundStaker(projAddrT, {from: repStaker2})
+
+      // take stock of variables after
+      let totalTokensAfter = await utils.getTotalTokens()
+      let tsBalAfter = await utils.getTokenBalance(tokenStaker2)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let projTokensAfter = await project.getStakedTokens(projAddrT)
+      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker2, projAddrT)
+
+      let totalRepAfter = await utils.getTotalRep()
+      let rsBalAfter = await utils.getRepBalance(repStaker2)
+      let projRepAfter = await project.getStakedRep(projAddrT)
+      let rsProjBalAfter = await project.getUserStakedRep(repStaker2, projAddrT)
+
+      // checks
+      assert.equal(totalTokensBefore + rewardToken, totalTokensAfter, 'incorrect token reward minted')
+      assert.equal(tsBalBefore + rewardToken + refundToken, tsBalAfter, 'incorrect token staker balance post-refund')
+      assert.equal(TRBalAfter + refundToken, TRBalBefore, 'incorrect TR balance post-refund')
+      assert.equal(tsProjBalBefore, refundToken, 'incorrect refund calculation')
+      assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
+
+      assert.equal(totalRepBefore + rewardRep, totalRepAfter, 'incorrect rep reward calculated')
+      assert.equal(rsBalBefore + rewardRep + refundRep, rsBalAfter, 'incorrect reputation staker balance post-refund')
+      assert.equal(rsProjBalBefore, refundRep, 'incorrect refund calculation')
+      assert.equal(rsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
+
+      assert.equal(projTokensBefore, projTokensAfter + refundToken, 'incorrect token reward minted')
+      assert.equal(projRepBefore, projRepAfter + refundRep, 'incorrect rep reward calculated')
+      assert.equal(projTokensAfter, 0, 'there are leftover tokens')
+      assert.equal(projRepAfter, 0, 'there is leftover rep')
     })
 
     it('all stakers can be rewarded from RR complete project', async () => {
+      // take stock of variables before
+      let totalTokensBefore = await utils.getTotalTokens()
+      let tsBalBefore = await utils.getTokenBalance(tokenStaker2)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let projTokensBefore = await project.getStakedTokens(projAddrR)
+      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker2, projAddrR)
+
+      let totalRepBefore = await utils.getTotalRep()
+      let rsBalBefore = await utils.getRepBalance(repStaker2)
+      let projRepBefore = await project.getStakedRep(projAddrR)
+      let rsProjBalBefore = await project.getUserStakedRep(repStaker2, projAddrR)
+
+      let passAmount = await project.getPassAmount(projAddrR)
+
+      // calculate refund & reward
+      let refundToken = Math.floor((tsProjBalBefore * passAmount) / 100)
+      let rewardToken = Math.floor(refundToken / 20)
+
+      let refundRep = Math.floor((rsProjBalBefore * passAmount) / 100)
+      let rewardRep = Math.floor(refundRep / 2)
+
+      // refund other token staker
+      await TR.refundStaker(projAddrR, {from: tokenStaker2})
+
+      // refund other reputation staker
+      await RR.refundStaker(projAddrR, {from: repStaker2})
+
+      // take stock of variables after
+      let totalTokensAfter = await utils.getTotalTokens()
+      let tsBalAfter = await utils.getTokenBalance(tokenStaker2)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let projTokensAfter = await project.getStakedTokens(projAddrR)
+      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker2, projAddrR)
+
+      let totalRepAfter = await utils.getTotalRep()
+      let rsBalAfter = await utils.getRepBalance(repStaker2)
+      let projRepAfter = await project.getStakedRep(projAddrR)
+      let rsProjBalAfter = await project.getUserStakedRep(repStaker2, projAddrR)
+
+      // checks
+      assert.equal(totalTokensBefore + rewardToken, totalTokensAfter, 'incorrect token reward minted')
+      assert.equal(tsBalBefore + rewardToken + refundToken, tsBalAfter, 'incorrect token staker balance post-refund')
+      assert.equal(TRBalAfter + refundToken, TRBalBefore, 'incorrect TR balance post-refund')
+      assert.equal(tsProjBalBefore, refundToken, 'incorrect refund calculation')
+      assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
+
+      assert.equal(totalRepBefore + rewardRep, totalRepAfter, 'incorrect rep reward calculated')
+      assert.equal(rsBalBefore + rewardRep + refundRep, rsBalAfter, 'incorrect reputation staker balance post-refund')
+      assert.equal(rsProjBalBefore, refundRep, 'incorrect refund calculation')
+      assert.equal(rsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
+
+      assert.equal(projTokensBefore, projTokensAfter + refundToken, 'incorrect token reward minted')
+      assert.equal(projRepBefore, projRepAfter + refundRep, 'incorrect rep reward calculated')
+      assert.equal(projTokensAfter, 0, 'there are leftover tokens')
+      assert.equal(projRepAfter, 0, 'there is leftover rep')
     })
   })
 

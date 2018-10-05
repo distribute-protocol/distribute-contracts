@@ -256,6 +256,7 @@ contract Project {
     @param _staker Address of the staker
     */
     function clearTokenStake(address _staker) external onlyTR {
+        tokensStaked = tokensStaked.sub(tokenBalances[_staker]);
         tokenBalances[_staker] = 0;
     }
 
@@ -265,6 +266,7 @@ contract Project {
     @param _staker Address of the staker
     */
     function clearReputationStake(address _staker) external onlyRR {
+        reputationStaked = reputationStaked.sub(reputationBalances[_staker]);
         reputationBalances[_staker] = 0;
     }
 
