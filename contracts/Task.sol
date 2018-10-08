@@ -201,6 +201,6 @@ contract Task {
     @param _validator Address of validator
     */
     function setValidatorIndex(address _validator) external onlyTR {
-        validators[_validator].index = 100;
+        validators[_validator].index = 5;
     }
 }

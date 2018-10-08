@@ -329,7 +329,7 @@ contract ReputationRegistry is Ownable {
     @param _index Index of the task
     */
     // called by reputation holder who completed a task
-    function rewardTask(address _projectAddress, uint8 _index) external {
+    function rewardTask(address _projectAddress, uint256 _index) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 reward = _projectAddress.claimTaskReward(_index, msg.sender);

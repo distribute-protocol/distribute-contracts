@@ -361,6 +361,12 @@ module.exports = function projectHelper (accounts) {
     return stakedStatePeriod.toNumber()
   }
 
+  obj.project.getProposer = async function (_projAddr) {
+    let PROJ = await Project.at(_projAddr)
+    let proposer = await PROJ.proposer()
+    return proposer
+  }
+
   obj.project.calculateWeightOfAddress = async function (_user, _projAddr) {
     let stakedRep = await obj.project.getUserStakedRep(_user, _projAddr)
     let totalRep = await obj.project.getStakedRep(_projAddr)
