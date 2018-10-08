@@ -177,7 +177,7 @@ contract Task {
     }
 
     /**
-    @notice Return the validator status (affrimative of negative) of validator at `_validator`
+    @notice Return the validator status (affirmative or negative) of validator at `_validator`
     @param _validator Address of validator
     */
     function getValidatorStatus(address _validator) external view returns (uint) {

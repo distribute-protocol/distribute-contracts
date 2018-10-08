@@ -123,7 +123,7 @@ contract TokenRegistry is Ownable {
     }
 
     function squaredAmount(uint _amount) internal pure returns (uint) {
-      return _amount * _amount;
+      return _amount.mul(_amount);
     }
 
 
@@ -150,9 +150,9 @@ contract TokenRegistry is Ownable {
         require(now < _stakingPeriod && _cost > 0);
         uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
         uint256 proposerTokenCost = (
-            Division.percent(costProportion, proposeProportion, 10) *
-            distributeToken.totalSupply()) /
-            10000000000;
+            Division.percent(costProportion, proposeProportion, 10).mul(
+            distributeToken.totalSupply())).div(
+            10000000000);
             //divide by 20 to get 5 percent of tokens
         require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
 
@@ -331,12 +331,12 @@ contract TokenRegistry is Ownable {
             }
             if (validationIndex < 5) {
                 uint addtlWeighting;
-                for(uint i = validationIndex; i < 5; i++) {
-                    addtlWeighting += projectRegistry.validationRewardWeightings(i);
+                for(uint i = validationIndex ; i < 5; i++) {
+                    addtlWeighting = addtlWeighting.add(projectRegistry.validationRewardWeightings(i));
                 }
                 rewardWeighting += addtlWeighting / validationIndex;
             }
-            uint256 weiReward = project.validationReward() * task.weighting() * rewardWeighting / 10000;
+            uint256 weiReward = project.validationReward().mul(task.weighting()).mul(rewardWeighting).div(10000);
             project.transferWeiReward(msg.sender, weiReward);
             emit LogRewardValidator(_projectAddress, _index, weiReward, returnAmount, msg.sender);
         } else {

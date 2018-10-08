@@ -388,7 +388,6 @@ contract Project {
     function transferWeiReward(address _rewardee, uint _reward) external onlyTRorRR {
         weiBal = weiBal.sub(_reward);
         _rewardee.transfer(_reward);
-        /* emit Transfer(_rewardee, _reward); */
     }
 
     /**

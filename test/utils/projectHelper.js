@@ -174,11 +174,9 @@ module.exports = function projectHelper (accounts) {
 
   obj.utils.getRepBalance = async function (_user, _unadulterated) {
     let bal = await obj.contracts.RR.users(_user)
-    if (_unadulterated === true) {
-      return bal[0]
-    } else {
-      return bal[0].toNumber()
-    }
+    return _unadulterated === true
+      ? bal[0]
+      : bal[0].toNumber()
   }
 
   obj.utils.getTotalTokens = async () => {
@@ -193,20 +191,16 @@ module.exports = function projectHelper (accounts) {
 
   obj.utils.getWeiPoolBal = async function (_unadulterated) {
     let weiBal = await obj.contracts.DT.weiBal()
-    if (_unadulterated === true) {
-      return weiBal
-    } else {
-      return weiBal.toNumber()
-    }
+    return _unadulterated === true
+      ? weiBal
+      : weiBal.toNumber()
   }
 
   obj.utils.getCurrentPrice = async function (_unadulterated) {
     let currPrice = await obj.contracts.DT.currentPrice()
-    if (_unadulterated === true) {
-      return currPrice
-    } else {
-      return currPrice.toNumber()
-    }
+    return _unadulterated === true
+      ? currPrice
+      : currPrice.toNumber()
   }
 
   obj.utils.calculateCurrentPrice = async () => { // will fail if totalSupply == 0
@@ -248,6 +242,12 @@ module.exports = function projectHelper (accounts) {
     return currPrice.times(_tokens).toNumber()
   }
 
+  obj.utils.getRewardWeighting = async function (_index) {
+    return (_index >= 0 && _index < 5)
+      ? obj.contracts.PR.validationRewardWeightings(_index)
+      : null
+  }
+
   obj.project.getState = async function (_projAddr) {
     let PROJ = await Project.at(_projAddr)
     let state = await PROJ.state()
@@ -257,31 +257,25 @@ module.exports = function projectHelper (accounts) {
   obj.project.getWeiCost = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let weiCost = await PROJ.weiCost()
-    if (_unadulterated === true) {
-      return weiCost
-    } else {
-      return weiCost.toNumber()
-    }
+    return _unadulterated === true
+      ? weiCost
+      : weiCost.toNumber()
   }
 
   obj.project.getProposedWeiCost = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let weiCost = await PROJ.proposedCost()
-    if (_unadulterated === true) {
-      return weiCost
-    } else {
-      return weiCost.toNumber()
-    }
+    return _unadulterated === true
+      ? weiCost
+      : weiCost.toNumber()
   }
 
   obj.project.getWeiBal = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let weiBal = await PROJ.weiBal()
-    if (_unadulterated === true) {
-      return weiBal
-    } else {
-      return weiBal.toNumber()
-    }
+    return _unadulterated === true
+      ? weiBal
+      : weiBal.toNumber()
   }
 
   obj.project.getWeiRemaining = async function (_projAddr) {
@@ -298,6 +292,14 @@ module.exports = function projectHelper (accounts) {
     } else {
       return repCost.toNumber()
     }
+  }
+
+  obj.project.getValidationReward = async function (_projAddr, _unadulterated) {
+    let PROJ = await Project.at(_projAddr)
+    let validationReward = await PROJ.validationReward()
+    return _unadulterated === true
+      ? validationReward
+      : validationReward.toNumber()
   }
 
   obj.project.calculateRequiredTokens = async function (_projAddr) {
@@ -439,11 +441,13 @@ module.exports = function projectHelper (accounts) {
     return RRAddress
   }
 
-  obj.task.getWeighting = async function (_projAddr, _index) {
+  obj.task.getWeighting = async function (_projAddr, _index, _unadulterated) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
     let weighting = await TASK.weighting()
-    return weighting.toNumber()
+    return _unadulterated === true
+      ? weighting
+      : weighting.toNumber()
   }
 
   obj.task.getWeiReward = async function (_projAddr, _index) {
@@ -478,7 +482,7 @@ module.exports = function projectHelper (accounts) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
     let validationEntryFee = await TASK.validationEntryFee()
-    return validationEntryFee
+    return validationEntryFee.toNumber()
   }
 
   obj.task.getValDetails = async function (_projAddr, _index, _user) {
