@@ -614,19 +614,103 @@ contract('Complete State', (accounts) => {
     })
 
     it('no validator can ask for half refund from TR complete project', async () => {
-      // half refund no validator on index validated true more
-      await TR.rewardValidator(projAddrT, 1, {from: validator2})
+      // take stock of important environmental variables
+      let index = 1
+      let claimable = await task.getClaimable(projAddrT, index)
+      let claimableByRep = await task.getClaimableByRep(projAddrT, index)
+      let valDetails = await task.getValDetails(projAddrT, index, validator2)
+      let validatorStatus = valDetails[0]
+      let validatorIndexBefore = valDetails[1].toNumber()
+      let validatorAtIndex = await task.getValidatorAtIndex(projAddrT, index, validatorIndexBefore, false)
+      let negativeIndex = await task.getValidationIndex(projAddrT, index, false)
 
-      // half refund no validator on index validated false more
-      await TR.rewardValidator(projAddrT, 2, {from: validator2})
+      // environmental checks
+      assert.equal(claimable, true, 'task should be claimable')
+      assert.equal(claimableByRep, true, 'task should be claimable by rep')
+      assert.isAtMost(validatorIndexBefore, 4, 'validator index should be at most 4')
+      assert.isAtLeast(validatorIndexBefore, 0, 'validator index should be at least 0')
+      assert.equal(validatorAtIndex, validator2, 'incorrect validator stored at index')
+      assert.equal(validatorStatus, false, 'ensure validator voted negatively')
+      assert.isAtMost(negativeIndex, 5, 'negative index should be at most 5')
+      assert.isAtLeast(negativeIndex, 0, 'negative index should be at least 0')
+
+      // take stock of variables
+      let validationEntryFee = await task.getValidationEntryFee(projAddrT, index)
+      let refund = Math.floor(validationEntryFee / 2)
+      let tokensBurned = validationEntryFee - refund
+
+      let totalTokensBefore = await utils.getTotalTokens()
+      let vBalBefore = await utils.getTokenBalance(validator2)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
+
+      // refund & reward validator on index validated true only
+      await TR.rewardValidator(projAddrT, index, {from: validator2})
+
+      // take stock of variables
+      valDetails = await task.getValDetails(projAddrT, index, validator2)
+      let validatorIndexAfter = valDetails[1]
+      let totalTokensAfter = await utils.getTotalTokens()
+      let vBalAfter = await utils.getTokenBalance(validator2)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
+
+      // checks
+      assert.equal(validatorIndexAfter, 5, 'validator index should be 5')
+      assert.equal(vBalAfter, vBalBefore + refund, 'validation tokens were not returned to validator')
+      assert.equal(TRBalAfter + refund + tokensBurned, TRBalBefore, 'validation tokens were not removed from TR correctly')
+      assert.equal(totalTokensAfter + tokensBurned, totalTokensBefore, 'tokens were not removed from total supply correctly')
+      assert.equal(projWeiBalAfter, projWeiBalBefore, 'no wei reward should have been sent to validator')
     })
 
     it('no validator can ask for half reward from RR complete project', async () => {
-      // half refund no validator on index validated true more
-      await TR.rewardValidator(projAddrR, 1, {from: validator2})
+      // take stock of important environmental variables
+      let index = 1
+      let claimable = await task.getClaimable(projAddrR, index)
+      let claimableByRep = await task.getClaimableByRep(projAddrR, index)
+      let valDetails = await task.getValDetails(projAddrR, index, validator2)
+      let validatorStatus = valDetails[0]
+      let validatorIndexBefore = valDetails[1].toNumber()
+      let validatorAtIndex = await task.getValidatorAtIndex(projAddrR, index, validatorIndexBefore, false)
+      let negativeIndex = await task.getValidationIndex(projAddrR, index, false)
 
-      // half refund no validator on index validated false more
-      await TR.rewardValidator(projAddrR, 2, {from: validator2})
+      // environmental checks
+      assert.equal(claimable, true, 'task should be claimable')
+      assert.equal(claimableByRep, true, 'task should be claimable by rep')
+      assert.isAtMost(validatorIndexBefore, 4, 'validator index should be at most 4')
+      assert.isAtLeast(validatorIndexBefore, 0, 'validator index should be at least 0')
+      assert.equal(validatorAtIndex, validator2, 'incorrect validator stored at index')
+      assert.equal(validatorStatus, false, 'ensure validator voted negatively')
+      assert.isAtMost(negativeIndex, 5, 'negative index should be at most 5')
+      assert.isAtLeast(negativeIndex, 0, 'negative index should be at least 0')
+
+      // take stock of variables
+      let validationEntryFee = await task.getValidationEntryFee(projAddrR, index)
+      let refund = Math.floor(validationEntryFee / 2)
+      let tokensBurned = validationEntryFee - refund
+
+      let totalTokensBefore = await utils.getTotalTokens()
+      let vBalBefore = await utils.getTokenBalance(validator2)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR))
+
+      // refund & reward validator on index validated true only
+      await TR.rewardValidator(projAddrR, index, {from: validator2})
+
+      // take stock of variables
+      valDetails = await task.getValDetails(projAddrR, index, validator2)
+      let validatorIndexAfter = valDetails[1]
+      let totalTokensAfter = await utils.getTotalTokens()
+      let vBalAfter = await utils.getTokenBalance(validator2)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR))
+
+      // checks
+      assert.equal(validatorIndexAfter, 5, 'validator index should be 5')
+      assert.equal(vBalAfter, vBalBefore + refund, 'validation tokens were not returned to validator')
+      assert.equal(TRBalAfter + refund + tokensBurned, TRBalBefore, 'validation tokens were not removed from TR correctly')
+      assert.equal(totalTokensAfter + tokensBurned, totalTokensBefore, 'tokens were not removed from total supply correctly')
+      assert.equal(projWeiBalAfter, projWeiBalBefore, 'no wei reward should have been sent to validator')
     })
 
     it('not validator can\'t ask for reward from TR complete project', async () => {
@@ -652,13 +736,18 @@ contract('Complete State', (accounts) => {
     })
 
     it('all eligible validators can be rewarded from TR complete project', async () => {
-      // refund remaining yes validator
-      TR.rewardValidator(projAddrT, 1, {from: validator3})
+      // refund remaining yes validators
+      await TR.rewardValidator(projAddrT, 1, {from: validator1})
+      await TR.rewardValidator(projAddrT, 2, {from: validator1})
+      await TR.rewardValidator(projAddrT, 1, {from: validator3})
+
+      // refund remaining no validators
+      await TR.rewardValidator(projAddrT, 1, {from: validator1})
     })
 
     it('all eligible validators can be reward from RR complete project', async () => {
       // refund remaining yes validator
-      TR.rewardValidator(projAddrR, 1, {from: validator3})
+      await TR.rewardValidator(projAddrR, 1, {from: validator3})
     })
   })
 
