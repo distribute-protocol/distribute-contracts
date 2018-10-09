@@ -65,7 +65,7 @@ contract ProjectRegistry is Ownable {
 
     mapping (address => StakedState) public stakedProjects;
 
-    uint[5] public validationRewardWeightings = [36, 24, 17, 13, 10];
+    uint[5] public validationRewardWeightings = [36, 26, 20, 16, 2];
 
     bool freeze;
 

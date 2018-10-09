@@ -803,7 +803,7 @@ contract('Complete State', (accounts) => {
 
       // calculate wei reward for validator 3 on index 1
       let index = 1
-      let rewardWeighting = 44 // 2nd of 2 validators
+      let rewardWeighting = 45 // 2nd of 2 validators
       let validationReward = await project.getValidationReward(projAddrT, true)
       let taskWeighting = await task.getWeighting(projAddrT, index, true)
       let weiReward = Math.floor(validationReward.times(taskWeighting).toNumber() * rewardWeighting / 10000)
@@ -835,7 +835,7 @@ contract('Complete State', (accounts) => {
 
       // calculate wei reward for validator 3 on index 1
       let index = 1
-      let rewardWeighting = 44 // 2nd of 2 validators
+      let rewardWeighting = 45 // 2nd of 2 validators
       let validationReward = await project.getValidationReward(projAddrR, true)
       let taskWeighting = await task.getWeighting(projAddrR, index, true)
       let weiReward = Math.floor(validationReward.times(taskWeighting).toNumber() * rewardWeighting / 10000)
@@ -862,37 +862,55 @@ contract('Complete State', (accounts) => {
     })
   })
 
-  describe('handle voters', () => {
-    it('yes voter can ask for refund from TR complete project', async () => {
-    })
-
-    it('yes voter can ask for refund from RR complete project', async () => {
-    })
-
-    it('no voter can ask for refund from TR complete project', async () => {
-    })
-
-    it('no voter can ask for refund from RR complete project', async () => {
-    })
-
-    it('not voter can\'t ask for refund from TR complete project', async () => {
-    })
-
-    it('not voter can\'t ask for refund from RR complete project', async () => {
-    })
-
-    it('all eligible voters can be refunded from TR complete project', async () => {
-    })
-
-    it('all eligible voters can be refund from RR complete project', async () => {
-    })
-  })
+  // describe('handle voters', () => {
+  //   it('yes voter can ask for refund from TR complete project', async () => {
+  //   })
+  //
+  //   it('yes voter can ask for refund from RR complete project', async () => {
+  //   })
+  //
+  //   it('no voter can ask for refund from TR complete project', async () => {
+  //   })
+  //
+  //   it('no voter can ask for refund from RR complete project', async () => {
+  //   })
+  //
+  //   it('not voter can\'t ask for refund from TR complete project', async () => {
+  //   })
+  //
+  //   it('not voter can\'t ask for refund from RR complete project', async () => {
+  //   })
+  //
+  //   it('all eligible voters can be refunded from TR complete project', async () => {
+  //   })
+  //
+  //   it('all eligible voters can be refund from RR complete project', async () => {
+  //   })
+  // })
 
   describe('project contract empty', () => {
     it('TR complete project has 0 wei, 0 tokens staked, and 0 reputation staked', async () => {
+      // take stock of variables
+      let projRepStaked = await project.getStakedRep(projAddrT)
+      let projTokensStaked = await project.getStakedTokens(projAddrT)
+      let projWeiBal = parseInt(await web3.eth.getBalance(projAddrT))
+
+      // checks
+      assert.equal(projRepStaked, 0, 'project should not have rep staked on it')
+      assert.equal(projTokensStaked, 0, 'project should not have tokens staked on it')
+      assert.equal(projWeiBal, 0, 'project contract should not have any wei left in it')
     })
 
     it('RR complete project has 0 wei, 0 tokens staked, and 0 reputation staked', async () => {
+      // take stock of variables
+      let projRepStaked = await project.getStakedRep(projAddrT)
+      let projTokensStaked = await project.getStakedTokens(projAddrT)
+      let projWeiBal = parseInt(await web3.eth.getBalance(projAddrT))
+
+      // checks
+      assert.equal(projRepStaked, 0, 'project should not have rep staked on it')
+      assert.equal(projTokensStaked, 0, 'project should not have tokens staked on it')
+      assert.equal(projWeiBal, 0, 'project contract should not have any wei left in it')
     })
   })
 })
