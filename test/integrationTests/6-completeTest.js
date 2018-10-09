@@ -528,7 +528,7 @@ contract('Complete State', (accounts) => {
 
       errorThrown = false
       try {
-        await RR.rewardTask(projAddrR, index, {from: worker1})
+        await RR.rewardTask(projAddrT, index, {from: worker1})
       } catch (e) {
         errorThrown = true
       }
@@ -802,8 +802,8 @@ contract('Complete State', (accounts) => {
       await TR.rewardValidator(projAddrT, 1, {from: validator3})
 
       // refund remaining no validators
-      await TR.rewardValidator(projAddrT, 1, {from: validator2})
-      await TR.rewardValidator(projAddrT, 1, {from: validator3})
+      await TR.rewardValidator(projAddrT, 2, {from: validator2})
+      await TR.rewardValidator(projAddrT, 2, {from: validator3})
     })
 
     it('all eligible validators can be reward from RR complete project', async () => {
@@ -813,8 +813,8 @@ contract('Complete State', (accounts) => {
       await TR.rewardValidator(projAddrR, 1, {from: validator3})
 
       // refund remaining no validators
-      await TR.rewardValidator(projAddrR, 1, {from: validator2})
-      await TR.rewardValidator(projAddrR, 1, {from: validator3})
+      await TR.rewardValidator(projAddrR, 2, {from: validator2})
+      await TR.rewardValidator(projAddrR, 2, {from: validator3})
     })
   })
 

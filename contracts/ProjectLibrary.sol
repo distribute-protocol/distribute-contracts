@@ -372,7 +372,7 @@ library ProjectLibrary {
     ) public returns (uint256) {
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));
-        require(task.claimer() == _claimer && task.claimableByRep());
+        require(task.complete() && task.claimer() == _claimer && task.claimableByRep());
         uint256 weiReward = task.weiReward();
         uint256 reputationReward = task.reputationReward();
         task.setTaskReward(0, 0, _claimer);
