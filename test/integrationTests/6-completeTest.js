@@ -450,65 +450,125 @@ contract('Complete State', (accounts) => {
 
   describe('handle workers', () => {
     it('worker can ask for reward from TR complete project', async () => {
-      // can't figure out why _rewardee.transfer to worker1 is not working at the moment, but will come back to this
+      let index = 0
 
-      // let index = 0
-      //
-      // // take stock of variables before
-      // let totalRepBefore = await utils.getTotalRep()
-      // let rwBalBefore = await utils.getRepBalance(worker1)
-      // let rwWeiBalBefore = parseInt(await web3.eth.getBalance(worker1))
-      // let projWeiBalVariableBefore = await project.getWeiBal(projAddrT)
-      // let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
-      // let repRewardBefore = await task.getRepReward(projAddrT, index)
-      // let weiRewardBefore = await task.getWeiReward(projAddrT, index)
-      //
-      // // reward worker
-      // await RR.rewardTask(projAddrT, index, {from: worker1})
-      //
-      // // take stock of variables after
-      //
-      // let totalRepAfter = await utils.getTotalRep()
-      // let rwBalAfter = await utils.getRepBalance(worker1)
-      // let rwWeiBalAfter = parseInt(await web3.eth.getBalance(worker1))
-      // let projWeiBalVariableAfter = await project.getWeiBal(projAddrT)
-      // let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
-      // let repRewardAfter = await task.getRepReward(projAddrT, index)
-      // let weiRewardAfter = await task.getWeiReward(projAddrT, index)
-      //
-      // console.log(worker1)
-      // console.log(projWeiBalBefore, projWeiBalAfter, weiRewardBefore, weiRewardAfter)
-      // console.log(rwWeiBalBefore, rwWeiBalAfter, weiRewardBefore, weiRewardAfter)
-      //
-      // // checks
-      // assert.equal(totalRepBefore, totalRepAfter, 'total reputation should not change')
-      // assert.equal(rwBalBefore + repRewardBefore, rwBalAfter, 'incorrect worker rep balance post-refund')
-      // assert.equal(rwWeiBalBefore + weiRewardBefore, rwWeiBalAfter, 'incorrect wei reward sent to worker')
-      // assert.equal(projWeiBalVariableBefore, projWeiBalVariableAfter + weiRewardBefore, 'project wei bal variable updated incorrectly')
-      // assert.equal(projWeiBalBefore, projWeiBalAfter + weiRewardBefore, 'incorrect wei reward sent from project')
-      // assert.equal(repRewardAfter, 0, 'rep reward not zeroed out')
-      // assert.equal(weiRewardAfter, 0, 'wei reward not zeroed out')
+      // take stock of variables before
+      let totalRepBefore = await utils.getTotalRep()
+      let rwBalBefore = await utils.getRepBalance(worker1)
+      let projWeiBalVariableBefore = await project.getWeiBal(projAddrT)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
+      let repRewardBefore = await task.getRepReward(projAddrT, index)
+      let weiRewardBefore = await task.getWeiReward(projAddrT, index)
+
+      // reward worker
+      await RR.rewardTask(projAddrT, index, {from: worker1})
+
+      // take stock of variables after
+      let totalRepAfter = await utils.getTotalRep()
+      let rwBalAfter = await utils.getRepBalance(worker1)
+      let projWeiBalVariableAfter = await project.getWeiBal(projAddrT)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
+      let repRewardAfter = await task.getRepReward(projAddrT, index)
+      let weiRewardAfter = await task.getWeiReward(projAddrT, index)
+
+      // checks
+      assert.equal(totalRepBefore, totalRepAfter, 'total reputation should not change')
+      assert.equal(rwBalBefore + repRewardBefore, rwBalAfter, 'incorrect worker rep balance post-refund')
+      assert.equal(projWeiBalVariableBefore, projWeiBalVariableAfter + weiRewardBefore, 'project wei bal variable updated incorrectly')
+      assert.equal(projWeiBalBefore, projWeiBalAfter + weiRewardBefore, 'incorrect wei reward sent from project')
+      assert.equal(repRewardAfter, 0, 'rep reward not zeroed out')
+      assert.equal(weiRewardAfter, 0, 'wei reward not zeroed out')
     })
 
     it('worker can ask for reward from RR complete project', async () => {
+      let index = 0
+
+      // take stock of variables before
+      let totalRepBefore = await utils.getTotalRep()
+      let rwBalBefore = await utils.getRepBalance(worker1)
+      let projWeiBalVariableBefore = await project.getWeiBal(projAddrR)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR))
+      let repRewardBefore = await task.getRepReward(projAddrR, index)
+      let weiRewardBefore = await task.getWeiReward(projAddrR, index)
+
+      // reward worker
+      await RR.rewardTask(projAddrR, index, {from: worker1})
+
+      // take stock of variables after
+      let totalRepAfter = await utils.getTotalRep()
+      let rwBalAfter = await utils.getRepBalance(worker1)
+      let projWeiBalVariableAfter = await project.getWeiBal(projAddrR)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR))
+      let repRewardAfter = await task.getRepReward(projAddrR, index)
+      let weiRewardAfter = await task.getWeiReward(projAddrR, index)
+
+      // checks
+      assert.equal(totalRepBefore, totalRepAfter, 'total reputation should not change')
+      assert.equal(rwBalBefore + repRewardBefore, rwBalAfter, 'incorrect worker rep balance post-refund')
+      assert.equal(projWeiBalVariableBefore, projWeiBalVariableAfter + weiRewardBefore, 'project wei bal variable updated incorrectly')
+      assert.equal(projWeiBalBefore, projWeiBalAfter + weiRewardBefore, 'incorrect wei reward sent from project')
+      assert.equal(repRewardAfter, 0, 'rep reward not zeroed out')
+      assert.equal(weiRewardAfter, 0, 'wei reward not zeroed out')
     })
 
     it('worker can\'t ask for reward they\'ve already received from TR complete project', async () => {
+      let index = 0
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrT, index, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('worker can\'t ask for reward they\'ve already received from RR complete project', async () => {
+      let index = 0
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrR, index, {from: worker1})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not worker can\'t ask for reward from TR complete project', async () => {
+      let index = 1
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrT, index, {from: notWorker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not worker can\'t ask for reward from RR complete project', async () => {
+      let index = 1
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrR, index, {from: notWorker})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('all workers can be rewarded from TR complete project', async () => {
+      // reward remaining workers
+      await RR.rewardTask(projAddrT, 1, {from: worker2})
+      await RR.rewardTask(projAddrT, 2, {from: worker1})
     })
 
     it('all workers can be rewarded from RR complete project', async () => {
+      // reward remaining workers
+      await RR.rewardTask(projAddrR, 1, {from: worker2})
+      await RR.rewardTask(projAddrR, 2, {from: worker1})
     })
   })
 
@@ -742,11 +802,18 @@ contract('Complete State', (accounts) => {
       await TR.rewardValidator(projAddrT, 1, {from: validator3})
 
       // refund remaining no validators
-      await TR.rewardValidator(projAddrT, 1, {from: validator1})
+      await TR.rewardValidator(projAddrT, 1, {from: validator2})
+      await TR.rewardValidator(projAddrT, 1, {from: validator3})
     })
 
     it('all eligible validators can be reward from RR complete project', async () => {
-      // refund remaining yes validator
+      // refund remaining yes validators
+      await TR.rewardValidator(projAddrR, 1, {from: validator1})
+      await TR.rewardValidator(projAddrR, 2, {from: validator1})
+      await TR.rewardValidator(projAddrR, 1, {from: validator3})
+
+      // refund remaining no validators
+      await TR.rewardValidator(projAddrR, 1, {from: validator2})
       await TR.rewardValidator(projAddrR, 1, {from: validator3})
     })
   })
