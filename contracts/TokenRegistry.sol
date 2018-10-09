@@ -334,7 +334,7 @@ contract TokenRegistry is Ownable {
                 for(uint i = validationIndex ; i < 5; i++) {
                     addtlWeighting = addtlWeighting.add(projectRegistry.validationRewardWeightings(i));
                 }
-                rewardWeighting += addtlWeighting / validationIndex;
+                rewardWeighting = rewardWeighting.add(addtlWeighting.div(validationIndex));
             }
             uint256 weiReward = project.validationReward().mul(task.weighting()).mul(rewardWeighting).div(10000);
             project.transferWeiReward(msg.sender, weiReward);

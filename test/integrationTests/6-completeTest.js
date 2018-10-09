@@ -560,12 +560,14 @@ contract('Complete State', (accounts) => {
     })
 
     it('all workers can be rewarded from TR complete project', async () => {
+      // most things to be tests have been done in previous tests, but want to test that every TR.rewardTask() can be called
       // reward remaining workers
       await RR.rewardTask(projAddrT, 1, {from: worker2})
       await RR.rewardTask(projAddrT, 2, {from: worker1})
     })
 
     it('all workers can be rewarded from RR complete project', async () => {
+      // most things to be tests have been done in previous tests, but want to test that every TR.rewardTask() can be called
       // reward remaining workers
       await RR.rewardTask(projAddrR, 1, {from: worker2})
       await RR.rewardTask(projAddrR, 2, {from: worker1})
@@ -796,10 +798,31 @@ contract('Complete State', (accounts) => {
     })
 
     it('all eligible validators can be rewarded from TR complete project', async () => {
+      // most things to be tests have been done in previous tests, but want to test that every TR.rewardValidator() can be called
+      // as well as making sure that validator is rewarded proportionally correctly
+
+      // calculate wei reward for validator 3 on index 1
+      let index = 1
+      let rewardWeighting = 44 // 2nd of 2 validators
+      let validationReward = await project.getValidationReward(projAddrT, true)
+      let taskWeighting = await task.getWeighting(projAddrT, index, true)
+      let weiReward = Math.floor(validationReward.times(taskWeighting).toNumber() * rewardWeighting / 10000)
+
+      // take stock of variables
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
+
+      // refund validator 3 on index 1
+      await TR.rewardValidator(projAddrT, index, {from: validator3})
+
+      // take stock of variables after
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
+
+      // checks
+      assert.equal(projWeiBalAfter + weiReward, projWeiBalBefore, 'wei reward was not sent correctly to validator')
+
       // refund remaining yes validators
       await TR.rewardValidator(projAddrT, 1, {from: validator1})
       await TR.rewardValidator(projAddrT, 2, {from: validator1})
-      await TR.rewardValidator(projAddrT, 1, {from: validator3})
 
       // refund remaining no validators
       await TR.rewardValidator(projAddrT, 2, {from: validator2})
@@ -807,10 +830,31 @@ contract('Complete State', (accounts) => {
     })
 
     it('all eligible validators can be reward from RR complete project', async () => {
+      // most things to be tests have been done in previous tests, but want to test that every TR.rewardValidator() can be called
+      // as well as making sure that validator is rewarded proportionally correctly
+
+      // calculate wei reward for validator 3 on index 1
+      let index = 1
+      let rewardWeighting = 44 // 2nd of 2 validators
+      let validationReward = await project.getValidationReward(projAddrR, true)
+      let taskWeighting = await task.getWeighting(projAddrR, index, true)
+      let weiReward = Math.floor(validationReward.times(taskWeighting).toNumber() * rewardWeighting / 10000)
+
+      // take stock of variables
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR))
+
+      // refund validator 3 on index 1
+      await TR.rewardValidator(projAddrR, index, {from: validator3})
+
+      // take stock of variables after
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR))
+
+      // checks
+      assert.equal(projWeiBalAfter + weiReward, projWeiBalBefore, 'wei reward was not sent correctly to validator')
+
       // refund remaining yes validators
       await TR.rewardValidator(projAddrR, 1, {from: validator1})
       await TR.rewardValidator(projAddrR, 2, {from: validator1})
-      await TR.rewardValidator(projAddrR, 1, {from: validator3})
 
       // refund remaining no validators
       await TR.rewardValidator(projAddrR, 2, {from: validator2})

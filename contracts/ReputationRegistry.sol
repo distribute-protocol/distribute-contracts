@@ -106,7 +106,7 @@ contract ReputationRegistry is Ownable {
     @return Average balance of each user
     */
     function averageBalance() external view returns(uint256) {
-        return totalSupply / totalUsers;
+        return totalSupply.div(totalUsers);
     }
 
     // =====================================================================
@@ -152,7 +152,7 @@ contract ReputationRegistry is Ownable {
     }
 
     function squaredAmount(uint _amount) internal pure returns (uint) {
-      return _amount * _amount;
+      return _amount.mul(_amount);
     }
 
     // =====================================================================
@@ -169,8 +169,8 @@ contract ReputationRegistry is Ownable {
         require(users[msg.sender].balance == 0 && users[msg.sender].registered == false);
         users[msg.sender].registered = true;
         users[msg.sender].balance = initialRepVal;
-        totalSupply += initialRepVal;
-        totalUsers += 1;
+        totalSupply = totalSupply.add(initialRepVal);
+        totalUsers = totalUsers.add(1);
         emit LogRegister(msg.sender);
     }
 
@@ -365,7 +365,7 @@ contract ReputationRegistry is Ownable {
         //make sure msg.sender has tokens available in PLCR contract
         //if not, request voting rights for token holder
         if (availableVotes < _votes) {
-            uint votesCost = squaredAmount(_votes) - squaredAmount(availableVotes);
+            uint votesCost = squaredAmount(_votes).sub(squaredAmount(availableVotes));
             require(users[msg.sender].balance >= votesCost);
             users[msg.sender].balance -= votesCost;
             plcrVoting.requestVotingRights(msg.sender, _votes - availableVotes);
