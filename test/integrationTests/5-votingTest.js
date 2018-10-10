@@ -14,9 +14,10 @@ contract('Voting State', (accounts) => {
 
   // get project helper variables
   let TR, RR, PR, PLCR
-  let {user, project, utils, returnProject, task} = projObj
+  let {user, project, utils, returnProject, task, voting} = projObj
   let {repYesVoter, repNoVoter, tokenYesVoter, tokenNoVoter, notVoter, cheekyYesVoter, cheekyNoVoter} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
+  let {voteAmount, voteAmountMore} = voting
 
   // set up task details & hashing functions
   let {taskSet3} = taskDetails
@@ -43,9 +44,6 @@ contract('Voting State', (accounts) => {
   let secretSalt = 10000
   let voteYes = 1
   let voteNo = 0
-
-  let voteAmount = 2
-  let voteAmountMore = 3
 
   before(async () => {
     // get contract

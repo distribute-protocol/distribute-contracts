@@ -14,13 +14,15 @@ contract('Complete State', (accounts) => {
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let TR, RR
-  let {user, project, task, utils, returnProject} = projObj
+  let TR, RR, PLCR
+  let {user, project, task, utils, returnProject, voting} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {tokenStaker1, tokenStaker2, repStaker1, repStaker2, notStaker} = user
   let {worker1, worker2, notWorker} = user
   let {validator1, validator2, validator3, notValidator} = user
+  let {tokenYesVoter, tokenNoVoter, repYesVoter, repNoVoter, notVoter} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
+  let {voteAmount, voteAmountMore} = voting
 
   // set up task details & hashing functions
   let {taskSet4} = taskDetails
@@ -55,6 +57,7 @@ contract('Complete State', (accounts) => {
     await projObj.contracts.setContracts()
     TR = projObj.contracts.TR
     RR = projObj.contracts.RR
+    PLCR = projObj.contracts.PLCR
 
     // get finished - complete projects
     // moves ganache forward 6 more weeks
@@ -65,7 +68,7 @@ contract('Complete State', (accounts) => {
   })
 
   describe('handle proposer', () => {
-    it('Not proposer can\'t call refund proposer from token registry', async () => {
+    it('not proposer can\'t call refund proposer from token registry', async () => {
       errorThrown = false
       try {
         await TR.refundProposer(projAddrT, {from: notProposer})
@@ -76,7 +79,7 @@ contract('Complete State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Not proposer can\'t call refund proposer from reputation registry', async () => {
+    it('not proposer can\'t call refund proposer from reputation registry', async () => {
       errorThrown = false
       try {
         await RR.refundProposer(projAddrR, {from: notProposer})
@@ -862,31 +865,173 @@ contract('Complete State', (accounts) => {
     })
   })
 
-  // describe('handle voters', () => {
-  //   it('yes voter can ask for refund from TR complete project', async () => {
-  //   })
-  //
-  //   it('yes voter can ask for refund from RR complete project', async () => {
-  //   })
-  //
-  //   it('no voter can ask for refund from TR complete project', async () => {
-  //   })
-  //
-  //   it('no voter can ask for refund from RR complete project', async () => {
-  //   })
-  //
-  //   it('not voter can\'t ask for refund from TR complete project', async () => {
-  //   })
-  //
-  //   it('not voter can\'t ask for refund from RR complete project', async () => {
-  //   })
-  //
-  //   it('all eligible voters can be refunded from TR complete project', async () => {
-  //   })
-  //
-  //   it('all eligible voters can be refund from RR complete project', async () => {
-  //   })
-  // })
+  describe('handle voters', () => {
+    it('yes token voter can\'t refund more voting tokens than they have', async () => {
+      errorThrown = false
+      let availableVotesBefore = await PLCR.getAvailableTokens(tokenYesVoter, 1)
+      let lockedTokens = await PLCR.getLockedTokens(tokenYesVoter)
+
+      try {
+        await TR.refundVotingTokens(availableVotesBefore - lockedTokens + 1, {from: tokenYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('yes token voter can refund voting tokens', async () => {
+      // take stock of variables before
+      let tyvBalBefore = await utils.getTokenBalance(tokenYesVoter)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let availableVotesBefore = await PLCR.getAvailableTokens(tokenYesVoter, 1)
+      let lockedTokens = await PLCR.getLockedTokens(tokenYesVoter)
+
+      // checks
+      assert.equal(0, lockedTokens, 'assure no votes are locked')
+      assert.equal(voteAmountMore, availableVotesBefore, 'assure correct amount of tokens are available')
+
+      // refund voter
+      await TR.refundVotingTokens(voteAmountMore, {from: tokenYesVoter})
+
+      // take stock of variables after
+      let tyvBalAfter = await utils.getTokenBalance(tokenYesVoter)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let availableVotesAfter = await PLCR.getAvailableTokens(tokenYesVoter, 1)
+
+      // checks
+      assert.equal(Math.pow(availableVotesBefore, 2) - Math.pow(availableVotesAfter, 2), tyvBalAfter - tyvBalBefore, 'votes requested incorrectly')
+      assert.equal(tyvBalAfter - tyvBalBefore, TRBalBefore - TRBalAfter, 'tokens transferred to escrow incorrectly')
+      assert.equal(availableVotesAfter, 0, 'assert no votes are available')
+    })
+
+    it('no token voter can\'t refund more voting tokens than they have', async () => {
+      errorThrown = false
+      let availableVotesBefore = await PLCR.getAvailableTokens(tokenNoVoter, 1)
+      let lockedTokens = await PLCR.getLockedTokens(tokenNoVoter)
+
+      try {
+        await TR.refundVotingTokens(availableVotesBefore - lockedTokens + 1, {from: tokenNoVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('no token voter can refund voting tokens', async () => {
+      // take stock of variables before
+      let tnvBalBefore = await utils.getTokenBalance(tokenNoVoter)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let availableVotesBefore = await PLCR.getAvailableTokens(tokenNoVoter, 1)
+      let lockedTokens = await PLCR.getLockedTokens(tokenNoVoter)
+
+      // checks
+      assert.equal(0, lockedTokens, 'assure no votes are locked')
+      assert.equal(voteAmount, availableVotesBefore, 'assure correct amount of tokens are available')
+
+      // refund voter
+      await TR.refundVotingTokens(voteAmount, {from: tokenNoVoter})
+
+      // take stock of variables after
+      let tnvBalAfter = await utils.getTokenBalance(tokenNoVoter)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let availableVotesAfter = await PLCR.getAvailableTokens(tokenNoVoter, 1)
+
+      // checks
+      assert.equal(Math.pow(availableVotesBefore, 2) - Math.pow(availableVotesAfter, 2), tnvBalAfter - tnvBalBefore, 'votes requested incorrectly')
+      assert.equal(tnvBalAfter - tnvBalBefore, TRBalBefore - TRBalAfter, 'tokens transferred to escrow incorrectly')
+      assert.equal(availableVotesAfter, 0, 'assert no votes are available')
+    })
+
+    it('yes reputation voter can\'t refund more voting tokens than they have', async () => {
+      errorThrown = false
+      let availableVotesBefore = await PLCR.getAvailableTokens(repYesVoter, 2)
+      let lockedTokens = await PLCR.getLockedTokens(repYesVoter)
+
+      try {
+        await RR.refundVotingReputation(availableVotesBefore - lockedTokens + 1, {from: repYesVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('yes reputation voter can refund voting reputation', async () => {
+      // take stock of variables before
+      let ryvBalBefore = await utils.getRepBalance(repYesVoter)
+      let availableVotesBefore = await PLCR.getAvailableTokens(repYesVoter, 2)
+      let lockedTokens = await PLCR.getLockedTokens(repYesVoter)
+
+      // checks
+      assert.equal(0, lockedTokens, 'assure no votes are locked')
+      assert.equal(voteAmountMore, availableVotesBefore, 'assure correct amount of rep are available')
+
+      // refund voter
+      await RR.refundVotingReputation(voteAmountMore, {from: repYesVoter})
+
+      // take stock of variables after
+      let ryvBalAfter = await utils.getRepBalance(repYesVoter)
+      let availableVotesAfter = await PLCR.getAvailableTokens(repYesVoter, 2)
+
+      // checks
+      assert.equal(Math.pow(availableVotesBefore, 2) - Math.pow(availableVotesAfter, 2), ryvBalAfter - ryvBalBefore, 'votes requested incorrectly')
+      assert.equal(availableVotesAfter, 0, 'assert no votes are available')
+    })
+
+    it('no reputation voter can\'t refund more voting tokens than they have', async () => {
+      errorThrown = false
+      let availableVotesBefore = await PLCR.getAvailableTokens(repNoVoter, 2)
+      let lockedTokens = await PLCR.getLockedTokens(repNoVoter)
+
+      try {
+        await RR.refundVotingReputation(availableVotesBefore - lockedTokens + 1, {from: repNoVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('no reputation voter can refund voting reputation', async () => {
+      // take stock of variables before
+      let rnvBalBefore = await utils.getRepBalance(repNoVoter)
+      let availableVotesBefore = await PLCR.getAvailableTokens(repNoVoter, 2)
+      let lockedTokens = await PLCR.getLockedTokens(repNoVoter)
+
+      // checks
+      assert.equal(0, lockedTokens, 'assure no votes are locked')
+      assert.equal(voteAmount, availableVotesBefore, 'assure correct amount of rep are available')
+
+      // refund voter
+      await RR.refundVotingReputation(voteAmount, {from: repNoVoter})
+
+      // take stock of variables after
+      let rnvBalAfter = await utils.getRepBalance(repNoVoter)
+      let availableVotesAfter = await PLCR.getAvailableTokens(repNoVoter, 2)
+
+      // checks
+      assert.equal(Math.pow(availableVotesBefore, 2) - Math.pow(availableVotesAfter, 2), rnvBalAfter - rnvBalBefore, 'votes requested incorrectly')
+      assert.equal(availableVotesAfter, 0, 'assert no votes are available')
+    })
+
+    it('not voter can\'t refund voting tokens', async () => {
+      errorThrown = false
+      try {
+        await TR.refundVotingTokens(voteAmount, {from: notVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('not voter can\'t refund voting reputation', async () => {
+      errorThrown = false
+      try {
+        await RR.refundVotingReputation(voteAmount, {from: notVoter})
+      } catch (e) {
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+  })
 
   describe('project contract empty', () => {
     it('TR complete project has 0 wei, 0 tokens staked, and 0 reputation staked', async () => {

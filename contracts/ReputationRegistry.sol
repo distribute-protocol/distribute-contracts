@@ -389,9 +389,7 @@ contract ReputationRegistry is Ownable {
     ) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
-        Project project = Project(_projectAddress);
-        uint256 pollId = Task(project.tasks(_index)).pollId();
-        plcrVoting.revealVote(msg.sender, pollId, _voteOption, _salt);
+        plcrVoting.revealVote(msg.sender, Task(Project(_projectAddress).tasks(_index)).pollId(), _voteOption, _salt);
         emit LogReputationVoteRevealed(_projectAddress, _index, _voteOption, _salt, msg.sender);
     }
 
