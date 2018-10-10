@@ -50,7 +50,7 @@ contract('Complete State', (accounts) => {
 
   let voteType = [voteNeither, voteTrueMore, voteTrueMore]
 
-  let fastForwards = 15 // ganache 15 weeks ahead at this point from previous tests' evmIncreaseTime()
+  let fastForwards = 16 // ganache 16 weeks ahead at this point from previous tests' evmIncreaseTime()
 
   before(async () => {
     // get contract

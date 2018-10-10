@@ -29,7 +29,7 @@ contract('Staked State', (accounts) => {
   let projAddrR1, projAddrR2
   let errorThrown
 
-  let fastForwards = 2 // ganache 2 week ahead at this point from previous test's evmIncreaseTime()
+  let fastForwards = 3 // ganache 3 week ahead at this point from previous test's evmIncreaseTime()
 
   before(async () => {
     // get contract
@@ -267,6 +267,7 @@ contract('Staked State', (accounts) => {
       try {
         await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: notStaker})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -277,6 +278,7 @@ contract('Staked State', (accounts) => {
       try {
         await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: notStaker})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -289,6 +291,7 @@ contract('Staked State', (accounts) => {
       try {
         await PR.addTaskHash(notProject, hashTasksArray(taskSet1), {from: tokenStaker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -299,6 +302,7 @@ contract('Staked State', (accounts) => {
       try {
         await PR.addTaskHash(notProject, hashTasksArray(taskSet1), {from: repStaker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -311,6 +315,7 @@ contract('Staked State', (accounts) => {
       try {
         await PR.submitHashList(projAddrT1, hashTasks(taskSet2), {from: tokenStaker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -321,6 +326,7 @@ contract('Staked State', (accounts) => {
       try {
         await PR.submitHashList(projAddrT1, hashTasks(taskSet2), {from: tokenStaker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -331,6 +337,7 @@ contract('Staked State', (accounts) => {
       try {
         await PR.submitHashList(projAddrR1, hashTasks(taskSet2), {from: tokenStaker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -341,6 +348,7 @@ contract('Staked State', (accounts) => {
       try {
         await PR.submitHashList(projAddrR1, hashTasks(taskSet2), {from: tokenStaker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -429,6 +437,7 @@ contract('Staked State', (accounts) => {
       try {
         await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: tokenStaker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -439,6 +448,7 @@ contract('Staked State', (accounts) => {
       try {
         await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: repStaker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -449,6 +459,7 @@ contract('Staked State', (accounts) => {
       try {
         await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: tokenStaker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -459,6 +470,7 @@ contract('Staked State', (accounts) => {
       try {
         await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: repStaker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')

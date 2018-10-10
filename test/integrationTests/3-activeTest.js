@@ -36,7 +36,7 @@ contract('Active State', (accounts) => {
   let indexThrowaway = 0 // to test a task that will fail every time it's claimed and marked complete
   let notIndex = 5 // to test a nonexistant task
 
-  let fastForwards = 3 // ganache 3 weeks ahead at this point from previous test's evmIncreaseTime()
+  let fastForwards = 4 // ganache 4 weeks ahead at this point from previous test's evmIncreaseTime()
 
   before(async () => {
     // get contracts
@@ -152,6 +152,7 @@ contract('Active State', (accounts) => {
       try {
         await PR.submitHashList(projAddrT, hashTasks(taskSet2), {from: repStaker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -162,6 +163,7 @@ contract('Active State', (accounts) => {
       try {
         await PR.submitHashList(projAddrR, hashTasks(taskSet2), {from: repStaker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -173,6 +175,7 @@ contract('Active State', (accounts) => {
       try {
         await project.getTasks(projAddrT, 0)
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -209,6 +212,7 @@ contract('Active State', (accounts) => {
       try {
         await project.getTasks(projAddrR, 0)
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -244,6 +248,7 @@ contract('Active State', (accounts) => {
       try {
         await PR.submitHashList(projAddrT, hashTasks(taskSet1), {from: repStaker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -254,6 +259,7 @@ contract('Active State', (accounts) => {
       try {
         await PR.submitHashList(projAddrR, hashTasks(taskSet1), {from: repStaker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -449,6 +455,7 @@ contract('Active State', (accounts) => {
       try {
         await RR.claimTask(projAddrT, indexNoReclaimPre, description, weighting, {from: worker2})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -462,6 +469,7 @@ contract('Active State', (accounts) => {
       try {
         await RR.claimTask(projAddrT, indexNoReclaimPre, description, weighting, {from: worker2})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -565,6 +573,7 @@ contract('Active State', (accounts) => {
       try {
         await RR.claimTask(projAddrT, indexThrowaway, description, weighting, {from: notWorker})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -578,6 +587,7 @@ contract('Active State', (accounts) => {
       try {
         await RR.claimTask(projAddrR, indexThrowaway, description, weighting, {from: notWorker})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -591,6 +601,7 @@ contract('Active State', (accounts) => {
       try {
         await RR.claimTask(projAddrT, indexThrowaway, description, weighting, {from: worker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -604,6 +615,7 @@ contract('Active State', (accounts) => {
       try {
         await RR.claimTask(projAddrR, indexThrowaway, description, weighting, {from: worker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -617,6 +629,7 @@ contract('Active State', (accounts) => {
       try {
         await RR.claimTask(projAddrT, indexThrowaway, description, weighting, {from: worker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -630,6 +643,7 @@ contract('Active State', (accounts) => {
       try {
         await RR.claimTask(projAddrR, indexThrowaway, description, weighting, {from: worker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -643,6 +657,7 @@ contract('Active State', (accounts) => {
       try {
         await RR.claimTask(projAddrT, notIndex, description, weighting, {from: worker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -656,6 +671,7 @@ contract('Active State', (accounts) => {
       try {
         await RR.claimTask(projAddrR, notIndex, description, weighting, {from: worker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -698,6 +714,7 @@ contract('Active State', (accounts) => {
       try {
         await PR.submitTaskComplete(projAddrT, indexReclaim, {from: worker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -708,6 +725,7 @@ contract('Active State', (accounts) => {
       try {
         await PR.submitTaskComplete(projAddrR, indexReclaim, {from: worker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -718,6 +736,7 @@ contract('Active State', (accounts) => {
       try {
         await PR.submitTaskComplete(projAddrT, indexReclaim, {from: notWorker})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -728,6 +747,7 @@ contract('Active State', (accounts) => {
       try {
         await PR.submitTaskComplete(projAddrR, indexReclaim, {from: notWorker})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -837,6 +857,7 @@ contract('Active State', (accounts) => {
       try {
         await RR.claimTask(projAddrT, indexReclaim, description, weighting, {from: worker2})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -850,6 +871,7 @@ contract('Active State', (accounts) => {
       try {
         await RR.claimTask(projAddrR, indexReclaim, description, weighting, {from: worker2})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -922,6 +944,7 @@ contract('Active State', (accounts) => {
       try {
         await PR.submitTaskComplete(projAddrT, indexReclaim, {from: worker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -932,6 +955,7 @@ contract('Active State', (accounts) => {
       try {
         await PR.submitTaskComplete(projAddrR, indexReclaim, {from: worker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -942,6 +966,7 @@ contract('Active State', (accounts) => {
       try {
         await PR.submitTaskComplete(projAddrT, indexReclaim, {from: worker2})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -952,6 +977,7 @@ contract('Active State', (accounts) => {
       try {
         await PR.submitTaskComplete(projAddrR, indexReclaim, {from: worker2})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1036,6 +1062,7 @@ contract('Active State', (accounts) => {
       try {
         await RR.claimTask(projAddrT, indexEndTest, description, weighting, {from: worker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1049,6 +1076,7 @@ contract('Active State', (accounts) => {
       try {
         await RR.claimTask(projAddrR, indexEndTest, description, weighting, {from: worker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1059,6 +1087,7 @@ contract('Active State', (accounts) => {
       try {
         await PR.submitTaskComplete(projAddrT, indexThrowaway, {from: worker2})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1069,6 +1098,7 @@ contract('Active State', (accounts) => {
       try {
         await PR.submitTaskComplete(projAddrR, indexThrowaway, {from: worker2})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')

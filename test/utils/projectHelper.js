@@ -699,7 +699,7 @@ module.exports = function projectHelper (accounts) {
       assert.equal(stateT, 3, 'project is not in active state')
       assert.equal(stateR, 3, 'project is not in active state')
     }
-    console.log(_numSets * 2 + ' active projects have been generated successfully.')
+    console.log('active')
 
     return projArray
   }
@@ -745,6 +745,8 @@ module.exports = function projectHelper (accounts) {
     let stateR = await obj.project.getState(projArray[0][1])
     assert.equal(stateT, 4, 'project T not in validating state')
     assert.equal(stateR, 4, 'project R not in validating state')
+
+    console.log('validating')
 
     return projArray
   }
@@ -805,6 +807,8 @@ module.exports = function projectHelper (accounts) {
     let stateR = await obj.project.getState(projArray[0][1])
     assert.equal(stateT, 5, 'project T not in voting state')
     assert.equal(stateR, 5, 'project R not in voting state')
+
+    console.log('voting')
 
     return projArray
   }
@@ -922,6 +926,8 @@ module.exports = function projectHelper (accounts) {
     let stateR = await obj.project.getState(projArray[0][1])
     assert.equal(stateT, _intendedState, 'project T not in failed or complete state')
     assert.equal(stateR, _intendedState, 'project R not in failed or complete state')
+
+    console.log('finished')
 
     return projArray
   }

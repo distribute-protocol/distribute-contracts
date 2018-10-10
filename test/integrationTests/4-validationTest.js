@@ -34,7 +34,7 @@ contract('Validating State', (accounts) => {
   let indexIncomplete = 4
   let notIndex = 5
 
-  let fastForwards = 6 // ganache 6 weeks ahead at this point from previous test's evmIncreaseTime()
+  let fastForwards = 7 // ganache 7 weeks ahead at this point from previous test's evmIncreaseTime()
 
   before(async () => {
     // get contract
@@ -495,6 +495,7 @@ contract('Validating State', (accounts) => {
         await TR.validateTask(projAddrT, indexBoth, true, {from: validator1})
         await TR.validateTask(projAddrT, indexBoth, false, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -510,6 +511,7 @@ contract('Validating State', (accounts) => {
         await TR.validateTask(projAddrR, indexBoth, true, {from: validator1})
         await TR.validateTask(projAddrR, indexBoth, false, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -524,6 +526,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrT, indexYes, true, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -538,6 +541,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrR, indexYes, true, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -552,6 +556,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrT, indexBoth, false, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -566,6 +571,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrR, indexBoth, false, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -576,6 +582,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrT, indexBoth, true, {from: notValidator})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -586,6 +593,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrT, indexBoth, true, {from: notValidator})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -596,6 +604,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrT, indexBoth, false, {from: notValidator})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -606,6 +615,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrR, indexBoth, false, {from: notValidator})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -621,6 +631,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrT, indexIncomplete, true, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -636,6 +647,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrR, indexIncomplete, true, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -651,6 +663,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrT, indexIncomplete, false, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -666,6 +679,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrR, indexIncomplete, false, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -676,6 +690,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrT, notIndex, true, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -686,6 +701,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrR, notIndex, true, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -696,6 +712,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrT, notIndex, false, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -706,6 +723,7 @@ contract('Validating State', (accounts) => {
       try {
         await TR.validateTask(projAddrR, notIndex, false, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -888,8 +906,9 @@ contract('Validating State', (accounts) => {
 
       errorThrown = false
       try {
-        await TR.validateTask(projAddrT, indexNeither, validationEntryFee, true, {from: validator1})
+        await TR.validateTask(projAddrT, indexNeither, true, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -902,8 +921,9 @@ contract('Validating State', (accounts) => {
 
       errorThrown = false
       try {
-        await TR.validateTask(projAddrR, indexNeither, validationEntryFee, true, {from: validator1})
+        await TR.validateTask(projAddrR, indexNeither, true, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -916,8 +936,9 @@ contract('Validating State', (accounts) => {
 
       errorThrown = false
       try {
-        await TR.validateTask(projAddrT, indexNeither, validationEntryFee, false, {from: validator1})
+        await TR.validateTask(projAddrT, indexNeither, false, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -930,8 +951,9 @@ contract('Validating State', (accounts) => {
 
       errorThrown = false
       try {
-        await TR.validateTask(projAddrT, indexNeither, validationEntryFee, false, {from: validator1})
+        await TR.validateTask(projAddrT, indexNeither, false, {from: validator1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')

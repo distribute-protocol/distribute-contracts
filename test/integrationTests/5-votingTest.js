@@ -40,7 +40,7 @@ contract('Voting State', (accounts) => {
 
   let valType = [valTrueOnly, valFalseOnly, valTrueMore1, valFalseMore1, valTrueMore1, valFalseMore1, valNeither]
 
-  let fastForwards = 10 // ganache 10 weeks ahead at this point from previous tests' evmIncreaseTime()
+  let fastForwards = 11 // ganache 11 weeks ahead at this point from previous tests' evmIncreaseTime()
 
   let secretSalt = 10000
   let voteYes = 1
@@ -362,6 +362,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteCommit(projAddrT, valTrueOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -376,6 +377,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteCommit(projAddrR, valTrueOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -390,6 +392,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteCommit(projAddrT, valFalseOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -404,6 +407,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteCommit(projAddrR, valFalseOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -418,6 +422,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteCommit(projAddrT, valNeither, voteAmount, secretHash, 0, {from: tokenYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -432,6 +437,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteCommit(projAddrR, valNeither, voteAmount, secretHash, 0, {from: tokenYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -631,6 +637,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteCommit(projAddrT, valTrueOnly, voteAmount, secretHash, 0, {from: tokenNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -644,6 +651,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteCommit(projAddrR, valTrueOnly, voteAmount, secretHash, 0, {from: tokenNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -657,6 +665,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteCommit(projAddrT, valFalseOnly, voteAmount, secretHash, 0, {from: tokenNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -670,6 +679,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteCommit(projAddrR, valFalseOnly, voteAmount, secretHash, 0, {from: tokenNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -683,6 +693,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteCommit(projAddrT, valNeither, voteAmount, secretHash, 0, {from: tokenNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -696,6 +707,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteCommit(projAddrR, valNeither, voteAmount, secretHash, 0, {from: tokenNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -883,6 +895,7 @@ contract('Voting State', (accounts) => {
       try {
         await RR.voteCommit(projAddrT, valTrueOnly, voteAmount, secretHash, 0, {from: repYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -896,6 +909,7 @@ contract('Voting State', (accounts) => {
       try {
         await RR.voteCommit(projAddrR, valTrueOnly, voteAmount, secretHash, 0, {from: repYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -909,6 +923,7 @@ contract('Voting State', (accounts) => {
       try {
         await RR.voteCommit(projAddrT, valFalseOnly, voteAmount, secretHash, 0, {from: tokenYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -922,6 +937,7 @@ contract('Voting State', (accounts) => {
       try {
         await RR.voteCommit(projAddrR, valFalseOnly, voteAmount, secretHash, 0, {from: repYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -935,6 +951,7 @@ contract('Voting State', (accounts) => {
       try {
         await RR.voteCommit(projAddrT, valNeither, voteAmount, secretHash, 0, {from: repYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -948,6 +965,7 @@ contract('Voting State', (accounts) => {
       try {
         await RR.voteCommit(projAddrR, valNeither, voteAmount, secretHash, 0, {from: repYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1135,6 +1153,7 @@ contract('Voting State', (accounts) => {
       try {
         await RR.voteCommit(projAddrT, valTrueOnly, voteAmount, secretHash, 0, {from: repNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1148,6 +1167,7 @@ contract('Voting State', (accounts) => {
       try {
         await RR.voteCommit(projAddrR, valTrueOnly, voteAmount, secretHash, 0, {from: repNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1161,6 +1181,7 @@ contract('Voting State', (accounts) => {
       try {
         await RR.voteCommit(projAddrT, valFalseOnly, voteAmount, secretHash, 0, {from: repNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1174,6 +1195,7 @@ contract('Voting State', (accounts) => {
       try {
         await RR.voteCommit(projAddrR, valFalseOnly, voteAmount, secretHash, 0, {from: repNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1187,6 +1209,7 @@ contract('Voting State', (accounts) => {
       try {
         await RR.voteCommit(projAddrT, valNeither, voteAmount, secretHash, 0, {from: repNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1200,6 +1223,7 @@ contract('Voting State', (accounts) => {
       try {
         await RR.voteCommit(projAddrR, valNeither, voteAmount, secretHash, 0, {from: repNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1341,6 +1365,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteReveal(projAddrT, valFalseMore1, voteNo, secretSalt, {from: cheekyYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1351,6 +1376,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteReveal(projAddrT, valFalseMore1, voteYes, secretSalt, {from: notVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1430,6 +1456,7 @@ contract('Voting State', (accounts) => {
       try {
         await RR.voteReveal(projAddrT, valTrueMore1, voteNo, secretSalt, {from: cheekyYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1440,6 +1467,7 @@ contract('Voting State', (accounts) => {
       try {
         await RR.voteReveal(projAddrT, valFalseMore1, voteYes, secretSalt, {from: notVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1537,6 +1565,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteReveal(projAddrT, valTrueMore1, voteYes, secretSalt, {from: cheekyNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1633,6 +1662,7 @@ contract('Voting State', (accounts) => {
       try {
         await TR.voteReveal(projAddrT, valTrueMore1, voteYes, secretSalt, {from: cheekyNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1644,7 +1674,7 @@ contract('Voting State', (accounts) => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT)
 
-      // attempt to checkStaked
+      // attempt to checkEnd
       await PR.checkEnd(projAddrT)
 
       // take stock of variables
@@ -1659,7 +1689,7 @@ contract('Voting State', (accounts) => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
 
-      // attempt to checkStaked
+      // attempt to checkEnd
       await PR.checkEnd(projAddrR)
 
       // take stock of variables
@@ -1694,7 +1724,7 @@ contract('Voting State', (accounts) => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT)
 
-      // attempt to checkStaked
+      // attempt to checkEnd
       await PR.checkEnd(projAddrT)
 
       // take stock of variables
@@ -1738,7 +1768,7 @@ contract('Voting State', (accounts) => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
 
-      // attempt to checkStaked
+      // attempt to checkEnd
       await PR.checkEnd(projAddrR)
 
       // take stock of variables
