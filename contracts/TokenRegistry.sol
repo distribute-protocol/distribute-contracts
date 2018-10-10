@@ -437,7 +437,9 @@ contract TokenRegistry is Ownable {
         require(refund > 0);
         Project(_projectAddress).clearTokenStake(msg.sender);
         distributeToken.transferFromEscrow(msg.sender, refund);
-        distributeToken.transferTokensTo(msg.sender, refund / 20);
+        if (Project(_projectAddress).state() == 6) {
+          distributeToken.transferTokensTo(msg.sender, refund / 20);
+        }
     }
 
     /**

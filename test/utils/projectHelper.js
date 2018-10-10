@@ -615,6 +615,37 @@ module.exports = function projectHelper (accounts) {
       projArray.push([temp1, temp2])
     }
 
+    for (let i = 0; i < _numSets; i++) {
+      for (let j = 0; j < 2; j++) {
+        // get tokens required to fully stake the project and stake half of them
+        await obj.utils.mintIfNecessary(obj.user.tokenStaker1, 5000)
+
+        let requiredTokens = await obj.project.calculateRequiredTokens(projArray[i][j])
+        let tokensToStake = Math.floor(requiredTokens / 2)
+
+        let tsBal = await obj.utils.getTokenBalance(obj.user.tokenStaker1)
+
+        assert.isAtLeast(tsBal, tokensToStake, 'tokenStaker1 doesn\'t have enough tokens to stake')
+
+        // stake
+        await obj.contracts.TR.stakeTokens(projArray[i][j], tokensToStake, {from: obj.user.tokenStaker1})
+
+        // register reputation stakers
+        await obj.utils.register(obj.user.repStaker1)
+
+        // get reputation required to fully stake the project and stake half of it
+        let requiredRep = await obj.project.getRequiredReputation(projArray[i][j])
+        let repToStake = Math.floor(requiredRep / 2)
+
+        // assert that repStaker1 has the reputation to stake
+        let rsBal = await obj.utils.getRepBalance(obj.user.repStaker1)
+        assert.isAtLeast(rsBal, repToStake, 'repStaker1 doesn\'t have enough rep to stake')
+
+        // stake
+        await obj.contracts.RR.stakeReputation(projArray[i][j], repToStake, {from: obj.user.repStaker1})
+      }
+    }
+
     // increase time 1 week + 1 ms to make sure that checkStaked() doesn't bug out
     await evmIncreaseTime(604801)
 

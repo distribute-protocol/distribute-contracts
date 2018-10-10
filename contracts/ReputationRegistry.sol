@@ -419,10 +419,13 @@ contract ReputationRegistry is Ownable {
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 refund = _projectAddress.refundStaker(msg.sender, address(this));
         require(refund > 0);
-        uint256 reward = refund / 2;
-        users[msg.sender].balance = users[msg.sender].balance.add(refund).add(reward);
-        totalSupply = totalSupply.add(reward);
         Project(_projectAddress).clearReputationStake(msg.sender);
+        users[msg.sender].balance = users[msg.sender].balance.add(refund);
+        if (Project(_projectAddress).state() == 6) {
+          uint256 reward = refund / 2;
+          users[msg.sender].balance = users[msg.sender].balance.add(reward);
+          totalSupply = totalSupply.add(reward);
+        }
     }
 
     /**
