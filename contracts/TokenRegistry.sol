@@ -416,6 +416,7 @@ contract TokenRegistry is Ownable {
     function refundVotingTokens(uint256 _votes) external {
         require(!freeze);
         uint userVotes = plcrVoting.getAvailableTokens(msg.sender, 1);
+        require(_votes <= userVotes);
         uint votesPrice = squaredAmount(userVotes) - squaredAmount(userVotes - _votes);
         plcrVoting.withdrawVotingRights(msg.sender, _votes);
         distributeToken.transferFromEscrow(msg.sender, votesPrice);
@@ -448,7 +449,6 @@ contract TokenRegistry is Ownable {
     function rescueTokens(address _projectAddress, uint _index) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
-        //rescue locked tokens that weren't revealed
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         plcrVoting.rescueTokens(msg.sender, pollId);
         emit LogTokenVoteRescued(_projectAddress, _index, pollId, msg.sender);

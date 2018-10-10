@@ -404,8 +404,8 @@ contract ReputationRegistry is Ownable {
         uint userVotes = plcrVoting.getAvailableTokens(msg.sender, 2);
         require(_votes <= userVotes);
         uint votesPrice = squaredAmount(userVotes) - squaredAmount(userVotes - _votes);
-        users[msg.sender].balance += votesPrice;
         plcrVoting.withdrawVotingRights(msg.sender, _votes);
+        users[msg.sender].balance += votesPrice;
     }
 
     // =====================================================================
