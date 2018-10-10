@@ -15,6 +15,7 @@ contract('Voting State', (accounts) => {
   // get project helper variables
   let TR, RR, PR, PLCR
   let {user, project, utils, returnProject, task, voting} = projObj
+  let {tokenProposer, repProposer, notProposer} = user
   let {repYesVoter, repNoVoter, tokenYesVoter, tokenNoVoter, notVoter, cheekyYesVoter, cheekyNoVoter} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
   let {voteAmount, voteAmountMore} = voting
@@ -71,6 +72,100 @@ contract('Voting State', (accounts) => {
     await utils.mintIfNecessary(cheekyNoVoter)
     await utils.register(cheekyYesVoter)
     await utils.register(cheekyNoVoter)
+  })
+
+  describe('handle proposer', () => {
+    it('not proposer can\'t call refund proposer from token registry', async () => {
+      errorThrown = false
+      try {
+        await TR.refundProposer(projAddrT, {from: notProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('not proposer can\'t call refund proposer from reputation registry', async () => {
+      errorThrown = false
+      try {
+        await RR.refundProposer(projAddrR, {from: notProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    // these two tests must come after not proposer refund proposer tests
+    it('refund proposer can be called on TR complete project', async () => {
+      // take stock of variables
+      let proposedWeiCost = await project.getProposedWeiCost(projAddrT)
+
+      let tpBalBefore = await utils.getTokenBalance(tokenProposer)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let weiPoolBefore = await utils.getWeiPoolBal()
+      let proposerStakeBefore = await project.getProposerStake(projAddrT)
+
+      // call refund proposer
+      await TR.refundProposer(projAddrT, {from: tokenProposer})
+
+      // take stock of variables
+      let tpBalAfter = await utils.getTokenBalance(tokenProposer)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let weiPoolAfter = await utils.getWeiPoolBal()
+      let proposerStakeAfter = await project.getProposerStake(projAddrT)
+
+      // checks
+      assert.equal(tpBalBefore + proposerStakeBefore, tpBalAfter, 'tokenProposer balance updated incorrectly')
+      assert.equal(TRBalBefore, TRBalAfter + proposerStakeBefore, 'TR balance updated incorrectly')
+      assert.equal(weiPoolBefore - Math.floor(proposedWeiCost / 20), weiPoolAfter, 'wei pool should be 5% of the project\'s proposed cost less')
+      assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
+    })
+
+    it('refund proposer can be called on RR complete project', async () => {
+      // take stock of variables
+      let proposedWeiCost = await project.getProposedWeiCost(projAddrR)
+
+      let rpBalBefore = await utils.getRepBalance(repProposer)
+      let weiPoolBefore = await utils.getWeiPoolBal()
+      let proposerStakeBefore = await project.getProposerStake(projAddrR)
+
+      // call refund proposer
+      await RR.refundProposer(projAddrR, {from: repProposer})
+
+      // take stock of variables
+      let rpBalAfter = await utils.getRepBalance(repProposer)
+      let weiPoolAfter = await utils.getWeiPoolBal()
+      let proposerStakeAfter = await project.getProposerStake(projAddrR)
+
+      // checks
+      assert.equal(rpBalBefore + proposerStakeBefore, rpBalAfter, 'tokenProposer balance updated incorrectly')
+      assert.equal(weiPoolBefore - Math.floor(proposedWeiCost / 20), weiPoolAfter, 'wei pool should be 5% of the project\'s proposed cost less')
+      assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
+    })
+
+    it('proposer can\'t call refund proposer multiple times from token registry', async () => {
+      errorThrown = false
+      try {
+        await TR.refundProposer(projAddrT, {from: tokenProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('proposer can\'t call refund proposer multiple times from reputation registry', async () => {
+      errorThrown = false
+      try {
+        await RR.refundProposer(projAddrR, {from: repProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
   })
 
   describe('committing yes votes with tokens', () => {

@@ -14,6 +14,7 @@ contract('Active State', (accounts) => {
   // get project helper variables
   let TR, RR, PR
   let {user, project, utils, returnProject, task} = projObj
+  let {tokenProposer, repProposer, notProposer} = user
   let {repStaker1} = user
   let {worker1, worker2, notWorker} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
@@ -51,8 +52,102 @@ contract('Active State', (accounts) => {
     projAddrR = projArray[0][1]
   })
 
+  describe('handle proposer', () => {
+    it('not proposer can\'t call refund proposer from token registry', async () => {
+      errorThrown = false
+      try {
+        await TR.refundProposer(projAddrT, {from: notProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('not proposer can\'t call refund proposer from reputation registry', async () => {
+      errorThrown = false
+      try {
+        await RR.refundProposer(projAddrR, {from: notProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    // these two tests must come after not proposer refund proposer tests
+    it('refund proposer can be called on TR complete project', async () => {
+      // take stock of variables
+      let proposedWeiCost = await project.getProposedWeiCost(projAddrT)
+
+      let tpBalBefore = await utils.getTokenBalance(tokenProposer)
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let weiPoolBefore = await utils.getWeiPoolBal()
+      let proposerStakeBefore = await project.getProposerStake(projAddrT)
+
+      // call refund proposer
+      await TR.refundProposer(projAddrT, {from: tokenProposer})
+
+      // take stock of variables
+      let tpBalAfter = await utils.getTokenBalance(tokenProposer)
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let weiPoolAfter = await utils.getWeiPoolBal()
+      let proposerStakeAfter = await project.getProposerStake(projAddrT)
+
+      // checks
+      assert.equal(tpBalBefore + proposerStakeBefore, tpBalAfter, 'tokenProposer balance updated incorrectly')
+      assert.equal(TRBalBefore, TRBalAfter + proposerStakeBefore, 'TR balance updated incorrectly')
+      assert.equal(weiPoolBefore - Math.floor(proposedWeiCost / 20), weiPoolAfter, 'wei pool should be 5% of the project\'s proposed cost less')
+      assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
+    })
+
+    it('refund proposer can be called on RR complete project', async () => {
+      // take stock of variables
+      let proposedWeiCost = await project.getProposedWeiCost(projAddrR)
+
+      let rpBalBefore = await utils.getRepBalance(repProposer)
+      let weiPoolBefore = await utils.getWeiPoolBal()
+      let proposerStakeBefore = await project.getProposerStake(projAddrR)
+
+      // call refund proposer
+      await RR.refundProposer(projAddrR, {from: repProposer})
+
+      // take stock of variables
+      let rpBalAfter = await utils.getRepBalance(repProposer)
+      let weiPoolAfter = await utils.getWeiPoolBal()
+      let proposerStakeAfter = await project.getProposerStake(projAddrR)
+
+      // checks
+      assert.equal(rpBalBefore + proposerStakeBefore, rpBalAfter, 'tokenProposer balance updated incorrectly')
+      assert.equal(weiPoolBefore - Math.floor(proposedWeiCost / 20), weiPoolAfter, 'wei pool should be 5% of the project\'s proposed cost less')
+      assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
+    })
+
+    it('proposer can\'t call refund proposer multiple times from token registry', async () => {
+      errorThrown = false
+      try {
+        await TR.refundProposer(projAddrT, {from: tokenProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('proposer can\'t call refund proposer multiple times from reputation registry', async () => {
+      errorThrown = false
+      try {
+        await RR.refundProposer(projAddrR, {from: repProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+  })
+
   describe('submitting hash lists to active projects', () => {
-    it('Incorrect hash list can\'t be submitted to TR active project', async () => {
+    it('incorrect hash list can\'t be submitted to TR active project', async () => {
       errorThrown = false
       try {
         await PR.submitHashList(projAddrT, hashTasks(taskSet2), {from: repStaker1})
@@ -62,7 +157,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Incorrect hash list can\'t be submitted to RR active project', async () => {
+    it('incorrect hash list can\'t be submitted to RR active project', async () => {
       errorThrown = false
       try {
         await PR.submitHashList(projAddrR, hashTasks(taskSet2), {from: repStaker1})
@@ -72,7 +167,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Correct hash list can be submitted to TR active project', async () => {
+    it('correct hash list can be submitted to TR active project', async () => {
       // getting the 0 index of the task array should fail before submitting hash list
       errorThrown = false
       try {
@@ -108,7 +203,7 @@ contract('Active State', (accounts) => {
       assert.equal(hashListSubmittedAfter, true, 'hash list submitted flag is incorrect')
     })
 
-    it('Correct hash list can be submitted to RR active project', async () => {
+    it('correct hash list can be submitted to RR active project', async () => {
       // getting the 0 index of the task array should fail before submitting hash list
       errorThrown = false
       try {
@@ -144,7 +239,7 @@ contract('Active State', (accounts) => {
       assert.equal(hashListSubmittedAfter, true, 'hash list submitted flag is incorrect')
     })
 
-    it('Correct hash list can\'t be resubmitted to TR active project', async () => {
+    it('correct hash list can\'t be resubmitted to TR active project', async () => {
       errorThrown = false
       try {
         await PR.submitHashList(projAddrT, hashTasks(taskSet1), {from: repStaker1})
@@ -154,7 +249,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Correct hash list can\'t be resubmitted to RR active project', async () => {
+    it('correct hash list can\'t be resubmitted to RR active project', async () => {
       errorThrown = false
       try {
         await PR.submitHashList(projAddrR, hashTasks(taskSet1), {from: repStaker1})
@@ -166,7 +261,7 @@ contract('Active State', (accounts) => {
   })
 
   describe('claiming tasks pre-turnover time', () => {
-    it('Worker with enough reputation can claim a task from TR active project', async () => {
+    it('worker with enough reputation can claim a task from TR active project', async () => {
       // register worker
       await utils.register(worker1)
 
@@ -211,7 +306,7 @@ contract('Active State', (accounts) => {
       assert.equal(taskClaimerAfter, worker1, 'task given incorrect claimer')
     })
 
-    it('Worker with enough reputation can claim a task from RR active project', async () => {
+    it('worker with enough reputation can claim a task from RR active project', async () => {
       // register worker
       await utils.register(worker1)
 
@@ -256,7 +351,7 @@ contract('Active State', (accounts) => {
       assert.equal(taskClaimerAfter, worker1, 'task given incorrect claimer')
     })
 
-    it('Same worker with enough reputation can claim a task from TR active project', async () => {
+    it('same worker with enough reputation can claim a task from TR active project', async () => {
       // register worker
       await utils.register(worker1)
 
@@ -301,7 +396,7 @@ contract('Active State', (accounts) => {
       assert.equal(taskClaimerAfter, worker1, 'task given incorrect claimer')
     })
 
-    it('Same worker with enough reputation can claim a task from RR active project', async () => {
+    it('same worker with enough reputation can claim a task from RR active project', async () => {
       // register worker
       await utils.register(worker1)
 
@@ -346,7 +441,7 @@ contract('Active State', (accounts) => {
       assert.equal(taskClaimerAfter, worker1, 'task given incorrect claimer')
     })
 
-    it('Worker with enough reputation can\'t claim the same task from TR active project', async () => {
+    it('worker with enough reputation can\'t claim the same task from TR active project', async () => {
       let description = taskSet1[indexNoReclaimPre].description
       let weighting = taskSet1[indexNoReclaimPre].weighting
 
@@ -359,7 +454,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker with enough reputation can\'t claim the same task from RR active project', async () => {
+    it('worker with enough reputation can\'t claim the same task from RR active project', async () => {
       let description = taskSet1[indexNoReclaimPre].description
       let weighting = taskSet1[indexNoReclaimPre].weighting
 
@@ -372,7 +467,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Different worker with enough reputation can claim a different task from TR active project', async () => {
+    it('different worker with enough reputation can claim a different task from TR active project', async () => {
       // register worker
       await utils.register(worker2)
 
@@ -417,7 +512,7 @@ contract('Active State', (accounts) => {
       assert.equal(taskClaimerAfter, worker2, 'task given incorrect claimer')
     })
 
-    it('Different worker with enough reputation can claim a different task from RR active project', async () => {
+    it('different worker with enough reputation can claim a different task from RR active project', async () => {
       // register worker
       await utils.register(worker2)
 
@@ -462,7 +557,7 @@ contract('Active State', (accounts) => {
       assert.equal(taskClaimerAfter, worker2, 'task given incorrect claimer')
     })
 
-    it('Worker without enough reputation can\'t claim a task from TR active project', async () => {
+    it('worker without enough reputation can\'t claim a task from TR active project', async () => {
       let description = taskSet1[indexThrowaway].description
       let weighting = taskSet1[indexThrowaway].weighting
 
@@ -475,7 +570,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker without enough reputation can\'t claim a task from RR active project', async () => {
+    it('worker without enough reputation can\'t claim a task from RR active project', async () => {
       let description = taskSet1[indexThrowaway].description
       let weighting = taskSet1[indexThrowaway].weighting
 
@@ -488,7 +583,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker can\'t claim task from TR active project with incorrect weighting', async () => {
+    it('worker can\'t claim task from TR active project with incorrect weighting', async () => {
       let description = taskSet1[indexThrowaway].description
       let weighting = taskSet1[indexThrowaway].weighting + 1
 
@@ -501,7 +596,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker can\'t claim task from RR active project with incorrect weighting', async () => {
+    it('worker can\'t claim task from RR active project with incorrect weighting', async () => {
       let description = taskSet1[indexThrowaway].description
       let weighting = taskSet1[indexThrowaway].weighting + 1
 
@@ -514,7 +609,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker can\'t claim task from TR active project with incorrect description', async () => {
+    it('worker can\'t claim task from TR active project with incorrect description', async () => {
       let description = taskSet1[indexThrowaway].description + 'yolo'
       let weighting = taskSet1[indexThrowaway].weighting
 
@@ -527,7 +622,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker can\'t claim task from RR active project with incorrect description', async () => {
+    it('worker can\'t claim task from RR active project with incorrect description', async () => {
       let description = taskSet1[indexThrowaway].description + 'yolo'
       let weighting = taskSet1[indexThrowaway].weighting
 
@@ -540,7 +635,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker can\'t claim nonexistant task from TR active project', async () => {
+    it('worker can\'t claim nonexistant task from TR active project', async () => {
       let description = taskSet1[indexThrowaway].description
       let weighting = taskSet1[indexThrowaway].weighting
 
@@ -553,7 +648,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker can\'t claim nonexistant task from RR active project', async () => {
+    it('worker can\'t claim nonexistant task from RR active project', async () => {
       let description = taskSet1[indexThrowaway].description
       let weighting = taskSet1[indexThrowaway].weighting
 
@@ -568,7 +663,7 @@ contract('Active State', (accounts) => {
   })
 
   describe('marking tasks complete pre-turnover time', () => {
-    it('Worker who claimed a task from TR active project can mark it complete before turnaround time', async () => {
+    it('worker who claimed a task from TR active project can mark it complete before turnaround time', async () => {
       // take stock of variables before
       let taskCompleteBefore = await task.getComplete(projAddrT, indexNoReclaimPre)
 
@@ -583,7 +678,7 @@ contract('Active State', (accounts) => {
       assert.equal(taskCompleteAfter, true, 'incorrect taskCompleteAfter')
     })
 
-    it('Worker who claimed a task from RR active project can mark it complete before turnaround time', async () => {
+    it('worker who claimed a task from RR active project can mark it complete before turnaround time', async () => {
       // take stock of variables before
       let taskCompleteBefore = await task.getComplete(projAddrR, indexNoReclaimPre)
 
@@ -598,7 +693,7 @@ contract('Active State', (accounts) => {
       assert.equal(taskCompleteAfter, true, 'incorrect taskCompleteAfter')
     })
 
-    it('Worker can\'t mark a task from TR active project complete again', async () => {
+    it('worker can\'t mark a task from TR active project complete again', async () => {
       errorThrown = false
       try {
         await PR.submitTaskComplete(projAddrT, indexReclaim, {from: worker1})
@@ -608,7 +703,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker can\'t mark a task from TR active project complete again', async () => {
+    it('worker can\'t mark a task from TR active project complete again', async () => {
       errorThrown = false
       try {
         await PR.submitTaskComplete(projAddrR, indexReclaim, {from: worker1})
@@ -618,7 +713,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker can\'t mark a task complete that they did not claim from TR active project', async () => {
+    it('worker can\'t mark a task complete that they did not claim from TR active project', async () => {
       errorThrown = false
       try {
         await PR.submitTaskComplete(projAddrT, indexReclaim, {from: notWorker})
@@ -628,7 +723,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker can\'t mark a task complete that they did not claim from RR active project', async () => {
+    it('worker can\'t mark a task complete that they did not claim from RR active project', async () => {
       errorThrown = false
       try {
         await PR.submitTaskComplete(projAddrR, indexReclaim, {from: notWorker})
@@ -652,7 +747,7 @@ contract('Active State', (accounts) => {
       await evmIncreaseTime(604800) // 1 week
     })
 
-    it('Worker with enough reputation can reclaim a task from TR active project that is claimed but not marked complete', async () => {
+    it('worker with enough reputation can reclaim a task from TR active project that is claimed but not marked complete', async () => {
       // take stock of variables before
       let description = taskSet1[indexReclaim].description
       let weighting = taskSet1[indexReclaim].weighting
@@ -693,7 +788,7 @@ contract('Active State', (accounts) => {
       assert.equal(taskClaimerAfter, worker1, 'task given incorrect claimer')
     })
 
-    it('Worker with enough reputation can reclaim a task from RR active project that is claimed but not marked complete', async () => {
+    it('worker with enough reputation can reclaim a task from RR active project that is claimed but not marked complete', async () => {
       // take stock of variables before
       let description = taskSet1[indexReclaim].description
       let weighting = taskSet1[indexReclaim].weighting
@@ -734,7 +829,7 @@ contract('Active State', (accounts) => {
       assert.equal(taskClaimerAfter, worker1, 'task given incorrect claimer')
     })
 
-    it('Worker with enough reputation can\'t reclaim that same task from TR active project', async () => {
+    it('worker with enough reputation can\'t reclaim that same task from TR active project', async () => {
       let description = taskSet1[indexReclaim].description
       let weighting = taskSet1[indexReclaim].weighting
 
@@ -747,7 +842,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker with enough reputation can\'t reclaim that same task from RR active project', async () => {
+    it('worker with enough reputation can\'t reclaim that same task from RR active project', async () => {
       let description = taskSet1[indexReclaim].description
       let weighting = taskSet1[indexReclaim].weighting
 
@@ -762,7 +857,7 @@ contract('Active State', (accounts) => {
   })
 
   describe('marking tasks complete post-turnover time', () => {
-    it('Worker who claimed a task from TR active project and is past their turnover time can mark it complete if the task wasn\'t reclaimed', async () => {
+    it('worker who claimed a task from TR active project and is past their turnover time can mark it complete if the task wasn\'t reclaimed', async () => {
       // take stock of variables before
       let taskCompleteBefore = await task.getComplete(projAddrT, indexNoReclaimPost)
 
@@ -777,7 +872,7 @@ contract('Active State', (accounts) => {
       assert.equal(taskCompleteAfter, true, 'incorrect taskCompleteAfter')
     })
 
-    it('Worker who claimed a task from RR active project and is past their turnover time can mark it complete if the task wasn\'t reclaimed', async () => {
+    it('worker who claimed a task from RR active project and is past their turnover time can mark it complete if the task wasn\'t reclaimed', async () => {
       // take stock of variables before
       let taskCompleteBefore = await task.getComplete(projAddrR, indexNoReclaimPost)
 
@@ -792,7 +887,7 @@ contract('Active State', (accounts) => {
       assert.equal(taskCompleteAfter, true, 'incorrect taskCompleteAfter')
     })
 
-    it('Worker who reclaimed a task from TR active project can mark it complete', async () => {
+    it('worker who reclaimed a task from TR active project can mark it complete', async () => {
       // take stock of variables before
       let taskCompleteBefore = await task.getComplete(projAddrT, indexReclaim)
 
@@ -807,7 +902,7 @@ contract('Active State', (accounts) => {
       assert.equal(taskCompleteAfter, true, 'incorrect taskCompleteAfter')
     })
 
-    it('Worker who reclaimed a task from RR active project can mark it complete', async () => {
+    it('worker who reclaimed a task from RR active project can mark it complete', async () => {
       // take stock of variables before
       let taskCompleteBefore = await task.getComplete(projAddrR, indexReclaim)
 
@@ -822,7 +917,7 @@ contract('Active State', (accounts) => {
       assert.equal(taskCompleteAfter, true, 'incorrect taskCompleteAfter')
     })
 
-    it('Worker can\'t mark a task from TR active project complete again', async () => {
+    it('worker can\'t mark a task from TR active project complete again', async () => {
       errorThrown = false
       try {
         await PR.submitTaskComplete(projAddrT, indexReclaim, {from: worker1})
@@ -832,7 +927,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker can\'t mark a task from TR active project complete again', async () => {
+    it('worker can\'t mark a task from TR active project complete again', async () => {
       errorThrown = false
       try {
         await PR.submitTaskComplete(projAddrR, indexReclaim, {from: worker1})
@@ -842,7 +937,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker can\'t mark a task from TR active project complete that was reclaimed from them', async () => {
+    it('worker can\'t mark a task from TR active project complete that was reclaimed from them', async () => {
       errorThrown = false
       try {
         await PR.submitTaskComplete(projAddrT, indexReclaim, {from: worker2})
@@ -852,7 +947,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Worker can\'t mark a task from RR active project complete that was reclaimed from them', async () => {
+    it('worker can\'t mark a task from RR active project complete that was reclaimed from them', async () => {
       errorThrown = false
       try {
         await PR.submitTaskComplete(projAddrR, indexReclaim, {from: worker2})
@@ -933,7 +1028,7 @@ contract('Active State', (accounts) => {
   })
 
   describe('mark task complete on validating projects', () => {
-    it('Claim task can\'t be called on task from TR validating project', async () => {
+    it('claim task can\'t be called on task from TR validating project', async () => {
       let description = taskSet1[indexEndTest].description
       let weighting = taskSet1[indexEndTest].weighting
 
@@ -946,7 +1041,10 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Claim task can\'t be called on task from RR validating project', async () => {
+    it('claim task can\'t be called on task from RR validating project', async () => {
+      let description = taskSet1[indexEndTest].description
+      let weighting = taskSet1[indexEndTest].weighting
+
       errorThrown = false
       try {
         await RR.claimTask(projAddrR, indexEndTest, description, weighting, {from: worker1})
@@ -956,7 +1054,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Mark task complete can\'t be called on task from TR validating project', async () => {
+    it('mark task complete can\'t be called on task from TR validating project', async () => {
       errorThrown = false
       try {
         await PR.submitTaskComplete(projAddrT, indexThrowaway, {from: worker2})
@@ -966,7 +1064,7 @@ contract('Active State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Mark task complete can\'t be called on task from RR validating project', async () => {
+    it('mark task complete can\'t be called on task from RR validating project', async () => {
       errorThrown = false
       try {
         await PR.submitTaskComplete(projAddrR, indexThrowaway, {from: worker2})

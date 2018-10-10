@@ -98,7 +98,6 @@ contract('Complete State', (accounts) => {
       let tpBalBefore = await utils.getTokenBalance(tokenProposer)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
       let weiPoolBefore = await utils.getWeiPoolBal()
-      let projWeiBalBefore = await project.getWeiCost(projAddrT, true)
       let proposerStakeBefore = await project.getProposerStake(projAddrT)
 
       // call refund proposer
@@ -108,16 +107,12 @@ contract('Complete State', (accounts) => {
       let tpBalAfter = await utils.getTokenBalance(tokenProposer)
       let TRBalAfter = await utils.getTokenBalance(TR.address)
       let weiPoolAfter = await utils.getWeiPoolBal()
-      let projWeiBalAfter = await project.getWeiCost(projAddrT, true)
       let proposerStakeAfter = await project.getProposerStake(projAddrT)
-
-      let projWeiCostDifference = projWeiBalBefore.minus(projWeiBalAfter).toNumber()
 
       // checks
       assert.equal(tpBalBefore + proposerStakeBefore, tpBalAfter, 'tokenProposer balance updated incorrectly')
       assert.equal(TRBalBefore, TRBalAfter + proposerStakeBefore, 'TR balance updated incorrectly')
       assert.equal(weiPoolBefore - Math.floor(proposedWeiCost / 20), weiPoolAfter, 'wei pool should be 5% of the project\'s proposed cost less')
-      assert.equal(projWeiCostDifference, 0, 'project wei cost should remain the same')
       assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
     })
 
@@ -127,7 +122,6 @@ contract('Complete State', (accounts) => {
 
       let rpBalBefore = await utils.getRepBalance(repProposer)
       let weiPoolBefore = await utils.getWeiPoolBal()
-      let projWeiBalBefore = await project.getWeiCost(projAddrR, true)
       let proposerStakeBefore = await project.getProposerStake(projAddrR)
 
       // call refund proposer
@@ -136,15 +130,11 @@ contract('Complete State', (accounts) => {
       // take stock of variables
       let rpBalAfter = await utils.getRepBalance(repProposer)
       let weiPoolAfter = await utils.getWeiPoolBal()
-      let projWeiBalAfter = await project.getWeiCost(projAddrR, true)
       let proposerStakeAfter = await project.getProposerStake(projAddrR)
-
-      let projWeiCostDifference = projWeiBalBefore.minus(projWeiBalAfter).toNumber()
 
       // checks
       assert.equal(rpBalBefore + proposerStakeBefore, rpBalAfter, 'tokenProposer balance updated incorrectly')
       assert.equal(weiPoolBefore - Math.floor(proposedWeiCost / 20), weiPoolAfter, 'wei pool should be 5% of the project\'s proposed cost less')
-      assert.equal(projWeiCostDifference, 0, 'project wei cost should remain the same')
       assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
     })
 
