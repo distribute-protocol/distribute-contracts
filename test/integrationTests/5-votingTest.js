@@ -6,6 +6,10 @@ const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const taskDetails = require('../utils/taskDetails')
 
+const Web3 = require('web3')
+const web3 = new Web3()
+web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'))
+
 const ethers = require('ethers')
 
 contract('Voting State', (accounts) => {
@@ -16,6 +20,7 @@ contract('Voting State', (accounts) => {
   let TR, RR, PR, PLCR
   let {user, project, utils, returnProject, task, voting} = projObj
   let {tokenProposer, repProposer, notProposer} = user
+  let {worker1, worker2, notWorker} = user
   let {repYesVoter, repNoVoter, tokenYesVoter, tokenNoVoter, notVoter, cheekyYesVoter, cheekyNoVoter} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
   let {voteAmount, voteAmountMore} = voting
@@ -98,7 +103,7 @@ contract('Voting State', (accounts) => {
     })
 
     // these two tests must come after not proposer refund proposer tests
-    it('refund proposer can be called on TR complete project', async () => {
+    it('refund proposer can be called on TR voting project', async () => {
       // take stock of variables
       let proposedWeiCost = await project.getProposedWeiCost(projAddrT)
 
@@ -123,7 +128,7 @@ contract('Voting State', (accounts) => {
       assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
     })
 
-    it('refund proposer can be called on RR complete project', async () => {
+    it('refund proposer can be called on RR voting project', async () => {
       // take stock of variables
       let proposedWeiCost = await project.getProposedWeiCost(projAddrR)
 
@@ -160,6 +165,200 @@ contract('Voting State', (accounts) => {
       errorThrown = false
       try {
         await RR.refundProposer(projAddrR, {from: repProposer})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+  })
+
+  describe('handle workers', () => {
+    it('worker can ask for reward from TR voting project', async () => {
+      let index = 0
+
+      // take stock of variables before
+      let totalRepBefore = await utils.getTotalRep()
+      let rwBalBefore = await utils.getRepBalance(worker1)
+      let projWeiBalVariableBefore = await project.getWeiBal(projAddrT)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
+      let repRewardBefore = await task.getRepReward(projAddrT, index)
+      let weiRewardBefore = await task.getWeiReward(projAddrT, index)
+
+      // reward worker
+      await RR.rewardTask(projAddrT, index, {from: worker1})
+
+      // take stock of variables after
+      let totalRepAfter = await utils.getTotalRep()
+      let rwBalAfter = await utils.getRepBalance(worker1)
+      let projWeiBalVariableAfter = await project.getWeiBal(projAddrT)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
+      let repRewardAfter = await task.getRepReward(projAddrT, index)
+      let weiRewardAfter = await task.getWeiReward(projAddrT, index)
+
+      // checks
+      assert.equal(totalRepBefore, totalRepAfter, 'total reputation should not change')
+      assert.equal(rwBalBefore + repRewardBefore, rwBalAfter, 'incorrect worker rep balance post-refund')
+      assert.equal(projWeiBalVariableBefore, projWeiBalVariableAfter + weiRewardBefore, 'project wei bal variable updated incorrectly')
+      assert.equal(projWeiBalBefore, projWeiBalAfter + weiRewardBefore, 'incorrect wei reward sent from project')
+      assert.equal(repRewardAfter, 0, 'rep reward not zeroed out')
+      assert.equal(weiRewardAfter, 0, 'wei reward not zeroed out')
+    })
+
+    it('worker can ask for reward from RR voting project', async () => {
+      let index = 0
+
+      // take stock of variables before
+      let totalRepBefore = await utils.getTotalRep()
+      let rwBalBefore = await utils.getRepBalance(worker1)
+      let projWeiBalVariableBefore = await project.getWeiBal(projAddrR)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR))
+      let repRewardBefore = await task.getRepReward(projAddrR, index)
+      let weiRewardBefore = await task.getWeiReward(projAddrR, index)
+
+      // reward worker
+      await RR.rewardTask(projAddrR, index, {from: worker1})
+
+      // take stock of variables after
+      let totalRepAfter = await utils.getTotalRep()
+      let rwBalAfter = await utils.getRepBalance(worker1)
+      let projWeiBalVariableAfter = await project.getWeiBal(projAddrR)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR))
+      let repRewardAfter = await task.getRepReward(projAddrR, index)
+      let weiRewardAfter = await task.getWeiReward(projAddrR, index)
+
+      // checks
+      assert.equal(totalRepBefore, totalRepAfter, 'total reputation should not change')
+      assert.equal(rwBalBefore + repRewardBefore, rwBalAfter, 'incorrect worker rep balance post-refund')
+      assert.equal(projWeiBalVariableBefore, projWeiBalVariableAfter + weiRewardBefore, 'project wei bal variable updated incorrectly')
+      assert.equal(projWeiBalBefore, projWeiBalAfter + weiRewardBefore, 'incorrect wei reward sent from project')
+      assert.equal(repRewardAfter, 0, 'rep reward not zeroed out')
+      assert.equal(weiRewardAfter, 0, 'wei reward not zeroed out')
+    })
+
+    it('worker can\'t ask for reward they\'ve already received from TR voting project', async () => {
+      let index = 0
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrT, index, {from: worker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward they\'ve already received from RR voting project', async () => {
+      let index = 0
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrT, index, {from: worker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task validated only false in TR voting project', async () => {
+      let index = 1
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrT, index, {from: worker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task validated only false in RR voting project', async () => {
+      let index = 1
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrR, index, {from: worker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task validated true and false in TR voting project', async () => {
+      let index = 2
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrT, index, {from: worker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task validated true and false in RR voting project', async () => {
+      let index = 2
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrR, index, {from: worker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task not validated in TR voting project', async () => {
+      let index = 6
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrT, index, {from: worker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task not validated in RR voting project', async () => {
+      let index = 6
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrR, index, {from: worker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('not worker can\'t ask for reward from TR voting project', async () => {
+      let index = 1
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrT, index, {from: notWorker})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('not worker can\'t ask for reward from RR voting project', async () => {
+      let index = 1
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrR, index, {from: notWorker})
       } catch (e) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true

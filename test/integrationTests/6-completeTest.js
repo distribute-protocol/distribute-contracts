@@ -289,6 +289,7 @@ contract('Complete State', (accounts) => {
       try {
         await TR.refundStaker(projAddrT, {from: notStaker})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -299,6 +300,7 @@ contract('Complete State', (accounts) => {
       try {
         await TR.refundStaker(projAddrR, {from: notStaker})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -309,6 +311,7 @@ contract('Complete State', (accounts) => {
       try {
         await RR.refundStaker(projAddrT, {from: notStaker})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -319,6 +322,7 @@ contract('Complete State', (accounts) => {
       try {
         await RR.refundStaker(projAddrR, {from: notStaker})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -511,6 +515,7 @@ contract('Complete State', (accounts) => {
       try {
         await RR.rewardTask(projAddrT, index, {from: worker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -523,6 +528,7 @@ contract('Complete State', (accounts) => {
       try {
         await RR.rewardTask(projAddrT, index, {from: worker1})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -535,6 +541,7 @@ contract('Complete State', (accounts) => {
       try {
         await RR.rewardTask(projAddrT, index, {from: notWorker})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -547,6 +554,7 @@ contract('Complete State', (accounts) => {
       try {
         await RR.rewardTask(projAddrR, index, {from: notWorker})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -774,6 +782,7 @@ contract('Complete State', (accounts) => {
         // attempt to refund not validator on index validated false more (still has validations left on it)
         await TR.rewardValidator(projAddrT, 2, {from: notValidator})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -785,6 +794,7 @@ contract('Complete State', (accounts) => {
         // attempt to refund not validator on index validated false more (still has validations left on it)
         await TR.rewardValidator(projAddrT, 2, {from: notValidator})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -864,6 +874,7 @@ contract('Complete State', (accounts) => {
       try {
         await TR.refundVotingTokens(availableVotesBefore - lockedTokens + 1, {from: tokenYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -902,6 +913,7 @@ contract('Complete State', (accounts) => {
       try {
         await TR.refundVotingTokens(availableVotesBefore - lockedTokens + 1, {from: tokenNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -940,6 +952,7 @@ contract('Complete State', (accounts) => {
       try {
         await RR.refundVotingReputation(availableVotesBefore - lockedTokens + 1, {from: repYesVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -975,6 +988,7 @@ contract('Complete State', (accounts) => {
       try {
         await RR.refundVotingReputation(availableVotesBefore - lockedTokens + 1, {from: repNoVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1007,6 +1021,7 @@ contract('Complete State', (accounts) => {
       try {
         await TR.refundVotingTokens(voteAmount, {from: notVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
@@ -1017,6 +1032,7 @@ contract('Complete State', (accounts) => {
       try {
         await RR.refundVotingReputation(voteAmount, {from: notVoter})
       } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')

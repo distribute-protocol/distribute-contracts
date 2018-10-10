@@ -3,15 +3,14 @@
 
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
-const taskDetails = require('../utils/taskDetails')
 
 contract('Expired State', (accounts) => {
   // set up project helper
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let TR, RR, DT, PR, PLCR
-  let {user, project, utils, returnProject, task} = projObj
+  let TR, RR
+  let {user, project, utils, returnProject} = projObj
   let {proposer} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
 
