@@ -34,7 +34,7 @@ contract('Voting State', (accounts) => {
   let errorThrown
   let projAddrT, projAddrR
 
-  // define validation indices
+  // define task validation indices
   let valTrueOnly = 0
   let valFalseOnly = 1
   let valTrueMore1 = 2

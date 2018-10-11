@@ -32,8 +32,12 @@ contract('Complete State', (accounts) => {
   let errorThrown
   let projAddrT, projAddrR
 
-  let valType = [validating.valTrueOnly, validating.valTrueMore, validating.valFalseMore]
+  // define task validation & voting indices
+  let valTrueOnly = 0
+  let valTrueMoreVoteTrueMore = 1
+  let valFalseMoreVoteTrueMore = 2
 
+  let valType = [validating.valTrueOnly, validating.valTrueMore, validating.valFalseMore]
   let voteType = [voting.voteNeither, voting.voteTrueMore, voting.voteTrueMore]
 
   let fastForwards = 16 // ganache 16 weeks ahead at this point from previous tests' evmIncreaseTime()
@@ -433,7 +437,7 @@ contract('Complete State', (accounts) => {
 
   describe('handle workers', () => {
     it('worker can ask for reward from TR complete project', async () => {
-      let index = 0
+      let index = valTrueOnly
 
       // take stock of variables before
       let totalRepBefore = await utils.getTotalRep()
@@ -464,7 +468,7 @@ contract('Complete State', (accounts) => {
     })
 
     it('worker can ask for reward from RR complete project', async () => {
-      let index = 0
+      let index = valTrueOnly
 
       // take stock of variables before
       let totalRepBefore = await utils.getTotalRep()
@@ -495,7 +499,7 @@ contract('Complete State', (accounts) => {
     })
 
     it('worker can\'t ask for reward they\'ve already received from TR complete project', async () => {
-      let index = 0
+      let index = valTrueOnly
 
       errorThrown = false
       try {
@@ -508,7 +512,7 @@ contract('Complete State', (accounts) => {
     })
 
     it('worker can\'t ask for reward they\'ve already received from RR complete project', async () => {
-      let index = 0
+      let index = valTrueOnly
 
       errorThrown = false
       try {
@@ -521,7 +525,7 @@ contract('Complete State', (accounts) => {
     })
 
     it('not worker can\'t ask for reward from TR complete project', async () => {
-      let index = 1
+      let index = valTrueMoreVoteTrueMore
 
       errorThrown = false
       try {
@@ -534,7 +538,7 @@ contract('Complete State', (accounts) => {
     })
 
     it('not worker can\'t ask for reward from RR complete project', async () => {
-      let index = 1
+      let index = valTrueMoreVoteTrueMore
 
       errorThrown = false
       try {
@@ -549,22 +553,22 @@ contract('Complete State', (accounts) => {
     it('all workers can be rewarded from TR complete project', async () => {
       // most things to be tests have been done in previous tests, but want to test that every TR.rewardTask() can be called
       // reward remaining workers
-      await RR.rewardTask(projAddrT, 1, {from: worker2})
-      await RR.rewardTask(projAddrT, 2, {from: worker1})
+      await RR.rewardTask(projAddrT, valTrueMoreVoteTrueMore, {from: worker2})
+      await RR.rewardTask(projAddrT, valFalseMoreVoteTrueMore, {from: worker1})
     })
 
     it('all workers can be rewarded from RR complete project', async () => {
       // most things to be tests have been done in previous tests, but want to test that every TR.rewardTask() can be called
       // reward remaining workers
-      await RR.rewardTask(projAddrR, 1, {from: worker2})
-      await RR.rewardTask(projAddrR, 2, {from: worker1})
+      await RR.rewardTask(projAddrR, valTrueMoreVoteTrueMore, {from: worker2})
+      await RR.rewardTask(projAddrR, valFalseMoreVoteTrueMore, {from: worker1})
     })
   })
 
   describe('handle validators', () => {
     it('yes validator can ask for refund & reward from TR complete project', async () => {
       // take stock of important environmental variables
-      let index = 0
+      let index = valTrueOnly
       let claimable = await task.getClaimable(projAddrT, index)
       let claimableByRep = await task.getClaimableByRep(projAddrT, index)
       let valDetails = await task.getValDetails(projAddrT, index, validator1)
@@ -614,7 +618,7 @@ contract('Complete State', (accounts) => {
 
     it('yes validator can ask for refund & reward from RR complete project', async () => {
       // take stock of important environmental variables
-      let index = 0
+      let index = valTrueOnly
       let claimable = await task.getClaimable(projAddrR, index)
       let claimableByRep = await task.getClaimableByRep(projAddrR, index)
       let valDetails = await task.getValDetails(projAddrR, index, validator1)
@@ -664,7 +668,7 @@ contract('Complete State', (accounts) => {
 
     it('no validator can ask for half refund from TR complete project', async () => {
       // take stock of important environmental variables
-      let index = 1
+      let index = valTrueMoreVoteTrueMore
       let claimable = await task.getClaimable(projAddrT, index)
       let claimableByRep = await task.getClaimableByRep(projAddrT, index)
       let valDetails = await task.getValDetails(projAddrT, index, validator2)
@@ -714,7 +718,7 @@ contract('Complete State', (accounts) => {
 
     it('no validator can ask for half reward from RR complete project', async () => {
       // take stock of important environmental variables
-      let index = 1
+      let index = valTrueMoreVoteTrueMore
       let claimable = await task.getClaimable(projAddrR, index)
       let claimableByRep = await task.getClaimableByRep(projAddrR, index)
       let valDetails = await task.getValDetails(projAddrR, index, validator2)
@@ -791,7 +795,7 @@ contract('Complete State', (accounts) => {
       // as well as making sure that validator is rewarded proportionally correctly
 
       // calculate wei reward for validator 3 on index 1
-      let index = 1
+      let index = valTrueMoreVoteTrueMore
       let rewardWeighting = 45 // 2nd of 2 validators
       let validationReward = await project.getValidationReward(projAddrT, true)
       let taskWeighting = await task.getWeighting(projAddrT, index, true)
@@ -810,12 +814,12 @@ contract('Complete State', (accounts) => {
       assert.equal(projWeiBalAfter + weiReward, projWeiBalBefore, 'wei reward was not sent correctly to validator')
 
       // refund remaining yes validators
-      await TR.rewardValidator(projAddrT, 1, {from: validator1})
-      await TR.rewardValidator(projAddrT, 2, {from: validator1})
+      await TR.rewardValidator(projAddrT, valTrueMoreVoteTrueMore, {from: validator1})
+      await TR.rewardValidator(projAddrT, valFalseMoreVoteTrueMore, {from: validator1})
 
       // refund remaining no validators
-      await TR.rewardValidator(projAddrT, 2, {from: validator2})
-      await TR.rewardValidator(projAddrT, 2, {from: validator3})
+      await TR.rewardValidator(projAddrT, valFalseMoreVoteTrueMore, {from: validator2})
+      await TR.rewardValidator(projAddrT, valFalseMoreVoteTrueMore, {from: validator3})
     })
 
     it('all eligible validators can be reward from RR complete project', async () => {
@@ -823,7 +827,7 @@ contract('Complete State', (accounts) => {
       // as well as making sure that validator is rewarded proportionally correctly
 
       // calculate wei reward for validator 3 on index 1
-      let index = 1
+      let index = valTrueMoreVoteTrueMore
       let rewardWeighting = 45 // 2nd of 2 validators
       let validationReward = await project.getValidationReward(projAddrR, true)
       let taskWeighting = await task.getWeighting(projAddrR, index, true)
@@ -842,12 +846,12 @@ contract('Complete State', (accounts) => {
       assert.equal(projWeiBalAfter + weiReward, projWeiBalBefore, 'wei reward was not sent correctly to validator')
 
       // refund remaining yes validators
-      await TR.rewardValidator(projAddrR, 1, {from: validator1})
-      await TR.rewardValidator(projAddrR, 2, {from: validator1})
+      await TR.rewardValidator(projAddrR, valTrueMoreVoteTrueMore, {from: validator1})
+      await TR.rewardValidator(projAddrR, valFalseMoreVoteTrueMore, {from: validator1})
 
       // refund remaining no validators
-      await TR.rewardValidator(projAddrR, 2, {from: validator2})
-      await TR.rewardValidator(projAddrR, 2, {from: validator3})
+      await TR.rewardValidator(projAddrR, valFalseMoreVoteTrueMore, {from: validator2})
+      await TR.rewardValidator(projAddrR, valFalseMoreVoteTrueMore, {from: validator3})
     })
   })
 

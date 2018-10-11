@@ -15,7 +15,7 @@ contract('Failed State', (accounts) => {
 
   // get project helper variables
   let TR, RR, PLCR
-  let {user, project, task, utils, returnProject, voting} = projObj
+  let {user, project, task, utils, returnProject, validating, voting} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {tokenStaker1, tokenStaker2, repStaker1, repStaker2, notStaker} = user
   let {worker1, worker2, notWorker} = user
@@ -32,27 +32,21 @@ contract('Failed State', (accounts) => {
   let errorThrown
   let projAddrT, projAddrR
 
-  // define validation indices
+  // define task validation & voting indices
   let valTrueOnly = 0
   let valFalseOnly = 1
-  let valTrueMore1 = 2
-  let valFalseMore1 = 3
-  // below are of type valTrueMore & valFalseMore
-  let valTrueMore2 = 4
-  let valFalseMore2 = 5
-  let valTrueMore3 = 6
-  let valFalseMore3 = 7
-  let valNeither = 9
+  let valTrueMoreVoteTrueOnly = 2
+  let valFalseMoreVoteTrueOnly = 3
+  let valTrueMoreVoteFalseOnly = 4
+  let valFalseMoreVoteFalseOnly = 5
+  let valTrueMoreVoteTrueMore = 6
+  let valFalseMoreVoteTrueMore = 7
+  let valTrueMoreVoteFalseMore = 8
+  let valFalseMoreVoteFalseMore = 9
+  let valNeither = 10
 
-  let valType = [valTrueOnly, valFalseOnly, valTrueMore1, valFalseMore1, valTrueMore1, valFalseMore1, valTrueMore1, valFalseMore1, valTrueMore1, valFalseMore1, valNeither]
-  // define voting indices
-  let voteNeither = 0
-  let voteTrueOnly = 1
-  let voteFalseOnly = 2
-  let voteTrueMore = 3
-  let voteFalseMore = 4
-
-  let voteType = [voteNeither, voteNeither, voteTrueMore, voteTrueMore, voteFalseMore, voteFalseMore]
+  let valType = [validating.valTrueOnly, validating.valFalseOnly, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valNeither]
+  let voteType = [voting.voteNeither, voting.voteNeither, voting.voteTrueOnly, voting.voteTrueOnly, voting.voteFalseOnly, voting.voteFalseOnly, voting.voteTrueMore, voting.voteTrueMore, voting.voteFalseMore, voting.voteFalseMore, voting.voteNeithert]
 
   let fastForwards = 16 // ganache 16 weeks ahead at this point from previous tests' evmIncreaseTime()
 
