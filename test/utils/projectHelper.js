@@ -106,8 +106,10 @@ module.exports = function projectHelper (accounts) {
   obj.voting.secretSalt = 10000
   obj.voting.voteYes = 1
   obj.voting.voteNo = 0
-  obj.voting.voteAmount = 2
-  obj.voting.voteAmountMore = 3
+
+  obj.voting.voteAmountLess = 2
+  obj.voting.voteAmount = 3
+  obj.voting.voteAmountMore = 4
 
   obj.voting.voteNeither = 0
   obj.voting.voteTrueOnly = 1
@@ -869,7 +871,9 @@ module.exports = function projectHelper (accounts) {
       await obj.utils.register(obj.user.repYesVoter)
       await obj.utils.register(obj.user.repNoVoter)
 
-      if (_voteType[j] === obj.voting.voteTrueOnly) {
+      if (_voteType[j] === obj.voting.voteNeither) {
+        // do nothing
+      } else if (_voteType[j] === obj.voting.voteTrueOnly) {
         secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [obj.voting.voteYes, obj.voting.secretSalt])
         await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenYesVoter})
         await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenYesVoter})
@@ -893,20 +897,20 @@ module.exports = function projectHelper (accounts) {
         await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.tokenNoVoter})
         await obj.contracts.RR.voteCommit(projArray[0][0], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.repNoVoter})
         await obj.contracts.RR.voteCommit(projArray[0][1], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.repNoVoter})
-      } else if (_voteType[j] === obj.voting.voteFalseOnly) {
+      } else if (_voteType[j] === obj.voting.voteFalseMore) {
         secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [obj.voting.voteYes, obj.voting.secretSalt])
-        await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.tokenYesVoter})
-        await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.tokenYesVoter})
-        await obj.contracts.RR.voteCommit(projArray[0][0], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.repYesVoter})
-        await obj.contracts.RR.voteCommit(projArray[0][1], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.repYesVoter})
+        console.log('before commit yes')
+        await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmountLess, secretHash, 0, {from: obj.user.tokenYesVoter})
+        await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmountLess, secretHash, 0, {from: obj.user.tokenYesVoter})
+        await obj.contracts.RR.voteCommit(projArray[0][0], j, obj.voting.voteAmountLess, secretHash, 0, {from: obj.user.repYesVoter})
+        await obj.contracts.RR.voteCommit(projArray[0][1], j, obj.voting.voteAmountLess, secretHash, 0, {from: obj.user.repYesVoter})
 
         secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [obj.voting.voteNo, obj.voting.secretSalt])
-        await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenNoVoter})
-        await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenNoVoter})
-        await obj.contracts.RR.voteCommit(projArray[0][0], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.repNoVoter})
-        await obj.contracts.RR.voteCommit(projArray[0][1], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.repNoVoter})
-      } else if (_voteType[j] === obj.voting.voteNeither) {
-        // do nothing
+        console.log('before commit no')
+        await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.tokenNoVoter})
+        await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.tokenNoVoter})
+        await obj.contracts.RR.voteCommit(projArray[0][0], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.repNoVoter})
+        await obj.contracts.RR.voteCommit(projArray[0][1], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.repNoVoter})
       }
     }
 
@@ -915,34 +919,16 @@ module.exports = function projectHelper (accounts) {
 
     // vote reveal as necessary
     for (let j = 0; j < _numComplete; j++) {
-      if (_voteType[j] === 0) {
+      if (_voteType[j] === obj.voting.voteNeither) {
         // do nothing
-      } else if (_voteType[j] === 1) {
+      } else if (_voteType[j] === obj.voting.voteTrueOnly || _voteType[j] === obj.voting.voteTrueMore || _voteType[j] === obj.voting.voteFalseMore) {
+        console.log('before reveal yes')
         await obj.contracts.TR.voteReveal(projArray[0][0], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.tokenYesVoter})
         await obj.contracts.TR.voteReveal(projArray[0][1], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.tokenYesVoter})
         await obj.contracts.RR.voteReveal(projArray[0][0], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.repYesVoter})
         await obj.contracts.RR.voteReveal(projArray[0][1], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.repYesVoter})
-      } else if (_voteType[j] === 2) {
-        await obj.contracts.TR.voteReveal(projArray[0][0], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.tokenNoVoter})
-        await obj.contracts.TR.voteReveal(projArray[0][1], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.tokenNoVoter})
-        await obj.contracts.RR.voteReveal(projArray[0][0], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.repNoVoter})
-        await obj.contracts.RR.voteReveal(projArray[0][1], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.repNoVoter})
-      } else if (_voteType[j] === 3) {
-        await obj.contracts.TR.voteReveal(projArray[0][0], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.tokenYesVoter})
-        await obj.contracts.TR.voteReveal(projArray[0][1], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.tokenYesVoter})
-        await obj.contracts.RR.voteReveal(projArray[0][0], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.repYesVoter})
-        await obj.contracts.RR.voteReveal(projArray[0][1], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.repYesVoter})
-
-        await obj.contracts.TR.voteReveal(projArray[0][0], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.tokenNoVoter})
-        await obj.contracts.TR.voteReveal(projArray[0][1], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.tokenNoVoter})
-        await obj.contracts.RR.voteReveal(projArray[0][0], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.repNoVoter})
-        await obj.contracts.RR.voteReveal(projArray[0][1], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.repNoVoter})
-      } else if (_voteType[j] === 4) {
-        await obj.contracts.TR.voteReveal(projArray[0][0], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.tokenYesVoter})
-        await obj.contracts.TR.voteReveal(projArray[0][1], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.tokenYesVoter})
-        await obj.contracts.RR.voteReveal(projArray[0][0], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.repYesVoter})
-        await obj.contracts.RR.voteReveal(projArray[0][1], j, obj.voting.voteYes, obj.voting.secretSalt, {from: obj.user.repYesVoter})
-
+      } else if (_voteType[j] === obj.voting.voteFalseOnly || _voteType[j] === obj.voting.voteTrueMore || _voteType[j] === obj.voting.voteFalseMore) {
+        console.log('before reveal no')
         await obj.contracts.TR.voteReveal(projArray[0][0], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.tokenNoVoter})
         await obj.contracts.TR.voteReveal(projArray[0][1], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.tokenNoVoter})
         await obj.contracts.RR.voteReveal(projArray[0][0], j, obj.voting.voteNo, obj.voting.secretSalt, {from: obj.user.repNoVoter})

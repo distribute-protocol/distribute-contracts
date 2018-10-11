@@ -22,7 +22,7 @@ contract('Failed State', (accounts) => {
   let {validator1, validator2, validator3, notValidator} = user
   let {tokenYesVoter, tokenNoVoter, repYesVoter, repNoVoter, notVoter} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
-  let {voteAmount, voteAmountMore} = voting
+  let {voteAmountLess, voteAmount, voteAmountMore} = voting
 
   // set up task details & hashing functions
   let {taskSet5} = taskDetails
@@ -46,7 +46,10 @@ contract('Failed State', (accounts) => {
   let valNeither = 10
 
   let valType = [validating.valTrueOnly, validating.valFalseOnly, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valNeither]
-  let voteType = [voting.voteNeither, voting.voteNeither, voting.voteTrueOnly, voting.voteTrueOnly, voting.voteFalseOnly, voting.voteFalseOnly, voting.voteTrueMore, voting.voteTrueMore, voting.voteFalseMore, voting.voteFalseMore, voting.voteNeithert]
+  let voteType = [voting.voteNeither, voting.voteNeither, voting.voteTrueOnly, voting.voteTrueOnly, voting.voteFalseOnly, voting.voteFalseOnly, voting.voteTrueMore, voting.voteTrueMore, voting.voteFalseMore, voting.voteFalseMore, voting.voteNeither]
+
+  // let valType = [validating.valTrueOnly, validating.valFalseOnly, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valNeither]
+  // let voteType = [voting.voteNeither, voting.voteNeither, voting.voteTrueOnly, voting.voteTrueOnly, voting.voteFalseOnly, voting.voteFalseOnly, voting.voteTrueMore, voting.voteTrueMore, voting.voteFalseMore, voting.voteFalseMore, voting.voteNeithert]
 
   let fastForwards = 16 // ganache 16 weeks ahead at this point from previous tests' evmIncreaseTime()
 
@@ -59,7 +62,7 @@ contract('Failed State', (accounts) => {
 
     // get finished - failed projects
     // moves ganache forward 6 more weeks
-    projArray = await returnProject.finished(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet5, taskSet5.length, valType, voteType, 6)
+    projArray = await returnProject.finished(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet5, taskSet5.length, valType, voteType, 7)
 
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
@@ -89,7 +92,7 @@ contract('Failed State', (accounts) => {
     })
 
     // these two tests must come after not proposer refund proposer tests
-    it('refund proposer can be called on TR complete project', async () => {
+    it('refund proposer can be called on TR failed project', async () => {
       // take stock of variables
       let proposedWeiCost = await project.getProposedWeiCost(projAddrT)
 
@@ -114,7 +117,7 @@ contract('Failed State', (accounts) => {
       assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
     })
 
-    it('refund proposer can be called on RR complete project', async () => {
+    it('refund proposer can be called on RR failed project', async () => {
       // take stock of variables
       let proposedWeiCost = await project.getProposedWeiCost(projAddrR)
 
@@ -160,129 +163,95 @@ contract('Failed State', (accounts) => {
   })
 
   describe('handle stakers', () => {
-    it('token staker can ask for refund from TR complete project', async () => {
-      // take stock of variables before
-      let totalTokensBefore = await utils.getTotalTokens()
-      let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let projTokensBefore = await project.getStakedTokens(projAddrT)
-      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT)
-      let passAmount = await project.getPassAmount(projAddrT)
+    it('token stakers can\'t ask for refund from TR failed project', async () => {
+      errorThrown = false
+      try {
+        // attempt to refund not validator on index validated false more (still has validations left on it)
+        await TR.refundStaker(projAddrT, {from: tokenStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
 
-      // calculate refund & reward
-      let refund = Math.floor((tsProjBalBefore * passAmount) / 100)
-      let reward = Math.floor(refund / 20)
-
-      // refund staker
-      await TR.refundStaker(projAddrT, {from: tokenStaker1})
-
-      // take stock of variables after
-      let totalTokensAfter = await utils.getTotalTokens()
-      let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let projTokensAfter = await project.getStakedTokens(projAddrT)
-      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker1, projAddrT)
-
-      // checks
-      assert.equal(totalTokensBefore + reward, totalTokensAfter, 'incorrect token reward minted')
-      assert.equal(tsBalBefore + reward + refund, tsBalAfter, 'incorrect token staker balance post-refund')
-      assert.equal(TRBalAfter + refund, TRBalBefore, 'incorrect TR balance post-refund')
-      assert.equal(tsProjBalBefore, refund, 'incorrect refund calculation')
-      assert.equal(projTokensAfter + refund, projTokensBefore, 'incorrect change in total staked tokens on project')
-      assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
+      errorThrown = false
+      try {
+        // attempt to refund not validator on index validated false more (still has validations left on it)
+        await TR.refundStaker(projAddrT, {from: tokenStaker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('token staker can ask for refund from RR complete project', async () => {
-      // take stock of variables before
-      let totalTokensBefore = await utils.getTotalTokens()
-      let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let projTokensBefore = await project.getStakedTokens(projAddrR)
-      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker1, projAddrR)
-      let passAmount = await project.getPassAmount(projAddrR)
+    it('token stakers can\'t ask for refund from RR failed project', async () => {
+      errorThrown = false
+      try {
+        // attempt to refund not validator on index validated false more (still has validations left on it)
+        await TR.refundStaker(projAddrR, {from: tokenStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
 
-      // calculate refund & reward
-      let refund = Math.floor((tsProjBalBefore * passAmount) / 100)
-      let reward = Math.floor(refund / 20)
-
-      // refund staker
-      await TR.refundStaker(projAddrR, {from: tokenStaker1})
-
-      // take stock of variables after
-      let totalTokensAfter = await utils.getTotalTokens()
-      let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let projTokensAfter = await project.getStakedTokens(projAddrR)
-      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR)
-
-      // checks
-      assert.equal(totalTokensBefore + reward, totalTokensAfter, 'incorrect token reward minted')
-      assert.equal(tsBalBefore + reward + refund, tsBalAfter, 'incorrect token staker balance post-refund')
-      assert.equal(TRBalAfter + refund, TRBalBefore, 'incorrect TR balance post-refund')
-      assert.equal(tsProjBalBefore, refund, 'incorrect refund calculation')
-      assert.equal(projTokensAfter + refund, projTokensBefore, 'incorrect change in total staked tokens on project')
-      assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
+      errorThrown = false
+      try {
+        // attempt to refund not validator on index validated false more (still has validations left on it)
+        await TR.refundStaker(projAddrR, {from: tokenStaker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('reputation staker can ask for refund from TR complete project', async () => {
-      // take stock of variables before
-      let totalRepBefore = await utils.getTotalRep()
-      let rsBalBefore = await utils.getRepBalance(repStaker1)
-      let projRepBefore = await project.getStakedRep(projAddrT)
-      let rsProjBalBefore = await project.getUserStakedRep(repStaker1, projAddrT)
-      let passAmount = await project.getPassAmount(projAddrT)
+    it('reputation stakers can\'t ask for refund from TR failed project', async () => {
+      errorThrown = false
+      try {
+        // attempt to refund not validator on index validated false more (still has validations left on it)
+        await RR.refundStaker(projAddrT, {from: repStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
 
-      // calculate refund & reward
-      let refund = Math.floor((rsProjBalBefore * passAmount) / 100)
-      let reward = Math.floor(refund / 2)
-
-      // refund staker
-      await RR.refundStaker(projAddrT, {from: repStaker1})
-
-      // take stock of variables after
-      let totalRepAfter = await utils.getTotalRep()
-      let rsBalAfter = await utils.getRepBalance(repStaker1)
-      let projRepAfter = await project.getStakedRep(projAddrT)
-      let rsProjBalAfter = await project.getUserStakedRep(repStaker1, projAddrT)
-
-      // checks
-      assert.equal(totalRepBefore + reward, totalRepAfter, 'incorrect rep reward calculated')
-      assert.equal(rsBalBefore + reward + refund, rsBalAfter, 'incorrect reputation staker balance post-refund')
-      assert.equal(rsProjBalBefore, refund, 'incorrect refund calculation')
-      assert.equal(projRepAfter + refund, projRepBefore, 'incorrect change in total staked rep on project')
-      assert.equal(rsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
+      errorThrown = false
+      try {
+        // attempt to refund not validator on index validated false more (still has validations left on it)
+        await RR.refundStaker(projAddrT, {from: repStaker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('reputation staker can ask for refund from RR complete project', async () => {
-      // take stock of variables before
-      let totalRepBefore = await utils.getTotalRep()
-      let rsBalBefore = await utils.getRepBalance(repStaker1)
-      let projRepBefore = await project.getStakedRep(projAddrR)
-      let rsProjBalBefore = await project.getUserStakedRep(repStaker1, projAddrR)
-      let passAmount = await project.getPassAmount(projAddrR)
+    it('reputation stakers can\'t ask for refund from RR failed project', async () => {
+      errorThrown = false
+      try {
+        // attempt to refund not validator on index validated false more (still has validations left on it)
+        await RR.refundStaker(projAddrR, {from: repStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
 
-      // calculate refund & reward
-      let refund = Math.floor((rsProjBalBefore * passAmount) / 100)
-      let reward = Math.floor(refund / 2)
-
-      // refund staker
-      await RR.refundStaker(projAddrR, {from: repStaker1})
-
-      // take stock of variables after
-      let totalRepAfter = await utils.getTotalRep()
-      let rsBalAfter = await utils.getRepBalance(repStaker1)
-      let projRepAfter = await project.getStakedRep(projAddrR)
-      let rsProjBalAfter = await project.getUserStakedRep(repStaker1, projAddrR)
-
-      // checks
-      assert.equal(totalRepBefore + reward, totalRepAfter, 'incorrect rep reward calculated')
-      assert.equal(rsBalBefore + reward + refund, rsBalAfter, 'incorrect reputation staker balance post-refund')
-      assert.equal(rsProjBalBefore, refund, 'incorrect refund calculation')
-      assert.equal(projRepAfter + refund, projRepBefore, 'incorrect change in total staked rep on project')
-      assert.equal(rsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
+      errorThrown = false
+      try {
+        // attempt to refund not validator on index validated false more (still has validations left on it)
+        await RR.refundStaker(projAddrR, {from: repStaker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not staker can\'t ask for token refund from TR complete project', async () => {
+    it('not staker can\'t ask for token refund from TR failed project', async () => {
       errorThrown = false
       try {
         await TR.refundStaker(projAddrT, {from: notStaker})
@@ -293,7 +262,7 @@ contract('Failed State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not staker can\'t ask for token refund from RR complete project', async () => {
+    it('not staker can\'t ask for token refund from RR failed project', async () => {
       errorThrown = false
       try {
         await TR.refundStaker(projAddrR, {from: notStaker})
@@ -304,7 +273,7 @@ contract('Failed State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not staker can\'t ask for reputation refund from TR complete project', async () => {
+    it('not staker can\'t ask for reputation refund from TR failed project', async () => {
       errorThrown = false
       try {
         await RR.refundStaker(projAddrT, {from: notStaker})
@@ -315,7 +284,7 @@ contract('Failed State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not staker can\'t ask for reputation refund from TR complete project', async () => {
+    it('not staker can\'t ask for reputation refund from TR failed project', async () => {
       errorThrown = false
       try {
         await RR.refundStaker(projAddrR, {from: notStaker})
@@ -325,126 +294,10 @@ contract('Failed State', (accounts) => {
       }
       assertThrown(errorThrown, 'An error should have been thrown')
     })
-
-    it('all stakers can be rewarded from TR complete project', async () => {
-      // take stock of variables before
-      let totalTokensBefore = await utils.getTotalTokens()
-      let tsBalBefore = await utils.getTokenBalance(tokenStaker2)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let projTokensBefore = await project.getStakedTokens(projAddrT)
-      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker2, projAddrT)
-
-      let totalRepBefore = await utils.getTotalRep()
-      let rsBalBefore = await utils.getRepBalance(repStaker2)
-      let projRepBefore = await project.getStakedRep(projAddrT)
-      let rsProjBalBefore = await project.getUserStakedRep(repStaker2, projAddrT)
-
-      let passAmount = await project.getPassAmount(projAddrT)
-
-      // calculate refund & reward
-      let refundToken = Math.floor((tsProjBalBefore * passAmount) / 100)
-      let rewardToken = Math.floor(refundToken / 20)
-
-      let refundRep = Math.floor((rsProjBalBefore * passAmount) / 100)
-      let rewardRep = Math.floor(refundRep / 2)
-
-      // refund other token staker
-      await TR.refundStaker(projAddrT, {from: tokenStaker2})
-
-      // refund other reputation staker
-      await RR.refundStaker(projAddrT, {from: repStaker2})
-
-      // take stock of variables after
-      let totalTokensAfter = await utils.getTotalTokens()
-      let tsBalAfter = await utils.getTokenBalance(tokenStaker2)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let projTokensAfter = await project.getStakedTokens(projAddrT)
-      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker2, projAddrT)
-
-      let totalRepAfter = await utils.getTotalRep()
-      let rsBalAfter = await utils.getRepBalance(repStaker2)
-      let projRepAfter = await project.getStakedRep(projAddrT)
-      let rsProjBalAfter = await project.getUserStakedRep(repStaker2, projAddrT)
-
-      // checks
-      assert.equal(totalTokensBefore + rewardToken, totalTokensAfter, 'incorrect token reward minted')
-      assert.equal(tsBalBefore + rewardToken + refundToken, tsBalAfter, 'incorrect token staker balance post-refund')
-      assert.equal(TRBalAfter + refundToken, TRBalBefore, 'incorrect TR balance post-refund')
-      assert.equal(tsProjBalBefore, refundToken, 'incorrect refund calculation')
-      assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
-
-      assert.equal(totalRepBefore + rewardRep, totalRepAfter, 'incorrect rep reward calculated')
-      assert.equal(rsBalBefore + rewardRep + refundRep, rsBalAfter, 'incorrect reputation staker balance post-refund')
-      assert.equal(rsProjBalBefore, refundRep, 'incorrect refund calculation')
-      assert.equal(rsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
-
-      assert.equal(projTokensBefore, projTokensAfter + refundToken, 'incorrect token reward minted')
-      assert.equal(projRepBefore, projRepAfter + refundRep, 'incorrect rep reward calculated')
-      assert.equal(projTokensAfter, 0, 'there are leftover tokens')
-      assert.equal(projRepAfter, 0, 'there is leftover rep')
-    })
-
-    it('all stakers can be rewarded from RR complete project', async () => {
-      // take stock of variables before
-      let totalTokensBefore = await utils.getTotalTokens()
-      let tsBalBefore = await utils.getTokenBalance(tokenStaker2)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let projTokensBefore = await project.getStakedTokens(projAddrR)
-      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker2, projAddrR)
-
-      let totalRepBefore = await utils.getTotalRep()
-      let rsBalBefore = await utils.getRepBalance(repStaker2)
-      let projRepBefore = await project.getStakedRep(projAddrR)
-      let rsProjBalBefore = await project.getUserStakedRep(repStaker2, projAddrR)
-
-      let passAmount = await project.getPassAmount(projAddrR)
-
-      // calculate refund & reward
-      let refundToken = Math.floor((tsProjBalBefore * passAmount) / 100)
-      let rewardToken = Math.floor(refundToken / 20)
-
-      let refundRep = Math.floor((rsProjBalBefore * passAmount) / 100)
-      let rewardRep = Math.floor(refundRep / 2)
-
-      // refund other token staker
-      await TR.refundStaker(projAddrR, {from: tokenStaker2})
-
-      // refund other reputation staker
-      await RR.refundStaker(projAddrR, {from: repStaker2})
-
-      // take stock of variables after
-      let totalTokensAfter = await utils.getTotalTokens()
-      let tsBalAfter = await utils.getTokenBalance(tokenStaker2)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let projTokensAfter = await project.getStakedTokens(projAddrR)
-      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker2, projAddrR)
-
-      let totalRepAfter = await utils.getTotalRep()
-      let rsBalAfter = await utils.getRepBalance(repStaker2)
-      let projRepAfter = await project.getStakedRep(projAddrR)
-      let rsProjBalAfter = await project.getUserStakedRep(repStaker2, projAddrR)
-
-      // checks
-      assert.equal(totalTokensBefore + rewardToken, totalTokensAfter, 'incorrect token reward minted')
-      assert.equal(tsBalBefore + rewardToken + refundToken, tsBalAfter, 'incorrect token staker balance post-refund')
-      assert.equal(TRBalAfter + refundToken, TRBalBefore, 'incorrect TR balance post-refund')
-      assert.equal(tsProjBalBefore, refundToken, 'incorrect refund calculation')
-      assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
-
-      assert.equal(totalRepBefore + rewardRep, totalRepAfter, 'incorrect rep reward calculated')
-      assert.equal(rsBalBefore + rewardRep + refundRep, rsBalAfter, 'incorrect reputation staker balance post-refund')
-      assert.equal(rsProjBalBefore, refundRep, 'incorrect refund calculation')
-      assert.equal(rsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
-
-      assert.equal(projTokensBefore, projTokensAfter + refundToken, 'incorrect token reward minted')
-      assert.equal(projRepBefore, projRepAfter + refundRep, 'incorrect rep reward calculated')
-      assert.equal(projTokensAfter, 0, 'there are leftover tokens')
-      assert.equal(projRepAfter, 0, 'there is leftover rep')
-    })
   })
 
   describe('handle workers', () => {
-    it('worker can ask for reward from TR complete project', async () => {
+    it('worker can ask for reward from TR failed project', async () => {
       let index = 0
 
       // take stock of variables before
@@ -475,7 +328,7 @@ contract('Failed State', (accounts) => {
       assert.equal(weiRewardAfter, 0, 'wei reward not zeroed out')
     })
 
-    it('worker can ask for reward from RR complete project', async () => {
+    it('worker can ask for reward from RR failed project', async () => {
       let index = 0
 
       // take stock of variables before
@@ -506,7 +359,7 @@ contract('Failed State', (accounts) => {
       assert.equal(weiRewardAfter, 0, 'wei reward not zeroed out')
     })
 
-    it('worker can\'t ask for reward they\'ve already received from TR complete project', async () => {
+    it('worker can\'t ask for reward they\'ve already received from TR failed project', async () => {
       let index = 0
 
       errorThrown = false
@@ -519,7 +372,7 @@ contract('Failed State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('worker can\'t ask for reward they\'ve already received from RR complete project', async () => {
+    it('worker can\'t ask for reward they\'ve already received from RR failed project', async () => {
       let index = 0
 
       errorThrown = false
@@ -532,7 +385,7 @@ contract('Failed State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not worker can\'t ask for reward from TR complete project', async () => {
+    it('not worker can\'t ask for reward from TR failed project', async () => {
       let index = 1
 
       errorThrown = false
@@ -545,7 +398,7 @@ contract('Failed State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not worker can\'t ask for reward from RR complete project', async () => {
+    it('not worker can\'t ask for reward from RR failed project', async () => {
       let index = 1
 
       errorThrown = false
@@ -558,14 +411,14 @@ contract('Failed State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('all workers can be rewarded from TR complete project', async () => {
+    it('all workers can be rewarded from TR failed project', async () => {
       // most things to be tests have been done in previous tests, but want to test that every TR.rewardTask() can be called
       // reward remaining workers
       await RR.rewardTask(projAddrT, 1, {from: worker2})
       await RR.rewardTask(projAddrT, 2, {from: worker1})
     })
 
-    it('all workers can be rewarded from RR complete project', async () => {
+    it('all workers can be rewarded from RR failed project', async () => {
       // most things to be tests have been done in previous tests, but want to test that every TR.rewardTask() can be called
       // reward remaining workers
       await RR.rewardTask(projAddrR, 1, {from: worker2})
@@ -574,7 +427,7 @@ contract('Failed State', (accounts) => {
   })
 
   describe('handle validators', () => {
-    it('yes validator can ask for refund & reward from TR complete project', async () => {
+    it('yes validator can ask for refund & reward from TR failed project', async () => {
       // take stock of important environmental variables
       let index = 0
       let claimable = await task.getClaimable(projAddrT, index)
@@ -624,7 +477,7 @@ contract('Failed State', (accounts) => {
       assert.equal(projWeiBalAfter + weiReward, projWeiBalBefore, 'wei reward was not sent correctly to validator')
     })
 
-    it('yes validator can ask for refund & reward from RR complete project', async () => {
+    it('yes validator can ask for refund & reward from RR failed project', async () => {
       // take stock of important environmental variables
       let index = 0
       let claimable = await task.getClaimable(projAddrR, index)
@@ -674,7 +527,7 @@ contract('Failed State', (accounts) => {
       assert.equal(projWeiBalAfter + weiReward, projWeiBalBefore, 'wei reward was not sent correctly to validator')
     })
 
-    it('no validator can ask for half refund from TR complete project', async () => {
+    it('no validator can ask for half refund from TR failed project', async () => {
       // take stock of important environmental variables
       let index = 1
       let claimable = await task.getClaimable(projAddrT, index)
@@ -724,7 +577,7 @@ contract('Failed State', (accounts) => {
       assert.equal(projWeiBalAfter, projWeiBalBefore, 'no wei reward should have been sent to validator')
     })
 
-    it('no validator can ask for half reward from RR complete project', async () => {
+    it('no validator can ask for half reward from RR failed project', async () => {
       // take stock of important environmental variables
       let index = 1
       let claimable = await task.getClaimable(projAddrR, index)
@@ -774,7 +627,7 @@ contract('Failed State', (accounts) => {
       assert.equal(projWeiBalAfter, projWeiBalBefore, 'no wei reward should have been sent to validator')
     })
 
-    it('not validator can\'t ask for reward from TR complete project', async () => {
+    it('not validator can\'t ask for reward from TR failed project', async () => {
       errorThrown = false
       try {
         // attempt to refund not validator on index validated false more (still has validations left on it)
@@ -786,7 +639,7 @@ contract('Failed State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not validator can\'t ask for reward from RR complete project', async () => {
+    it('not validator can\'t ask for reward from RR failed project', async () => {
       errorThrown = false
       try {
         // attempt to refund not validator on index validated false more (still has validations left on it)
@@ -798,7 +651,7 @@ contract('Failed State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('all eligible validators can be rewarded from TR complete project', async () => {
+    it('all eligible validators can be rewarded from TR failed project', async () => {
       // most things to be tests have been done in previous tests, but want to test that every TR.rewardValidator() can be called
       // as well as making sure that validator is rewarded proportionally correctly
 
@@ -830,7 +683,7 @@ contract('Failed State', (accounts) => {
       await TR.rewardValidator(projAddrT, 2, {from: validator3})
     })
 
-    it('all eligible validators can be reward from RR complete project', async () => {
+    it('all eligible validators can be reward from RR failed project', async () => {
       // most things to be tests have been done in previous tests, but want to test that every TR.rewardValidator() can be called
       // as well as making sure that validator is rewarded proportionally correctly
 
@@ -1038,7 +891,7 @@ contract('Failed State', (accounts) => {
   })
 
   describe('project contract empty', () => {
-    it('TR complete project has 0 wei, 0 tokens staked, and 0 reputation staked', async () => {
+    it('TR failed project has 0 wei, 0 tokens staked, and 0 reputation staked', async () => {
       // take stock of variables
       let projRepStaked = await project.getStakedRep(projAddrT)
       let projTokensStaked = await project.getStakedTokens(projAddrT)
@@ -1050,7 +903,7 @@ contract('Failed State', (accounts) => {
       assert.equal(projWeiBal, 0, 'project contract should not have any wei left in it')
     })
 
-    it('RR complete project has 0 wei, 0 tokens staked, and 0 reputation staked', async () => {
+    it('RR failed project has 0 wei, 0 tokens staked, and 0 reputation staked', async () => {
       // take stock of variables
       let projRepStaked = await project.getStakedRep(projAddrT)
       let projTokensStaked = await project.getStakedTokens(projAddrT)
