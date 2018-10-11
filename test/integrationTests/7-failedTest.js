@@ -22,7 +22,7 @@ contract('Failed State', (accounts) => {
   let {validator1, validator2, validator3, notValidator} = user
   let {tokenYesVoter, tokenNoVoter, repYesVoter, repNoVoter, notVoter} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
-  let {voteAmountLess, voteAmount, voteAmountMore} = voting
+  let {voteAmount, voteAmountMore} = voting
 
   // set up task details & hashing functions
   let {taskSet5} = taskDetails
@@ -1166,10 +1166,10 @@ contract('Failed State', (accounts) => {
 
       // checks
       assert.equal(0, lockedTokens, 'assure no votes are locked')
-      assert.equal(voteAmount, availableVotesBefore, 'assure correct amount of tokens are available')
+      assert.equal(voteAmountMore, availableVotesBefore, 'assure correct amount of tokens are available')
 
       // refund voter
-      await TR.refundVotingTokens(voteAmount, {from: tokenNoVoter})
+      await TR.refundVotingTokens(voteAmountMore, {from: tokenNoVoter})
 
       // take stock of variables after
       let tnvBalAfter = await utils.getTokenBalance(tokenNoVoter)
@@ -1240,10 +1240,10 @@ contract('Failed State', (accounts) => {
 
       // checks
       assert.equal(0, lockedTokens, 'assure no votes are locked')
-      assert.equal(voteAmount, availableVotesBefore, 'assure correct amount of rep are available')
+      assert.equal(voteAmountMore, availableVotesBefore, 'assure correct amount of rep are available')
 
       // refund voter
-      await RR.refundVotingReputation(voteAmount, {from: repNoVoter})
+      await RR.refundVotingReputation(voteAmountMore, {from: repNoVoter})
 
       // take stock of variables after
       let rnvBalAfter = await utils.getRepBalance(repNoVoter)
