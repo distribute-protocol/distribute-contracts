@@ -175,7 +175,7 @@ contract('Voting State', (accounts) => {
 
   describe('handle workers', () => {
     it('worker can ask for reward from task validated only true in TR voting project', async () => {
-      let index = 0
+      let index = valTrueOnly
 
       // take stock of variables before
       let totalRepBefore = await utils.getTotalRep()
@@ -206,7 +206,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('worker can ask for reward from task validated only true in RR voting project', async () => {
-      let index = 0
+      let index = valTrueOnly
 
       // take stock of variables before
       let totalRepBefore = await utils.getTotalRep()
@@ -237,7 +237,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('worker can\'t ask for reward they\'ve already received from task validated only true in TR voting project', async () => {
-      let index = 0
+      let index = valTrueOnly
 
       errorThrown = false
       try {
@@ -250,7 +250,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('worker can\'t ask for reward they\'ve already received from task validated only true in RR voting project', async () => {
-      let index = 0
+      let index = valTrueOnly
 
       errorThrown = false
       try {
@@ -263,7 +263,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('worker can\'t ask for reward from task validated only false in TR voting project', async () => {
-      let index = 1
+      let index = valFalseOnly
 
       errorThrown = false
       try {
@@ -276,7 +276,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('worker can\'t ask for reward from task validated only false in RR voting project', async () => {
-      let index = 1
+      let index = valFalseOnly
 
       errorThrown = false
       try {
@@ -289,7 +289,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('worker can\'t ask for reward from task validated true and false in TR voting project', async () => {
-      let index = 2
+      let index = valTrueMore1
 
       errorThrown = false
       try {
@@ -302,7 +302,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('worker can\'t ask for reward from task validated true and false in RR voting project', async () => {
-      let index = 2
+      let index = valTrueMore1
 
       errorThrown = false
       try {
@@ -315,7 +315,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('worker can\'t ask for reward from task not validated in TR voting project', async () => {
-      let index = 6
+      let index = valNeither
 
       errorThrown = false
       try {
@@ -328,7 +328,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('worker can\'t ask for reward from task not validated in RR voting project', async () => {
-      let index = 6
+      let index = valNeither
 
       errorThrown = false
       try {
@@ -341,7 +341,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('not worker can\'t ask for reward from TR voting project', async () => {
-      let index = 1
+      let index = valFalseOnly
 
       errorThrown = false
       try {
@@ -354,7 +354,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('not worker can\'t ask for reward from RR voting project', async () => {
-      let index = 1
+      let index = valFalseOnly
 
       errorThrown = false
       try {
@@ -370,7 +370,7 @@ contract('Voting State', (accounts) => {
   describe('handle validators', () => {
     it('yes validator can ask for refund & reward from task validated only true in TR voting project', async () => {
       // take stock of important environmental variables
-      let index = 0
+      let index = valTrueOnly
       let claimable = await task.getClaimable(projAddrT, index)
       let claimableByRep = await task.getClaimableByRep(projAddrT, index)
       let valDetails = await task.getValDetails(projAddrT, index, validator1)
@@ -420,7 +420,7 @@ contract('Voting State', (accounts) => {
 
     it('yes validator can ask for refund & reward from task validated only true in RR voting project', async () => {
       // take stock of important environmental variables
-      let index = 0
+      let index = valTrueOnly
       let claimable = await task.getClaimable(projAddrR, index)
       let claimableByRep = await task.getClaimableByRep(projAddrR, index)
       let valDetails = await task.getValDetails(projAddrR, index, validator1)
@@ -470,7 +470,7 @@ contract('Voting State', (accounts) => {
 
     it('no validator can ask for refund & reward from task validated only false in TR voting project', async () => {
       // take stock of important environmental variables
-      let index = 1
+      let index = valFalseOnly
       let claimable = await task.getClaimable(projAddrT, index)
       let claimableByRep = await task.getClaimableByRep(projAddrT, index)
       let valDetails = await task.getValDetails(projAddrT, index, validator1)
@@ -520,7 +520,7 @@ contract('Voting State', (accounts) => {
 
     it('no validator can ask for refund & reward from task validated only false in RR voting project', async () => {
       // take stock of important environmental variables
-      let index = 1
+      let index = valFalseOnly
       let claimable = await task.getClaimable(projAddrR, index)
       let claimableByRep = await task.getClaimableByRep(projAddrR, index)
       let valDetails = await task.getValDetails(projAddrR, index, validator1)
@@ -569,7 +569,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('validator can\'t ask for reward from task validated true and false in TR voting project', async () => {
-      let index = 2
+      let index = valTrueMore1
 
       errorThrown = false
       try {
@@ -582,7 +582,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('validator can\'t ask for reward from task validated true and false in RR voting project', async () => {
-      let index = 2
+      let index = valTrueMore1
 
       errorThrown = false
       try {
@@ -595,7 +595,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('validator can\'t ask for reward from task not validated in TR voting project', async () => {
-      let index = 6
+      let index = valNeither
 
       errorThrown = false
       try {
@@ -608,7 +608,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('worker can\'t ask for reward from task not validated in RR voting project', async () => {
-      let index = 6
+      let index = valNeither
 
       errorThrown = false
       try {
@@ -621,7 +621,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('not validator can\'t ask for reward from TR voting project', async () => {
-      let index = 2
+      let index = valTrueMore1
 
       errorThrown = false
       try {
@@ -634,7 +634,7 @@ contract('Voting State', (accounts) => {
     })
 
     it('not validator can\'t ask for reward from RR voting project', async () => {
-      let index = 2
+      let index = valTrueMore1
 
       errorThrown = false
       try {

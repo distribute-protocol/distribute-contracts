@@ -57,9 +57,9 @@ contract('Failed State', (accounts) => {
     RR = projObj.contracts.RR
     PLCR = projObj.contracts.PLCR
 
-    // get finished - complete projects
+    // get finished - failed projects
     // moves ganache forward 6 more weeks
-    projArray = await returnProject.finished(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet4, taskSet4.length, valType, voteType, 6)
+    projArray = await returnProject.finished(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet5, taskSet5.length, valType, voteType, 6)
 
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]

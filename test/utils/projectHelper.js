@@ -806,26 +806,28 @@ module.exports = function projectHelper (accounts) {
       await obj.utils.mintIfNecessary(obj.user.validator2, totalValEntryFee * 20)
       await obj.utils.mintIfNecessary(obj.user.validator3, totalValEntryFee * 20)
 
-      if (_valType[j] === 0) {
+      if (_valType[j] === obj.validating.valTrueOnly) {
         await obj.contracts.TR.validateTask(projArray[0][0], j, true, {from: obj.user.validator1})
         await obj.contracts.TR.validateTask(projArray[0][1], j, true, {from: obj.user.validator1})
-      } else if (_valType[j] === 1) {
+      } else if (_valType[j] === obj.validating.valFalseOnly) {
         await obj.contracts.TR.validateTask(projArray[0][0], j, false, {from: obj.user.validator1})
         await obj.contracts.TR.validateTask(projArray[0][1], j, false, {from: obj.user.validator1})
-      } else if (_valType[j] === 2) {
+      } else if (_valType[j] === obj.validating.valTrueMore) {
         await obj.contracts.TR.validateTask(projArray[0][0], j, true, {from: obj.user.validator1})
         await obj.contracts.TR.validateTask(projArray[0][1], j, true, {from: obj.user.validator1})
         await obj.contracts.TR.validateTask(projArray[0][0], j, false, {from: obj.user.validator2})
         await obj.contracts.TR.validateTask(projArray[0][1], j, false, {from: obj.user.validator2})
         await obj.contracts.TR.validateTask(projArray[0][0], j, true, {from: obj.user.validator3})
         await obj.contracts.TR.validateTask(projArray[0][1], j, true, {from: obj.user.validator3})
-      } else if (_valType[j] === 3) {
+      } else if (_valType[j] === obj.validating.valFalseMore) {
         await obj.contracts.TR.validateTask(projArray[0][0], j, true, {from: obj.user.validator1})
         await obj.contracts.TR.validateTask(projArray[0][1], j, true, {from: obj.user.validator1})
         await obj.contracts.TR.validateTask(projArray[0][0], j, false, {from: obj.user.validator2})
         await obj.contracts.TR.validateTask(projArray[0][1], j, false, {from: obj.user.validator2})
         await obj.contracts.TR.validateTask(projArray[0][0], j, false, {from: obj.user.validator3})
         await obj.contracts.TR.validateTask(projArray[0][1], j, false, {from: obj.user.validator3})
+      } else if (_valType[j] === obj.validating.valNeither) {
+        // do nothing
       }
     }
 
@@ -867,21 +869,19 @@ module.exports = function projectHelper (accounts) {
       await obj.utils.register(obj.user.repYesVoter)
       await obj.utils.register(obj.user.repNoVoter)
 
-      if (_voteType[j] === 0) {
-        // do nothing
-      } else if (_voteType[j] === 1) {
+      if (_voteType[j] === obj.voting.voteTrueOnly) {
         secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [obj.voting.voteYes, obj.voting.secretSalt])
         await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenYesVoter})
         await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenYesVoter})
         await obj.contracts.RR.voteCommit(projArray[0][0], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.repYesVoter})
         await obj.contracts.RR.voteCommit(projArray[0][1], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.repYesVoter})
-      } else if (_voteType[j] === 2) {
+      } else if (_voteType[j] === obj.voting.voteFalseOnly) {
         secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [obj.voting.voteNo, obj.voting.secretSalt])
         await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenNoVoter})
         await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenNoVoter})
         await obj.contracts.RR.voteCommit(projArray[0][0], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.repNoVoter})
         await obj.contracts.RR.voteCommit(projArray[0][1], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.repNoVoter})
-      } else if (_voteType[j] === 3) {
+      } else if (_voteType[j] === obj.voting.voteTrueMore) {
         secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [obj.voting.voteYes, obj.voting.secretSalt])
         await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenYesVoter})
         await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenYesVoter})
@@ -893,7 +893,7 @@ module.exports = function projectHelper (accounts) {
         await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.tokenNoVoter})
         await obj.contracts.RR.voteCommit(projArray[0][0], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.repNoVoter})
         await obj.contracts.RR.voteCommit(projArray[0][1], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.repNoVoter})
-      } else if (_voteType[j] === 4) {
+      } else if (_voteType[j] === obj.voting.voteFalseOnly) {
         secretHash = ethers.utils.solidityKeccak256(['int', 'int'], [obj.voting.voteYes, obj.voting.secretSalt])
         await obj.contracts.TR.voteCommit(projArray[0][0], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.tokenYesVoter})
         await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmount, secretHash, 0, {from: obj.user.tokenYesVoter})
@@ -905,6 +905,8 @@ module.exports = function projectHelper (accounts) {
         await obj.contracts.TR.voteCommit(projArray[0][1], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.tokenNoVoter})
         await obj.contracts.RR.voteCommit(projArray[0][0], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.repNoVoter})
         await obj.contracts.RR.voteCommit(projArray[0][1], j, obj.voting.voteAmountMore, secretHash, 0, {from: obj.user.repNoVoter})
+      } else if (_voteType[j] === obj.voting.voteNeither) {
+        // do nothing
       }
     }
 
