@@ -48,9 +48,6 @@ contract('Failed State', (accounts) => {
   let valType = [validating.valTrueOnly, validating.valFalseOnly, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valNeither]
   let voteType = [voting.voteNeither, voting.voteNeither, voting.voteTrueOnly, voting.voteTrueOnly, voting.voteFalseOnly, voting.voteFalseOnly, voting.voteTrueMore, voting.voteTrueMore, voting.voteFalseMore, voting.voteFalseMore, voting.voteNeither]
 
-  // let valType = [validating.valTrueOnly, validating.valFalseOnly, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valNeither]
-  // let voteType = [voting.voteNeither, voting.voteNeither, voting.voteTrueOnly, voting.voteTrueOnly, voting.voteFalseOnly, voting.voteFalseOnly, voting.voteTrueMore, voting.voteTrueMore, voting.voteFalseMore, voting.voteFalseMore, voting.voteNeithert]
-
   let fastForwards = 16 // ganache 16 weeks ahead at this point from previous tests' evmIncreaseTime()
 
   before(async () => {
@@ -608,7 +605,7 @@ contract('Failed State', (accounts) => {
     })
 
     it('worker can\'t ask for reward they\'ve already received from TR failed project', async () => {
-      let index = 0
+      let index = valTrueOnly
 
       errorThrown = false
       try {
@@ -621,11 +618,167 @@ contract('Failed State', (accounts) => {
     })
 
     it('worker can\'t ask for reward they\'ve already received from RR failed project', async () => {
-      let index = 0
+      let index = valTrueOnly
 
       errorThrown = false
       try {
         await RR.rewardTask(projAddrT, index, {from: worker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task validated only no in TR failed project', async () => {
+      let index = valFalseOnly
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrT, index, {from: worker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task validated only no in RR failed project', async () => {
+      let index = valFalseOnly
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrR, index, {from: worker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task not validated in TR failed project', async () => {
+      let index = valNeither
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrT, index, {from: worker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task not validated in RR failed project', async () => {
+      let index = valNeither
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrR, index, {from: worker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task validated more yes than no and voted only no in TR failed project', async () => {
+      let index = valTrueMoreVoteFalseOnly
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrT, index, {from: worker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task validated more yes than no and voted only no in RR failed project', async () => {
+      let index = valTrueMoreVoteFalseOnly
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrR, index, {from: worker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task validated more no than yes and voted only no in TR failed project', async () => {
+      let index = valFalseMoreVoteFalseOnly
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrT, index, {from: worker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task validated more no than yes and voted only no in RR failed project', async () => {
+      let index = valFalseMoreVoteFalseOnly
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrR, index, {from: worker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task validated more yes than no and voted more no than yes in TR failed project', async () => {
+      let index = valTrueMoreVoteFalseMore
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrT, index, {from: worker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task validated more yes than no and voted more no than yes in RR failed project', async () => {
+      let index = valTrueMoreVoteFalseMore
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrR, index, {from: worker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task validated more no than yes and voted more no than yes in TR failed project', async () => {
+      let index = valFalseMoreVoteFalseMore
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrT, index, {from: worker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker can\'t ask for reward from task validated more no than yes and voted more no than yes in RR failed project', async () => {
+      let index = valFalseMoreVoteFalseMore
+
+      errorThrown = false
+      try {
+        await RR.rewardTask(projAddrR, index, {from: worker2})
       } catch (e) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
@@ -657,20 +810,6 @@ contract('Failed State', (accounts) => {
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
-    })
-
-    it('all workers can be rewarded from TR failed project', async () => {
-      // most things to be tests have been done in previous tests, but want to test that every TR.rewardTask() can be called
-      // reward remaining workers
-      await RR.rewardTask(projAddrT, 1, {from: worker2})
-      await RR.rewardTask(projAddrT, 2, {from: worker1})
-    })
-
-    it('all workers can be rewarded from RR failed project', async () => {
-      // most things to be tests have been done in previous tests, but want to test that every TR.rewardTask() can be called
-      // reward remaining workers
-      await RR.rewardTask(projAddrR, 1, {from: worker2})
-      await RR.rewardTask(projAddrR, 2, {from: worker1})
     })
   })
 

@@ -230,7 +230,7 @@ library ProjectLibrary {
                         task.setPollId(pollNonce); // function handles storage of voting pollId
                         emit LogTaskVote(task, _projectAddress, pollNonce);
                     } else {
-                        if (task.negativeIndex() == 0) {
+                        if (task.negativeIndex() == 0 && task.affirmativeIndex() != 0) {
                           // this means that there are no negative validators, the task passes, and reward is claimable.
                           task.markTaskClaimable(true);
                           emit LogTaskValidated(task, _projectAddress, true);
