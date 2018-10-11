@@ -9,13 +9,13 @@ const Web3 = require('web3')
 const web3 = new Web3()
 web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'))
 
-contract('Complete State', (accounts) => {
+contract('Failed State', (accounts) => {
   // set up project helper
   let projObj = projectHelper(accounts)
 
   // get project helper variables
   let TR, RR, PLCR
-  let {user, project, task, utils, returnProject, validating, voting} = projObj
+  let {user, project, task, utils, returnProject, voting} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {tokenStaker1, tokenStaker2, repStaker1, repStaker2, notStaker} = user
   let {worker1, worker2, notWorker} = user
@@ -25,16 +25,34 @@ contract('Complete State', (accounts) => {
   let {voteAmount, voteAmountMore} = voting
 
   // set up task details & hashing functions
-  let {taskSet4} = taskDetails
+  let {taskSet5} = taskDetails
 
   // local test variables
   let projArray
   let errorThrown
   let projAddrT, projAddrR
 
-  let valType = [validating.valTrueOnly, validating.valTrueMore, validating.valFalseMore]
+  // define validation indices
+  let valTrueOnly = 0
+  let valFalseOnly = 1
+  let valTrueMore1 = 2
+  let valFalseMore1 = 3
+  // below are of type valTrueMore & valFalseMore
+  let valTrueMore2 = 4
+  let valFalseMore2 = 5
+  let valTrueMore3 = 6
+  let valFalseMore3 = 7
+  let valNeither = 9
 
-  let voteType = [voting.voteNeither, voting.voteTrueMore, voting.voteTrueMore]
+  let valType = [valTrueOnly, valFalseOnly, valTrueMore1, valFalseMore1, valTrueMore1, valFalseMore1, valTrueMore1, valFalseMore1, valTrueMore1, valFalseMore1, valNeither]
+  // define voting indices
+  let voteNeither = 0
+  let voteTrueOnly = 1
+  let voteFalseOnly = 2
+  let voteTrueMore = 3
+  let voteFalseMore = 4
+
+  let voteType = [voteNeither, voteNeither, voteTrueMore, voteTrueMore, voteFalseMore, voteFalseMore]
 
   let fastForwards = 16 // ganache 16 weeks ahead at this point from previous tests' evmIncreaseTime()
 

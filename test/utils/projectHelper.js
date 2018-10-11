@@ -26,18 +26,8 @@ module.exports = function projectHelper (accounts) {
   obj.returnProject = {}
   obj.returnProjectHelper = {}
   obj.task = {}
+  obj.validating = {}
   obj.voting = {}
-
-  // set up user identities
-  // accounts[0] - no identity, default user for non-specified contract calls
-  // accounts[1] - tokens
-  // accounts[2] - both
-  // accounts[3] - tokens
-  // accounts[4] - rep
-  // accounts[5] - rep
-  // accounts[6] - rep
-  // accounts[7] - rep
-  // accounts[8] - nothing
 
   obj.user.tokenProposer = accounts[1]
   obj.user.repProposer = accounts[2]
@@ -105,12 +95,25 @@ module.exports = function projectHelper (accounts) {
   obj.project.proposeProportion = 20
   obj.project.proposeReward = 100
 
+  // validating details
+  obj.validating.valTrueOnly = 0
+  obj.validating.valFalseOnly = 1
+  obj.validating.valTrueMore = 2
+  obj.validating.valFalseMore = 3
+  obj.validating.valNeither = 4
+
   // voting details
   obj.voting.secretSalt = 10000
   obj.voting.voteYes = 1
   obj.voting.voteNo = 0
   obj.voting.voteAmount = 2
   obj.voting.voteAmountMore = 3
+
+  obj.voting.voteNeither = 0
+  obj.voting.voteTrueOnly = 1
+  obj.voting.voteFalseOnly = 2
+  obj.voting.voteTrueMore = 3
+  obj.voting.voteFalseMore = 4
 
   // contracts
   obj.contracts.setContracts = async () => {

@@ -18,7 +18,7 @@ contract('Voting State', (accounts) => {
 
   // get project helper variables
   let TR, RR, PR, PLCR
-  let {user, project, utils, returnProject, task, voting} = projObj
+  let {user, project, utils, returnProject, task, validating, voting} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {worker1, worker2, notWorker} = user
   let {validator1, validator2, notValidator} = user
@@ -39,12 +39,11 @@ contract('Voting State', (accounts) => {
   let valFalseOnly = 1
   let valTrueMore1 = 2
   let valFalseMore1 = 3
-  // the two indices below are to test committing, but not revealing votes
   let valTrueMore2 = 4
   let valFalseMore2 = 5
   let valNeither = 6
 
-  let valType = [valTrueOnly, valFalseOnly, valTrueMore1, valFalseMore1, valTrueMore1, valFalseMore1, valNeither]
+  let valType = [validating.valTrueOnly, validating.valFalseOnly, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valNeither]
 
   let fastForwards = 11 // ganache 11 weeks ahead at this point from previous tests' evmIncreaseTime()
 
