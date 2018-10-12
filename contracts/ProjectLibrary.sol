@@ -223,25 +223,38 @@ library ProjectLibrary {
             PLCRVoting plcr = PLCRVoting(_plcrVoting);
             for(uint i = 0; i < project.getTaskCount(); i++) {
                 Task task = Task(project.tasks(i));
+                uint reward;
                 if (task.complete()) {
                     // require that one of the indexes is not zero, meaning that a validator exists
                     if (task.affirmativeIndex() != 0 && task.negativeIndex() != 0) { // there is an opposing validator, poll required
                         uint pollNonce = plcr.startPoll(51, project.voteCommitPeriod(), project.voteRevealPeriod());
                         task.setPollId(pollNonce); // function handles storage of voting pollId
                         emit LogTaskVote(task, _projectAddress, pollNonce);
+                    } else if (task.negativeIndex() == 0 && task.affirmativeIndex() != 0) {
+                        // this means that there are no negative validators, the task passes, and reward is claimable.
+                        task.markTaskClaimable(true);
+                        emit LogTaskValidated(task, _projectAddress, true);
+                    } else if (task.negativeIndex() != 0 && task.affirmativeIndex() == 0) {
+                      // this means that there are no affirmative validators, the task fails, and reward is not claimable.
+                        task.markTaskClaimable(false);
+                        reward = task.weiReward();
+                        tr.revertWei(reward);
+                        project.returnWei(_distributeTokenAddress, reward);
+                        emit LogTaskValidated(task, _projectAddress, false);
                     } else {
-                        if (task.negativeIndex() == 0 && task.affirmativeIndex() != 0) {
-                          // this means that there are no negative validators, the task passes, and reward is claimable.
-                          task.markTaskClaimable(true);
-                          emit LogTaskValidated(task, _projectAddress, true);
-                        } else {
-                          task.markTaskClaimable(false);
-                          uint reward = task.weiReward();
-                          tr.revertWei(reward);
-                          project.returnWei(_distributeTokenAddress, reward);
-                          emit LogTaskValidated(task, _projectAddress, false);
-                        }
+                      // there are no validators, reward must be sent back
+                      task.markTaskClaimable(false);
+                      reward = task.weiReward().mul(21).div(20);
+                      tr.revertWei(reward);
+                      project.returnWei(_distributeTokenAddress, reward);
+                      emit LogTaskValidated(task, _projectAddress, false);
                     }
+                } else {
+                  // reward must also be sent back if the task is incomplete
+                  reward = task.weiReward().mul(21).div(20);
+                  tr.revertWei(reward);
+                  project.returnWei(_distributeTokenAddress, reward);
+                  emit LogTaskValidated(task, _projectAddress, false);
                 }
             }
             return true;

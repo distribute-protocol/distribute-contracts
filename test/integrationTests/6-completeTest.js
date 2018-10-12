@@ -822,7 +822,7 @@ contract('Complete State', (accounts) => {
       await TR.rewardValidator(projAddrT, valFalseMoreVoteTrueMore, {from: validator3})
     })
 
-    it('all eligible validators can be reward from RR complete project', async () => {
+    it('all eligible validators can be rewarded from RR complete project', async () => {
       // most things to be tests have been done in previous tests, but want to test that every TR.rewardValidator() can be called
       // as well as making sure that validator is rewarded proportionally correctly
 
