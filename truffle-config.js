@@ -32,7 +32,8 @@ module.exports = {
       reporterOptions: {
         currency: 'ETH',
         gasPrice: 21
-      }
+      },
+      enableTimeouts: false
     }
   },
   solc: {

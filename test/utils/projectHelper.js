@@ -76,10 +76,8 @@ module.exports = function projectHelper (accounts) {
   obj.reputation.registeredRep = 10000
 
   // mutable project details
-  // note that now & stakingPeriod are absolute and don't reflect evmIncreaseTime() calls
-  // this will be accounted for manually in each integration test and clearly denoted
   obj.project.now = Math.floor(new Date().getTime() / 1000) // in seconds
-  obj.project.stakingPeriod = obj.project.now + 604800 // blockchain understands seconds                    // one week from now
+  obj.project.stakingPeriod = obj.project.now + 604800 // one week from now
 
   obj.project.expiredStakingPeriod = 10 // January 1st, 1970
   obj.project.proposalCost = parseInt(web3.toWei(0.25, 'ether'))
@@ -118,7 +116,7 @@ module.exports = function projectHelper (accounts) {
   obj.voting.voteFalseMore = 4
 
   // contracts
-  obj.contracts.setContracts = async () => {
+  obj.contracts.setContracts = async function () {
     obj.contracts.TR = await TokenRegistry.deployed()
     obj.contracts.RR = await ReputationRegistry.deployed()
     obj.contracts.DT = await DistributeToken.deployed()
@@ -167,7 +165,7 @@ module.exports = function projectHelper (accounts) {
   }
 
   // getters
-  obj.utils.getRepHolders = async () => {
+  obj.utils.getRepHolders = async function () {
     let repHolders = await obj.contracts.RR.totalUsers()
     return repHolders.toNumber()
   }
@@ -184,12 +182,12 @@ module.exports = function projectHelper (accounts) {
       : bal[0].toNumber()
   }
 
-  obj.utils.getTotalTokens = async () => {
+  obj.utils.getTotalTokens = async function () {
     let total = await obj.contracts.DT.totalSupply()
     return total.toNumber()
   }
 
-  obj.utils.getTotalRep = async () => {
+  obj.utils.getTotalRep = async function () {
     let total = await obj.contracts.RR.totalSupply()
     return total.toNumber()
   }
@@ -208,7 +206,7 @@ module.exports = function projectHelper (accounts) {
       : currPrice.toNumber()
   }
 
-  obj.utils.calculateCurrentPrice = async () => { // will fail if totalSupply == 0
+  obj.utils.calculateCurrentPrice = async function () { // will fail if totalSupply == 0
     let baseCost = await obj.utils.getBaseCost()
     let weiBal = await obj.utils.getWeiPoolBal()
     let totalSupply = await obj.utils.getTotalTokens()
@@ -219,7 +217,7 @@ module.exports = function projectHelper (accounts) {
     return price
   }
 
-  obj.utils.getBaseCost = async () => {
+  obj.utils.getBaseCost = async function () {
     let baseCost = await obj.contracts.DT.baseCost()
     return baseCost.toNumber()
   }
@@ -558,16 +556,6 @@ module.exports = function projectHelper (accounts) {
   // project return functions
   // return project (address) proposed by token holder
   obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash) {
-    // input parameter checks
-    if (_cost === undefined) {
-      _cost = obj.project.projectCost // use default project cost
-    }
-    if (_stakingPeriod === undefined) {
-      _stakingPeriod = obj.project.stakingPeriod // use default staking period
-    }
-    if (_ipfsHash === undefined) {
-      _ipfsHash = obj.project.ipfsHash // use default staking period
-    }
 
     // seed the system with tokens and rep
     await obj.utils.mintIfNecessary(obj.user.tokenProposer)
@@ -594,7 +582,7 @@ module.exports = function projectHelper (accounts) {
       _stakingPeriod = obj.project.stakingPeriod // use default staking period
     }
     if (_ipfsHash === undefined) {
-      _ipfsHash = obj.project.ipfsHash // use default staking period
+      _ipfsHash = obj.project.ipfsHash // use default ipfs hash
     }
 
     // seed the system with tokens and rep
@@ -680,7 +668,6 @@ module.exports = function projectHelper (accounts) {
     // check that the project is in state 2
     let state = await obj.project.getState(_projAddr)
     assert.equal(state, 2, 'project is not in staked state')
-
     return _projAddr
   }
 
@@ -696,7 +683,6 @@ module.exports = function projectHelper (accounts) {
     // check that the project is in state 2
     let state = await obj.project.getState(_projAddr)
     assert.equal(state, 2, 'project is not in staked state')
-
     return _projAddr
   }
 
@@ -735,7 +721,6 @@ module.exports = function projectHelper (accounts) {
       assert.equal(stateT, 3, 'project is not in active state')
       assert.equal(stateR, 3, 'project is not in active state')
     }
-    console.log('active')
 
     return projArray
   }
@@ -746,6 +731,7 @@ module.exports = function projectHelper (accounts) {
   obj.returnProject.validating = async function (_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete) {
     // get array of active projects
     // moves ganache forward 1 week
+
     let projArray = await obj.returnProject.active(_cost, _stakingPeriod, _ipfsHash, 1, _tasks)
     // register workers
     await obj.utils.register(obj.user.worker1)
@@ -770,7 +756,7 @@ module.exports = function projectHelper (accounts) {
       await obj.contracts.PR.submitTaskComplete(projArray[0][1], j, {from: workerArray[j % 2]})
     }
     // increase time 2 weeks + 1 ms to make sure that checkValidating() doesn't bug out
-    await evmIncreaseTime((2 * 604800) + 1)
+    await evmIncreaseTime(2 * 604801)
 
     // call check validate for each project
     await obj.contracts.PR.checkValidate(projArray[0][0])
@@ -781,8 +767,6 @@ module.exports = function projectHelper (accounts) {
     let stateR = await obj.project.getState(projArray[0][1])
     assert.equal(stateT, 4, 'project T not in validating state')
     assert.equal(stateR, 4, 'project R not in validating state')
-
-    console.log('validating')
 
     return projArray
   }
@@ -804,9 +788,9 @@ module.exports = function projectHelper (accounts) {
       let validationEntryFee1 = parseInt(await obj.task.getValidationEntryFee(projArray[0][0], j))
       let validationEntryFee2 = parseInt(await obj.task.getValidationEntryFee(projArray[0][1], j))
       let totalValEntryFee = validationEntryFee1 + validationEntryFee2
-      await obj.utils.mintIfNecessary(obj.user.validator1, totalValEntryFee * 20)
-      await obj.utils.mintIfNecessary(obj.user.validator2, totalValEntryFee * 20)
-      await obj.utils.mintIfNecessary(obj.user.validator3, totalValEntryFee * 20)
+      await obj.utils.mintIfNecessary(obj.user.validator1, totalValEntryFee)
+      await obj.utils.mintIfNecessary(obj.user.validator2, totalValEntryFee)
+      await obj.utils.mintIfNecessary(obj.user.validator3, totalValEntryFee)
 
       if (_valType[j] === obj.validating.valTrueOnly) {
         await obj.contracts.TR.validateTask(projArray[0][0], j, true, {from: obj.user.validator1})
@@ -832,9 +816,8 @@ module.exports = function projectHelper (accounts) {
         // do nothing
       }
     }
-
     // increase time 1 week + 1 ms to make sure that checkVoting() doesn't bug out
-    await evmIncreaseTime((1 * 604800) + 1)
+    await evmIncreaseTime(604801)
 
     // call check voting for each project
     await obj.contracts.PR.checkVoting(projArray[0][0])
@@ -845,8 +828,6 @@ module.exports = function projectHelper (accounts) {
     let stateR = await obj.project.getState(projArray[0][1])
     assert.equal(stateT, 5, 'project T not in voting state')
     assert.equal(stateR, 5, 'project R not in voting state')
-
-    console.log('voting')
 
     return projArray
   }
@@ -865,7 +846,6 @@ module.exports = function projectHelper (accounts) {
     let projArray = await obj.returnProject.voting(_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete, _valType)
     // vote commit as necessary
     for (let j = 0; j < _numComplete; j++) {
-
       let secretHash
       await obj.utils.mintIfNecessary(obj.user.tokenYesVoter)
       await obj.utils.mintIfNecessary(obj.user.tokenNoVoter)
@@ -914,7 +894,7 @@ module.exports = function projectHelper (accounts) {
     }
 
     // increase time 1 week + 1 ms to make sure that reveal vote doesn't bug out
-    await evmIncreaseTime((1 * 604800) + 1)
+    await evmIncreaseTime(604801)
 
     // vote reveal as necessary
     for (let j = 0; j < _numComplete; j++) {
@@ -935,7 +915,7 @@ module.exports = function projectHelper (accounts) {
     }
 
     // increase time 1 week + 1 ms to make sure that checkEnd() doesn't bug out
-    await evmIncreaseTime((1 * 604800) + 1)
+    await evmIncreaseTime(604801)
 
     // call check end for each project
     await obj.contracts.PR.checkEnd(projArray[0][0])
@@ -946,8 +926,6 @@ module.exports = function projectHelper (accounts) {
     let stateR = await obj.project.getState(projArray[0][1])
     assert.equal(stateT, _intendedState, 'project T not in failed or complete state')
     assert.equal(stateR, _intendedState, 'project R not in failed or complete state')
-
-    console.log('finished')
 
     return projArray
   }

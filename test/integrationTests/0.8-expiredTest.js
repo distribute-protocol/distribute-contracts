@@ -4,7 +4,7 @@
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 
-contract('Expired State', (accounts) => {
+contract('Expired State', function (accounts) {
   // set up project helper
   let projObj = projectHelper(accounts)
 
@@ -20,22 +20,21 @@ contract('Expired State', (accounts) => {
   let errorThrown
   let projAddrT, projAddrR
 
-  before(async () => {
+  before(async function () {
     // get contract
     await projObj.contracts.setContracts()
     TR = projObj.contracts.TR
     RR = projObj.contracts.RR
 
     // get finished - expired projects
-    // moves ganache forward 1 more week
     projArray = await returnProject.expired(projectCost, stakingPeriod, ipfsHash, 1)
 
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
   })
 
-  describe('handle proposer', () => {
-    it('proposer can\'t call refund proposer from token registry', async () => {
+  describe('handle proposer', function () {
+    it('proposer can\'t call refund proposer from token registry', async function () {
       errorThrown = false
       try {
         await TR.refundProposer(projAddrT, {from: tokenProposer})
@@ -46,7 +45,7 @@ contract('Expired State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('proposer can\'t call refund proposer from reputation registry', async () => {
+    it('proposer can\'t call refund proposer from reputation registry', async function () {
       errorThrown = false
       try {
         await RR.refundProposer(projAddrR, {from: repProposer})
@@ -58,8 +57,8 @@ contract('Expired State', (accounts) => {
     })
   })
 
-  describe('handle stakers', () => {
-    it('token staker can ask for refund from TR expired project', async () => {
+  describe('handle stakers', function () {
+    it('token staker can ask for refund from TR expired project', async function () {
       // take stock of variables before
       let totalTokensBefore = await utils.getTotalTokens()
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
@@ -89,7 +88,7 @@ contract('Expired State', (accounts) => {
       assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
 
-    it('token staker can ask for refund from RR expired project', async () => {
+    it('token staker can ask for refund from RR expired project', async function () {
       // take stock of variables before
       let totalTokensBefore = await utils.getTotalTokens()
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
@@ -119,7 +118,7 @@ contract('Expired State', (accounts) => {
       assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
 
-    it('reputation staker can ask for refund from TR expired project', async () => {
+    it('reputation staker can ask for refund from TR expired project', async function () {
       // take stock of variables before
       let totalRepBefore = await utils.getTotalRep()
       let rsBalBefore = await utils.getRepBalance(repStaker1)
@@ -146,7 +145,7 @@ contract('Expired State', (accounts) => {
       assert.equal(rsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
 
-    it('reputation staker can ask for refund from RR expired project', async () => {
+    it('reputation staker can ask for refund from RR expired project', async function () {
       // take stock of variables before
       let totalRepBefore = await utils.getTotalRep()
       let rsBalBefore = await utils.getRepBalance(repStaker1)
@@ -173,7 +172,7 @@ contract('Expired State', (accounts) => {
       assert.equal(rsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
 
-    it('not staker can\'t ask for token refund from TR expired project', async () => {
+    it('not staker can\'t ask for token refund from TR expired project', async function () {
       errorThrown = false
       try {
         await TR.refundStaker(projAddrT, {from: notStaker})
@@ -184,7 +183,7 @@ contract('Expired State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not staker can\'t ask for token refund from RR expired project', async () => {
+    it('not staker can\'t ask for token refund from RR expired project', async function () {
       errorThrown = false
       try {
         await TR.refundStaker(projAddrR, {from: notStaker})
@@ -195,7 +194,7 @@ contract('Expired State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not staker can\'t ask for reputation refund from TR expired project', async () => {
+    it('not staker can\'t ask for reputation refund from TR expired project', async function () {
       errorThrown = false
       try {
         await RR.refundStaker(projAddrT, {from: notStaker})
@@ -206,7 +205,7 @@ contract('Expired State', (accounts) => {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not staker can\'t ask for reputation refund from TR expired project', async () => {
+    it('not staker can\'t ask for reputation refund from TR expired project', async function () {
       errorThrown = false
       try {
         await RR.refundStaker(projAddrR, {from: notStaker})

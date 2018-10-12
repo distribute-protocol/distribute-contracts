@@ -14,7 +14,7 @@ const ProxyFactory = artifacts.require('library/ProxyFactory')
 */
 
 module.exports = function (deployer) {
-  deployer.then(async () => {
+  deployer.then(async function () {
     await deployer.deploy(Division)
     await deployer.link(Division, [DistributeToken, ProjectLibrary, ProjectRegistry, ReputationRegistry, TokenRegistry, Project])
     await deployer.deploy(ProjectLibrary)

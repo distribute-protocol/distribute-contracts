@@ -28,7 +28,7 @@ contract('Project', function (accounts) {
   let costProportion, proposerTokenCost
   let errorThrown
 
-  before(async () => {
+  before(async function () {
     // set costProportion, proposerTokenCost, weiToReturn
     costProportion = 10
     proposerTokenCost = 100
@@ -48,7 +48,7 @@ contract('Project', function (accounts) {
     SpoofedP_R = await Project.new()
   })
 
-  it('can be initialized via setup()', async () => {
+  it('can be initialized via setup()', async function () {
     // initialize project contract
     await SpoofedP_T.setup(proposalCost, costProportion, stakingPeriod, tokenProposer, proposerTypeToken, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
     await SpoofedP_R.setup(proposalCost, costProportion, stakingPeriod, repProposer, proposerTypeRep, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
@@ -145,7 +145,7 @@ contract('Project', function (accounts) {
     assert.equal(passThresholdR, 100, 'incorrect pass threshold')
   })
 
-  it('can\'t be re-initialized via setup()', async () => {
+  it('can\'t be re-initialized via setup()', async function () {
     let errorThrown = false
     try {
       await SpoofedP_T.setup(projectCost, costProportion, stakingPeriod, tokenProposer, proposerTypeToken, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
@@ -163,7 +163,7 @@ contract('Project', function (accounts) {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('allows tokenRegistry to call stakeTokens()', async () => {
+  it('allows tokenRegistry to call stakeTokens()', async function () {
     // take stock of variables before
     let tokenBalanceBefore = await SpoofedP_T.tokenBalances(tokenStaker1)
     let stakedTokensBefore = await SpoofedP_T.tokensStaked()
@@ -202,7 +202,7 @@ contract('Project', function (accounts) {
     assert.equal(weiBalAfter - weiBalBefore, weiToReturn, "doesn't update balance correctly")
   })
 
-  it('only allows tokenRegistry to call stakeTokens()', async () => {
+  it('only allows tokenRegistry to call stakeTokens()', async function () {
     let errorThrown = false
     try {
       await SpoofedP_T.stakeTokens(tokenStaker1, tokensToMint, {from: anyAddress})
@@ -221,7 +221,7 @@ contract('Project', function (accounts) {
   })
 
   // SOLIDITY REVERTS - FIX IT
-  it('allows reputationRegistry to call stakeReputation()', async () => {
+  it('allows reputationRegistry to call stakeReputation()', async function () {
     // // take stock of variables before
     // let reputationBalanceBefore = await SpoofedP_T.reputationBalances(repStaker1)
     // let stakedReputationBefore = await SpoofedP_T.reputationStaked()
@@ -254,7 +254,7 @@ contract('Project', function (accounts) {
     // assert.equal(stakedReputationAfter - stakedTokensBefore, registeredRep, "doesn't update total reputation supply correctly")
   })
 
-  it('only allows reputationRegistry to call stakeReputation()', async () => {
+  it('only allows reputationRegistry to call stakeReputation()', async function () {
     let errorThrown = false
     try {
       await SpoofedP_T.stakeReputation(repStaker1, registeredRep, {from: anyAddress})
@@ -273,7 +273,7 @@ contract('Project', function (accounts) {
   })
 
 
-  // it('returns a bool for an address whether they are a project staker', async () => {
+  // it('returns a bool for an address whether they are a project staker', async function () {
   //   let trueVal = await PL.isStaker(spoofedP.address, staker)
   //   let trueRepVal = await PL.isStaker(spoofedP.address, repStaker)
   //   let falseVal = await PL.isStaker(spoofedP.address, nonStaker)
@@ -283,7 +283,7 @@ contract('Project', function (accounts) {
   // })
   //
   //
-  // it('returns the proportional weight of an address staking', async () => {
+  // it('returns the proportional weight of an address staking', async function () {
   //   let val = await PL.calculateWeightOfAddress(spoofedP.address, staker, {from: spoofedPRaddress})
   //   assert.equal(val.toNumber(), 50, 'doesn\'t return the correct weight')
   //   await spoofedP.stakeTokens(staker2, tokens, web3.toWei(0.5, 'ether'), {from: spoofedTRaddress})
@@ -296,7 +296,7 @@ contract('Project', function (accounts) {
   //   await spoofedP.unstakeTokens(staker2, tokens, {from: spoofedTRaddress})
   // })
   // // NEED TO FINISH
-  // // it('returns the proportional weight on an address staking (reputation)', async () => {
+  // // it('returns the proportional weight on an address staking (reputation)', async function () {
   //   // let val = await spoofedP.calculateWeightOfAddress(repStaker)
   //   // assert.equal(val.toNumber(), 100, 'doesn\'t return the correct weight')
   //   // await spoofedP.stakeTokens(staker2, tokens, web3.toWei(0.5, 'ether'), {from: spoofedTRaddress})
@@ -307,7 +307,7 @@ contract('Project', function (accounts) {
   //   // await spoofedP.unstakeTokens(staker2, tokens, {from: spoofedTRaddress})
   // // })
   //
-  // it('unstakes tokens', async () => {
+  // it('unstakes tokens', async function () {
   //   await spoofedP.unstakeTokens(staker, tokens, {from: spoofedTRaddress})
   //   let tokenBalance = await spoofedP.stakedTokenBalances.call(staker)
   //   let totalTokenBalance = await spoofedP.totalTokensStaked.call()
@@ -317,7 +317,7 @@ contract('Project', function (accounts) {
   //   assert.equal(weiBal, 0, "doesn't update balance correctly")
   // })
   //
-  // it('unstakes reputation', async () => {
+  // it('unstakes reputation', async function () {
   //   RR.unstakeReputation(spoofedP.address, 10000, {from: repStaker})
   //   let stakedReputationBalance = await spoofedP.stakedReputationBalances(repStaker)
   //   let repRegBal = await RR.balances(repStaker)
@@ -325,13 +325,13 @@ contract('Project', function (accounts) {
   //   assert.equal(repRegBal, 10000, 'reputation balance not updated correctly')
   // })
   //
-  // it('returns the correct bool for a staker who has unstaked', async () => {
+  // it('returns the correct bool for a staker who has unstaked', async function () {
   //   let falseVal = await PL.isStaker(spoofedP.address, staker)
   //   let falseVal2 = await PL.isStaker(spoofedP.address, repStaker)
   //   assert.isNotTrue(falseVal, 'returns staker as non-staker')
   // })
   //
-  // it('returns if a project is staked or not', async () => {
+  // it('returns if a project is staked or not', async function () {
   //   let notStaked = await PL.isStaked(spoofedP.address)
   //   await spoofedP.stakeTokens(staker, tokens, web3.toWei(1, 'ether'), {from: spoofedTRaddress})
   //   let staked = await PL.isStaked(spoofedP.address)
@@ -339,7 +339,7 @@ contract('Project', function (accounts) {
   //   assert.isNotTrue(notStaked, "doesn't return unstaked state correctly")
   // })
   //
-  // it('sets project state', async () => {
+  // it('sets project state', async function () {
   //   let nextDate = Date.now() + (7 * 25 * 60 * 60)
   //   await spoofedP.setState(2, nextDate, {from: spoofedPRaddress})
   //   let state = await spoofedP.state.call()
@@ -348,12 +348,12 @@ contract('Project', function (accounts) {
   //   assert.equal(nextDeadline, nextDate, "doesn't update nextDeadline correctly")
   // })
   //
-  // it('returns false if time is not up', async () => {
+  // it('returns false if time is not up', async function () {
   //   let val = await PL.timesUp(spoofedP.address)
   //   assert.isFalse(val, 'returns timesUp true when should be false')
   // })
   //
-  // it('handles times up correctly when time is up', async () => {
+  // it('handles times up correctly when time is up', async function () {
   //   await spoofedP.setState(2, Math.floor(Date.now()/1000) - 1, {from: spoofedPRaddress})
   //   let nextDeadline = await spoofedP.nextDeadline.call()
   //   let val = await PL.timesUp(spoofedP.address)
@@ -361,7 +361,7 @@ contract('Project', function (accounts) {
   //   assert.isTrue(val, 'returns timesUp false when should be true')
   // })
   //
-  // // it('handles validation correctly', async () => {
+  // // it('handles validation correctly', async function () {
   // //   await spoofedP.setState(5, 0, {from: spoofedPRaddress})
   // //   await PL.validate(spoofedP.address, staker, tokens, true, {from: spoofedTRaddress})
   // //   await PL.validate(spoofedP.address, staker2, tokens, false, {from: spoofedTRaddress})
@@ -373,7 +373,7 @@ contract('Project', function (accounts) {
   // //   assert.equal(totalValNegative.toNumber(), tokens, "doesn't update negative validation correctly")
   // // })
   //
-  // it('refunds a token staker when project succeeds', async () => {
+  // it('refunds a token staker when project succeeds', async function () {
   //   await spoofedP.setState(6, 0, {from: spoofedPRaddress})
   //   let state = await spoofedP.state()
   //   // console.log(state)
@@ -394,7 +394,7 @@ contract('Project', function (accounts) {
   //   // })
   // })
   //
-  // it('refunds a token staker when project fails', async () => {
+  // it('refunds a token staker when project fails', async function () {
   //   // let spoofedP2 = await Project.new(projectCost, proposeProportion, stakingPeriod, RR.address, spoofedTRaddress, {from: spoofedPRaddress})
   //   // await spoofedP2.stakeTokens(staker, tokens, web3.toWei(1, 'ether'), {from: spoofedTRaddress})
   //   // await spoofedP2.stakeTokens(staker2, tokens, web3.toWei(1, 'ether'), {from: spoofedTRaddress})
@@ -420,7 +420,7 @@ contract('Project', function (accounts) {
   // // Note this does not check total reputation/tokens staked because those have already been burned
   // // We should likely add a flag so that this can only be called once. As this test uses a "bug"
   // // To be able to be ran
-  // // it('sets ValidationState when project passes', async () => {
+  // // it('sets ValidationState when project passes', async function () {
   // //   await spoofedP.setValidationState(true, {from: spoofedPRaddress})
   // //   let validateReward = await spoofedP.validateReward.call()
   // //   let totalValidateNegative = await spoofedP.totalValidateNegative.call()
@@ -430,7 +430,7 @@ contract('Project', function (accounts) {
   // //   assert.isTrue(opposingValidator, "doesn't set opposingValidator correctly")
   // // })
   //
-  // it('only allows the TokenRegistry to call stakeTokens', async () => {
+  // it('only allows the TokenRegistry to call stakeTokens', async function () {
   //   let errorThrown = false
   //   try {
   //     await P.stakeTokens(staker, tokens, web3.toWei(0.5, 'ether'))
@@ -440,7 +440,7 @@ contract('Project', function (accounts) {
   //   assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
-  // it('only allows the TokenRegistry to call unstakeTokens', async () => {
+  // it('only allows the TokenRegistry to call unstakeTokens', async function () {
   //   let errorThrown = false
   //   try {
   //     await P.unstakeTokens(staker, tokens)
@@ -450,7 +450,7 @@ contract('Project', function (accounts) {
   //   assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
-  // it('only allows the TokenRegistry to call validate', async () => {
+  // it('only allows the TokenRegistry to call validate', async function () {
   //   let errorThrown = false
   //   try {
   //     await P.validate(staker, tokens, false)
@@ -460,7 +460,7 @@ contract('Project', function (accounts) {
   //   assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
-  // it('only allows the ReputationRegistry to call stakeReputation', async () => {
+  // it('only allows the ReputationRegistry to call stakeReputation', async function () {
   //   let errorThrown = false
   //   try {
   //     await P.stakeReputation(repStaker, 1)
@@ -470,7 +470,7 @@ contract('Project', function (accounts) {
   //   assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
-  // it('only allows the ReputationRegistry to call unstakeReputation', async () => {
+  // it('only allows the ReputationRegistry to call unstakeReputation', async function () {
   //   let errorThrown = false
   //   try {
   //     await P.unstakeReputation(repStaker, 1)
@@ -480,7 +480,7 @@ contract('Project', function (accounts) {
   //   assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
-  // it('only allows the projectRegistry to call clearStake', async () => {
+  // it('only allows the projectRegistry to call clearStake', async function () {
   //   let errorThrown = false
   //   try {
   //     await P.clearStake()
@@ -490,7 +490,7 @@ contract('Project', function (accounts) {
   //   assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
-  // it('only allows the projectRegistry to call setState', async () => {
+  // it('only allows the projectRegistry to call setState', async function () {
   //   let errorThrown = false
   //   try {
   //     await P.setState(2, (7 * 25 * 60 * 60))
@@ -500,13 +500,13 @@ contract('Project', function (accounts) {
   //   assertThrown(errorThrown, 'An error should have been thrown')
   // })
 
-  // it('returns true if time is up', async () => {
+  // it('returns true if time is up', async function () {
   //   await evmIncreaseTime(300000000000)
   //   let val = await spoofedP.timesUp()
   //   console.log('second', val)
   //   assert.isTrue(val, 'returns timesUp false when should be true')
   // })
-  // it('only allows Token Registry to stake tokens', async () => {
+  // it('only allows Token Registry to stake tokens', async function () {
   //
   // })
 

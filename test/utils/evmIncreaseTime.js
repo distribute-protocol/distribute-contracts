@@ -1,41 +1,18 @@
-/* global web3 */
-const delay = require('./delay')
-const Promise = require('bluebird')
-web3.version = Promise.promisifyAll(web3.version)
-web3.eth = Promise.promisifyAll(web3.eth)
+// increase time
+const Web3 = require('web3')
+const web3 = new Web3()
+web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'))
 
-function increaseTime (seconds) {
-  return new Promise(function (resolve, reject) {
-    web3.currentProvider.sendAsync(
-      {
-        jsonrpc: '2.0',
-        method: 'evm_increaseTime',
-        params: [seconds],
-        id: 0
-      },
-      resolve
-    )
+const jsonrpc = '2.0'
+const id = 0
+
+const send = (method, params = []) =>
+  web3.currentProvider.send({
+    id, jsonrpc, method, params
   })
-}
 
-async function waitTime (seconds) {
-  let blockNum = await web3.eth.getBlockNumberAsync()
-  let block = await web3.eth.getBlockAsync(blockNum)
-  const startTime = block.timestamp
-  let blockTime = startTime
-  while (blockTime - startTime < seconds) {
-    await delay(1000)
-    blockNum = await web3.eth.getBlockNumberAsync()
-    block = await web3.eth.getBlockAsync(blockNum)
-    blockTime = block.timestamp
-  }
+const increaseTime = async seconds => {
+  await send('evm_increaseTime', [seconds])
+  await send('evm_mine')
 }
-
-module.exports = async function (seconds) {
-  const netver = await web3.version.getNetworkAsync()
-  if (netver !== '234') {
-    return increaseTime(seconds)
-  } else {
-    return waitTime(seconds)
-  }
-}
+module.exports = increaseTime
