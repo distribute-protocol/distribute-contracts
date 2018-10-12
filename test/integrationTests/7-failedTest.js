@@ -814,9 +814,9 @@ contract('Failed State', (accounts) => {
   })
 
   describe('handle validators', () => {
-    it('yes validator can ask for refund & reward from TR failed project', async () => {
+    it('yes validator can ask for refund & reward from in TR failed project', async () => {
       // take stock of important environmental variables
-      let index = 0
+      let index = valTrueMoreVoteTrueOnly
       let claimable = await task.getClaimable(projAddrT, index)
       let claimableByRep = await task.getClaimableByRep(projAddrT, index)
       let valDetails = await task.getValDetails(projAddrT, index, validator1)
@@ -836,7 +836,7 @@ contract('Failed State', (accounts) => {
       assert.isAtLeast(affirmativeIndex, 0, 'affirmative index should be at least 0')
 
       // calculate wei reward
-      let rewardWeighting = 100 // no other validators on this task
+      let rewardWeighting = 55 // 1st of 2 validators
       let validationReward = await project.getValidationReward(projAddrT, true)
       let taskWeighting = await task.getWeighting(projAddrT, index, true)
       let weiReward = Math.floor(validationReward.times(taskWeighting).toNumber() * rewardWeighting / 10000)
@@ -866,7 +866,7 @@ contract('Failed State', (accounts) => {
 
     it('yes validator can ask for refund & reward from RR failed project', async () => {
       // take stock of important environmental variables
-      let index = 0
+      let index = valTrueMoreVoteTrueOnly
       let claimable = await task.getClaimable(projAddrR, index)
       let claimableByRep = await task.getClaimableByRep(projAddrR, index)
       let valDetails = await task.getValDetails(projAddrR, index, validator1)
@@ -886,7 +886,7 @@ contract('Failed State', (accounts) => {
       assert.isAtLeast(affirmativeIndex, 0, 'affirmative index should be at least 0')
 
       // calculate wei reward
-      let rewardWeighting = 100 // no other validators on this task
+      let rewardWeighting = 55 // 1st of 2 validators
       let validationReward = await project.getValidationReward(projAddrR, true)
       let taskWeighting = await task.getWeighting(projAddrR, index, true)
       let weiReward = Math.floor(validationReward.times(taskWeighting).toNumber() * rewardWeighting / 10000)
@@ -916,7 +916,7 @@ contract('Failed State', (accounts) => {
 
     it('no validator can ask for half refund from TR failed project', async () => {
       // take stock of important environmental variables
-      let index = 1
+      let index = valTrueMoreVoteTrueOnly
       let claimable = await task.getClaimable(projAddrT, index)
       let claimableByRep = await task.getClaimableByRep(projAddrT, index)
       let valDetails = await task.getValDetails(projAddrT, index, validator2)
@@ -966,7 +966,7 @@ contract('Failed State', (accounts) => {
 
     it('no validator can ask for half reward from RR failed project', async () => {
       // take stock of important environmental variables
-      let index = 1
+      let index = valTrueMoreVoteTrueOnly
       let claimable = await task.getClaimable(projAddrR, index)
       let claimableByRep = await task.getClaimableByRep(projAddrR, index)
       let valDetails = await task.getValDetails(projAddrR, index, validator2)
@@ -1018,7 +1018,7 @@ contract('Failed State', (accounts) => {
       errorThrown = false
       try {
         // attempt to refund not validator on index validated false more (still has validations left on it)
-        await TR.rewardValidator(projAddrT, 2, {from: notValidator})
+        await TR.rewardValidator(projAddrT, valTrueMoreVoteTrueOnly, {from: notValidator})
       } catch (e) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
@@ -1030,7 +1030,7 @@ contract('Failed State', (accounts) => {
       errorThrown = false
       try {
         // attempt to refund not validator on index validated false more (still has validations left on it)
-        await TR.rewardValidator(projAddrT, 2, {from: notValidator})
+        await TR.rewardValidator(projAddrT, valTrueMoreVoteTrueOnly, {from: notValidator})
       } catch (e) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
@@ -1043,7 +1043,7 @@ contract('Failed State', (accounts) => {
       // as well as making sure that validator is rewarded proportionally correctly
 
       // calculate wei reward for validator 3 on index 1
-      let index = 1
+      let index = valTrueMoreVoteTrueOnly
       let rewardWeighting = 45 // 2nd of 2 validators
       let validationReward = await project.getValidationReward(projAddrT, true)
       let taskWeighting = await task.getWeighting(projAddrT, index, true)
@@ -1061,13 +1061,57 @@ contract('Failed State', (accounts) => {
       // checks
       assert.equal(projWeiBalAfter + weiReward, projWeiBalBefore, 'wei reward was not sent correctly to validator')
 
-      // refund remaining yes validators
-      await TR.rewardValidator(projAddrT, 1, {from: validator1})
-      await TR.rewardValidator(projAddrT, 2, {from: validator1})
+      // refund validators from index valTrueOnly
+      index = valTrueOnly
+      await TR.rewardValidator(projAddrT, index, {from: validator1})
 
-      // refund remaining no validators
-      await TR.rewardValidator(projAddrT, 2, {from: validator2})
-      await TR.rewardValidator(projAddrT, 2, {from: validator3})
+      // refund validators from index valFalseOnly
+      index = valFalseOnly
+      await TR.rewardValidator(projAddrT, index, {from: validator1})
+
+      // refund validators from index valTrueMoreVoteTrueOnly --> completed above
+
+      // refund validators from index valTrueMoreVoteFalseOnly
+      index = valTrueMoreVoteFalseOnly
+      await TR.rewardValidator(projAddrT, index, {from: validator1})
+      await TR.rewardValidator(projAddrT, index, {from: validator2})
+      await TR.rewardValidator(projAddrT, index, {from: validator3})
+
+      // refund validators from index valTrueMoreVoteTrueMore
+      index = valTrueMoreVoteTrueMore
+      await TR.rewardValidator(projAddrT, index, {from: validator1})
+      await TR.rewardValidator(projAddrT, index, {from: validator2})
+      await TR.rewardValidator(projAddrT, index, {from: validator3})
+
+      // refund validators from index valTrueMoreVoteFalseMore
+      index = valTrueMoreVoteFalseMore
+      await TR.rewardValidator(projAddrT, index, {from: validator1})
+      await TR.rewardValidator(projAddrT, index, {from: validator2})
+      await TR.rewardValidator(projAddrT, index, {from: validator3})
+
+      // refund validators from index valFalseMoreVoteTrueOnly
+      index = valFalseMoreVoteTrueOnly
+      await TR.rewardValidator(projAddrT, index, {from: validator1})
+      await TR.rewardValidator(projAddrT, index, {from: validator2})
+      await TR.rewardValidator(projAddrT, index, {from: validator3})
+
+      // refund validators from index valFalseMoreVoteFalseOnly
+      index = valFalseMoreVoteFalseOnly
+      await TR.rewardValidator(projAddrT, index, {from: validator1})
+      await TR.rewardValidator(projAddrT, index, {from: validator2})
+      await TR.rewardValidator(projAddrT, index, {from: validator3})
+
+      // refund validators from index valFalseMoreVoteTrueMore
+      index = valFalseMoreVoteTrueMore
+      await TR.rewardValidator(projAddrT, index, {from: validator1})
+      await TR.rewardValidator(projAddrT, index, {from: validator2})
+      await TR.rewardValidator(projAddrT, index, {from: validator3})
+
+      // refund validators from index valFalseMoreVoteFalseMore
+      index = valFalseMoreVoteFalseMore
+      await TR.rewardValidator(projAddrT, index, {from: validator1})
+      await TR.rewardValidator(projAddrT, index, {from: validator2})
+      await TR.rewardValidator(projAddrT, index, {from: validator3})
     })
 
     it('all eligible validators can be reward from RR failed project', async () => {
@@ -1075,7 +1119,7 @@ contract('Failed State', (accounts) => {
       // as well as making sure that validator is rewarded proportionally correctly
 
       // calculate wei reward for validator 3 on index 1
-      let index = 1
+      let index = valTrueMoreVoteTrueOnly
       let rewardWeighting = 45 // 2nd of 2 validators
       let validationReward = await project.getValidationReward(projAddrR, true)
       let taskWeighting = await task.getWeighting(projAddrR, index, true)
@@ -1093,13 +1137,57 @@ contract('Failed State', (accounts) => {
       // checks
       assert.equal(projWeiBalAfter + weiReward, projWeiBalBefore, 'wei reward was not sent correctly to validator')
 
-      // refund remaining yes validators
-      await TR.rewardValidator(projAddrR, 1, {from: validator1})
-      await TR.rewardValidator(projAddrR, 2, {from: validator1})
+      // refund validators from index valTrueOnly
+      index = valTrueOnly
+      await TR.rewardValidator(projAddrR, index, {from: validator1})
 
-      // refund remaining no validators
-      await TR.rewardValidator(projAddrR, 2, {from: validator2})
-      await TR.rewardValidator(projAddrR, 2, {from: validator3})
+      // refund validators from index valFalseOnly
+      index = valFalseOnly
+      await TR.rewardValidator(projAddrR, index, {from: validator1})
+
+      // refund validators from index valTrueMoreVoteTrueOnly --> completed above
+
+      // refund validators from index valTrueMoreVoteFalseOnly
+      index = valTrueMoreVoteFalseOnly
+      await TR.rewardValidator(projAddrR, index, {from: validator1})
+      await TR.rewardValidator(projAddrR, index, {from: validator2})
+      await TR.rewardValidator(projAddrR, index, {from: validator3})
+
+      // refund validators from index valTrueMoreVoteTrueMore
+      index = valTrueMoreVoteTrueMore
+      await TR.rewardValidator(projAddrR, index, {from: validator1})
+      await TR.rewardValidator(projAddrR, index, {from: validator2})
+      await TR.rewardValidator(projAddrR, index, {from: validator3})
+
+      // refund validators from index valTrueMoreVoteFalseMore
+      index = valTrueMoreVoteFalseMore
+      await TR.rewardValidator(projAddrR, index, {from: validator1})
+      await TR.rewardValidator(projAddrR, index, {from: validator2})
+      await TR.rewardValidator(projAddrR, index, {from: validator3})
+
+      // refund validators from index valFalseMoreVoteTrueOnly
+      index = valFalseMoreVoteTrueOnly
+      await TR.rewardValidator(projAddrR, index, {from: validator1})
+      await TR.rewardValidator(projAddrR, index, {from: validator2})
+      await TR.rewardValidator(projAddrR, index, {from: validator3})
+
+      // refund validators from index valFalseMoreVoteFalseOnly
+      index = valFalseMoreVoteFalseOnly
+      await TR.rewardValidator(projAddrR, index, {from: validator1})
+      await TR.rewardValidator(projAddrR, index, {from: validator2})
+      await TR.rewardValidator(projAddrR, index, {from: validator3})
+
+      // refund validators from index valFalseMoreVoteTrueMore
+      index = valFalseMoreVoteTrueMore
+      await TR.rewardValidator(projAddrR, index, {from: validator1})
+      await TR.rewardValidator(projAddrR, index, {from: validator2})
+      await TR.rewardValidator(projAddrR, index, {from: validator3})
+
+      // refund validators from index valFalseMoreVoteFalseMore
+      index = valFalseMoreVoteFalseMore
+      await TR.rewardValidator(projAddrR, index, {from: validator1})
+      await TR.rewardValidator(projAddrR, index, {from: validator2})
+      await TR.rewardValidator(projAddrR, index, {from: validator3})
     })
   })
 
@@ -1182,7 +1270,7 @@ contract('Failed State', (accounts) => {
       assert.equal(availableVotesAfter, 0, 'assert no votes are available')
     })
 
-    it('yes reputation voter can\'t refund more voting tokens than they have', async () => {
+    it('yes reputation voter can\'t refund more voting reputation than they have', async () => {
       errorThrown = false
       let availableVotesBefore = await PLCR.getAvailableTokens(repYesVoter, 2)
       let lockedTokens = await PLCR.getLockedTokens(repYesVoter)
@@ -1218,7 +1306,7 @@ contract('Failed State', (accounts) => {
       assert.equal(availableVotesAfter, 0, 'assert no votes are available')
     })
 
-    it('no reputation voter can\'t refund more voting tokens than they have', async () => {
+    it('no reputation voter can\'t refund more voting reputation than they have', async () => {
       errorThrown = false
       let availableVotesBefore = await PLCR.getAvailableTokens(repNoVoter, 2)
       let lockedTokens = await PLCR.getLockedTokens(repNoVoter)

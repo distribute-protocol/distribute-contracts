@@ -934,7 +934,7 @@ contract('Complete State', (accounts) => {
       assert.equal(availableVotesAfter, 0, 'assert no votes are available')
     })
 
-    it('yes reputation voter can\'t refund more voting tokens than they have', async () => {
+    it('yes reputation voter can\'t refund more voting reputation than they have', async () => {
       errorThrown = false
       let availableVotesBefore = await PLCR.getAvailableTokens(repYesVoter, 2)
       let lockedTokens = await PLCR.getLockedTokens(repYesVoter)
@@ -970,7 +970,7 @@ contract('Complete State', (accounts) => {
       assert.equal(availableVotesAfter, 0, 'assert no votes are available')
     })
 
-    it('no reputation voter can\'t refund more voting tokens than they have', async () => {
+    it('no reputation voter can\'t refund more voting reputation than they have', async () => {
       errorThrown = false
       let availableVotesBefore = await PLCR.getAvailableTokens(repNoVoter, 2)
       let lockedTokens = await PLCR.getLockedTokens(repNoVoter)
