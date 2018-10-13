@@ -48,7 +48,6 @@ contract('Staked State', function (accounts) {
     projAddrT2 = await returnProject.staked_T(projectCost, stakingPeriod, ipfsHash)
     console.log('after stakedT2')
     projAddrR2 = await returnProject.staked_R(projectCost, stakingPeriod, ipfsHash)
-    console.log('after stakedR2')
     console.log('after staked')
   })
 

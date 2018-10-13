@@ -13,6 +13,8 @@ const evmIncreaseTime = require('./evmIncreaseTime')
 const keccakHashes = require('../utils/keccakHashes')
 const ethers = require('ethers')
 
+let Promise = require('bluebird')
+
 module.exports = function projectHelper (accounts) {
   let obj = {}
   obj.user = {}
@@ -234,7 +236,9 @@ module.exports = function projectHelper (accounts) {
 
   obj.utils.calculateTargetPrice = async function (_tokens) {
     let currPrice = await obj.utils.getCurrentPrice(true) // get big number version
+    console.log('after curr price')
     let totalSupply = await obj.utils.getTotalTokens()
+    console.log('after total supply')
     let newSupply = totalSupply + _tokens
     let weiReq = currPrice.times(1000 + Math.round(_tokens * 1000 / newSupply)) // emulate Divison.percent() precision of 3
     return weiReq.div(1000)
@@ -274,16 +278,22 @@ module.exports = function projectHelper (accounts) {
   }
 
   obj.project.getWeiBal = async function (_projAddr, _unadulterated) {
+    console.log(_projAddr)
     let PROJ = await Project.at(_projAddr)
+    console.log('after PROJ')
     let weiBal = await PROJ.weiBal()
+    console.log('after weiBal in getweibal')
     return _unadulterated === true
       ? weiBal
       : weiBal.toNumber()
   }
 
   obj.project.getWeiRemaining = async function (_projAddr) {
+    console.log('get weiremaining function')
     let weiCost = await obj.project.getWeiCost(_projAddr, true)
+    console.log('after weicosts')
     let weiBal = await obj.project.getWeiBal(_projAddr, true)
+    console.log('after get weibal')
     return weiCost.minus(weiBal)
   }
 
@@ -306,9 +316,13 @@ module.exports = function projectHelper (accounts) {
   }
 
   obj.project.calculateRequiredTokens = async function (_projAddr) {
+    console.log('before getweiremaining')
     let weiRemaining = await obj.project.getWeiRemaining(_projAddr)
+    console.log('after wei remaining')
     let currentPrice = await obj.utils.getCurrentPrice(true)
+    console.log('after current price')
     let requiredTokens = Math.ceil(weiRemaining.div(currentPrice))
+    console.log('after required tokens')
     return requiredTokens
   }
 
@@ -556,7 +570,6 @@ module.exports = function projectHelper (accounts) {
   // project return functions
   // return project (address) proposed by token holder
   obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash) {
-
     // seed the system with tokens and rep
     await obj.utils.mintIfNecessary(obj.user.tokenProposer)
     await obj.utils.register(obj.user.repProposer)
@@ -932,23 +945,29 @@ module.exports = function projectHelper (accounts) {
 
   // fully stake project with tokens via two stakers
   obj.returnProjectHelper.stakeTokens = async function (_projAddr) {
+    // console.log('pretokens')
     // fuel token stakers
     await obj.utils.mintIfNecessary(obj.user.tokenStaker1, 5000)
     await obj.utils.mintIfNecessary(obj.user.tokenStaker2, 5000)
+    console.log('midtokens??')
 
     // get tokens required to fully stake the project and stake half of them
     let requiredTokens = await obj.project.calculateRequiredTokens(_projAddr)
+    console.log(requiredTokens)
     let tokensToStake = Math.floor(requiredTokens / 2)
+    console.log('midtokens???')
 
     // assert that tokenStaker1 has the tokens to stake
     let tsBal = await obj.utils.getTokenBalance(obj.user.tokenStaker1)
     assert.isAtLeast(tsBal, tokensToStake, 'tokenStaker1 doesn\'t have enough tokens to stake')
 
     // stake
-    await obj.contracts.TR.stakeTokens(_projAddr, tokensToStake, {from: obj.user.tokenStaker1})
+    console.log('midtokens?')
 
+    await obj.contracts.TR.stakeTokens(_projAddr, tokensToStake, {from: obj.user.tokenStaker1})
+    console.log('midtokens')
     // get tokens left to fully stake the project and stake them
-    requiredTokens = await obj.project.calculateRequiredTokens(_projAddr)
+    requiredTokens = await obj.project.calculateRequiredTokens(_projAddr) + 1
 
     // assert that tokenStaker2 has the tokens to stake
     tsBal = await obj.utils.getTokenBalance(obj.user.tokenStaker2)
@@ -956,10 +975,12 @@ module.exports = function projectHelper (accounts) {
 
     // stake
     await obj.contracts.TR.stakeTokens(_projAddr, requiredTokens, {from: obj.user.tokenStaker2})
+    console.log('posttokens')
   }
 
   // fully stake project with reputation via two stakers
   obj.returnProjectHelper.stakeReputation = async function (_projAddr) {
+    console.log('prerep')
     // register reputation stakers
     await obj.utils.register(obj.user.repStaker1)
     await obj.utils.register(obj.user.repStaker2)
@@ -976,7 +997,7 @@ module.exports = function projectHelper (accounts) {
     await obj.contracts.RR.stakeReputation(_projAddr, repToStake, {from: obj.user.repStaker1})
 
     // get reputation left to fully stake the project and stake it
-    requiredRep = await obj.project.getRequiredReputation(_projAddr)
+    requiredRep = await obj.project.getRequiredReputation(_projAddr) + 1
 
     // assert that repStaker2 has the reputation to stake
     rsBal = await obj.utils.getRepBalance(obj.user.repStaker2)
@@ -984,7 +1005,7 @@ module.exports = function projectHelper (accounts) {
 
     // stake
     await obj.contracts.RR.stakeReputation(_projAddr, requiredRep, {from: obj.user.repStaker2})
+    console.log('postrep')
   }
-
   return obj
 }

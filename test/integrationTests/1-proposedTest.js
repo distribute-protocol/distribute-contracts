@@ -32,21 +32,29 @@ contract('Proposed State', function (accounts) {
 
     // propose projects
     // to check staking below required amount, unstaking
-
+    console.log('before proposed')
     projAddrT1 = await returnProject.proposed_T(projectCost, stakingPeriod, ipfsHash)
+    console.log('after proposedT1')
     projAddrR1 = await returnProject.proposed_R(projectCost, stakingPeriod, ipfsHash)
+    console.log('after proposedR1')
 
     // to check staking extra above required amount & state change to staked
     projAddrT2 = await returnProject.proposed_T(projectCost, stakingPeriod, ipfsHash)
+    console.log('after proposedT2')
     projAddrR2 = await returnProject.proposed_R(projectCost, stakingPeriod, ipfsHash)
+    console.log('after proposedR2')
 
     // to check staking by multiple stakers
     projAddrT3 = await returnProject.proposed_T(projectCost, stakingPeriod, ipfsHash)
+    console.log('after proposedT3')
     projAddrR3 = await returnProject.proposed_R(projectCost, stakingPeriod, ipfsHash)
+    console.log('after proposedR3')
 
     // to check errors and expiration
     projAddrT4 = await returnProject.proposed_T(projectCost, stakingPeriod, ipfsHash)
+    console.log('after proposedT4')
     projAddrR4 = await returnProject.proposed_R(projectCost, stakingPeriod, ipfsHash)
+    console.log('after proposed')
 
     // fund token stakers
     await utils.mintIfNecessary(tokenStaker1)

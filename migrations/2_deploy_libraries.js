@@ -1,3 +1,5 @@
+/* global artifacts */
+
 const PLCRVoting = artifacts.require('library/PLCRVoting')
 const DLL = artifacts.require('library/DLL')
 const AttributeStore = artifacts.require('library/AttributeStore')

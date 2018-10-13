@@ -1,3 +1,5 @@
+/* global artifacts */
+
 const TokenRegistry = artifacts.require('TokenRegistry')
 const ReputationRegistry = artifacts.require('ReputationRegistry')
 const ProjectRegistry = artifacts.require('ProjectRegistry')
@@ -7,14 +9,14 @@ const DistributeToken = artifacts.require('DistributeToken')
 const ProjectLibrary = artifacts.require('ProjectLibrary')
 const Division = artifacts.require('library/Division')
 const Task = artifacts.require('Task')
-const ProxyFactory = artifacts.require('library/ProxyFactory')
+// const ProxyFactory = artifacts.require('library/ProxyFactory')
 
 /*
   deploys and connects contracts
 */
 
 module.exports = function (deployer) {
-  deployer.then(async function () {
+  deployer.then(async () => {
     await deployer.deploy(Division)
     await deployer.link(Division, [DistributeToken, ProjectLibrary, ProjectRegistry, ReputationRegistry, TokenRegistry, Project])
     await deployer.deploy(ProjectLibrary)
