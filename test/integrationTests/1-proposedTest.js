@@ -1407,7 +1407,7 @@ contract('Proposed State', function (accounts) {
   describe('time out state changes', () => {
     before(async () => {
       // fast forward time
-      evmIncreaseTime(604801 * 2) // 2 weeks
+      await evmIncreaseTime(604801 * 1) // 1 week & 1 second
     })
 
     it('TR proposed project becomes expired if not staked at staking deadline', async () => {

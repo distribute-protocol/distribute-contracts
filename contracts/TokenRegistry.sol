@@ -147,7 +147,7 @@ contract TokenRegistry is Ownable {
     */
     function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes _ipfsHash) external {
         require(!freeze);
-        require(now < _stakingPeriod && _cost > 0);
+        require(block.timestamp < _stakingPeriod && _cost > 0);
         uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
         uint256 proposerTokenCost = (
             Division.percent(costProportion, proposeProportion, 10).mul(

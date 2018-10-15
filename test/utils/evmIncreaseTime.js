@@ -1,18 +1,38 @@
 // increase time
-const Web3 = require('web3')
-const web3 = new Web3()
-web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'))
 
-const jsonrpc = '2.0'
-const id = 0
+const EthRPC = require('ethjs-rpc')
+const HttpProvider = require('ethjs-provider-http')
 
-const send = (method, params = []) =>
-  web3.currentProvider.send({
-    id, jsonrpc, method, params
-  })
+const ethRPC = new EthRPC(new HttpProvider('http://localhost:7545'))
 
-const increaseTime = async seconds => {
-  await send('evm_increaseTime', [seconds])
-  await send('evm_mine')
+const increaseTime = (seconds) => {
+  if ((typeof seconds) !== 'number') {
+    throw new Error('arguments to increaseTime must be of type number')
+  }
+
+  return new Promise((resolve, reject) =>
+    ethRPC.sendAsync(
+      {
+        method: 'evm_increaseTime',
+        params: [seconds]
+      }, (err) => {
+        if (err) reject(err)
+        resolve()
+      }
+    )
+  ).then(() =>
+    new Promise((resolve, reject) =>
+      ethRPC.sendAsync(
+        {
+          method: 'evm_mine',
+          params: []
+        }, (err) => {
+          if (err) reject(err)
+          resolve()
+        }
+      )
+    )
+  )
 }
+
 module.exports = increaseTime

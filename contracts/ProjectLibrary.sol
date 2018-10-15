@@ -63,7 +63,7 @@ library ProjectLibrary {
     @return A boolean representing whether the project has passed its next deadline.
     */
     function timesUp(address _projectAddress) public view returns (bool) {
-        return (now > Project(_projectAddress).nextDeadline());
+        return (block.timestamp > Project(_projectAddress).nextDeadline());
     }
 
     /**
@@ -113,13 +113,12 @@ library ProjectLibrary {
         require(project.state() == 1);
 
         if(isStaked(_projectAddress)) {
-            uint256 nextDeadline = now + project.stakedStatePeriod();
+            uint256 nextDeadline = block.timestamp + project.stakedStatePeriod();
             project.setState(2, nextDeadline);
             return true;
         } else if(timesUp(_projectAddress)) {
             project.setState(8, 0);
-            // this line bugs for some reason
-            /* project.clearProposerStake(); */
+            project.clearProposerStake();
             emit LogProjectExpired(_projectAddress);
         }
         return false;
@@ -143,7 +142,7 @@ library ProjectLibrary {
         if(timesUp(_projectAddress)) {
             uint256 nextDeadline;
             if(_taskHash != 0 && _taskListWeighting > 50) {
-                nextDeadline = now + project.activeStatePeriod();
+                nextDeadline = block.timestamp + project.activeStatePeriod();
                 project.setState(3, nextDeadline);
                 return true;
             } else {
@@ -178,7 +177,7 @@ library ProjectLibrary {
         require(project.state() == 3);
 
         if (timesUp(_projectAddress)) {
-            uint256 nextDeadline = now + project.validateStatePeriod();
+            uint256 nextDeadline = block.timestamp + project.validateStatePeriod();
             project.setState(4, nextDeadline);
             TokenRegistry tr = TokenRegistry(_tokenRegistryAddress);
             for(uint i = 0; i < project.getTaskCount(); i++) {
@@ -217,7 +216,7 @@ library ProjectLibrary {
         Project project = Project(_projectAddress);
         require(project.state() == 4);
         if (timesUp(_projectAddress)) {
-            uint256 nextDeadline = now + project.voteCommitPeriod() + project.voteRevealPeriod();
+            uint256 nextDeadline = block.timestamp + project.voteCommitPeriod() + project.voteRevealPeriod();
             project.setState(5, nextDeadline);
             TokenRegistry tr = TokenRegistry(_tokenRegistryAddress);
             PLCRVoting plcr = PLCRVoting(_plcrVoting);

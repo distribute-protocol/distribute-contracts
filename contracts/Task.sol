@@ -111,7 +111,7 @@ contract Task {
     function setTaskReward(uint256 _weiVal, uint256 _reputationVal, address _claimer) external onlyPRorRR {
         weiReward = _weiVal;
         reputationReward = _reputationVal;
-        claimTime = now;
+        claimTime = block.timestamp;
         complete = false;
         claimer = _claimer;
     }

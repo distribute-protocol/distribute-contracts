@@ -565,7 +565,7 @@ contract ProjectRegistry is Ownable {
         require(keccak256(abi.encodePacked(_taskDescription, _weighting)) == task.taskHash());
         require(
             task.claimer() == 0 ||
-            (now > (task.claimTime() + project.turnoverTime()) && !task.complete())
+            (block.timestamp > (task.claimTime() + project.turnoverTime()) && !task.complete())
         );
         task.setWeighting(_weighting);
         task.setTaskReward(_weiVal, _reputationVal, _claimer);

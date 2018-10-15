@@ -33,38 +33,38 @@ module.exports = function projectHelper (accounts) {
   obj.user.repProposer = accounts[2]
   obj.user.notProposer = accounts[3]
 
-  obj.user.tokenStaker1 = accounts[4]
-  obj.user.tokenStaker2 = accounts[5]
-  obj.user.repStaker1 = accounts[6]
-  obj.user.repStaker2 = accounts[7]
-  obj.user.notStaker = accounts[8]
+  obj.user.tokenStaker1 = accounts[1]
+  obj.user.tokenStaker2 = accounts[2]
+  obj.user.repStaker1 = accounts[3]
+  obj.user.repStaker2 = accounts[4]
+  obj.user.notStaker = accounts[5]
 
-  obj.user.worker1 = accounts[9]
-  obj.user.worker2 = accounts[10]
-  obj.user.notWorker = accounts[11]
+  obj.user.worker1 = accounts[1]
+  obj.user.worker2 = accounts[2]
+  obj.user.notWorker = accounts[3]
 
-  obj.user.validator1 = accounts[12]
-  obj.user.validator2 = accounts[13]
-  obj.user.validator3 = accounts[14]
-  obj.user.notValidator = accounts[15]
+  obj.user.validator1 = accounts[1]
+  obj.user.validator2 = accounts[2]
+  obj.user.validator3 = accounts[3]
+  obj.user.notValidator = accounts[4]
 
-  obj.user.repYesVoter = accounts[16]
-  obj.user.repNoVoter = accounts[17]
-  obj.user.tokenYesVoter = accounts[18]
-  obj.user.tokenNoVoter = accounts[19]
-  obj.user.cheekyYesVoter = accounts[20]
-  obj.user.cheekyNoVoter = accounts[21]
-  obj.user.notVoter = accounts[22]
+  obj.user.repYesVoter = accounts[1]
+  obj.user.repNoVoter = accounts[2]
+  obj.user.tokenYesVoter = accounts[3]
+  obj.user.tokenNoVoter = accounts[4]
+  obj.user.cheekyYesVoter = accounts[5]
+  obj.user.cheekyNoVoter = accounts[6]
+  obj.user.notVoter = accounts[7]
 
-  obj.user.notProject = accounts[23]
+  obj.user.notProject = accounts[1]
 
   // these will only be used in unit tests
-  obj.spoofed.spoofedDT = accounts[24]
-  obj.spoofed.spoofedTR = accounts[25]
-  obj.spoofed.spoofedRR = accounts[26]
-  obj.spoofed.spoofedPR = accounts[27]
-  obj.spoofed.anyAddress = accounts[0]
-  obj.spoofed.spoofedPLCRVoting = accounts[28]
+  obj.spoofed.spoofedDT = accounts[1]
+  obj.spoofed.spoofedTR = accounts[2]
+  obj.spoofed.spoofedRR = accounts[3]
+  obj.spoofed.spoofedPR = accounts[4]
+  obj.spoofed.anyAddress = accounts[5]
+  obj.spoofed.spoofedPLCRVoting = accounts[6]
 
   obj.spoofed.weiToReturn = 10000000000000000000
 
@@ -80,7 +80,7 @@ module.exports = function projectHelper (accounts) {
   obj.project.stakingPeriod = obj.project.now + 604800 // one week from now
 
   obj.project.expiredStakingPeriod = 10 // January 1st, 1970
-  obj.project.proposalCost = parseInt(web3.toWei(0.25, 'ether'))
+  obj.project.proposalCost = parseInt(web3.toWei(0.1, 'ether'))
   obj.project.projectCost = obj.project.proposalCost * 1.05
   obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala' // length === 46
   obj.project.incorrectIpfsHash = 'whyiseveryspokeleadawhiteman' // length != 46
