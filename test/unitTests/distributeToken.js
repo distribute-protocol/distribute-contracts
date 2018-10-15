@@ -20,7 +20,7 @@ contract('Distribute Token', function (accounts) {
   // local test variables
   // let errorThrown
 
-  before(async function () {
+  before(async () => {
     // get contracts from project helped
     await projObj.contracts.setContracts()
 
@@ -28,7 +28,7 @@ contract('Distribute Token', function (accounts) {
     spoofedDT = await DistributeToken.new(spoofedTR, spoofedRR)
   })
 
-  it('correctly returns baseCost as the current price when no tokens are available', async function () {
+  it('correctly returns baseCost as the current price when no tokens are available', async () => {
     // current price, base cost getters
     let currentPrice = await utils.getCurrentPrice()
     let baseCost = await utils.getBaseCost()
@@ -37,7 +37,7 @@ contract('Distribute Token', function (accounts) {
     assert.equal(currentPrice, baseCost, 'currPrice not returned correctly')
   })
 
-  it('returns the correct wei required when no tokens have been minted', async function () {
+  it('returns the correct wei required when no tokens have been minted', async () => {
     // wei required getters
     let weiRequiredFunc = await utils.getWeiRequired(tokensToMint)
     let weiRequiredCalc = await utils.calculateWeiRequired(tokensToMint)
@@ -46,7 +46,7 @@ contract('Distribute Token', function (accounts) {
     assert.equal(weiRequiredFunc, weiRequiredCalc, 'weiRequired not returned correctly')
   })
 
-  it('mints tokens', async function () {
+  it('mints tokens', async () => {
     // take stock of variables before
     let weiRequired = await utils.getWeiRequired(tokensToMint)
     let totalSupplyBefore = await utils.getTotalTokens()
@@ -70,7 +70,7 @@ contract('Distribute Token', function (accounts) {
     assert.equal(tpBalAfter, tokensToMint, 'there should be tokensToMint tokens in tokenProposer\'s balance after minting')
   })
 
-  it('returns the correct wei required when tokens are available', async function () {
+  it('returns the correct wei required when tokens are available', async () => {
     // wei required getters
     let weiRequiredFunc = await utils.getWeiRequired(tokensToMint)
     let weiRequiredCalc = await utils.calculateWeiRequired(tokensToMint)
@@ -79,7 +79,7 @@ contract('Distribute Token', function (accounts) {
     assert.equal(weiRequiredFunc, weiRequiredCalc, 'weiRequired not returned correctly')
   })
 
-  it('correctly returns the current price when tokens are available', async function () {
+  it('correctly returns the current price when tokens are available', async () => {
     // current price getters
     let currentPriceFunc = await utils.getCurrentPrice()
     let currentPriceCalc = await utils.calculateCurrentPrice()
@@ -88,7 +88,7 @@ contract('Distribute Token', function (accounts) {
     assert.equal(currentPriceFunc, currentPriceCalc, 'currPrice not returned correctly')
   })
 
-  it('sells tokens', async function () {
+  it('sells tokens', async () => {
     // take stock of variables before
     let burnVal = await utils.getBurnPrice(tokensToBurn)
     let totalSupplyBefore = await utils.getTotalTokens()
@@ -109,7 +109,7 @@ contract('Distribute Token', function (accounts) {
     assert.equal(tpBalBefore - tpBalAfter, tokensToBurn, 'incorrectly updated tokenProposer\'s token balance')
   })
 
-  it('allows tokenRegistry to call burn()', async function () {
+  it('allows tokenRegistry to call burn()', async () => {
     // take stock of variables before
     let weiRequired = await spoofedDT.weiRequired(tokensToMint)
     let totalSupplyBefore = await spoofedDT.totalSupply()
@@ -128,7 +128,7 @@ contract('Distribute Token', function (accounts) {
     assert.equal(TRBalAfter - TRBalBefore, tokensToMint - tokensToBurn, 'incorretly updated TR token balance')
   })
 
-  it('only allows the tokenRegistry to call burn()', async function () {
+  it('only allows the tokenRegistry to call burn()', async () => {
     // mint some tokens so RR has tokens to burn
     let weiRequired = await spoofedDT.weiRequired(tokensToMint)
     await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
@@ -142,7 +142,7 @@ contract('Distribute Token', function (accounts) {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('allows tokenRegistry to call transferWeiTo()', async function () {
+  it('allows tokenRegistry to call transferWeiTo()', async () => {
     // mint some tokens so there is wei to transfer from the pool
     let weiRequired = await spoofedDT.weiRequired(tokensToMint)
     await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
@@ -161,7 +161,7 @@ contract('Distribute Token', function (accounts) {
     assert.equal(weiPoolBalAfter, 0, 'doesn\'t transfer wei correctly')
   })
 
-  it('allows reputationRegistry to call transferWeiTo()', async function () {
+  it('allows reputationRegistry to call transferWeiTo()', async () => {
     // mint some tokens so there is wei to transfer from the pool
     let weiRequired = await spoofedDT.weiRequired(tokensToMint)
     await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
@@ -180,7 +180,7 @@ contract('Distribute Token', function (accounts) {
     assert.equal(weiPoolBalAfter, 0, 'doesn\'t transfer wei correctly')
   })
 
-  it('only allows the tokenRegistry or reputationRegistry to call transferWeiTo()', async function () {
+  it('only allows the tokenRegistry or reputationRegistry to call transferWeiTo()', async () => {
     // mint some tokens so there is wei to transfer from the pool
     let weiRequired = await spoofedDT.weiRequired(tokensToMint)
     await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
@@ -197,7 +197,7 @@ contract('Distribute Token', function (accounts) {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('allows tokenRegistry to call returnWei()', async function () {
+  it('allows tokenRegistry to call returnWei()', async () => {
     // get wei pool bal before
     let weiPoolBalBefore = await spoofedDT.weiBal()
 
@@ -211,7 +211,7 @@ contract('Distribute Token', function (accounts) {
     assert.equal(weiPoolBalAfter - weiPoolBalBefore, weiToReturn, 'doesn\'t increment weiBal correctly')
   })
 
-  it('only allows the tokenRegistry to call returnWei()', async function () {
+  it('only allows the tokenRegistry to call returnWei()', async () => {
     let errorThrown = false
     try {
       await spoofedDT.returnWei(weiToReturn, {from: anyAddress})
@@ -221,7 +221,7 @@ contract('Distribute Token', function (accounts) {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('allows tokenRegistry to call transferToEscrow()', async function () {
+  it('allows tokenRegistry to call transferToEscrow()', async () => {
     // mint some tokens so there are tokens to transfer to escrow
     let weiRequired = await spoofedDT.weiRequired(tokensToMint)
     await spoofedDT.mint(tokensToMint, {from: tokenProposer, value: weiRequired})
@@ -245,7 +245,7 @@ contract('Distribute Token', function (accounts) {
     assert.equal(tpBalBefore - tpBalAfter, tokensToMint, 'doesn\'t update balance correctly')
   })
 
-  it('only allows the tokenRegistry to call transferToEscrow()', async function () {
+  it('only allows the tokenRegistry to call transferToEscrow()', async () => {
     // mint some tokens so there are tokens to transfer to escrow
     let weiRequired = await spoofedDT.weiRequired(tokensToMint)
     await spoofedDT.mint(tokensToMint, {from: tokenProposer, value: weiRequired})
@@ -259,7 +259,7 @@ contract('Distribute Token', function (accounts) {
     assertThrown(errorThrown, 'An error should have been thrown')
   })
 
-  it('allows tokenRegistry to call transferFromEscrow()', async function () {
+  it('allows tokenRegistry to call transferFromEscrow()', async () => {
     // take stock of variables before
     let totalSupplyBefore = await spoofedDT.totalSupply()
     let TRBalBefore = await spoofedDT.balances(spoofedTR)
@@ -279,7 +279,7 @@ contract('Distribute Token', function (accounts) {
     assert.equal(tpBalAfter - tpBalBefore, tokensToMint, 'doesn\'t update balance correctly')
   })
 
-  it('only allows the tokenRegistry to call transferFromEscrow()', async function () {
+  it('only allows the tokenRegistry to call transferFromEscrow()', async () => {
     let errorThrown = false
     try {
       await spoofedDT.transferFromEscrow(tokenProposer, tokensToMint, {from: anyAddress})

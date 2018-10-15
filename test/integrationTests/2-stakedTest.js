@@ -38,21 +38,16 @@ contract('Staked State', function (accounts) {
 
     // get staked projects
     // to check successful transition to active period
-    console.log('before staked')
     projAddrT1 = await returnProject.staked_T(projectCost, stakingPeriod, ipfsHash)
-    console.log('after stakedT1')
     projAddrR1 = await returnProject.staked_R(projectCost, stakingPeriod, ipfsHash)
-    console.log('after stakedR1')
 
     // to check failed transition to failed period
     projAddrT2 = await returnProject.staked_T(projectCost, stakingPeriod, ipfsHash)
-    console.log('after stakedT2')
     projAddrR2 = await returnProject.staked_R(projectCost, stakingPeriod, ipfsHash)
-    console.log('after staked')
   })
 
-  describe('handle proposer', function () {
-    it('not proposer can\'t call refund proposer from token registry', async function () {
+  describe('handle proposer', () => {
+    it('not proposer can\'t call refund proposer from token registry', async () => {
       errorThrown = false
       try {
         await TR.refundProposer(projAddrT1, {from: notProposer})
@@ -63,7 +58,7 @@ contract('Staked State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not proposer can\'t call refund proposer from reputation registry', async function () {
+    it('not proposer can\'t call refund proposer from reputation registry', async () => {
       errorThrown = false
       try {
         await RR.refundProposer(projAddrR1, {from: notProposer})
@@ -75,7 +70,7 @@ contract('Staked State', function (accounts) {
     })
 
     // these two tests must come after not proposer refund proposer tests
-    it('refund proposer can be called on TR complete project', async function () {
+    it('refund proposer can be called on TR complete project', async () => {
       // take stock of variables
       let proposedWeiCost = await project.getProposedWeiCost(projAddrT1)
 
@@ -100,7 +95,7 @@ contract('Staked State', function (accounts) {
       assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
     })
 
-    it('refund proposer can be called on RR complete project', async function () {
+    it('refund proposer can be called on RR complete project', async () => {
       // take stock of variables
       let proposedWeiCost = await project.getProposedWeiCost(projAddrR1)
 
@@ -122,7 +117,7 @@ contract('Staked State', function (accounts) {
       assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
     })
 
-    it('proposer can\'t call refund proposer multiple times from token registry', async function () {
+    it('proposer can\'t call refund proposer multiple times from token registry', async () => {
       errorThrown = false
       try {
         await TR.refundProposer(projAddrT1, {from: tokenProposer})
@@ -133,7 +128,7 @@ contract('Staked State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('proposer can\'t call refund proposer multiple times from reputation registry', async function () {
+    it('proposer can\'t call refund proposer multiple times from reputation registry', async () => {
       errorThrown = false
       try {
         await RR.refundProposer(projAddrR1, {from: repProposer})
@@ -145,8 +140,8 @@ contract('Staked State', function (accounts) {
     })
   })
 
-  describe('adding task hashes to staked projects', function () {
-    it('token staker can submit a task hash to TR staked project', async function () {
+  describe('adding task hashes to staked projects', () => {
+    it('token staker can submit a task hash to TR staked project', async () => {
       // take stock of variables before
       let topTaskHashBefore = await PR.stakedProjects(projAddrT1)
 
@@ -161,7 +156,7 @@ contract('Staked State', function (accounts) {
       assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash')
     })
 
-    it('token staker can submit a task hash to RR staked project', async function () {
+    it('token staker can submit a task hash to RR staked project', async () => {
       // take stock of variables before
       let topTaskHashBefore = await PR.stakedProjects(projAddrR1)
 
@@ -176,7 +171,7 @@ contract('Staked State', function (accounts) {
       assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash after')
     })
 
-    it('reputation staker can submit a different task hash to TR staked project', async function () {
+    it('reputation staker can submit a different task hash to TR staked project', async () => {
       // take stock of variables before
       let topTaskHashBefore = await PR.stakedProjects(projAddrT1)
 
@@ -197,7 +192,7 @@ contract('Staked State', function (accounts) {
         : assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash after')
     })
 
-    it('reputation staker can submit the same task hash to TR staked project', async function () {
+    it('reputation staker can submit the same task hash to TR staked project', async () => {
       // take stock of variables before
       let topTaskHashBefore = await PR.stakedProjects(projAddrT1)
 
@@ -220,7 +215,7 @@ contract('Staked State', function (accounts) {
       }
     })
 
-    it('reputation staker can submit a different task hash to RR staked project', async function () {
+    it('reputation staker can submit a different task hash to RR staked project', async () => {
       // take stock of variables before
       let topTaskHashBefore = await PR.stakedProjects(projAddrR1)
 
@@ -242,7 +237,7 @@ contract('Staked State', function (accounts) {
         : assert.equal(topTaskHashAfter, hashTasksArray(taskSet1), 'incorrect top task hash after')
     })
 
-    it('reputation staker can submit the same task hash to RR staked project', async function () {
+    it('reputation staker can submit the same task hash to RR staked project', async () => {
       // take stock of variables before
       let topTaskHashBefore = await PR.stakedProjects(projAddrR1)
 
@@ -265,7 +260,7 @@ contract('Staked State', function (accounts) {
       }
     })
 
-    it('not staker can\'t submit a task hash to TR staked project', async function () {
+    it('not staker can\'t submit a task hash to TR staked project', async () => {
       errorThrown = false
       try {
         await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: notStaker})
@@ -276,7 +271,7 @@ contract('Staked State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not staker can\'t submit a task hash to RR staked project', async function () {
+    it('not staker can\'t submit a task hash to RR staked project', async () => {
       errorThrown = false
       try {
         await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: notStaker})
@@ -288,8 +283,8 @@ contract('Staked State', function (accounts) {
     })
   })
 
-  describe('adding task hashes to nonexistant projects', function () {
-    it('token staker can\'t add a task hash to a nonexistant project', async function () {
+  describe('adding task hashes to nonexistant projects', () => {
+    it('token staker can\'t add a task hash to a nonexistant project', async () => {
       errorThrown = false
       try {
         await PR.addTaskHash(notProject, hashTasksArray(taskSet1), {from: tokenStaker1})
@@ -300,7 +295,7 @@ contract('Staked State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('reputation staker can\'t add a task hash to a nonexistant project', async function () {
+    it('reputation staker can\'t add a task hash to a nonexistant project', async () => {
       errorThrown = false
       try {
         await PR.addTaskHash(notProject, hashTasksArray(taskSet1), {from: repStaker1})
@@ -312,8 +307,8 @@ contract('Staked State', function (accounts) {
     })
   })
 
-  describe('submitting hash lists to staked projects', function () {
-    it('token staker can\'t submit hash list to TR staked project in staked state', async function () {
+  describe('submitting hash lists to staked projects', () => {
+    it('token staker can\'t submit hash list to TR staked project in staked state', async () => {
       errorThrown = false
       try {
         await PR.submitHashList(projAddrT1, hashTasks(taskSet2), {from: tokenStaker1})
@@ -324,7 +319,7 @@ contract('Staked State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('reputation staker can\'t submit hash list to TR staked project in staked state', async function () {
+    it('reputation staker can\'t submit hash list to TR staked project in staked state', async () => {
       errorThrown = false
       try {
         await PR.submitHashList(projAddrT1, hashTasks(taskSet2), {from: tokenStaker1})
@@ -335,7 +330,7 @@ contract('Staked State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('token staker can\'t submit hash list to RR staked project in staked state', async function () {
+    it('token staker can\'t submit hash list to RR staked project in staked state', async () => {
       errorThrown = false
       try {
         await PR.submitHashList(projAddrR1, hashTasks(taskSet2), {from: tokenStaker1})
@@ -346,7 +341,7 @@ contract('Staked State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('reputation staker can\'t submit hash list to RR staked project in staked state', async function () {
+    it('reputation staker can\'t submit hash list to RR staked project in staked state', async () => {
       errorThrown = false
       try {
         await PR.submitHashList(projAddrR1, hashTasks(taskSet2), {from: tokenStaker1})
@@ -358,8 +353,8 @@ contract('Staked State', function (accounts) {
     })
   })
 
-  describe('state changes on staked projects with task hash submissions', function () {
-    before(async function () {
+  describe('state changes on staked projects with task hash submissions', () => {
+    before(async () => {
       // have tokenStaker2 and repStaker1 change their hash list back to taskSet1 so that each project has at least 51% on taskSet1
       await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: tokenStaker2})
       await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: repStaker1})
@@ -371,7 +366,7 @@ contract('Staked State', function (accounts) {
       await evmIncreaseTime(604801) // 1 week
     })
 
-    it('TR staked project becomes active if task hashes are submitted by the staking deadline', async function () {
+    it('TR staked project becomes active if task hashes are submitted by the staking deadline', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT1)
 
@@ -386,7 +381,7 @@ contract('Staked State', function (accounts) {
       assert.equal(stateAfter, 3, 'state after should be 3')
     })
 
-    it('RR staked project becomes active if task hashes are submitted by the staking deadline', async function () {
+    it('RR staked project becomes active if task hashes are submitted by the staking deadline', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR1)
 
@@ -402,8 +397,8 @@ contract('Staked State', function (accounts) {
     })
   })
 
-  describe('time out state changes', function () {
-    it('TR staked project becomes failed if no task hashes are submitted by the staking deadline', async function () {
+  describe('time out state changes', () => {
+    it('TR staked project becomes failed if no task hashes are submitted by the staking deadline', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT2)
 
@@ -418,7 +413,7 @@ contract('Staked State', function (accounts) {
       assert.equal(stateAfter, 7, 'state after should be 7')
     })
 
-    it('RR staked project becomes failed if no task hashes are submitted by the staking deadline', async function () {
+    it('RR staked project becomes failed if no task hashes are submitted by the staking deadline', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR2)
 
@@ -434,8 +429,8 @@ contract('Staked State', function (accounts) {
     })
   })
 
-  describe('submit task hash on active projects', function () {
-    it('add task hash can\'t be called by token staker on TR staked project once it is active', async function () {
+  describe('submit task hash on active projects', () => {
+    it('add task hash can\'t be called by token staker on TR staked project once it is active', async () => {
       errorThrown = false
       try {
         await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: tokenStaker1})
@@ -446,7 +441,7 @@ contract('Staked State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('add task hash can\'t be called by reputation staker on TR staked project once it is active', async function () {
+    it('add task hash can\'t be called by reputation staker on TR staked project once it is active', async () => {
       errorThrown = false
       try {
         await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: repStaker1})
@@ -457,7 +452,7 @@ contract('Staked State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('add task hash can\'t be called by token staker on RR staked project once it is active', async function () {
+    it('add task hash can\'t be called by token staker on RR staked project once it is active', async () => {
       errorThrown = false
       try {
         await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: tokenStaker1})
@@ -468,7 +463,7 @@ contract('Staked State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('add task hash can\'t be called by reputation staker on RR staked project once it is active', async function () {
+    it('add task hash can\'t be called by reputation staker on RR staked project once it is active', async () => {
       errorThrown = false
       try {
         await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: repStaker1})

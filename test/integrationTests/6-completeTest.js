@@ -48,16 +48,14 @@ contract('Complete State', function (accounts) {
     PLCR = projObj.contracts.PLCR
 
     // get finished - complete projects
-    console.log('before complete')
     projArray = await returnProject.finished(projectCost, stakingPeriod, ipfsHash, taskSet4, taskSet4.length, valType, voteType, 6)
-    console.log('after complete')
 
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
   })
 
-  describe('handle proposer', function () {
-    it('not proposer can\'t call refund proposer from token registry', async function () {
+  describe('handle proposer', () => {
+    it('not proposer can\'t call refund proposer from token registry', async () => {
       errorThrown = false
       try {
         await TR.refundProposer(projAddrT, {from: notProposer})
@@ -68,7 +66,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not proposer can\'t call refund proposer from reputation registry', async function () {
+    it('not proposer can\'t call refund proposer from reputation registry', async () => {
       errorThrown = false
       try {
         await RR.refundProposer(projAddrR, {from: notProposer})
@@ -80,7 +78,7 @@ contract('Complete State', function (accounts) {
     })
 
     // these two tests must come after not proposer refund proposer tests
-    it('refund proposer can be called on TR complete project', async function () {
+    it('refund proposer can be called on TR complete project', async () => {
       // take stock of variables
       let proposedWeiCost = await project.getProposedWeiCost(projAddrT)
 
@@ -105,7 +103,7 @@ contract('Complete State', function (accounts) {
       assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
     })
 
-    it('refund proposer can be called on RR complete project', async function () {
+    it('refund proposer can be called on RR complete project', async () => {
       // take stock of variables
       let proposedWeiCost = await project.getProposedWeiCost(projAddrR)
 
@@ -127,7 +125,7 @@ contract('Complete State', function (accounts) {
       assert.equal(proposerStakeAfter, 0, 'proposer stake should have been zeroed out')
     })
 
-    it('proposer can\'t call refund proposer multiple times from token registry', async function () {
+    it('proposer can\'t call refund proposer multiple times from token registry', async () => {
       errorThrown = false
       try {
         await TR.refundProposer(projAddrT, {from: tokenProposer})
@@ -138,7 +136,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('proposer can\'t call refund proposer multiple times from reputation registry', async function () {
+    it('proposer can\'t call refund proposer multiple times from reputation registry', async () => {
       errorThrown = false
       try {
         await RR.refundProposer(projAddrR, {from: repProposer})
@@ -150,8 +148,8 @@ contract('Complete State', function (accounts) {
     })
   })
 
-  describe('handle stakers', function () {
-    it('token staker can ask for refund from TR complete project', async function () {
+  describe('handle stakers', () => {
+    it('token staker can ask for refund from TR complete project', async () => {
       // take stock of variables before
       let totalTokensBefore = await utils.getTotalTokens()
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
@@ -183,7 +181,7 @@ contract('Complete State', function (accounts) {
       assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
 
-    it('token staker can ask for refund from RR complete project', async function () {
+    it('token staker can ask for refund from RR complete project', async () => {
       // take stock of variables before
       let totalTokensBefore = await utils.getTotalTokens()
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
@@ -215,7 +213,7 @@ contract('Complete State', function (accounts) {
       assert.equal(tsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
 
-    it('reputation staker can ask for refund from TR complete project', async function () {
+    it('reputation staker can ask for refund from TR complete project', async () => {
       // take stock of variables before
       let totalRepBefore = await utils.getTotalRep()
       let rsBalBefore = await utils.getRepBalance(repStaker1)
@@ -244,7 +242,7 @@ contract('Complete State', function (accounts) {
       assert.equal(rsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
 
-    it('reputation staker can ask for refund from RR complete project', async function () {
+    it('reputation staker can ask for refund from RR complete project', async () => {
       // take stock of variables before
       let totalRepBefore = await utils.getTotalRep()
       let rsBalBefore = await utils.getRepBalance(repStaker1)
@@ -273,7 +271,7 @@ contract('Complete State', function (accounts) {
       assert.equal(rsProjBalAfter, 0, 'staker should no longer have any tokens staked on the project')
     })
 
-    it('not staker can\'t ask for token refund from TR complete project', async function () {
+    it('not staker can\'t ask for token refund from TR complete project', async () => {
       errorThrown = false
       try {
         await TR.refundStaker(projAddrT, {from: notStaker})
@@ -284,7 +282,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not staker can\'t ask for token refund from RR complete project', async function () {
+    it('not staker can\'t ask for token refund from RR complete project', async () => {
       errorThrown = false
       try {
         await TR.refundStaker(projAddrR, {from: notStaker})
@@ -295,7 +293,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not staker can\'t ask for reputation refund from TR complete project', async function () {
+    it('not staker can\'t ask for reputation refund from TR complete project', async () => {
       errorThrown = false
       try {
         await RR.refundStaker(projAddrT, {from: notStaker})
@@ -306,7 +304,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not staker can\'t ask for reputation refund from TR complete project', async function () {
+    it('not staker can\'t ask for reputation refund from TR complete project', async () => {
       errorThrown = false
       try {
         await RR.refundStaker(projAddrR, {from: notStaker})
@@ -317,7 +315,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('all stakers can be rewarded from TR complete project', async function () {
+    it('all stakers can be rewarded from TR complete project', async () => {
       // take stock of variables before
       let totalTokensBefore = await utils.getTotalTokens()
       let tsBalBefore = await utils.getTokenBalance(tokenStaker2)
@@ -375,7 +373,7 @@ contract('Complete State', function (accounts) {
       assert.equal(projRepAfter, 0, 'there is leftover rep')
     })
 
-    it('all stakers can be rewarded from RR complete project', async function () {
+    it('all stakers can be rewarded from RR complete project', async () => {
       // take stock of variables before
       let totalTokensBefore = await utils.getTotalTokens()
       let tsBalBefore = await utils.getTokenBalance(tokenStaker2)
@@ -434,8 +432,8 @@ contract('Complete State', function (accounts) {
     })
   })
 
-  describe('handle workers', function () {
-    it('worker can ask for reward from TR complete project', async function () {
+  describe('handle workers', () => {
+    it('worker can ask for reward from TR complete project', async () => {
       let index = valTrueOnly
 
       // take stock of variables before
@@ -466,7 +464,7 @@ contract('Complete State', function (accounts) {
       assert.equal(weiRewardAfter, 0, 'wei reward not zeroed out')
     })
 
-    it('worker can ask for reward from RR complete project', async function () {
+    it('worker can ask for reward from RR complete project', async () => {
       let index = valTrueOnly
 
       // take stock of variables before
@@ -497,7 +495,7 @@ contract('Complete State', function (accounts) {
       assert.equal(weiRewardAfter, 0, 'wei reward not zeroed out')
     })
 
-    it('worker can\'t ask for reward they\'ve already received from TR complete project', async function () {
+    it('worker can\'t ask for reward they\'ve already received from TR complete project', async () => {
       let index = valTrueOnly
 
       errorThrown = false
@@ -510,7 +508,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('worker can\'t ask for reward they\'ve already received from RR complete project', async function () {
+    it('worker can\'t ask for reward they\'ve already received from RR complete project', async () => {
       let index = valTrueOnly
 
       errorThrown = false
@@ -523,7 +521,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not worker can\'t ask for reward from TR complete project', async function () {
+    it('not worker can\'t ask for reward from TR complete project', async () => {
       let index = valTrueMoreVoteTrueMore
 
       errorThrown = false
@@ -536,7 +534,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not worker can\'t ask for reward from RR complete project', async function () {
+    it('not worker can\'t ask for reward from RR complete project', async () => {
       let index = valTrueMoreVoteTrueMore
 
       errorThrown = false
@@ -549,14 +547,14 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('all workers can be rewarded from TR complete project', async function () {
+    it('all workers can be rewarded from TR complete project', async () => {
       // most things to be tests have been done in previous tests, but want to test that every TR.rewardTask() can be called
       // reward remaining workers
       await RR.rewardTask(projAddrT, valTrueMoreVoteTrueMore, {from: worker2})
       await RR.rewardTask(projAddrT, valFalseMoreVoteTrueMore, {from: worker1})
     })
 
-    it('all workers can be rewarded from RR complete project', async function () {
+    it('all workers can be rewarded from RR complete project', async () => {
       // most things to be tests have been done in previous tests, but want to test that every TR.rewardTask() can be called
       // reward remaining workers
       await RR.rewardTask(projAddrR, valTrueMoreVoteTrueMore, {from: worker2})
@@ -564,8 +562,8 @@ contract('Complete State', function (accounts) {
     })
   })
 
-  describe('handle validators', function () {
-    it('yes validator can ask for refund & reward from TR complete project', async function () {
+  describe('handle validators', () => {
+    it('yes validator can ask for refund & reward from TR complete project', async () => {
       // take stock of important environmental variables
       let index = valTrueOnly
       let claimable = await task.getClaimable(projAddrT, index)
@@ -615,7 +613,7 @@ contract('Complete State', function (accounts) {
       assert.equal(projWeiBalAfter + weiReward, projWeiBalBefore, 'wei reward was not sent correctly to validator')
     })
 
-    it('yes validator can ask for refund & reward from RR complete project', async function () {
+    it('yes validator can ask for refund & reward from RR complete project', async () => {
       // take stock of important environmental variables
       let index = valTrueOnly
       let claimable = await task.getClaimable(projAddrR, index)
@@ -665,7 +663,7 @@ contract('Complete State', function (accounts) {
       assert.equal(projWeiBalAfter + weiReward, projWeiBalBefore, 'wei reward was not sent correctly to validator')
     })
 
-    it('no validator can ask for half refund from TR complete project', async function () {
+    it('no validator can ask for half refund from TR complete project', async () => {
       // take stock of important environmental variables
       let index = valTrueMoreVoteTrueMore
       let claimable = await task.getClaimable(projAddrT, index)
@@ -715,7 +713,7 @@ contract('Complete State', function (accounts) {
       assert.equal(projWeiBalAfter, projWeiBalBefore, 'no wei reward should have been sent to validator')
     })
 
-    it('no validator can ask for half reward from RR complete project', async function () {
+    it('no validator can ask for half reward from RR complete project', async () => {
       // take stock of important environmental variables
       let index = valTrueMoreVoteTrueMore
       let claimable = await task.getClaimable(projAddrR, index)
@@ -765,7 +763,7 @@ contract('Complete State', function (accounts) {
       assert.equal(projWeiBalAfter, projWeiBalBefore, 'no wei reward should have been sent to validator')
     })
 
-    it('not validator can\'t ask for reward from TR complete project', async function () {
+    it('not validator can\'t ask for reward from TR complete project', async () => {
       errorThrown = false
       try {
         // attempt to refund not validator on index validated false more (still has validations left on it)
@@ -777,7 +775,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not validator can\'t ask for reward from RR complete project', async function () {
+    it('not validator can\'t ask for reward from RR complete project', async () => {
       errorThrown = false
       try {
         // attempt to refund not validator on index validated false more (still has validations left on it)
@@ -789,7 +787,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('all eligible validators can be rewarded from TR complete project', async function () {
+    it('all eligible validators can be rewarded from TR complete project', async () => {
       // most things to be tests have been done in previous tests, but want to test that every TR.rewardValidator() can be called
       // as well as making sure that validator is rewarded proportionally correctly
 
@@ -821,7 +819,7 @@ contract('Complete State', function (accounts) {
       await TR.rewardValidator(projAddrT, valFalseMoreVoteTrueMore, {from: validator3})
     })
 
-    it('all eligible validators can be rewarded from RR complete project', async function () {
+    it('all eligible validators can be rewarded from RR complete project', async () => {
       // most things to be tests have been done in previous tests, but want to test that every TR.rewardValidator() can be called
       // as well as making sure that validator is rewarded proportionally correctly
 
@@ -854,8 +852,8 @@ contract('Complete State', function (accounts) {
     })
   })
 
-  describe('handle voters', function () {
-    it('yes token voter can\'t refund more voting tokens than they have', async function () {
+  describe('handle voters', () => {
+    it('yes token voter can\'t refund more voting tokens than they have', async () => {
       errorThrown = false
       let availableVotesBefore = await PLCR.getAvailableTokens(tokenYesVoter, 1)
       let lockedTokens = await PLCR.getLockedTokens(tokenYesVoter)
@@ -869,7 +867,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('yes token voter can refund voting tokens', async function () {
+    it('yes token voter can refund voting tokens', async () => {
       // take stock of variables before
       let tyvBalBefore = await utils.getTokenBalance(tokenYesVoter)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
@@ -894,7 +892,7 @@ contract('Complete State', function (accounts) {
       assert.equal(availableVotesAfter, 0, 'assert no votes are available')
     })
 
-    it('no token voter can\'t refund more voting tokens than they have', async function () {
+    it('no token voter can\'t refund more voting tokens than they have', async () => {
       errorThrown = false
       let availableVotesBefore = await PLCR.getAvailableTokens(tokenNoVoter, 1)
       let lockedTokens = await PLCR.getLockedTokens(tokenNoVoter)
@@ -908,7 +906,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('no token voter can refund voting tokens', async function () {
+    it('no token voter can refund voting tokens', async () => {
       // take stock of variables before
       let tnvBalBefore = await utils.getTokenBalance(tokenNoVoter)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
@@ -933,7 +931,7 @@ contract('Complete State', function (accounts) {
       assert.equal(availableVotesAfter, 0, 'assert no votes are available')
     })
 
-    it('yes reputation voter can\'t refund more voting reputation than they have', async function () {
+    it('yes reputation voter can\'t refund more voting reputation than they have', async () => {
       errorThrown = false
       let availableVotesBefore = await PLCR.getAvailableTokens(repYesVoter, 2)
       let lockedTokens = await PLCR.getLockedTokens(repYesVoter)
@@ -947,7 +945,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('yes reputation voter can refund voting reputation', async function () {
+    it('yes reputation voter can refund voting reputation', async () => {
       // take stock of variables before
       let ryvBalBefore = await utils.getRepBalance(repYesVoter)
       let availableVotesBefore = await PLCR.getAvailableTokens(repYesVoter, 2)
@@ -969,7 +967,7 @@ contract('Complete State', function (accounts) {
       assert.equal(availableVotesAfter, 0, 'assert no votes are available')
     })
 
-    it('no reputation voter can\'t refund more voting reputation than they have', async function () {
+    it('no reputation voter can\'t refund more voting reputation than they have', async () => {
       errorThrown = false
       let availableVotesBefore = await PLCR.getAvailableTokens(repNoVoter, 2)
       let lockedTokens = await PLCR.getLockedTokens(repNoVoter)
@@ -983,7 +981,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('no reputation voter can refund voting reputation', async function () {
+    it('no reputation voter can refund voting reputation', async () => {
       // take stock of variables before
       let rnvBalBefore = await utils.getRepBalance(repNoVoter)
       let availableVotesBefore = await PLCR.getAvailableTokens(repNoVoter, 2)
@@ -1005,7 +1003,7 @@ contract('Complete State', function (accounts) {
       assert.equal(availableVotesAfter, 0, 'assert no votes are available')
     })
 
-    it('not voter can\'t refund voting tokens', async function () {
+    it('not voter can\'t refund voting tokens', async () => {
       errorThrown = false
       try {
         await TR.refundVotingTokens(voteAmount, {from: notVoter})
@@ -1016,7 +1014,7 @@ contract('Complete State', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('not voter can\'t refund voting reputation', async function () {
+    it('not voter can\'t refund voting reputation', async () => {
       errorThrown = false
       try {
         await RR.refundVotingReputation(voteAmount, {from: notVoter})
@@ -1028,8 +1026,8 @@ contract('Complete State', function (accounts) {
     })
   })
 
-  describe('project contract empty', function () {
-    it('TR complete project has 0 wei, 0 tokens staked, and 0 reputation staked', async function () {
+  describe('project contract empty', () => {
+    it('TR complete project has 0 wei, 0 tokens staked, and 0 reputation staked', async () => {
       // take stock of variables
       let projRepStaked = await project.getStakedRep(projAddrT)
       let projTokensStaked = await project.getStakedTokens(projAddrT)
@@ -1041,7 +1039,7 @@ contract('Complete State', function (accounts) {
       assert.equal(projWeiBal, 0, 'project contract should not have any wei left in it')
     })
 
-    it('RR complete project has 0 wei, 0 tokens staked, and 0 reputation staked', async function () {
+    it('RR complete project has 0 wei, 0 tokens staked, and 0 reputation staked', async () => {
       // take stock of variables
       let projRepStaked = await project.getStakedRep(projAddrT)
       let projTokensStaked = await project.getStakedTokens(projAddrT)
