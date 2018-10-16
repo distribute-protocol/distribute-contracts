@@ -123,7 +123,7 @@ contract TokenRegistry is Ownable {
     }
 
     function squaredAmount(uint _amount) internal pure returns (uint) {
-      return _amount * _amount;
+      return _amount.mul(_amount);
     }
 
 
@@ -147,12 +147,13 @@ contract TokenRegistry is Ownable {
     */
     function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes _ipfsHash) external {
         require(!freeze);
-        require(now < _stakingPeriod && _cost > 0);
+        require(block.timestamp < _stakingPeriod && _cost > 0);
         uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
         uint256 proposerTokenCost = (
-            Division.percent(costProportion, proposeProportion, 10) *
-            distributeToken.totalSupply()) /
-            10000000000;           //divide by 20 to get 5 percent of tokens
+            Division.percent(costProportion, proposeProportion, 10).mul(
+            distributeToken.totalSupply())).div(
+            10000000000);
+            //divide by 20 to get 5 percent of tokens
         require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
 
         distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
@@ -163,14 +164,13 @@ contract TokenRegistry is Ownable {
             msg.sender,
             1,
             proposerTokenCost,
-            _ipfsHash,
-            proposerTokenCost
+            _ipfsHash
         );
         emit LogProjectCreated(projectAddress, _cost, proposerTokenCost);
     }
 
     /**
-    @notice Refund a token proposer upon proposal success, transfer 1% of the project cost in
+    @notice Refund a token proposer upon proposal success, transfer 5% of the project cost in
     wei as a reward along with any tokens staked on the project.
     @dev token proposer types are denoted by '1' and reputation proposers by '2'
     @param _projectAddress Address of the project
@@ -331,12 +331,12 @@ contract TokenRegistry is Ownable {
             }
             if (validationIndex < 5) {
                 uint addtlWeighting;
-                for(uint i = validationIndex; i < 5; i++) {
-                    addtlWeighting += projectRegistry.validationRewardWeightings(i);
+                for(uint i = validationIndex ; i < 5; i++) {
+                    addtlWeighting = addtlWeighting.add(projectRegistry.validationRewardWeightings(i));
                 }
-                rewardWeighting += addtlWeighting / validationIndex;
+                rewardWeighting = rewardWeighting.add(addtlWeighting.div(validationIndex));
             }
-            uint256 weiReward = project.validationReward() * task.weighting() * rewardWeighting / 10000;
+            uint256 weiReward = project.validationReward().mul(task.weighting()).mul(rewardWeighting).div(10000);
             project.transferWeiReward(msg.sender, weiReward);
             emit LogRewardValidator(_projectAddress, _index, weiReward, returnAmount, msg.sender);
         } else {
@@ -416,6 +416,7 @@ contract TokenRegistry is Ownable {
     function refundVotingTokens(uint256 _votes) external {
         require(!freeze);
         uint userVotes = plcrVoting.getAvailableTokens(msg.sender, 1);
+        require(_votes <= userVotes);
         uint votesPrice = squaredAmount(userVotes) - squaredAmount(userVotes - _votes);
         plcrVoting.withdrawVotingRights(msg.sender, _votes);
         distributeToken.transferFromEscrow(msg.sender, votesPrice);
@@ -432,12 +433,13 @@ contract TokenRegistry is Ownable {
     function refundStaker(address _projectAddress) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
-        uint256 refund = _projectAddress.refundStaker(msg.sender);
+        uint256 refund = _projectAddress.refundStaker(msg.sender, address(this));
         require(refund > 0);
-
         Project(_projectAddress).clearTokenStake(msg.sender);
         distributeToken.transferFromEscrow(msg.sender, refund);
-        distributeToken.transferTokensTo(msg.sender, refund / 20);
+        if (Project(_projectAddress).state() == 6) {
+          distributeToken.transferTokensTo(msg.sender, refund / 20);
+        }
     }
 
     /**
@@ -449,7 +451,6 @@ contract TokenRegistry is Ownable {
     function rescueTokens(address _projectAddress, uint _index) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
-        //rescue locked tokens that weren't revealed
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();
         plcrVoting.rescueTokens(msg.sender, pollId);
         emit LogTokenVoteRescued(_projectAddress, _index, pollId, msg.sender);

@@ -36,21 +36,17 @@ contract Task {
 
     mapping (address => Validator) public validators;
     uint256 public validateReward;
-    uint public validationEntryFee;
+    uint256 public validationEntryFee;
+    uint256 public affirmativeIndex;
+    uint256 public negativeIndex;
     address[5] public affirmativeValidators;
-    uint public affirmativeIndex;
     address[5] public negativeValidators;
-    uint public negativeIndex;
 
     struct Validator {
         uint256 status;
         uint256 index;
         bool initialized;
     }
-
-    /* bool public opposingValidator = false;
-    uint256 public totalValidateAffirmative;
-    uint256 public totalValidateNegative; */
 
     // =====================================================================
     // MODIFIERS
@@ -115,7 +111,7 @@ contract Task {
     function setTaskReward(uint256 _weiVal, uint256 _reputationVal, address _claimer) external onlyPRorRR {
         weiReward = _weiVal;
         reputationReward = _reputationVal;
-        claimTime = now;
+        claimTime = block.timestamp;
         complete = false;
         claimer = _claimer;
     }
@@ -145,13 +141,12 @@ contract Task {
     */
     function setValidator(address _validator, uint256 _validationVal) external onlyTR {
         require(!validators[_validator].initialized);
-        require(_validationVal == 1 || _validationVal == 0);
         if (_validationVal == 1) {
           require(affirmativeIndex < 5);
           affirmativeValidators[affirmativeIndex] = _validator;
           validators[_validator] = Validator(_validationVal, affirmativeIndex, true);
           affirmativeIndex += 1;
-        } else {
+        } else if (_validationVal == 0) {
           require(negativeIndex < 5);
           negativeValidators[negativeIndex] = _validator;
           validators[_validator] = Validator(_validationVal, negativeIndex, true);
@@ -182,7 +177,7 @@ contract Task {
     }
 
     /**
-    @notice Return the validator status (affrimative of negative) of validator at `_validator`
+    @notice Return the validator status (affirmative or negative) of validator at `_validator`
     @param _validator Address of validator
     */
     function getValidatorStatus(address _validator) external view returns (uint) {
@@ -206,6 +201,6 @@ contract Task {
     @param _validator Address of validator
     */
     function setValidatorIndex(address _validator) external onlyTR {
-        validators[_validator].index = 100;
+        validators[_validator].index = 5;
     }
 }

@@ -11,19 +11,18 @@ contract('Distribute Token', function (accounts) {
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let DT, spoofedDT
+  let spoofedDT
   let {tokenProposer} = projObj.user
   let {spoofedTR, spoofedRR, spoofedPR, anyAddress, weiToReturn} = projObj.spoofed
   let {tokensToMint, tokensToBurn} = projObj.minting
   let {utils} = projObj
 
   // local test variables
-  let errorThrown
+  // let errorThrown
 
   before(async () => {
     // get contracts from project helped
     await projObj.contracts.setContracts()
-    DT = projObj.contracts.DT
 
     // initialize spoofed DT
     spoofedDT = await DistributeToken.new(spoofedTR, spoofedRR)
@@ -159,7 +158,7 @@ contract('Distribute Token', function (accounts) {
 
     // checks
     assert.notEqual(weiPoolBalBefore, 0, 'weiPoolBal is 0')
-    assert.equal(weiPoolBalAfter, 0, "doesn't transfer wei correctly")
+    assert.equal(weiPoolBalAfter, 0, 'doesn\'t transfer wei correctly')
   })
 
   it('allows reputationRegistry to call transferWeiTo()', async () => {
@@ -178,7 +177,7 @@ contract('Distribute Token', function (accounts) {
 
     // checks
     assert.notEqual(weiPoolBalBefore, 0, 'weiPoolBal is 0')
-    assert.equal(weiPoolBalAfter, 0, "doesn't transfer wei correctly")
+    assert.equal(weiPoolBalAfter, 0, 'doesn\'t transfer wei correctly')
   })
 
   it('only allows the tokenRegistry or reputationRegistry to call transferWeiTo()', async () => {
@@ -209,7 +208,7 @@ contract('Distribute Token', function (accounts) {
     let weiPoolBalAfter = await spoofedDT.weiBal()
 
     // check
-    assert.equal(weiPoolBalAfter - weiPoolBalBefore, weiToReturn, "doesn't increment weiBal correctly")
+    assert.equal(weiPoolBalAfter - weiPoolBalBefore, weiToReturn, 'doesn\'t increment weiBal correctly')
   })
 
   it('only allows the tokenRegistry to call returnWei()', async () => {
@@ -241,9 +240,9 @@ contract('Distribute Token', function (accounts) {
     let tpBalAfter = await spoofedDT.balances(tokenProposer)
 
     // checks
-    assert.equal(totalSupplyAfter.toNumber(), totalSupplyBefore.toNumber(), "should not change")
-    assert.equal(TRBalAfter - TRBalBefore, tokensToMint, "doesn't update balance correctly")
-    assert.equal(tpBalBefore - tpBalAfter, tokensToMint, "doesn't update balance correctly")
+    assert.equal(totalSupplyAfter.toNumber(), totalSupplyBefore.toNumber(), 'should not change')
+    assert.equal(TRBalAfter - TRBalBefore, tokensToMint, 'doesn\'t update balance correctly')
+    assert.equal(tpBalBefore - tpBalAfter, tokensToMint, 'doesn\'t update balance correctly')
   })
 
   it('only allows the tokenRegistry to call transferToEscrow()', async () => {
@@ -275,9 +274,9 @@ contract('Distribute Token', function (accounts) {
     let tpBalAfter = await spoofedDT.balances(tokenProposer)
 
     // checks
-    assert.equal(totalSupplyAfter.toNumber(), totalSupplyBefore.toNumber(), "should not change")
-    assert.equal(TRBalBefore - TRBalAfter, tokensToMint, "doesn't update balance correctly")
-    assert.equal(tpBalAfter - tpBalBefore, tokensToMint, "doesn't update balance correctly")
+    assert.equal(totalSupplyAfter.toNumber(), totalSupplyBefore.toNumber(), 'should not change')
+    assert.equal(TRBalBefore - TRBalAfter, tokensToMint, 'doesn\'t update balance correctly')
+    assert.equal(tpBalAfter - tpBalBefore, tokensToMint, 'doesn\'t update balance correctly')
   })
 
   it('only allows the tokenRegistry to call transferFromEscrow()', async () => {

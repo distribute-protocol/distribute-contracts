@@ -41,6 +41,8 @@ contract Project {
       uint passThreshold
     );
 
+    /* event Transfer(address worker, uint reward); */
+
     // =====================================================================
     // STATE VARIABLES
     // =====================================================================
@@ -200,10 +202,7 @@ contract Project {
           voteRevealPeriod,
           passThreshold
         );
-
     }
-
-
 
     // =====================================================================
     // FALLBACK
@@ -256,6 +255,7 @@ contract Project {
     @param _staker Address of the staker
     */
     function clearTokenStake(address _staker) external onlyTR {
+        tokensStaked = tokensStaked.sub(tokenBalances[_staker]);
         tokenBalances[_staker] = 0;
     }
 
@@ -265,6 +265,7 @@ contract Project {
     @param _staker Address of the staker
     */
     function clearReputationStake(address _staker) external onlyRR {
+        reputationStaked = reputationStaked.sub(reputationBalances[_staker]);
         reputationBalances[_staker] = 0;
     }
 
@@ -323,12 +324,9 @@ contract Project {
     */
     function stakeTokens(address _staker, uint256 _tokens, uint256 _weiValue) external onlyTR {
         require(state == 1);
-        require(
-            tokenBalances[_staker].add(_tokens) > tokenBalances[_staker]    // check overflow
-        );
-        tokenBalances[_staker] += _tokens;
-        tokensStaked += _tokens;
-        weiBal += _weiValue;
+        tokenBalances[_staker] = tokenBalances[_staker].add(_tokens);
+        tokensStaked = tokensStaked.add(_tokens);
+        weiBal = weiBal.add(_weiValue);
     }
 
     /**
@@ -338,22 +336,17 @@ contract Project {
     @dev Only callable before the staking period of a proposed project ends (state must still be 1)
     @param _staker Address of the staker who is unstaking
     @param _tokens Amount of tokens to unstake on the project
-    @param _distributeTokenAddress Address of distribute token contract
+    @param _distributeToken Address of distribute token contract
     @return The amount of ether to deduct from the projects balance
 
     */
-    function unstakeTokens(address _staker, uint256 _tokens, address _distributeTokenAddress) external onlyTR returns (uint256) {
+    function unstakeTokens(address _staker, uint256 _tokens, address _distributeToken) external onlyTR returns (uint256) {
         require(state == 1);
-        require(
-            tokenBalances[_staker].sub(_tokens) <= tokenBalances[_staker]
-        );
-
-        uint256 weiVal = (Division.percent(_tokens, tokensStaked, 10) * weiBal) / 10000000000;
-        require(weiVal <= weiBal);
-        tokenBalances[_staker] -= _tokens;
-        tokensStaked -= _tokens;
-        weiBal -= weiVal;
-        _distributeTokenAddress.transfer(weiVal);
+        uint256 weiVal = (Division.percent(_tokens, tokensStaked, 10).mul(weiBal)).div(10000000000);
+        tokenBalances[_staker] = tokenBalances[_staker].sub(_tokens);
+        tokensStaked = tokensStaked.sub(_tokens);
+        weiBal = weiBal.sub(weiVal);
+        _distributeToken.transfer(weiVal);
         return weiVal;
     }
 
@@ -365,10 +358,8 @@ contract Project {
     */
     function stakeReputation(address _staker, uint256 _reputation) external onlyRR {
         require(state == 1);
-        require(reputationBalances[_staker] + _reputation > reputationBalances[_staker]);
-
-        reputationBalances[_staker] += _reputation;
-        reputationStaked += _reputation;
+        reputationBalances[_staker] = reputationBalances[_staker].add(_reputation);
+        reputationStaked = reputationStaked.add(_reputation);
     }
 
     /**
@@ -380,13 +371,8 @@ contract Project {
     */
     function unstakeReputation(address _staker, uint256 _reputation) external onlyRR {
         require(state == 1);
-        require(
-            reputationBalances[_staker].sub(_reputation) < reputationBalances[_staker] &&  //check overflow
-            reputationBalances[_staker] >= _reputation //make sure _staker has the tokens staked to unstake
-        );
-
-        reputationBalances[_staker] -= _reputation;
-        reputationStaked -= _reputation;
+        reputationBalances[_staker] = reputationBalances[_staker].sub(_reputation);
+        reputationStaked = reputationStaked.sub(_reputation);
     }
 
     // =====================================================================
@@ -395,13 +381,12 @@ contract Project {
 
     /**
     @notice Transfer `_reward` wei as reward for completing a task to `_rewardee
-    @dev Only callable by the Reputation Registry initialized during construction, to maintain control flow
+    @dev Only callable by the Reputation Registry or Token Registry initialized during construction, to maintain control flow
     @param _rewardee The account who claimed and completed the task.
     @param _reward The amount of wei to transfer.
     */
     function transferWeiReward(address _rewardee, uint _reward) external onlyTRorRR {
-        require(_reward <= weiBal);
-        weiBal -= _reward;
+        weiBal = weiBal.sub(_reward);
         _rewardee.transfer(_reward);
     }
 
@@ -412,8 +397,7 @@ contract Project {
     @param _value The amount of ether to send
     */
     function returnWei(address _distributeToken, uint _value) external onlyPR {
-        require(_value <= weiBal);
-        weiBal -= _value;
+        weiBal = weiBal.sub(_value);
         _distributeToken.transfer(_value);
     }
 

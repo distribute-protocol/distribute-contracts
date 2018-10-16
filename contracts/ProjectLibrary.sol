@@ -63,7 +63,7 @@ library ProjectLibrary {
     @return A boolean representing whether the project has passed its next deadline.
     */
     function timesUp(address _projectAddress) public view returns (bool) {
-        return (now > Project(_projectAddress).nextDeadline());
+        return (block.timestamp > Project(_projectAddress).nextDeadline());
     }
 
     /**
@@ -113,13 +113,12 @@ library ProjectLibrary {
         require(project.state() == 1);
 
         if(isStaked(_projectAddress)) {
-            uint256 nextDeadline = now + project.stakedStatePeriod();
+            uint256 nextDeadline = block.timestamp + project.stakedStatePeriod();
             project.setState(2, nextDeadline);
             return true;
         } else if(timesUp(_projectAddress)) {
             project.setState(8, 0);
-            // this line bugs for some reason
-            /* project.clearProposerStake(); */
+            project.clearProposerStake();
             emit LogProjectExpired(_projectAddress);
         }
         return false;
@@ -143,7 +142,7 @@ library ProjectLibrary {
         if(timesUp(_projectAddress)) {
             uint256 nextDeadline;
             if(_taskHash != 0 && _taskListWeighting > 50) {
-                nextDeadline = now + project.activeStatePeriod();
+                nextDeadline = block.timestamp + project.activeStatePeriod();
                 project.setState(3, nextDeadline);
                 return true;
             } else {
@@ -178,7 +177,7 @@ library ProjectLibrary {
         require(project.state() == 3);
 
         if (timesUp(_projectAddress)) {
-            uint256 nextDeadline = now + project.validateStatePeriod();
+            uint256 nextDeadline = block.timestamp + project.validateStatePeriod();
             project.setState(4, nextDeadline);
             TokenRegistry tr = TokenRegistry(_tokenRegistryAddress);
             for(uint i = 0; i < project.getTaskCount(); i++) {
@@ -217,32 +216,44 @@ library ProjectLibrary {
         Project project = Project(_projectAddress);
         require(project.state() == 4);
         if (timesUp(_projectAddress)) {
-            uint256 nextDeadline = now + project.voteCommitPeriod() + project.voteRevealPeriod();
+            uint256 nextDeadline = block.timestamp + project.voteCommitPeriod() + project.voteRevealPeriod();
             project.setState(5, nextDeadline);
             TokenRegistry tr = TokenRegistry(_tokenRegistryAddress);
             PLCRVoting plcr = PLCRVoting(_plcrVoting);
             for(uint i = 0; i < project.getTaskCount(); i++) {
                 Task task = Task(project.tasks(i));
+                uint reward;
                 if (task.complete()) {
-                    // require that one of the indexes is not zero, meaning that a validator existss
-                    require(task.affirmativeIndex() != 0 || task.negativeIndex() != 0);
+                    // require that one of the indexes is not zero, meaning that a validator exists
                     if (task.affirmativeIndex() != 0 && task.negativeIndex() != 0) { // there is an opposing validator, poll required
                         uint pollNonce = plcr.startPoll(51, project.voteCommitPeriod(), project.voteRevealPeriod());
                         task.setPollId(pollNonce); // function handles storage of voting pollId
                         emit LogTaskVote(task, _projectAddress, pollNonce);
+                    } else if (task.negativeIndex() == 0 && task.affirmativeIndex() != 0) {
+                        // this means that there are no negative validators, the task passes, and reward is claimable.
+                        task.markTaskClaimable(true);
+                        emit LogTaskValidated(task, _projectAddress, true);
+                    } else if (task.negativeIndex() != 0 && task.affirmativeIndex() == 0) {
+                      // this means that there are no affirmative validators, the task fails, and reward is not claimable.
+                        task.markTaskClaimable(false);
+                        reward = task.weiReward();
+                        tr.revertWei(reward);
+                        project.returnWei(_distributeTokenAddress, reward);
+                        emit LogTaskValidated(task, _projectAddress, false);
                     } else {
-                        if (task.negativeIndex() == 0) {
-                          // this means that there are no negative validators, the task passes, and reward is claimable.
-                          task.markTaskClaimable(true);
-                          emit LogTaskValidated(task, _projectAddress, true);
-                        } else {
-                          task.markTaskClaimable(false);
-                          uint reward = task.weiReward();
-                          tr.revertWei(reward);
-                          project.returnWei(_distributeTokenAddress, reward);
-                          emit LogTaskValidated(task, _projectAddress, false);
-                        }
+                      // there are no validators, reward must be sent back
+                      task.markTaskClaimable(false);
+                      reward = task.weiReward().mul(21).div(20);
+                      tr.revertWei(reward);
+                      project.returnWei(_distributeTokenAddress, reward);
+                      emit LogTaskValidated(task, _projectAddress, false);
                     }
+                } else {
+                  // reward must also be sent back if the task is incomplete
+                  reward = task.weiReward().mul(21).div(20);
+                  tr.revertWei(reward);
+                  project.returnWei(_distributeTokenAddress, reward);
+                  emit LogTaskValidated(task, _projectAddress, false);
                 }
             }
             return true;
@@ -373,8 +384,7 @@ library ProjectLibrary {
     ) public returns (uint256) {
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));
-        require(task.claimer() == _claimer && task.claimableByRep());
-
+        require(task.complete() && task.claimer() == _claimer && task.claimableByRep());
         uint256 weiReward = task.weiReward();
         uint256 reputationReward = task.reputationReward();
         task.setTaskReward(0, 0, _claimer);
@@ -394,13 +404,12 @@ library ProjectLibrary {
     @param _staker Address of the staker
     @return The amount to be refunded to the staker.
     */
-    function refundStaker(address _projectAddress, address _staker) public returns (uint256) {
+    function refundStaker(address _projectAddress, address _staker, address _sender) public returns (uint256) {
         Project project = Project(_projectAddress);
         require(project.state() == 6 || project.state() == 8);
-
-        if (project.isTR(msg.sender)) {
+        if (project.isTR(_sender)) {
             return handleTokenStaker(project, _staker);
-        } else if (project.isRR(msg.sender)) {
+        } else if (project.isRR(_sender)) {
             return handleReputationStaker(project, _staker);
         } else {
             return 0;
@@ -418,7 +427,9 @@ library ProjectLibrary {
         uint256 refund;
         // account for proportion of successful tasks
         if(_project.tokensStaked() != 0) {
-            refund = _project.tokenBalances(_staker) * _project.passAmount() / 100;
+            _project.state() == 6
+                ? refund = _project.tokenBalances(_staker).mul( _project.passAmount()).div(100)
+                : refund = _project.tokenBalances(_staker);
         }
         emit TokenRefund(_staker, refund);
         return refund;
@@ -434,7 +445,9 @@ library ProjectLibrary {
     function handleReputationStaker(Project _project, address _staker) internal returns (uint256) {
         uint256 refund;
         if(_project.reputationStaked() != 0) {
-            refund = _project.reputationBalances(_staker) * _project.passAmount() / 100;
+          _project.state() == 6
+              ? refund = _project.reputationBalances(_staker).mul( _project.passAmount()).div(100)
+              : refund = _project.reputationBalances(_staker);
         }
         emit ReputationRefund(address(_project), _staker, refund);
         return refund;

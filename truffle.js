@@ -14,14 +14,12 @@ if (fs.existsSync('secrets.json')) {
 
 module.exports = {
   networks: {
-    development: {
+    // run truffle migrate --network app to migrate contracts for app
+    // do not change name to development!!!!
+    app: {
       host: 'localhost',
       port: 8545,
       network_id: 5777
-    },
-    docker: {
-      host: 'ganachecli',
-      port: 8545
     },
     rinkeby: {
       provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/'),
@@ -33,8 +31,7 @@ module.exports = {
         currency: 'ETH',
         gasPrice: 21
       }
-    },
-
+    }
   },
   solc: {
     optimizer: {

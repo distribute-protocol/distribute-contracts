@@ -65,7 +65,8 @@ contract ProjectRegistry is Ownable {
 
     mapping (address => StakedState) public stakedProjects;
 
-    uint[5] public validationRewardWeightings = [36, 24, 17, 13, 10];
+    uint[5] public validationRewardWeightings = [36, 26, 20, 16, 2];
+    // done this way so that 100% of the validation reward can be pulled, regardless of how many validators there are
 
     bool freeze;
 
@@ -385,9 +386,8 @@ contract ProjectRegistry is Ownable {
         address _proposer,
         uint256 _proposerType,
         uint256 _proposerStake,
-        bytes _ipfsHash,
-        uint256 _proposerCost
-    ) external onlyTRorRR returns (address) {
+        bytes _ipfsHash
+        ) external onlyTRorRR returns (address) {
         require(!freeze);
         address projectAddress = createProxyProject(
             _cost,
@@ -403,7 +403,7 @@ contract ProjectRegistry is Ownable {
         projects[projectAddress] = true;
         projectsList[projectNonce] = projectAddress;
         projectNonce += 1;
-        emit LogProjectCreated(projectAddress, _proposerCost);
+        emit LogProjectCreated(projectAddress, _proposerStake);
         return projectAddress;
     }
 
@@ -566,7 +566,7 @@ contract ProjectRegistry is Ownable {
         require(keccak256(abi.encodePacked(_taskDescription, _weighting)) == task.taskHash());
         require(
             task.claimer() == 0 ||
-            (now > (task.claimTime() + project.turnoverTime()) && !task.complete())
+            (block.timestamp > (task.claimTime() + project.turnoverTime()) && !task.complete())
         );
         task.setWeighting(_weighting);
         task.setTaskReward(_weiVal, _reputationVal, _claimer);
