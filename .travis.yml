@@ -1,8 +1,5 @@
 language: node_js
 node_js:
- - "node"
-cache:
-  directories:
-    - node_modules
+ - "8"
 script:
 - truffle test
