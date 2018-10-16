@@ -8,4 +8,4 @@ coverage.json
 coverageEnv/
 yarn-error.log
 package-lock.json
-report.md
+report*.md

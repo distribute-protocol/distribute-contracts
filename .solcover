@@ -1,0 +1,3 @@
+module.exports = {
+    skipFiles: ['library/ProxyFactory.sol', 'library/Divison.sol', 'library.SafeMath.sol', 'library/Ownable.sol', 'library/Migrations.sol']
+};
