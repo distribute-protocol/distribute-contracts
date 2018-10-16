@@ -1,5 +1,4 @@
-# distribute contracts
-[![Build Status](https://travis-ci.com/distribute-protocol/distribute-contracts.svg?branch=master)](https://travis-ci.com/distribute-protocol/distribute-contracts)
+# Distribute Smart Contracts [![Build Status](https://travis-ci.com/distribute-protocol/distribute-contracts.svg?branch=master)](https://travis-ci.com/distribute-protocol/distribute-contracts)
 
 * [Protocol Overview](#protocol-overview)
 * [Contracts](#contracts)
