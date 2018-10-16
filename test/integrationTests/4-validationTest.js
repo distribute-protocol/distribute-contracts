@@ -779,121 +779,121 @@ contract('Validating State', function (accounts) {
     })
 
     it('checkVoting changes TR validating project to voting after time is up', async () => {
-    //   // take stock of variables
-    //   let stateBefore = await project.getState(projAddrT)
-    //   let projWeiBalBefore = await project.getWeiBal(projAddrT, true)
-    //   let DTBalBefore = await utils.getWeiPoolBal(true)
-    //
-    //   // attempt to checkVoting
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrT)
+      // let projWeiBalBefore = await project.getWeiBal(projAddrT, true)
+      // let DTBalBefore = await utils.getWeiPoolBal(true)
+
+      // attempt to checkVoting
       await PR.checkVoting(projAddrT)
-    //
-    //   // take stock of variables
-    //   let stateAfter = await project.getState(projAddrT)
-    //   let projWeiBalAfter = await project.getWeiBal(projAddrT, true)
-    //   let DTBalAfter = await utils.getWeiPoolBal(true)
-    //
-    //   let failedTaskWeiReward = new BigNumber(0)
-    //   let pollNonce = []
-    //   let taskClaimableByVal = []
-    //   let taskClaimableByRep = []
-    //
-    //   for (let i = 0; i < taskSet1.length; i++) {
-    //     let nonce = await task.getPollNonce(projAddrT, i)
-    //     let claimable = await task.getClaimable(projAddrT, i)
-    //     let claimableByRep = await task.getClaimableByRep(projAddrT, i)
-    //     let complete = await task.getComplete(projAddrT, i)
-    //     if ((claimable === true && claimableByRep === false && complete === true)) {
-    //       let weiReward = await task.getWeiReward(projAddrT, i)
-    //       failedTaskWeiReward.plus(weiReward)
-    //     }
-    //     pollNonce.push(nonce)
-    //     taskClaimableByVal.push(claimable)
-    //     taskClaimableByRep.push(claimableByRep)
-    //   }
-    //
-    //   // interim calculations
-    //   let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter)
-    //   let weiPoolDifference = DTBalAfter.minus(DTBalBefore)
-    //
-    //   // checks
-    //   assert.equal(stateBefore, 4, 'state before should be 4')
-    //   assert.equal(stateAfter, 5, 'state should have changed')
-    //   assert.equal(pollNonce[indexYes], 0, 'should be no poll ID')
-    //   assert.equal(pollNonce[indexNo], 0, 'should be no poll ID')
-    //   assert.equal(pollNonce[indexNeither], 0, 'should be no poll ID')
-    //   assert.equal(pollNonce[indexIncomplete], 0, 'should be no poll ID')
-    //   assert.notEqual(pollNonce[indexBoth], 0, 'should be nonzero poll ID')
-    //   assert.equal(taskClaimableByVal[indexYes], true, 'should be claimable by validator')
-    //   assert.equal(taskClaimableByVal[indexNo], true, 'should be claimable by validator')
-    //   assert.equal(taskClaimableByVal[indexNeither], true, 'should be claimable by validator')
-    //   assert.equal(taskClaimableByVal[indexIncomplete], false, 'should not be claimable by validator')
-    //   assert.equal(taskClaimableByVal[indexBoth], false, 'should not be claimable by validator')
-    //   assert.equal(taskClaimableByRep[indexYes], true, 'should be claimable by rep')
-    //   assert.equal(taskClaimableByRep[indexNo], false, 'should not be claimable by rep')
-    //   assert.equal(taskClaimableByRep[indexNeither], false, 'should not be claimable by rep')
-    //   assert.equal(taskClaimableByRep[indexIncomplete], false, 'should not be claimable by rep')
-    //   assert.equal(taskClaimableByRep[indexBoth], false, 'should not be claimable by rep')
-    //   assert.equal(weiBalDifference, weiPoolDifference, 'should be same amount')
-    //   assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrT)
+      // let projWeiBalAfter = await project.getWeiBal(projAddrT, true)
+      // let DTBalAfter = await utils.getWeiPoolBal(true)
+
+      // let failedTaskWeiReward = new BigNumber(0)
+      let pollNonce = []
+      let taskClaimableByVal = []
+      let taskClaimableByRep = []
+
+      for (let i = 0; i < taskSet1.length; i++) {
+        let nonce = await task.getPollNonce(projAddrT, i)
+        let claimable = await task.getClaimable(projAddrT, i)
+        let claimableByRep = await task.getClaimableByRep(projAddrT, i)
+        // let complete = await task.getComplete(projAddrT, i)
+        // if ((claimable === true && claimableByRep === false && complete === true)) {
+        //   let weiReward = await task.getWeiReward(projAddrT, i)
+        //   failedTaskWeiReward.plus(weiReward)
+        // }
+        pollNonce.push(nonce)
+        taskClaimableByVal.push(claimable)
+        taskClaimableByRep.push(claimableByRep)
+      }
+
+      // interim calculations
+      // let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter)
+      // let weiPoolDifference = DTBalAfter.minus(DTBalBefore)
+
+      // checks
+      assert.equal(stateBefore, 4, 'state before should be 4')
+      assert.equal(stateAfter, 5, 'state should have changed')
+      assert.equal(pollNonce[indexYes], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexNo], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexNeither], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexIncomplete], 0, 'should be no poll ID')
+      assert.notEqual(pollNonce[indexBoth], 0, 'should be nonzero poll ID')
+      assert.equal(taskClaimableByVal[indexYes], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[indexNo], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[indexNeither], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[indexIncomplete], false, 'should not be claimable by validator')
+      assert.equal(taskClaimableByVal[indexBoth], false, 'should not be claimable by validator')
+      assert.equal(taskClaimableByRep[indexYes], true, 'should be claimable by rep')
+      assert.equal(taskClaimableByRep[indexNo], false, 'should not be claimable by rep')
+      assert.equal(taskClaimableByRep[indexNeither], false, 'should not be claimable by rep')
+      assert.equal(taskClaimableByRep[indexIncomplete], false, 'should not be claimable by rep')
+      assert.equal(taskClaimableByRep[indexBoth], false, 'should not be claimable by rep')
+      // assert.equal(weiBalDifference, weiPoolDifference, 'should be same amount')
+      // assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
     })
 
     it('checkVoting changes RR validating project to voting after time is up', async () => {
-    //   // take stock of variables
-    //   let stateBefore = await project.getState(projAddrR)
-    //   let projWeiBalBefore = await project.getWeiBal(projAddrR, true)
-    //   let DTBalBefore = await utils.getWeiPoolBal(true)
-    //
-    //   // attempt to checkVoting
+      // take stock of variables
+      let stateBefore = await project.getState(projAddrR)
+      // let projWeiBalBefore = await project.getWeiBal(projAddrR, true)
+      // let DTBalBefore = await utils.getWeiPoolBal(true)
+
+      // attempt to checkVoting
       await PR.checkVoting(projAddrR)
-    //
-    //   // take stock of variables
-    //   let stateAfter = await project.getState(projAddrR)
-    //   let projWeiBalAfter = await project.getWeiBal(projAddrR, true)
-    //   let DTBalAfter = await utils.getWeiPoolBal(true)
-    //
-    //   let failedTaskWeiReward = new BigNumber(0)
-    //   let pollNonce = []
-    //   let taskClaimableByVal = []
-    //   let taskClaimableByRep = []
-    //
-    //   for (let i = 0; i < taskSet1.length; i++) {
-    //     let nonce = await task.getPollNonce(projAddrR, i)
-    //     let claimable = await task.getClaimable(projAddrR, i)
-    //     let claimableByRep = await task.getClaimableByRep(projAddrR, i)
-    //     let complete = await task.getComplete(projAddrR, i)
-    //     if ((claimable === true && claimableByRep === false && complete === true)) {
-    //       let weiReward = await task.getWeiReward(projAddrR, i)
-    //       failedTaskWeiReward.plus(weiReward)
-    //     }
-    //     pollNonce.push(nonce)
-    //     taskClaimableByVal.push(claimable)
-    //     taskClaimableByRep.push(claimableByRep)
-    //   }
-    //
-    //   // interim calculations
-    //   let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter)
-    //   let weiPoolDifference = DTBalAfter.minus(DTBalBefore)
-    //
-    //   // checks
-    //   assert.equal(stateBefore, 4, 'state before should be 4')
-    //   assert.equal(stateAfter, 5, 'state should have changed')
-    //   assert.equal(pollNonce[indexYes], 0, 'should be no poll ID')
-    //   assert.equal(pollNonce[indexNo], 0, 'should be no poll ID')
-    //   assert.equal(pollNonce[indexNeither], 0, 'should be no poll ID')
-    //   assert.equal(pollNonce[indexIncomplete], 0, 'should be no poll ID')
-    //   assert.notEqual(pollNonce[indexBoth], 0, 'should be nonzero poll ID')
-    //   assert.equal(taskClaimableByVal[indexYes], true, 'should be claimable by validator')
-    //   assert.equal(taskClaimableByVal[indexNo], true, 'should be claimable by validator')
-    //   assert.equal(taskClaimableByVal[indexNeither], true, 'should be claimable by validator')
-    //   assert.equal(taskClaimableByVal[indexIncomplete], false, 'should not be claimable by validator')
-    //   assert.equal(taskClaimableByVal[indexBoth], false, 'should not be claimable by validator')
-    //   assert.equal(taskClaimableByRep[indexYes], true, 'should be claimable by rep')
-    //   assert.equal(taskClaimableByRep[indexNo], false, 'should not be claimable by rep')
-    //   assert.equal(taskClaimableByRep[indexNeither], false, 'should notbe claimable by rep')
-    //   assert.equal(taskClaimableByRep[indexIncomplete], false, 'should not be claimable by rep')
-    //   assert.equal(taskClaimableByRep[indexBoth], false, 'should not be claimable by rep')
-    //   assert.equal(weiBalDifference, weiPoolDifference, 'should be same amount')
-    //   assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
+
+      // take stock of variables
+      let stateAfter = await project.getState(projAddrR)
+      // let projWeiBalAfter = await project.getWeiBal(projAddrR, true)
+      // let DTBalAfter = await utils.getWeiPoolBal(true)
+
+      // let failedTaskWeiReward = new BigNumber(0)
+      let pollNonce = []
+      let taskClaimableByVal = []
+      let taskClaimableByRep = []
+
+      for (let i = 0; i < taskSet1.length; i++) {
+        let nonce = await task.getPollNonce(projAddrR, i)
+        let claimable = await task.getClaimable(projAddrR, i)
+        let claimableByRep = await task.getClaimableByRep(projAddrR, i)
+        // let complete = await task.getComplete(projAddrR, i)
+        // if ((claimable === true && claimableByRep === false && complete === true)) {
+        //   let weiReward = await task.getWeiReward(projAddrR, i)
+        //   failedTaskWeiReward.plus(weiReward)
+        // }
+        pollNonce.push(nonce)
+        taskClaimableByVal.push(claimable)
+        taskClaimableByRep.push(claimableByRep)
+      }
+
+      // interim calculations
+      // let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter)
+      // let weiPoolDifference = DTBalAfter.minus(DTBalBefore)
+
+      // checks
+      assert.equal(stateBefore, 4, 'state before should be 4')
+      assert.equal(stateAfter, 5, 'state should have changed')
+      assert.equal(pollNonce[indexYes], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexNo], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexNeither], 0, 'should be no poll ID')
+      assert.equal(pollNonce[indexIncomplete], 0, 'should be no poll ID')
+      assert.notEqual(pollNonce[indexBoth], 0, 'should be nonzero poll ID')
+      assert.equal(taskClaimableByVal[indexYes], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[indexNo], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[indexNeither], true, 'should be claimable by validator')
+      assert.equal(taskClaimableByVal[indexIncomplete], false, 'should not be claimable by validator')
+      assert.equal(taskClaimableByVal[indexBoth], false, 'should not be claimable by validator')
+      assert.equal(taskClaimableByRep[indexYes], true, 'should be claimable by rep')
+      assert.equal(taskClaimableByRep[indexNo], false, 'should not be claimable by rep')
+      assert.equal(taskClaimableByRep[indexNeither], false, 'should notbe claimable by rep')
+      assert.equal(taskClaimableByRep[indexIncomplete], false, 'should not be claimable by rep')
+      assert.equal(taskClaimableByRep[indexBoth], false, 'should not be claimable by rep')
+      // assert.equal(weiBalDifference, weiPoolDifference, 'should be same amount')
+      // assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
     })
   })
 

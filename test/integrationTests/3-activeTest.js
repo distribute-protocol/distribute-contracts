@@ -565,33 +565,33 @@ contract('Active State', function (accounts) {
       assert.equal(taskClaimerAfter, worker2, 'task given incorrect claimer')
     })
 
-    // it('worker without enough reputation can\'t claim a task from TR active project', async () => {
-    //   let description = taskSet1[indexThrowaway].description
-    //   let weighting = taskSet1[indexThrowaway].weighting
-    //
-    //   errorThrown = false
-    //   try {
-    //     await RR.claimTask(projAddrT, indexThrowaway, description, weighting, {from: notWorker})
-    //   } catch (e) {
-    //     assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
-    //     errorThrown = true
-    //   }
-    //   assertThrown(errorThrown, 'An error should have been thrown')
-    // })
-    //
-    // it('worker without enough reputation can\'t claim a task from RR active project', async () => {
-    //   let description = taskSet1[indexThrowaway].description
-    //   let weighting = taskSet1[indexThrowaway].weighting
-    //
-    //   errorThrown = false
-    //   try {
-    //     await RR.claimTask(projAddrR, indexThrowaway, description, weighting, {from: notWorker})
-    //   } catch (e) {
-    //     assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
-    //     errorThrown = true
-    //   }
-    //   assertThrown(errorThrown, 'An error should have been thrown')
-    // })
+    it('worker without enough reputation can\'t claim a task from TR active project', async () => {
+      let description = taskSet1[indexThrowaway].description
+      let weighting = taskSet1[indexThrowaway].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrT, indexThrowaway, description, weighting, {from: notWorker})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('worker without enough reputation can\'t claim a task from RR active project', async () => {
+      let description = taskSet1[indexThrowaway].description
+      let weighting = taskSet1[indexThrowaway].weighting
+
+      errorThrown = false
+      try {
+        await RR.claimTask(projAddrR, indexThrowaway, description, weighting, {from: notWorker})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
 
     it('worker can\'t claim task from TR active project with incorrect weighting', async () => {
       let description = taskSet1[indexThrowaway].description

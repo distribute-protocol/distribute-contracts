@@ -41,7 +41,7 @@ module.exports = function projectHelper (accounts) {
 
   obj.user.worker1 = accounts[1]
   obj.user.worker2 = accounts[2]
-  obj.user.notWorker = accounts[3]
+  obj.user.notWorker = accounts[7]
 
   obj.user.validator1 = accounts[1]
   obj.user.validator2 = accounts[2]

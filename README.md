@@ -435,18 +435,7 @@ tokenRegistry.refundStaker(_projectAddress)
 
 ## Running Tests
 
-To run the tests, open a tab and run
-```
-ganache-cli -e 1000 -a 30
-```
-This will create 30 Ethereum accounts, each loaded with 1000 ether. This is due to the large number of workers, stakers, validators, voters, etc required to run these tests.
-
-To run the full test suite, open another tab and run
+To run the full test suite, open a tab and run
 ```
 truffle test
-```
-
-To run an individual test, restart ganache-cli and run
-```
-truffle test test/<path_to_test>
 ```
