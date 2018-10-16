@@ -2876,6 +2876,10 @@ klaw@^1.0.0:
   optionalDependencies:
     graceful-fs "^4.1.9"
 
+kv-idb@^1.0.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/kv-idb/-/kv-idb-1.1.0.tgz#5773dc7c7df39f4a6470fb708607babe04b02427"
+
 lazy-cache@^1.0.3:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/lazy-cache/-/lazy-cache-1.0.4.tgz#a1d78fc3a50474cb80845d3b3b6e1da49a446e8e"
@@ -4323,15 +4327,11 @@ sol-explore@^1.6.2:
   version "1.6.2"
   resolved "https://registry.yarnpkg.com/sol-explore/-/sol-explore-1.6.2.tgz#43ae8c419fd3ac056a05f8a9d1fb1022cd41ecc2"
 
-solc-js@^0.4.20-browser.1:
-  version "0.4.20-browser.1"
-  resolved "https://registry.yarnpkg.com/solc-js/-/solc-js-0.4.20-browser.1.tgz#8cddedcbb90f5ed1289f3a984a71fcbb50fa1ebf"
+solc-js@^0.4.21:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/solc-js/-/solc-js-0.5.0.tgz#5be42d54a013cf50ae2cbc48b3a64dd03d91ab19"
   dependencies:
-    fs-extra "^0.30.0"
-    memorystream "^0.3.1"
-    require-from-string "^1.1.0"
-    semver "^5.3.0"
-    yargs "^4.7.1"
+    kv-idb "^1.0.0"
 
 solc@0.4.24, solc@^0.4.2:
   version "0.4.24"
