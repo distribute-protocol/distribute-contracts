@@ -33,6 +33,8 @@ contract('Validating State', function (accounts) {
   let indexIncomplete = 4
   let notIndex = 5
 
+  let fastForwards = 5 // testrpc is 5 weeks ahead at this point
+
   before(async function () {
     // get contract
     await projObj.contracts.setContracts()
@@ -41,7 +43,7 @@ contract('Validating State', function (accounts) {
     RR = projObj.contracts.RR
 
     // get validating projects
-    projArray = await returnProject.validating(projectCost, stakingPeriod, ipfsHash, taskSet1, taskSet1.length - 1)
+    projArray = await returnProject.validating(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet1, taskSet1.length - 1)
 
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]

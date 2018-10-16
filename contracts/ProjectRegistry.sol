@@ -66,6 +66,7 @@ contract ProjectRegistry is Ownable {
     mapping (address => StakedState) public stakedProjects;
 
     uint[5] public validationRewardWeightings = [36, 26, 20, 16, 2];
+    // done this way so that 100% of the validation reward can be pulled, regardless of how many validators there are
 
     bool freeze;
 

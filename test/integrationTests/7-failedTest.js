@@ -7,7 +7,7 @@ const taskDetails = require('../utils/taskDetails')
 
 const Web3 = require('web3')
 const web3 = new Web3()
-web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'))
+web3.setProvider(new Web3.providers.HttpProvider('http://localhost:7545'))
 
 contract('Failed State', function (accounts) {
   // set up project helper
@@ -48,6 +48,8 @@ contract('Failed State', function (accounts) {
   let valType = [validating.valTrueOnly, validating.valFalseOnly, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valNeither]
   let voteType = [voting.voteNeither, voting.voteNeither, voting.voteTrueOnly, voting.voteTrueOnly, voting.voteFalseOnly, voting.voteFalseOnly, voting.voteTrueMore, voting.voteTrueMore, voting.voteFalseMore, voting.voteFalseMore, voting.voteNeither]
 
+  let fastForwards = 23 // testrpc is 23 weeks ahead at this point
+
   before(async function () {
     // get contract
     await projObj.contracts.setContracts()
@@ -56,7 +58,7 @@ contract('Failed State', function (accounts) {
     PLCR = projObj.contracts.PLCR
 
     // get finished - failed projects
-    projArray = await returnProject.finished(projectCost, stakingPeriod, ipfsHash, taskSet5, taskSet5.length, valType, voteType, 7)
+    projArray = await returnProject.finished(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet5, taskSet5.length, valType, voteType, 7)
 
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]

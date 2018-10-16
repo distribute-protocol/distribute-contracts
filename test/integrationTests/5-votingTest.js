@@ -8,7 +8,7 @@ const taskDetails = require('../utils/taskDetails')
 
 const Web3 = require('web3')
 const web3 = new Web3()
-web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'))
+web3.setProvider(new Web3.providers.HttpProvider('http://localhost:7545'))
 
 const ethers = require('ethers')
 
@@ -49,6 +49,8 @@ contract('Voting State', function (accounts) {
   let voteYes = 1
   let voteNo = 0
 
+  let fastForwards = 9 // testrpc is 9 weeks ahead at this point
+
   before(async function () {
     // get contract
     await projObj.contracts.setContracts()
@@ -58,7 +60,7 @@ contract('Voting State', function (accounts) {
     PLCR = projObj.contracts.PLCR
 
     // get voting projects
-    projArray = await returnProject.voting(projectCost, stakingPeriod, ipfsHash, taskSet3, taskSet3.length - 1, valType)
+    projArray = await returnProject.voting(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet3, taskSet3.length - 1, valType)
 
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]

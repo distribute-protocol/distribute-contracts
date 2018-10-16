@@ -29,6 +29,8 @@ contract('Staked State', function (accounts) {
   let projAddrR1, projAddrR2
   let errorThrown
 
+  let fastForwards = 1 // testrpc is 1 week ahead at this point
+
   before(async function () {
     // get contract
     await projObj.contracts.setContracts()
@@ -38,12 +40,12 @@ contract('Staked State', function (accounts) {
 
     // get staked projects
     // to check successful transition to active period
-    projAddrT1 = await returnProject.staked_T(projectCost, stakingPeriod, ipfsHash)
-    projAddrR1 = await returnProject.staked_R(projectCost, stakingPeriod, ipfsHash)
+    projAddrT1 = await returnProject.staked_T(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
+    projAddrR1 = await returnProject.staked_R(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
 
     // to check failed transition to failed period
-    projAddrT2 = await returnProject.staked_T(projectCost, stakingPeriod, ipfsHash)
-    projAddrR2 = await returnProject.staked_R(projectCost, stakingPeriod, ipfsHash)
+    projAddrT2 = await returnProject.staked_T(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
+    projAddrR2 = await returnProject.staked_R(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash)
   })
 
   describe('handle proposer', () => {

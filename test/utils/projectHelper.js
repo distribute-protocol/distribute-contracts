@@ -639,7 +639,7 @@ module.exports = function projectHelper (accounts) {
     }
 
     // increase time 1 week + 1 ms to make sure that checkStaked() doesn't bug out
-    await evmIncreaseTime(604801)
+    await evmIncreaseTime(2 * 604801)
 
     for (let i = 0; i < _numSets; i++) {
       // call checkStaked on projects and do checks

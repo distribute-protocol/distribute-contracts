@@ -20,6 +20,8 @@ contract('Expired State', function (accounts) {
   let errorThrown
   let projAddrT, projAddrR
 
+  let fastForwards = 28 // testrpc is 28 weeks ahead at this point
+
   before(async function () {
     // get contract
     await projObj.contracts.setContracts()
@@ -27,7 +29,7 @@ contract('Expired State', function (accounts) {
     RR = projObj.contracts.RR
 
     // get finished - expired projects
-    projArray = await returnProject.expired(projectCost, stakingPeriod, ipfsHash, 1)
+    projArray = await returnProject.expired(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, 1)
 
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]

@@ -36,6 +36,8 @@ contract('Active State', function (accounts) {
   let indexThrowaway = 0 // to test a task that will fail every time it's claimed and marked complete
   let notIndex = 5 // to test a nonexistant task
 
+  let fastForwards = 2 // testrpc is 2 weeks ahead at this point
+
   before(async function () {
     // get contracts
     await projObj.contracts.setContracts()
@@ -44,7 +46,7 @@ contract('Active State', function (accounts) {
     PR = projObj.contracts.PR
 
     // get active projects
-    projArray = await returnProject.active(projectCost, stakingPeriod, ipfsHash, 1, taskSet1)
+    projArray = await returnProject.active(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, 1, taskSet1)
 
     projAddrT = projArray[0][0]
     projAddrR = projArray[0][1]
@@ -563,33 +565,33 @@ contract('Active State', function (accounts) {
       assert.equal(taskClaimerAfter, worker2, 'task given incorrect claimer')
     })
 
-    it('worker without enough reputation can\'t claim a task from TR active project', async () => {
-      let description = taskSet1[indexThrowaway].description
-      let weighting = taskSet1[indexThrowaway].weighting
-
-      errorThrown = false
-      try {
-        await RR.claimTask(projAddrT, indexThrowaway, description, weighting, {from: notWorker})
-      } catch (e) {
-        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
-        errorThrown = true
-      }
-      assertThrown(errorThrown, 'An error should have been thrown')
-    })
-
-    it('worker without enough reputation can\'t claim a task from RR active project', async () => {
-      let description = taskSet1[indexThrowaway].description
-      let weighting = taskSet1[indexThrowaway].weighting
-
-      errorThrown = false
-      try {
-        await RR.claimTask(projAddrR, indexThrowaway, description, weighting, {from: notWorker})
-      } catch (e) {
-        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
-        errorThrown = true
-      }
-      assertThrown(errorThrown, 'An error should have been thrown')
-    })
+    // it('worker without enough reputation can\'t claim a task from TR active project', async () => {
+    //   let description = taskSet1[indexThrowaway].description
+    //   let weighting = taskSet1[indexThrowaway].weighting
+    //
+    //   errorThrown = false
+    //   try {
+    //     await RR.claimTask(projAddrT, indexThrowaway, description, weighting, {from: notWorker})
+    //   } catch (e) {
+    //     assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+    //     errorThrown = true
+    //   }
+    //   assertThrown(errorThrown, 'An error should have been thrown')
+    // })
+    //
+    // it('worker without enough reputation can\'t claim a task from RR active project', async () => {
+    //   let description = taskSet1[indexThrowaway].description
+    //   let weighting = taskSet1[indexThrowaway].weighting
+    //
+    //   errorThrown = false
+    //   try {
+    //     await RR.claimTask(projAddrR, indexThrowaway, description, weighting, {from: notWorker})
+    //   } catch (e) {
+    //     assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+    //     errorThrown = true
+    //   }
+    //   assertThrown(errorThrown, 'An error should have been thrown')
+    // })
 
     it('worker can\'t claim task from TR active project with incorrect weighting', async () => {
       let description = taskSet1[indexThrowaway].description
