@@ -1,66 +1,18 @@
-# Contract Docs [![Build Status](https://travis-ci.com/distribute-protocol/distribute-contracts.svg?branch=master)](https://travis-ci.com/distribute-protocol/distribute-contracts)
+# distribute contracts
+[![Build Status](https://travis-ci.com/distribute-protocol/distribute-contracts.svg?branch=master)](https://travis-ci.com/distribute-protocol/distribute-contracts)
 
 * [Protocol Overview](#protocol-overview)
 * [Contracts](#contracts)
   * [Main Contract Summaries](#main-contract-summaries)
-    * [DistributeToken.sol](#distributeToken.sol)
-    * [TokenRegistry.sol](#tokenRegistry.sol)
-    * [ReputationRegistry.sol](#reputationRegistry.sol)
-    * [ProjectRegistry.sol](#projectRegistry.sol)
-    * [ProjectLibrary.sol](#ProjectLibrary.sol)
-    * [Project.sol](#project.sol)
-    * [Task.sol](#task.sol)
   * [Helper Contract Summaries](#helper-contract-summaries)
-    * [DistributeToken.sol](#distributeToken.sol)
-    * [TokenRegistry.sol](#tokenRegistry.sol)
-    * [ReputationRegistry.sol](#reputationRegistry.sol)
-    * [ProjectRegistry.sol](#projectRegistry.sol)
-    * [ProjectLibrary.sol](#ProjectLibrary.sol)
-    * [Project.sol](#project.sol)
-    * [Task.sol](#task.sol)
 * [Actions](#actions)
   * [General Actions](#general-actions)
-    * [Minting Tokens](#minting-tokens)
-    * [Selling Tokens](#selling-tokens)
-    * [Registering as a Worker](#registering-as-a-worker)
   * [Stage-Specific Actions](#stage-specific-actions)
-    * [0 - Proposal](#0---proposal)
-      * [Propose a Project with Tokens](#propose-a-project-with-tokens)
-      * [Propose a Project with Reputation](#propose-a-project-with-reputation)
-    * [1 - Staking](#1---staking)
-      * [Staking Tokens](#staking-tokens)
-      * [Staking Reputation](#staking-reputation)
-      * [Unstaking Tokens](#unstaking-tokens)
-      * [Unstaking Reputation](#unstaking-reputation)
-      * [* State Change - Check Staked](#-state-change---check-staked)
-    * [2 - Staked Project](#2---staked-project)
-      * [Submit Hashed Task List](#submit-hashed-task-list)
-      * [* State Change - Check Active](#-state-change---check-active)
-    * [3 - Active Project](#3---active-project)
-      * [Submit Task List](#submit-task-list)
-      * [Claim/Reclaim Task](#claimreclaim-task)
-      * [Mark Task Complete](#mark-task-complete)
-      * [* State Change - Check Validate](#-state-change---check-validate)
-    * [4 - Validating Project](#4---validating-project)
-      * [Validate Yes/No with Tokens](#validate-yesno-with-tokens)
-      * [* State Change - Check Voting](#-state-change---check-voting)
-    * [5 - Voting Project](#5---voting-project)
-      * [Vote Yes/No with Tokens](#vote-yesno-with-tokens)
-      * [Vote Yes/No with Reputation](#vote-yesno-with-reputation)
-      * [* State Change - Check End](#-state-change---check-end)
-    * [6 - Complete Project](#6---complete-project)
-      * [Refund Staker](#refund-staker)
-      * [Reward Validator](#reward-validator)
-      * [Refund Voting Tokens/Reputation](#refund-voting-tokensreputation)
-      * [Reward Worker](#reward-worker)
-    * [7 - Failed Project](#7---failed-project)
-    * [8 - Expired Project](#8---expired-project)
-      * [Refund Staker](#refund-staker)
 * [Running Tests](#running-tests)
 
 ## Protocol Overview
 
-The Distribute Protocol is an experiment in using smart contract-enabled token economies to decentralize the governance, maintenance, and financial support of public utilities and communal infrastructure.
+The distribute protocol is an experiment in using smart contract-enabled token economies to decentralize the governance, maintenance, and financial support of public utilities and communal infrastructure.
 
 Its multifaceted incentive structure ensures that:
 
@@ -78,10 +30,10 @@ Its multifaceted incentive structure ensures that:
 The distribute token (DST) is continuously minted as the network gains more users, so there is no cap on the total number of tokens in circulation. The price of the token is determined by the total market share of the amount of tokens being minted or sold. The user exchanges ether (ETH) for tokens and then the ETH is held in the distribute token contract. Any function that involves minting, selling, transferring, or burning tokens goes through DistributeToken.sol. Minting and selling tokens can be called directly by the user while burning and transferring tokens are called by the token registry or reputation registry that the contract was initialized with. DST is based on a standard EIP20 token and uses EIP20.sol to import basic token functionality and EIP20Interface.sol to import a getter function for the total supply of tokens.
 
 #### [TokenRegistry.sol](../contracts/TokenRegistry.sol)
-The token registry is the central contract by which the Distribute Protocol's users perform actions using tokens in the various stages of a project. It is the contract through which users are given the ability to propose projects using tokens. Users may also stake their tokens on projects, come to consensus on which tasks to perform, vote on completed tasks and more.
+The token registry is the central contract by which the distribute protocol's users perform actions using tokens in the various stages of a project. It is the contract through which users are given the ability to propose projects using tokens. Users may also stake their tokens on projects, come to consensus on which tasks to perform, vote on completed tasks and more.
 
 #### [ReputationRegistry.sol](../contracts/ReputationRegistry.sol)
-The reputation registry is the central contract for the Distribute Protocol to manage the reputation balances of each user. It is the contract through which users are given the ability to propose projects using reputation. Users may also stake their reputation on projects, come to consensus on which tasks to perform, then claim tasks, and subsequent task rewards, vote on completed tasks and more.
+The reputation registry is the central contract for the distribute protocol to manage the reputation balances of each user. It is the contract through which users are given the ability to propose projects using reputation. Users may also stake their reputation on projects, come to consensus on which tasks to perform, then claim tasks, and subsequent task rewards, vote on completed tasks and more.
 
 #### [ProjectRegistry.sol](../contracts/ProjectRegistry.sol)
 The project registry manages and records the state of projects and allows for the user to interact with projects by creating projects, add tasks after the project has been staked, submit hashed task lists to finalize the tasks for a project, claim tasks, and submit completed tasks for validation. The project registry contract provides a way for the user to manage the information in each project and return information to the token and reputation registries. The project registry does not initialize any projects, just handles the information within a project and the state of the projects. ProjectRegistry.sol calls ProjectLibrary.sol to check what stage a project is in and tell the token registry or reputation registry to burn tokens and reputation if needed.
@@ -103,10 +55,10 @@ Task contracts are instantiated for single tasks in every project to keep track 
 This is an extension of the [Partial-Lock-Commit-Reveal Voting scheme with ERC20 tokens](https://github.com/ConsenSys/PLCRVoting) that includes non-ERC20 tokens.
 
 #### [SafeMath.sol](../contracts/library/SafeMath.sol)
-SafeMath.sol helps Distribute Protocol deal with unsigned integer overflow issues as the Ethereum Virtual Machine allows mathematical operations to overflow the maximum integer value it can handle, resulting in incorrect calculations.
+SafeMath.sol helps the distribute protocol deal with unsigned integer overflow issues as the Ethereum Virtual Machine allows mathematical operations to overflow the maximum integer value it can handle, resulting in incorrect calculations.
 
 #### [Division.sol](../contracts/library/Division.sol)
-Division.sol allows for the Distribute Protocol to use division, because Ethereum has not implemented floating point numbers. The function in Division.sol rounds up to the degree of precision needed for a specific task.
+Division.sol allows for the distribute protocol to use division, because Ethereum has not implemented floating point numbers. The function in Division.sol rounds up to the degree of precision needed for a specific task.
 
 #### [ProxyFactory.sol](../contracts/library/ProxyFactory.sol)
 Allows us to create new proxy contracts and execute a message call to the new proxy within one transaction.
@@ -372,7 +324,7 @@ projectRegistry.checkEnd(_projectAddress)
 [diagram TBD]
 
 #### 6 - Complete Project
-When a project reaches stage 6- Complete, all stakers (reputation and token holders) regain their stake, and the positive validators are rewarded for correct validation of tasks.
+When a project reaches stage 6- Complete, all stakers (reputation and token holders) regain their stake, positive validators are rewarded for correct validation of tasks, and negative validators lose half of the tokens they validated with.
 
 ##### Refund Staker
 ```
@@ -421,7 +373,7 @@ Some of the actions in stage 6 still apply.
 
 If a **task** fails, the associated wei needed to complete it is returned to the collective pool from the project contract's balance. Validators who correctly marked the task as incomplete are rewarded. The reputation staked by the worker who failed to complete the task are burned.
 
-If a **project** fails, validators who validated tasks correctly and workers who completed their tasks still receive rewards. However, all the stakers' tokens are burned.
+If a **project** fails, validators who validated tasks correctly and workers who completed their tasks still receive rewards. However, validators who validated a task incorrectly lose half of the tokens they used to validate that task and all the stakers' tokens are burned.
 
 #### 8 - Expired Project
 If a project does not receive enough stakes before the set deadline, then the project expires. The proposer who put tokens or reputation as collateral lose them, but stakers on the project can retrieve their stakes.  
