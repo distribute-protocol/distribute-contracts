@@ -1,14 +1,10 @@
 /* eslint-env mocha */
-/* global assert contract */
+/* global assert contract web3 */
 
 const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const taskDetails = require('../utils/taskDetails')
-
-const Web3 = require('web3')
-const web3 = new Web3()
-web3.setProvider(new Web3.providers.HttpProvider('http://localhost:7545'))
 
 const ethers = require('ethers')
 
