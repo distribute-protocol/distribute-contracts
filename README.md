@@ -184,7 +184,7 @@ reputationRegistry.refundProposer(_projectAddress)
 [diagram TBD]
 
 ##### Submit Hashed Task List
-After a project has been fully staked and is in the staked stage, stakers need to collaborate off-chain to determine a task list for the project. At any time in the staked stage, stakers need to submit a hashed task list that they believe fully encompasses what needs to get done to complete the project and assigns the correct ETH value to reward the worker and purchase any supplies needed for the task. Once every staker submits their hashed list, the final task list is determined by the highest proportion of tokens and reputation staked.
+After a project has been fully staked and is in the staked stage, stakers need to collaborate off-chain to determine a task list for the project. At any time in the staked stage, stakers need to submit a hashed task list that they believe fully encompasses what needs to get done to complete the project and assigns the correct ETH value to reward the worker and purchase any supplies needed for the task. Once every staker submits their hashed list, the final task list is determined by the highest proportion of tokens and reputation staked. The first staker who submitted the winning task hash is deemed the originator, and will be rewarded if the project becomes complete.
 
 To submit a list of tasks:
 ```
