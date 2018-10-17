@@ -36,7 +36,7 @@ contract('Complete State', function (accounts) {
   let valType = [validating.valTrueOnly, validating.valTrueMore, validating.valFalseMore]
   let voteType = [voting.voteNeither, voting.voteTrueMore, voting.voteTrueMore]
 
-  let fastForwards = 17 // testrpc is 17 weeks ahead at this point
+  let fastForwards = 0 // testrpc is 17 weeks ahead at this point
 
   before(async function () {
     // get contract
@@ -557,6 +557,52 @@ contract('Complete State', function (accounts) {
       // reward remaining workers
       await RR.rewardTask(projAddrR, valTrueMoreVoteTrueMore, {from: worker2})
       await RR.rewardTask(projAddrR, valFalseMoreVoteTrueMore, {from: worker1})
+    })
+  })
+
+  describe('handle originator', () => {
+    it('not originator can\'t call reward originator from TR complete project', async () => {
+      errorThrown = false
+      try {
+        await TR.rewardOriginator(projAddrT, {from: tokenStaker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('not originator can\'t call reward originator from RR complete project', async () => {
+      errorThrown = false
+      try {
+        await TR.rewardOriginator(projAddrR, {from: tokenStaker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('originator can call reward originator from TR complete project', async () => {
+      // take stock of variables before
+
+      // refund originator
+      await TR.rewardOriginator(projAddrT, {from: tokenStaker1})
+
+      // take stock of variables after
+
+      // checks
+    })
+
+    it('originator can call reward originator from RR complete project', async () => {
+      // take stock of variables before
+
+      // refund originator
+      await TR.rewardOriginator(projAddrR, {from: tokenStaker1})
+
+      // take stock of variables after
+
+      // checks
     })
   })
 

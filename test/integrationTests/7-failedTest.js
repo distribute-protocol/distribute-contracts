@@ -44,7 +44,7 @@ contract('Failed State', function (accounts) {
   let valType = [validating.valTrueOnly, validating.valFalseOnly, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valNeither]
   let voteType = [voting.voteNeither, voting.voteNeither, voting.voteTrueOnly, voting.voteTrueOnly, voting.voteFalseOnly, voting.voteFalseOnly, voting.voteTrueMore, voting.voteTrueMore, voting.voteFalseMore, voting.voteFalseMore, voting.voteNeither]
 
-  let fastForwards = 23 // testrpc is 23 weeks ahead at this point
+  let fastForwards = 0 // testrpc is 23 weeks ahead at this point
 
   before(async function () {
     // get contract
@@ -800,6 +800,52 @@ contract('Failed State', function (accounts) {
       errorThrown = false
       try {
         await RR.rewardTask(projAddrR, index, {from: notWorker})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+  })
+
+  describe('handle originator', () => {
+    it('not originator can\'t call reward originator from TR failed project', async () => {
+      errorThrown = false
+      try {
+        await TR.rewardOriginator(projAddrT, {from: tokenStaker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('not originator can\'t call reward originator from RR failed project', async () => {
+      errorThrown = false
+      try {
+        await TR.rewardOriginator(projAddrR, {from: tokenStaker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('originator can\'t call reward originator from TR failed project', async () => {
+      errorThrown = false
+      try {
+        await TR.rewardOriginator(projAddrT, {from: tokenStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('originator can\'t call reward originator from RR failed project', async () => {
+      errorThrown = false
+      try {
+        await TR.rewardOriginator(projAddrR, {from: tokenStaker1})
       } catch (e) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true

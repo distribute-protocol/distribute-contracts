@@ -188,15 +188,14 @@ contract TokenRegistry is Ownable {
 
     /**
     @notice Rewards the originator of a project plan in tokens.
-    @param _rewardee Address of the project
-    @param _amount Address of the project
+    @param _projectAddress Address of the project
     */
-    function rewardOriginator(
-      address _rewardee,
-      uint _amount
-    ) external onlyPR {
+    function rewardOriginator(address _projectAddress) external {
       require(!freeze);
-      distributeToken.transferWeiTo(_rewardee, _amount);
+      Project project = Project(_projectAddress);
+      require(project.state() == 6);
+      projectRegistry.rewardOriginator(_projectAddress, msg.sender);
+      project.transferWeiReward(msg.sender, project.originatorReward());
     }
 
     // =====================================================================
