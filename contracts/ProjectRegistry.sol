@@ -496,7 +496,7 @@ contract ProjectRegistry is Ownable {
     function rewardOriginator(
       address _projectAddress,
       address _claimer
-    ) onlyTR {
+    ) onlyTR public {
       require(projects[_projectAddress] == true);
       StakedState storage ss = stakedProjects[_projectAddress];
       require(_claimer == ss.originator[ss.topTaskHash]);

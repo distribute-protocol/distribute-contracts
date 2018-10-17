@@ -36,7 +36,7 @@ contract('Complete State', function (accounts) {
   let valType = [validating.valTrueOnly, validating.valTrueMore, validating.valFalseMore]
   let voteType = [voting.voteNeither, voting.voteTrueMore, voting.voteTrueMore]
 
-  let fastForwards = 0 // testrpc is 17 weeks ahead at this point
+  let fastForwards = 17 // testrpc is 17 weeks ahead at this point
 
   before(async function () {
     // get contract
@@ -585,24 +585,42 @@ contract('Complete State', function (accounts) {
 
     it('originator can call reward originator from TR complete project', async () => {
       // take stock of variables before
+      let projWeiBalVariableBefore = await project.getWeiBal(projAddrT, true)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
 
       // refund originator
       await TR.rewardOriginator(projAddrT, {from: tokenStaker1})
 
       // take stock of variables after
+      let projWeiBalVariableAfter = await project.getWeiBal(projAddrT, true)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
+
+      // interm calculations
+      let weiBalVariableDifference = projWeiBalVariableBefore.minus(projWeiBalVariableAfter)
+      let weiBalDifference = projWeiBalBefore - projWeiBalAfter
 
       // checks
+      assert.equal(weiBalVariableDifference, weiBalDifference, 'these differences should be equivalent')
     })
 
     it('originator can call reward originator from RR complete project', async () => {
       // take stock of variables before
+      let projWeiBalVariableBefore = await project.getWeiBal(projAddrR, true)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR))
 
       // refund originator
       await TR.rewardOriginator(projAddrR, {from: tokenStaker1})
 
       // take stock of variables after
+      let projWeiBalVariableAfter = await project.getWeiBal(projAddrR, true)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR))
+
+      // interm calculations
+      let weiBalVariableDifference = projWeiBalVariableBefore.minus(projWeiBalVariableAfter)
+      let weiBalDifference = projWeiBalBefore - projWeiBalAfter
 
       // checks
+      assert.equal(weiBalVariableDifference, weiBalDifference, 'these differences should be equivalent')
     })
   })
 

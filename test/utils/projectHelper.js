@@ -80,8 +80,7 @@ module.exports = function projectHelper (accounts) {
   obj.project.stakingPeriod = obj.project.now + 604800 // one week from now
 
   obj.project.expiredStakingPeriod = 10 // January 1st, 1970
-  obj.project.proposalCost = parseInt(web3.toWei(0.1, 'ether'))
-  obj.project.projectCost = obj.project.proposalCost * 1.06
+  obj.project.projectCost = parseInt(web3.toWei(0.1, 'ether'))
   obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala' // length === 46
   obj.project.incorrectIpfsHash = 'whyiseveryspokeleadawhiteman' // length != 46
 

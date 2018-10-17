@@ -323,7 +323,7 @@ projectRegistry.checkEnd(_projectAddress)
 [diagram TBD]
 
 #### 6 - Complete Project
-When a project reaches stage 6- Complete, all stakers (reputation and token holders) regain their stake, positive validators are rewarded for correct validation of tasks, and negative validators lose half of the tokens they validated with.
+When a project reaches stage 6- Complete, all stakers (reputation and token holders) regain their stake, positive validators are rewarded for correct validation of tasks, negative validators lose half of the tokens they validated with, and originators are rewarded for originating the winning task hash.
 
 ##### Refund Staker
 ```
@@ -364,6 +364,13 @@ reputationRegistry.refundVotingReputation(_reputation)
 let _projectAddress = '0x0b239F63eC6248162c7F19B0B2956186725eb321'
 let _index = 0
 reputationRegistry.rewardTask(_projectAddress, _index)
+```
+[diagram TBD]
+
+##### Reward Originator
+```
+let _projectAddress = '0x0b239F63eC6248162c7F19B0B2956186725eb321'
+tokenRegistry.rewardOriginator(_projectAddress)
 ```
 [diagram TBD]
 

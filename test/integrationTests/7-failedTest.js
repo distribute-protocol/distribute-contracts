@@ -44,7 +44,7 @@ contract('Failed State', function (accounts) {
   let valType = [validating.valTrueOnly, validating.valFalseOnly, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valNeither]
   let voteType = [voting.voteNeither, voting.voteNeither, voting.voteTrueOnly, voting.voteTrueOnly, voting.voteFalseOnly, voting.voteFalseOnly, voting.voteTrueMore, voting.voteTrueMore, voting.voteFalseMore, voting.voteFalseMore, voting.voteNeither]
 
-  let fastForwards = 0 // testrpc is 23 weeks ahead at this point
+  let fastForwards = 23 // testrpc is 23 weeks ahead at this point
 
   before(async function () {
     // get contract
