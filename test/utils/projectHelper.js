@@ -81,7 +81,7 @@ module.exports = function projectHelper (accounts) {
 
   obj.project.expiredStakingPeriod = 10 // January 1st, 1970
   obj.project.proposalCost = parseInt(web3.toWei(0.1, 'ether'))
-  obj.project.projectCost = obj.project.proposalCost * 1.05
+  obj.project.projectCost = obj.project.proposalCost * 1.06
   obj.project.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala' // length === 46
   obj.project.incorrectIpfsHash = 'whyiseveryspokeleadawhiteman' // length != 46
 
@@ -303,6 +303,14 @@ module.exports = function projectHelper (accounts) {
     return _unadulterated
       ? validationReward
       : validationReward.toNumber()
+  }
+
+  obj.project.getOriginatorReward = async function (_projAddr, _unadulterated) {
+    let PROJ = await Project.at(_projAddr)
+    let originatorReward = await PROJ.originatorReward()
+    return _unadulterated
+      ? originatorReward
+      : originatorReward.toNumber()
   }
 
   obj.project.calculateRequiredTokens = async function (_projAddr) {

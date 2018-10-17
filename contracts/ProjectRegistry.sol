@@ -490,7 +490,7 @@ contract ProjectRegistry is Ownable {
         }
     }
     /**
-    @notice Rewards the originator of a project plan in tokens.
+    @notice Rewards the originator of a project plan in wei
     @param _projectAddress Address of the project
     */
     function rewardOriginator(
@@ -501,8 +501,7 @@ contract ProjectRegistry is Ownable {
       StakedState storage ss = stakedProjects[_projectAddress];
       require(msg.sender == ss.originator[ss.topTaskHash]);
       ss.originator[ss.topTaskHash] = 0;
-      uint amount = (project.proposedCost() + DistributeToken(distributeTokenAddress).weiBal()) / 2;
-      TokenRegistry(tokenRegistryAddress).rewardOriginator(msg.sender, amount);
+      TokenRegistry(tokenRegistryAddress).rewardOriginator(msg.sender, project.originatorReward);
       emit LogRewardOriginator(_projectAddress, msg.sender, amount);
 
     }
