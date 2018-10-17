@@ -116,7 +116,6 @@ contract('Proposed State', function (accounts) {
       let tsStakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrT1)
       let stakedRepBefore = await project.getStakedRep(projAddrT1)
-      // let projWeiBalBefore = await web3.eth.getBalance(projAddrT1)
 
       // tokenStaker1 unstakes all
       await TR.unstakeTokens(projAddrT1, tokensToUnstake, {from: tokenStaker1})
@@ -129,7 +128,6 @@ contract('Proposed State', function (accounts) {
       let tsStakedTokensAfter = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
       let stakedTokensAfter = await project.getStakedTokens(projAddrT1)
       let stakedRepAfter = await project.getStakedRep(projAddrT1)
-      // let projWeiBalAfter = await web3.eth.getBalance(projAddrT1)
 
       // handle big number subtraction
       let weiPoolDifference = weiPoolAfter.minus(weiPoolBefore).toNumber()

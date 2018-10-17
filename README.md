@@ -184,7 +184,7 @@ reputationRegistry.refundProposer(_projectAddress)
 [diagram TBD]
 
 ##### Submit Hashed Task List
-After a project has been fully staked and is in the staked stage, stakers need to collaborate off-chain to determine a task list for the project. At any time in the staked stage, stakers need to submit a hashed task list that they believe fully encompasses what needs to get done to complete the project and assigns the correct ETH value to reward the worker and purchase any supplies needed for the task. Once every staker submits their hashed list, the final task list is determined by the highest proportion of tokens and reputation staked.
+After a project has been fully staked and is in the staked stage, stakers need to collaborate off-chain to determine a task list for the project. At any time in the staked stage, stakers need to submit a hashed task list that they believe fully encompasses what needs to get done to complete the project and assigns the correct ETH value to reward the worker and purchase any supplies needed for the task. Once every staker submits their hashed list, the final task list is determined by the highest proportion of tokens and reputation staked. The first staker who submitted the winning task hash is deemed the originator, and will be rewarded if the project becomes complete.
 
 To submit a list of tasks:
 ```
@@ -323,7 +323,7 @@ projectRegistry.checkEnd(_projectAddress)
 [diagram TBD]
 
 #### 6 - Complete Project
-When a project reaches stage 6- Complete, all stakers (reputation and token holders) regain their stake, positive validators are rewarded for correct validation of tasks, and negative validators lose half of the tokens they validated with.
+When a project reaches stage 6- Complete, all stakers (reputation and token holders) regain their stake, positive validators are rewarded for correct validation of tasks, negative validators lose half of the tokens they validated with, and originators are rewarded for originating the winning task hash.
 
 ##### Refund Staker
 ```
@@ -364,6 +364,13 @@ reputationRegistry.refundVotingReputation(_reputation)
 let _projectAddress = '0x0b239F63eC6248162c7F19B0B2956186725eb321'
 let _index = 0
 reputationRegistry.rewardTask(_projectAddress, _index)
+```
+[diagram TBD]
+
+##### Reward Originator
+```
+let _projectAddress = '0x0b239F63eC6248162c7F19B0B2956186725eb321'
+tokenRegistry.rewardOriginator(_projectAddress)
 ```
 [diagram TBD]
 

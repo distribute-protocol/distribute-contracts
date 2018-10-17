@@ -80,6 +80,7 @@ contract Project {
     uint256 public nextDeadline;
     uint256 public proposedCost;
     uint256 public validationReward;
+    uint256 public originatorReward;
     uint256 public weiCost;
     uint256 public reputationCost;
 
@@ -169,8 +170,9 @@ contract Project {
         tokenRegistryAddress = _tokenRegistry;
         projectRegistryAddress = msg.sender;
         validationReward = _cost * 5 / 100;
+        originatorReward = _cost * 5 / 100;
         proposedCost = _cost;
-        weiCost = proposedCost + validationReward;
+        weiCost = proposedCost + validationReward + originatorReward;
         reputationCost = _costProportion * ReputationRegistry(_reputationRegistry).totalSupply() / 10000000000;
         state = 1;
         nextDeadline = _stakingPeriod;

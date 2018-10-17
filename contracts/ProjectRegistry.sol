@@ -490,21 +490,17 @@ contract ProjectRegistry is Ownable {
         }
     }
     /**
-    @notice Rewards the originator of a project plan in tokens.
+    @notice Sets the originator of a project plan to 0 after verifying msg.sender is the originator
     @param _projectAddress Address of the project
     */
     function rewardOriginator(
-      address _projectAddress
-    ) external {
-      Project project =  Project(_projectAddress);
-      require(project.state() == 6);
+      address _projectAddress,
+      address _claimer
+    ) onlyTR public {
+      require(projects[_projectAddress] == true);
       StakedState storage ss = stakedProjects[_projectAddress];
-      require(msg.sender == ss.originator[ss.topTaskHash]);
+      require(_claimer == ss.originator[ss.topTaskHash]);
       ss.originator[ss.topTaskHash] = 0;
-      uint amount = (project.proposedCost() + DistributeToken(distributeTokenAddress).weiBal()) / 2;
-      TokenRegistry(tokenRegistryAddress).rewardOriginator(msg.sender, amount);
-      emit LogRewardOriginator(_projectAddress, msg.sender, amount);
-
     }
     // =====================================================================
     // ACTIVE

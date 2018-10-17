@@ -808,6 +808,52 @@ contract('Failed State', function (accounts) {
     })
   })
 
+  describe('handle originator', () => {
+    it('not originator can\'t call reward originator from TR failed project', async () => {
+      errorThrown = false
+      try {
+        await TR.rewardOriginator(projAddrT, {from: tokenStaker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('not originator can\'t call reward originator from RR failed project', async () => {
+      errorThrown = false
+      try {
+        await TR.rewardOriginator(projAddrR, {from: tokenStaker2})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('originator can\'t call reward originator from TR failed project', async () => {
+      errorThrown = false
+      try {
+        await TR.rewardOriginator(projAddrT, {from: tokenStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('originator can\'t call reward originator from RR failed project', async () => {
+      errorThrown = false
+      try {
+        await TR.rewardOriginator(projAddrR, {from: tokenStaker1})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+  })
+
   describe('handle validators', () => {
     it('yes validator can ask for refund & reward from in TR failed project', async () => {
       // take stock of important environmental variables

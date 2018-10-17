@@ -304,6 +304,9 @@ library ProjectLibrary {
               project.setState(6, 0);
               return 1;
             } else {
+              uint originatorReward = project.originatorReward();
+              tr.revertWei(originatorReward);
+              project.returnWei(_distributeTokenAddress, originatorReward);
               project.setState(7, 0);
               TokenRegistry(_tokenRegistryAddress).burnTokens(project.tokensStaked());
               ReputationRegistry(_reputationRegistryAddress).burnReputation(project.reputationStaked());

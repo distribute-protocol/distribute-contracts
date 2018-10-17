@@ -1,32 +1,32 @@
 /* eslint-env mocha */
-/* global assert contract artifacts */
+/* global contract artifacts */
 
 const Project = artifacts.require('Project')
 const SpoofedRR = artifacts.require('SpoofedRR')
 
 const projectHelper = require('../utils/projectHelper')
-const assertThrown = require('../utils/assertThrown')
-const hexToAscii = require('../utils/hexToAscii')
+// const assertThrown = require('../utils/assertThrown')
+// const hexToAscii = require('../utils/hexToAscii')
 
 contract('Project', function (accounts) {
   // set up project helper
-  let projObj = projectHelper(accounts)
+  // let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let {tokenProposer, repProposer} = projObj.user
-  let {tokenStaker1, repStaker1} = projObj.user
-  let {spoofedTR, spoofedPR, anyAddress, weiToReturn} = projObj.spoofed
-  let {tokensToMint, registeredRep} = projObj.minting
-  let {stakingPeriod, proposalCost, projectCost, ipfsHash, proposerTypeToken, proposerTypeRep} = projObj.project
+  // let {tokenProposer, repProposer} = projObj.user
+  // let {tokenStaker1, repStaker1} = projObj.user
+  // let {spoofedTR, spoofedPR, anyAddress, weiToReturn} = projObj.spoofed
+  // let {tokensToMint, registeredRep} = projObj.minting
+  // let {stakingPeriod, proposalCost, projectCost, ipfsHash, proposerTypeToken, proposerTypeRep} = projObj.project
 
   // local test variables
-  let spoofedProjT, spoofedProjR, spoofedRR
-  let costProportion, proposerTokenCost
+  // let spoofedProjT, spoofedProjR, spoofedRR
+  // let costProportion, proposerTokenCost
 
   before(async () => {
     // set costProportion, proposerTokenCost, weiToReturn
-    costProportion = 10
-    proposerTokenCost = 100
+    // costProportion = 10
+    // proposerTokenCost = 100
 
     // get contracts from project helped
     // await projObj.contracts.setContracts()
@@ -36,235 +36,235 @@ contract('Project', function (accounts) {
     // PL = projObj.contracts.PL
 
     // set up spoofedRR
-    spoofedRR = await SpoofedRR.new()
+    // spoofedRR = await SpoofedRR.new()
 
     // set up project contracts
-    spoofedProjT = await Project.new()
-    spoofedProjR = await Project.new()
+    // spoofedProjT = await Project.new()
+    // spoofedProjR = await Project.new()
   })
 
-  it('can be initialized via setup()', async () => {
-    // initialize project contract
-    await spoofedProjT.setup(proposalCost, costProportion, stakingPeriod, tokenProposer, proposerTypeToken, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
-    await spoofedProjR.setup(proposalCost, costProportion, stakingPeriod, repProposer, proposerTypeRep, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
+  it('can be initialized via setup()')
+  //   // initialize project contract
+  //   await spoofedProjT.setup(proposalCost, costProportion, stakingPeriod, tokenProposer, proposerTypeToken, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
+  //   await spoofedProjR.setup(proposalCost, costProportion, stakingPeriod, repProposer, proposerTypeRep, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
+  //
+  //   // take stock of variables
+  //   let repRegAddrT = await spoofedProjT.reputationRegistryAddress()
+  //   let repRegAddrR = await spoofedProjR.reputationRegistryAddress()
+  //   assert.equal(repRegAddrT, spoofedRR.address, 'incorrect reputationRegistry address')
+  //   assert.equal(repRegAddrR, spoofedRR.address, 'incorrect reputationRegistry address')
+  //
+  //   let tokRegAddrT = await spoofedProjT.tokenRegistryAddress()
+  //   let tokRegAddrR = await spoofedProjR.tokenRegistryAddress()
+  //   assert.equal(tokRegAddrT, spoofedTR, 'incorrect tokenRegistry address')
+  //   assert.equal(tokRegAddrR, spoofedTR, 'incorrect tokenRegistry address')
+  //
+  //   let projRegAddrT = await spoofedProjT.projectRegistryAddress()
+  //   let projRegAddrR = await spoofedProjR.projectRegistryAddress()
+  //   assert.equal(projRegAddrT, spoofedPR, 'incorrect projectRegistry address')
+  //   assert.equal(projRegAddrR, spoofedPR, 'incorrect projectRegistry address')
+  //
+  //   let weiCostT = await spoofedProjT.weiCost()
+  //   let weiCostR = await spoofedProjR.weiCost()
+  //   assert.equal(weiCostT, projectCost, 'incorrect wei cost')
+  //   assert.equal(weiCostR, projectCost, 'incorrect wei cost')
+  //
+  //   let repCostT = await spoofedProjT.reputationCost()
+  //   let repCostR = await spoofedProjR.reputationCost()
+  //   let totalSupplyRR = await spoofedRR.totalSupply()
+  //   let calRepCost = Math.round((costProportion * totalSupplyRR) / 10000000000)
+  //   assert.equal(repCostT, calRepCost, 'incorrect reputation cost')
+  //   assert.equal(repCostR, calRepCost, 'incorrect reputation cost')
+  //
+  //   let stateT = await spoofedProjT.state()
+  //   let stateR = await spoofedProjR.state()
+  //   assert.equal(stateT, 1, 'incorrect state')
+  //   assert.equal(stateR, 1, 'incorrect state')
+  //
+  //   let nextDeadlineT = await spoofedProjT.nextDeadline()
+  //   let nextDeadlineR = await spoofedProjR.nextDeadline()
+  //   assert.equal(nextDeadlineT, stakingPeriod, 'incorrect next deadline')
+  //   assert.equal(nextDeadlineR, stakingPeriod, 'incorrect next deadline')
+  //
+  //   let propT = await spoofedProjT.proposer()
+  //   let propR = await spoofedProjR.proposer()
+  //   assert.equal(propT, tokenProposer, 'incorrect proposer')
+  //   assert.equal(propR, repProposer, 'incorrect proposer')
+  //
+  //   let propTypeT = await spoofedProjT.proposerType()
+  //   let propTypeR = await spoofedProjR.proposerType()
+  //   assert.equal(propTypeT, proposerTypeToken, 'incorrect proposer type')
+  //   assert.equal(propTypeR, proposerTypeRep, 'incorrect proposer type')
+  //
+  //   let ipfsHashT = await spoofedProjT.ipfsHash()
+  //   let ipfsHashR = await spoofedProjR.ipfsHash()
+  //   assert.equal(hexToAscii(ipfsHashT), ipfsHash, 'incorrect ipfs hash')
+  //   assert.equal(hexToAscii(ipfsHashR), ipfsHash, 'incorrect ipfs hash')
+  //
+  //   let week = 604800
+  //
+  //   let stakedStatePeriodT = await spoofedProjT.stakedStatePeriod()
+  //   let stakedStatePeriodR = await spoofedProjR.stakedStatePeriod()
+  //   assert.equal(stakedStatePeriodT, week, 'incorrect staked state period')
+  //   assert.equal(stakedStatePeriodR, week, 'incorrect staked state period')
+  //
+  //   // INCORRECT OUTCOME - FIX IT
+  //   // let activeStatePeriodT = await spoofedProjT.activeStatePeriod()
+  //   // let activeStatePeriodR = await spoofedProjR.activeStatePeriod()
+  //   // assert.equal(activeStatePeriodT, 2 * week, 'incorrect active state period')
+  //   // assert.equal(stakedStatePeriodR, 2 * week, 'incorrect active state period')
+  //
+  //   let turnoverTimeT = await spoofedProjT.turnoverTime()
+  //   let turnoverTimeR = await spoofedProjR.turnoverTime()
+  //   assert.equal(turnoverTimeT, week, 'incorrect turnover time period')
+  //   assert.equal(turnoverTimeR, week, 'incorrect turnover time period')
+  //
+  //   let validateStatePeriodT = await spoofedProjT.validateStatePeriod()
+  //   let validateStatePeriodR = await spoofedProjR.validateStatePeriod()
+  //   assert.equal(validateStatePeriodT, week, 'incorrect validate state period')
+  //   assert.equal(validateStatePeriodR, week, 'incorrect validate state period')
+  //
+  //   let voteCommitPeriodT = await spoofedProjT.voteCommitPeriod()
+  //   let voteCommitPeriodR = await spoofedProjR.voteCommitPeriod()
+  //   assert.equal(voteCommitPeriodT, week, 'incorrect vote commit period')
+  //   assert.equal(voteCommitPeriodR, week, 'incorrect vote commit period')
+  //
+  //   let voteRevealPeriodT = await spoofedProjT.voteRevealPeriod()
+  //   let voteRevealPeriodR = await spoofedProjR.voteRevealPeriod()
+  //   assert.equal(voteRevealPeriodT, week, 'incorrect vote reveal period')
+  //   assert.equal(voteRevealPeriodR, week, 'incorrect vote reveal period')
+  //
+  //   let passThresholdT = await spoofedProjT.passThreshold()
+  //   let passThresholdR = await spoofedProjR.passThreshold()
+  //   assert.equal(passThresholdT, 100, 'incorrect pass threshold')
+  //   assert.equal(passThresholdR, 100, 'incorrect pass threshold')
+  // })
 
-    // take stock of variables
-    let repRegAddrT = await spoofedProjT.reputationRegistryAddress()
-    let repRegAddrR = await spoofedProjR.reputationRegistryAddress()
-    assert.equal(repRegAddrT, spoofedRR.address, 'incorrect reputationRegistry address')
-    assert.equal(repRegAddrR, spoofedRR.address, 'incorrect reputationRegistry address')
+  it('can\'t be re-initialized via setup()')
+  //   let errorThrown = false
+  //   try {
+  //     await spoofedProjT.setup(projectCost, costProportion, stakingPeriod, tokenProposer, proposerTypeToken, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
+  //   } catch (e) {
+  //     errorThrown = true
+  //   }
+  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //
+  //   errorThrown = false
+  //   try {
+  //     await spoofedProjR.setup(projectCost, costProportion, stakingPeriod, repProposer, proposerTypeRep, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
+  //   } catch (e) {
+  //     errorThrown = true
+  //   }
+  //   assertThrown(errorThrown, 'An error should have been thrown')
+  // })
 
-    let tokRegAddrT = await spoofedProjT.tokenRegistryAddress()
-    let tokRegAddrR = await spoofedProjR.tokenRegistryAddress()
-    assert.equal(tokRegAddrT, spoofedTR, 'incorrect tokenRegistry address')
-    assert.equal(tokRegAddrR, spoofedTR, 'incorrect tokenRegistry address')
+  it('allows tokenRegistry to call stakeTokens()')
+  //   // take stock of variables before
+  //   let tokenBalanceBefore = await spoofedProjT.tokenBalances(tokenStaker1)
+  //   let stakedTokensBefore = await spoofedProjT.tokensStaked()
+  //   let weiBalBefore = await spoofedProjT.weiBal()
+  //
+  //   // stake tokensToMint tokens with weiRequired amount of ether
+  //   await spoofedProjT.stakeTokens(tokenStaker1, tokensToMint, weiToReturn, {from: spoofedTR})
+  //
+  //   // take stock of variables after
+  //   let tokenBalanceAfter = await spoofedProjT.tokenBalances(tokenStaker1)
+  //   let stakedTokensAfter = await spoofedProjT.tokensStaked()
+  //   let weiBalAfter = await spoofedProjT.weiBal()
+  //
+  //   // checks
+  //   assert.equal(tokenBalanceAfter - tokenBalanceBefore, tokensToMint, "doesn't stake tokens to correctly")
+  //   assert.equal(stakedTokensAfter - stakedTokensBefore, tokensToMint, "doesn't update total token supply correctly")
+  //   assert.equal(weiBalAfter - weiBalBefore, weiToReturn, "doesn't update balance correctly")
+  //
+  //   // take stock of variables before
+  //   tokenBalanceBefore = await spoofedProjR.tokenBalances(tokenStaker1)
+  //   stakedTokensBefore = await spoofedProjR.tokensStaked()
+  //   weiBalBefore = await spoofedProjR.weiBal()
+  //
+  //   // stake tokensToMint tokens with weiRequired amount of ether
+  //   await spoofedProjR.stakeTokens(tokenStaker1, tokensToMint, weiToReturn, {from: spoofedTR})
+  //
+  //   // take stock of variables after
+  //   tokenBalanceAfter = await spoofedProjR.tokenBalances(tokenStaker1)
+  //   stakedTokensAfter = await spoofedProjR.tokensStaked()
+  //   weiBalAfter = await spoofedProjR.weiBal()
+  //
+  //   // checks
+  //   assert.equal(tokenBalanceAfter - tokenBalanceBefore, tokensToMint, "doesn't stake tokens to correctly")
+  //   assert.equal(stakedTokensAfter - stakedTokensBefore, tokensToMint, "doesn't update total token supply correctly")
+  //   assert.equal(weiBalAfter - weiBalBefore, weiToReturn, "doesn't update balance correctly")
+  // })
 
-    let projRegAddrT = await spoofedProjT.projectRegistryAddress()
-    let projRegAddrR = await spoofedProjR.projectRegistryAddress()
-    assert.equal(projRegAddrT, spoofedPR, 'incorrect projectRegistry address')
-    assert.equal(projRegAddrR, spoofedPR, 'incorrect projectRegistry address')
-
-    let weiCostT = await spoofedProjT.weiCost()
-    let weiCostR = await spoofedProjR.weiCost()
-    assert.equal(weiCostT, projectCost, 'incorrect wei cost')
-    assert.equal(weiCostR, projectCost, 'incorrect wei cost')
-
-    let repCostT = await spoofedProjT.reputationCost()
-    let repCostR = await spoofedProjR.reputationCost()
-    let totalSupplyRR = await spoofedRR.totalSupply()
-    let calRepCost = Math.round((costProportion * totalSupplyRR) / 10000000000)
-    assert.equal(repCostT, calRepCost, 'incorrect reputation cost')
-    assert.equal(repCostR, calRepCost, 'incorrect reputation cost')
-
-    let stateT = await spoofedProjT.state()
-    let stateR = await spoofedProjR.state()
-    assert.equal(stateT, 1, 'incorrect state')
-    assert.equal(stateR, 1, 'incorrect state')
-
-    let nextDeadlineT = await spoofedProjT.nextDeadline()
-    let nextDeadlineR = await spoofedProjR.nextDeadline()
-    assert.equal(nextDeadlineT, stakingPeriod, 'incorrect next deadline')
-    assert.equal(nextDeadlineR, stakingPeriod, 'incorrect next deadline')
-
-    let propT = await spoofedProjT.proposer()
-    let propR = await spoofedProjR.proposer()
-    assert.equal(propT, tokenProposer, 'incorrect proposer')
-    assert.equal(propR, repProposer, 'incorrect proposer')
-
-    let propTypeT = await spoofedProjT.proposerType()
-    let propTypeR = await spoofedProjR.proposerType()
-    assert.equal(propTypeT, proposerTypeToken, 'incorrect proposer type')
-    assert.equal(propTypeR, proposerTypeRep, 'incorrect proposer type')
-
-    let ipfsHashT = await spoofedProjT.ipfsHash()
-    let ipfsHashR = await spoofedProjR.ipfsHash()
-    assert.equal(hexToAscii(ipfsHashT), ipfsHash, 'incorrect ipfs hash')
-    assert.equal(hexToAscii(ipfsHashR), ipfsHash, 'incorrect ipfs hash')
-
-    let week = 604800
-
-    let stakedStatePeriodT = await spoofedProjT.stakedStatePeriod()
-    let stakedStatePeriodR = await spoofedProjR.stakedStatePeriod()
-    assert.equal(stakedStatePeriodT, week, 'incorrect staked state period')
-    assert.equal(stakedStatePeriodR, week, 'incorrect staked state period')
-
-    // INCORRECT OUTCOME - FIX IT
-    // let activeStatePeriodT = await spoofedProjT.activeStatePeriod()
-    // let activeStatePeriodR = await spoofedProjR.activeStatePeriod()
-    // assert.equal(activeStatePeriodT, 2 * week, 'incorrect active state period')
-    // assert.equal(stakedStatePeriodR, 2 * week, 'incorrect active state period')
-
-    let turnoverTimeT = await spoofedProjT.turnoverTime()
-    let turnoverTimeR = await spoofedProjR.turnoverTime()
-    assert.equal(turnoverTimeT, week, 'incorrect turnover time period')
-    assert.equal(turnoverTimeR, week, 'incorrect turnover time period')
-
-    let validateStatePeriodT = await spoofedProjT.validateStatePeriod()
-    let validateStatePeriodR = await spoofedProjR.validateStatePeriod()
-    assert.equal(validateStatePeriodT, week, 'incorrect validate state period')
-    assert.equal(validateStatePeriodR, week, 'incorrect validate state period')
-
-    let voteCommitPeriodT = await spoofedProjT.voteCommitPeriod()
-    let voteCommitPeriodR = await spoofedProjR.voteCommitPeriod()
-    assert.equal(voteCommitPeriodT, week, 'incorrect vote commit period')
-    assert.equal(voteCommitPeriodR, week, 'incorrect vote commit period')
-
-    let voteRevealPeriodT = await spoofedProjT.voteRevealPeriod()
-    let voteRevealPeriodR = await spoofedProjR.voteRevealPeriod()
-    assert.equal(voteRevealPeriodT, week, 'incorrect vote reveal period')
-    assert.equal(voteRevealPeriodR, week, 'incorrect vote reveal period')
-
-    let passThresholdT = await spoofedProjT.passThreshold()
-    let passThresholdR = await spoofedProjR.passThreshold()
-    assert.equal(passThresholdT, 100, 'incorrect pass threshold')
-    assert.equal(passThresholdR, 100, 'incorrect pass threshold')
-  })
-
-  it('can\'t be re-initialized via setup()', async () => {
-    let errorThrown = false
-    try {
-      await spoofedProjT.setup(projectCost, costProportion, stakingPeriod, tokenProposer, proposerTypeToken, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-
-    errorThrown = false
-    try {
-      await spoofedProjR.setup(projectCost, costProportion, stakingPeriod, repProposer, proposerTypeRep, proposerTokenCost, ipfsHash, spoofedRR.address, spoofedTR, {from: spoofedPR})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
-
-  it('allows tokenRegistry to call stakeTokens()', async () => {
-    // take stock of variables before
-    let tokenBalanceBefore = await spoofedProjT.tokenBalances(tokenStaker1)
-    let stakedTokensBefore = await spoofedProjT.tokensStaked()
-    let weiBalBefore = await spoofedProjT.weiBal()
-
-    // stake tokensToMint tokens with weiRequired amount of ether
-    await spoofedProjT.stakeTokens(tokenStaker1, tokensToMint, weiToReturn, {from: spoofedTR})
-
-    // take stock of variables after
-    let tokenBalanceAfter = await spoofedProjT.tokenBalances(tokenStaker1)
-    let stakedTokensAfter = await spoofedProjT.tokensStaked()
-    let weiBalAfter = await spoofedProjT.weiBal()
-
-    // checks
-    assert.equal(tokenBalanceAfter - tokenBalanceBefore, tokensToMint, "doesn't stake tokens to correctly")
-    assert.equal(stakedTokensAfter - stakedTokensBefore, tokensToMint, "doesn't update total token supply correctly")
-    assert.equal(weiBalAfter - weiBalBefore, weiToReturn, "doesn't update balance correctly")
-
-    // take stock of variables before
-    tokenBalanceBefore = await spoofedProjR.tokenBalances(tokenStaker1)
-    stakedTokensBefore = await spoofedProjR.tokensStaked()
-    weiBalBefore = await spoofedProjR.weiBal()
-
-    // stake tokensToMint tokens with weiRequired amount of ether
-    await spoofedProjR.stakeTokens(tokenStaker1, tokensToMint, weiToReturn, {from: spoofedTR})
-
-    // take stock of variables after
-    tokenBalanceAfter = await spoofedProjR.tokenBalances(tokenStaker1)
-    stakedTokensAfter = await spoofedProjR.tokensStaked()
-    weiBalAfter = await spoofedProjR.weiBal()
-
-    // checks
-    assert.equal(tokenBalanceAfter - tokenBalanceBefore, tokensToMint, "doesn't stake tokens to correctly")
-    assert.equal(stakedTokensAfter - stakedTokensBefore, tokensToMint, "doesn't update total token supply correctly")
-    assert.equal(weiBalAfter - weiBalBefore, weiToReturn, "doesn't update balance correctly")
-  })
-
-  it('only allows tokenRegistry to call stakeTokens()', async () => {
-    let errorThrown = false
-    try {
-      await spoofedProjT.stakeTokens(tokenStaker1, tokensToMint, {from: anyAddress})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-
-    errorThrown = false
-    try {
-      await spoofedProjR.stakeTokens(tokenStaker1, tokensToMint, {from: anyAddress})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
+  it('only allows tokenRegistry to call stakeTokens()')
+  //   let errorThrown = false
+  //   try {
+  //     await spoofedProjT.stakeTokens(tokenStaker1, tokensToMint, {from: anyAddress})
+  //   } catch (e) {
+  //     errorThrown = true
+  //   }
+  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //
+  //   errorThrown = false
+  //   try {
+  //     await spoofedProjR.stakeTokens(tokenStaker1, tokensToMint, {from: anyAddress})
+  //   } catch (e) {
+  //     errorThrown = true
+  //   }
+  //   assertThrown(errorThrown, 'An error should have been thrown')
+  // })
 
   // SOLIDITY REVERTS - FIX IT
-  it('allows reputationRegistry to call stakeReputation()', async () => {
-    // // take stock of variables before
-    // let reputationBalanceBefore = await spoofedProjT.reputationBalances(repStaker1)
-    // let stakedReputationBefore = await spoofedProjT.reputationStaked()
-    //
-    // // stake tokensToMint tokens with weiRequired amount of ether
-    // await spoofedRR.callStakeReputation(spoofedProjT.address, repStaker1, registeredRep)
-    //
-    // // take stock of variables after
-    // let reputationBalanceAfter = await spoofedProjT.reputationBalances(repStaker1)
-    // let stakedReputationAfter = await spoofedProjT.reputationStaked()
-    //
-    // // checks
-    // assert.equal(reputationBalanceAfter - reputationBalanceBefore, registeredRep, "doesn't stake reputation to correctly")
-    // assert.equal(stakedReputationAfter - stakedTokensBefore, registeredRep, "doesn't update total reputation supply correctly")
-    //
-    //
-    // // take stock of variables before
-    // reputationBalanceBefore = await spoofedProjR.reputationBalances(repStaker1)
-    // stakedReputationBefore = await spoofedProjR.reputationStaked()
-    //
-    // // stake tokensToMint tokens with weiRequired amount of ether
-    // await spoofedRR.callStakeReputation(spoofedProjR.address, repStaker1, registeredRep)
-    //
-    // // take stock of variables after
-    // reputationBalanceAfter = await spoofedProjR.reputationBalances(repStaker1)
-    // stakedReputationAfter = await spoofedProjR.reputationStaked()
-    //
-    // // checks
-    // assert.equal(reputationBalanceAfter - reputationBalanceBefore, registeredRep, "doesn't stake reputation to correctly")
-    // assert.equal(stakedReputationAfter - stakedTokensBefore, registeredRep, "doesn't update total reputation supply correctly")
-  })
+  it('allows reputationRegistry to call stakeReputation()')
+  // // take stock of variables before
+  // let reputationBalanceBefore = await spoofedProjT.reputationBalances(repStaker1)
+  // let stakedReputationBefore = await spoofedProjT.reputationStaked()
+  //
+  // // stake tokensToMint tokens with weiRequired amount of ether
+  // await spoofedRR.callStakeReputation(spoofedProjT.address, repStaker1, registeredRep)
+  //
+  // // take stock of variables after
+  // let reputationBalanceAfter = await spoofedProjT.reputationBalances(repStaker1)
+  // let stakedReputationAfter = await spoofedProjT.reputationStaked()
+  //
+  // // checks
+  // assert.equal(reputationBalanceAfter - reputationBalanceBefore, registeredRep, "doesn't stake reputation to correctly")
+  // assert.equal(stakedReputationAfter - stakedTokensBefore, registeredRep, "doesn't update total reputation supply correctly")
+  //
+  //
+  // // take stock of variables before
+  // reputationBalanceBefore = await spoofedProjR.reputationBalances(repStaker1)
+  // stakedReputationBefore = await spoofedProjR.reputationStaked()
+  //
+  // // stake tokensToMint tokens with weiRequired amount of ether
+  // await spoofedRR.callStakeReputation(spoofedProjR.address, repStaker1, registeredRep)
+  //
+  // // take stock of variables after
+  // reputationBalanceAfter = await spoofedProjR.reputationBalances(repStaker1)
+  // stakedReputationAfter = await spoofedProjR.reputationStaked()
+  //
+  // // checks
+  // assert.equal(reputationBalanceAfter - reputationBalanceBefore, registeredRep, "doesn't stake reputation to correctly")
+  // assert.equal(stakedReputationAfter - stakedTokensBefore, registeredRep, "doesn't update total reputation supply correctly")
 
-  it('only allows reputationRegistry to call stakeReputation()', async () => {
-    let errorThrown = false
-    try {
-      await spoofedProjT.stakeReputation(repStaker1, registeredRep, {from: anyAddress})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-
-    errorThrown = false
-    try {
-      await spoofedProjR.stakeReputation(repStaker1, registeredRep, {from: anyAddress})
-    } catch (e) {
-      errorThrown = true
-    }
-    assertThrown(errorThrown, 'An error should have been thrown')
-  })
+  it('only allows reputationRegistry to call stakeReputation()')
+  // , async () => {
+  //   let errorThrown = false
+  //   try {
+  //     await spoofedProjT.stakeReputation(repStaker1, registeredRep, {from: anyAddress})
+  //   } catch (e) {
+  //     errorThrown = true
+  //   }
+  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //
+  //   errorThrown = false
+  //   try {
+  //     await spoofedProjR.stakeReputation(repStaker1, registeredRep, {from: anyAddress})
+  //   } catch (e) {
+  //     errorThrown = true
+  //   }
+  //   assertThrown(errorThrown, 'An error should have been thrown')
+  // })
 
   // it('returns a bool for an address whether they are a project staker', async () => {
   //   let trueVal = await PL.isStaker(spoofedP.address, staker)

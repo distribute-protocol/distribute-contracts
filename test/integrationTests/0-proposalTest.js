@@ -7,6 +7,8 @@ const projectHelper = require('../utils/projectHelper')
 const assertThrown = require('../utils/assertThrown')
 const hexToAscii = require('../utils/hexToAscii')
 
+const BigNumber = require('bignumber.js')
+
 contract('Propose Projects', function (accounts) {
   // set up project helper
   let projObj = projectHelper(accounts)
@@ -66,7 +68,7 @@ contract('Propose Projects', function (accounts) {
   })
 
   describe('propose project successfully', () => {
-    it('Proposer can propose project with tokens', async () => {
+    it('proposer can propose project with tokens', async () => {
       // propose project
       tx = await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: tokenProposer})
 
@@ -97,13 +99,12 @@ contract('Propose Projects', function (accounts) {
       let _proposerType = await PROJ_T.proposerType()
       let _proposerStake = await PROJ_T.proposerStake()
       let _ipfsHash = await PROJ_T.ipfsHash()
-
       // convert _ipfsHash to ascii
       _ipfsHash = hexToAscii(_ipfsHash)
 
       assert.equal(TR.address, _TRaddr, 'PR stored incorrect token registry address')
       assert.equal(PR.address, _PRaddr, 'PR stored incorrect project registry address')
-      assert.equal(projectCost * 1.05, _weiCost, 'PR stored incorrect project cost')
+      assert.equal(new BigNumber(projectCost).times(1.10).minus(_weiCost), 0, 'PR stored incorrect project cost')
       assert.equal(repCost, _repCost, 'PR stored incorrect rep cost')
       assert.equal(1, _state, 'PR stored incorrect state')
       assert.equal(stakingPeriod, _nextDeadline, 'PR stored incorrect staking period')
@@ -113,7 +114,7 @@ contract('Propose Projects', function (accounts) {
       assert.equal(ipfsHash, _ipfsHash, 'PR stored incorrect ipfs hash')
     })
 
-    it('Proposer can propose project with reputation', async () => {
+    it('proposer can propose project with reputation', async () => {
       // propose project
       tx = await RR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: repProposer})
 
@@ -150,7 +151,7 @@ contract('Propose Projects', function (accounts) {
 
       assert.equal(TR.address, _TRaddr, 'PR stored incorrect token registry address')
       assert.equal(PR.address, _PRaddr, 'PR stored incorrect project registry address')
-      assert.equal(projectCost * 1.05, _weiCost, 'PR stored incorrect project cost')
+      assert.equal(new BigNumber(projectCost).times(1.10).minus(_weiCost), 0, 'PR stored incorrect project cost')
       assert.equal(repCost, _repCost, 'PR stored incorrect rep cost')
       assert.equal(1, _state, 'PR stored incorrect state')
       assert.equal(stakingPeriod, _nextDeadline, 'PR stored incorrect staking period')
@@ -162,7 +163,7 @@ contract('Propose Projects', function (accounts) {
   })
 
   describe('propose project unsuccessfully', () => {
-    it('Proposer with tokens can\'t propose project from TR with staking period that\'s passed', async () => {
+    it('proposer with tokens can\'t propose project from TR with staking period that\'s passed', async () => {
       errorThrown = false
       try {
         await TR.proposeProject(projectCost, expiredStakingPeriod, ipfsHash, {from: tokenProposer})
@@ -173,7 +174,7 @@ contract('Propose Projects', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Proposer with reputation can\'t propose project from RR with staking period that\'s passed', async () => {
+    it('proposer with reputation can\'t propose project from RR with staking period that\'s passed', async () => {
       errorThrown = false
       try {
         await RR.proposeProject(projectCost, expiredStakingPeriod, ipfsHash, {from: repProposer})
@@ -184,7 +185,7 @@ contract('Propose Projects', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Proposer can\'t propose project from TR with ipfs hash of incorrect length', async () => {
+    it('proposer can\'t propose project from TR with ipfs hash of incorrect length', async () => {
       errorThrown = false
       try {
         await TR.proposeProject(projectCost, stakingPeriod, incorrectIpfsHash, {from: tokenProposer})
@@ -195,7 +196,7 @@ contract('Propose Projects', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('Proposer can\'t propose project from RR with ipfs hash of incorrect length', async () => {
+    it('proposer can\'t propose project from RR with ipfs hash of incorrect length', async () => {
       errorThrown = false
       try {
         await RR.proposeProject(projectCost, stakingPeriod, incorrectIpfsHash, {from: repProposer})
@@ -206,7 +207,7 @@ contract('Propose Projects', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('User can\'t propose project without the required token stake', async () => {
+    it('user can\'t propose project without the required token stake', async () => {
       errorThrown = false
       try {
         await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: notProposer})
@@ -217,7 +218,7 @@ contract('Propose Projects', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('User can\'t propose project without the required reputation stake', async () => {
+    it('user can\'t propose project without the required reputation stake', async () => {
       errorThrown = false
       try {
         await RR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: notProposer})

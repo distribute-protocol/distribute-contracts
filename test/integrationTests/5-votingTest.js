@@ -2144,7 +2144,7 @@ contract('Voting State', function (accounts) {
   })
 
   describe('state changes before time is up', () => {
-    it('checkEnd() does not change TR voting project to failed state before time is up', async () => {
+    it('checkEnd does not change TR voting project to failed state before time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT)
 
@@ -2159,7 +2159,7 @@ contract('Voting State', function (accounts) {
       assert.equal(stateAfter, 5, 'state should not have changed')
     })
 
-    it('checkEnd() does not change RR voting project to failed state before time is up', async () => {
+    it('checkEnd does not change RR voting project to failed state before time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
 
@@ -2194,7 +2194,7 @@ contract('Voting State', function (accounts) {
       await evmIncreaseTime(604801) // 1 week
     })
 
-    it('checkEnd() changes TR voting project to failed state after time is up', async () => {
+    it('checkEnd changes TR voting project to failed state after time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT)
 
@@ -2238,7 +2238,7 @@ contract('Voting State', function (accounts) {
       assert.equal(pollEnded[valFalseMore2 - 2], true, 'poll should be ended')
     })
 
-    it('checkEnd() changes RR voting project to failed state after time is up', async () => {
+    it('checkEnd changes RR voting project to failed state after time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
 
