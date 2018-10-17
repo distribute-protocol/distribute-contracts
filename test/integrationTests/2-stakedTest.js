@@ -7,12 +7,16 @@ const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const keccakHashes = require('../utils/keccakHashes')
 const taskDetails = require('../utils/taskDetails')
 
+const Web3 = require('web3')
+const web3 = new Web3()
+web3.setProvider(new Web3.providers.HttpProvider('http://localhost:7545'))
+
 contract('Staked State', function (accounts) {
   // set up project helper
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let PR, TR, RR
+  let PR, TR, RR, DT
   let {user, project, returnProject, utils} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {tokenStaker1, tokenStaker2} = user
@@ -37,6 +41,7 @@ contract('Staked State', function (accounts) {
     PR = projObj.contracts.PR
     RR = projObj.contracts.RR
     TR = projObj.contracts.TR
+    DT = projObj.contracts.DT
 
     // get staked projects
     // to check successful transition to active period
@@ -403,31 +408,85 @@ contract('Staked State', function (accounts) {
     it('TR staked project becomes failed if no task hashes are submitted by the staking deadline', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT2)
+      let tokensStakedBefore = await project.getStakedTokens(projAddrT2)
+      let repStakedBefore = await project.getStakedRep(projAddrT2)
+      let totalTokensBefore = await utils.getTotalTokens()
+      let totalRepBefore = await utils.getTotalRep()
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let projWeiBalVariableBefore = await project.getWeiBal(projAddrT2)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT2))
+      let DTWeiBalBefore = parseInt(await web3.eth.getBalance(DT.address))
+      let totalWeiPoolBefore = await utils.getWeiPoolBal()
 
       // call checkActive
       await PR.checkActive(projAddrT2)
 
       // take stock of variables
       let stateAfter = await project.getState(projAddrT2)
+      let tokensStakedAfter = await project.getStakedTokens(projAddrT2)
+      let repStakedAfter = await project.getStakedRep(projAddrT2)
+      let totalTokensAfter = await utils.getTotalTokens()
+      let totalRepAfter = await utils.getTotalRep()
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let projWeiBalVariableAfter = await project.getWeiBal(projAddrT2)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT2))
+      let DTWeiBalAfter = parseInt(await web3.eth.getBalance(DT.address))
+      let totalWeiPoolAfter = await utils.getWeiPoolBal()
 
       // checks
       assert.equal(stateBefore, 2, 'state before should be 2')
       assert.equal(stateAfter, 7, 'state after should be 7')
+      assert.equal(TRBalBefore, TRBalAfter + tokensStakedBefore, 'TR token balance accurately decremented')
+      assert.equal(totalTokensBefore, totalTokensAfter + tokensStakedBefore, 'total token supply accurately decremented')
+      assert.equal(totalRepBefore, totalRepAfter + repStakedBefore, 'total rep supply accurately decremented')
+      assert.equal(totalWeiPoolAfter, totalWeiPoolBefore + projWeiBalVariableBefore, 'wei pool variable accurately incremented')
+      assert.equal(tokensStakedAfter, 0, 'project tokens staked accurately cleared')
+      assert.equal(repStakedAfter, 0, 'project rep staked accurately cleared')
+      assert.equal(projWeiBalVariableAfter, 0, 'project wei bal variable cleared')
+      assert.equal(DTWeiBalAfter - DTWeiBalBefore, projWeiBalBefore - projWeiBalAfter, 'should be the same')
+      assert.equal(projWeiBalAfter, 0, 'project should have no wei left in it')
     })
 
     it('RR staked project becomes failed if no task hashes are submitted by the staking deadline', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR2)
+      let tokensStakedBefore = await project.getStakedTokens(projAddrR2)
+      let repStakedBefore = await project.getStakedRep(projAddrR2)
+      let totalTokensBefore = await utils.getTotalTokens()
+      let totalRepBefore = await utils.getTotalRep()
+      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let projWeiBalVariableBefore = await project.getWeiBal(projAddrR2)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR2))
+      let DTWeiBalBefore = parseInt(await web3.eth.getBalance(DT.address))
+      let totalWeiPoolBefore = await utils.getWeiPoolBal()
 
       // call checkActive
       await PR.checkActive(projAddrR2)
 
       // take stock of variables
       let stateAfter = await project.getState(projAddrR2)
+      let tokensStakedAfter = await project.getStakedTokens(projAddrR2)
+      let repStakedAfter = await project.getStakedRep(projAddrR2)
+      let totalTokensAfter = await utils.getTotalTokens()
+      let totalRepAfter = await utils.getTotalRep()
+      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let projWeiBalVariableAfter = await project.getWeiBal(projAddrR2)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR2))
+      let DTWeiBalAfter = parseInt(await web3.eth.getBalance(DT.address))
+      let totalWeiPoolAfter = await utils.getWeiPoolBal()
 
       // checks
       assert.equal(stateBefore, 2, 'state before should be 2')
       assert.equal(stateAfter, 7, 'state after should be 7')
+      assert.equal(TRBalBefore, TRBalAfter + tokensStakedBefore, 'TR token balance accurately decremented')
+      assert.equal(totalTokensBefore, totalTokensAfter + tokensStakedBefore, 'total token supply accurately decremented')
+      assert.equal(totalRepBefore, totalRepAfter + repStakedBefore, 'total rep supply accurately decremented')
+      assert.equal(totalWeiPoolAfter, totalWeiPoolBefore + projWeiBalVariableBefore, 'wei pool variable accurately incremented')
+      assert.equal(tokensStakedAfter, 0, 'project tokens staked accurately cleared')
+      assert.equal(repStakedAfter, 0, 'project rep staked accurately cleared')
+      assert.equal(projWeiBalVariableAfter, 0, 'project wei bal variable cleared')
+      assert.equal(DTWeiBalAfter - DTWeiBalBefore, projWeiBalBefore - projWeiBalAfter, 'should be the same')
+      assert.equal(projWeiBalAfter, 0, 'project should have no wei left in it')
     })
   })
 

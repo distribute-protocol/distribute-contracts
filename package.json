@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "bignumber.js": "^7.2.1",
     "bluebird": "^3.5.1",
     "ethereumjs-abi": "^0.6.5",
     "ethers": "^3.0.19",

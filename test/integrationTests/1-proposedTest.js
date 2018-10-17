@@ -1413,31 +1413,39 @@ contract('Proposed State', function (accounts) {
     it('TR proposed project becomes expired if not staked at staking deadline', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT4)
+      let proposerStakeBefore = await project.getProposerStake(projAddrT4)
 
       // call checkStaked
       await PR.checkStaked(projAddrT4)
 
       // take stock of variables
       let stateAfter = await project.getState(projAddrT4)
+      let proposerStakeAfter = await project.getProposerStake(projAddrT4)
 
       // checks
       assert.equal(stateBefore, 1, 'state before should be 1')
       assert.equal(stateAfter, 8, 'state after should be 8')
+      assert.notEqual(proposerStakeBefore, 0, 'proposer stake before should be positive nonzero value')
+      assert.equal(proposerStakeAfter, 0, 'proposer stake should have been cleared')
     })
 
     it('RR proposed project becomes expired if not staked at staking deadline', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR4)
+      let proposerStakeBefore = await project.getProposerStake(projAddrR4)
 
       // call checkStaked
       await PR.checkStaked(projAddrR4)
 
       // take stock of variables
       let stateAfter = await project.getState(projAddrR4)
+      let proposerStakeAfter = await project.getProposerStake(projAddrR4)
 
       // checks
       assert.equal(stateBefore, 1, 'state before should be 1')
       assert.equal(stateAfter, 8, 'state after should be 8')
+      assert.notEqual(proposerStakeBefore, 0, 'proposer stake before should be positive nonzero value')
+      assert.equal(proposerStakeAfter, 0, 'proposer stake should have been cleared')
     })
   })
 

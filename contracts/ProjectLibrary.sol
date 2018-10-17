@@ -241,7 +241,7 @@ library ProjectLibrary {
                         project.returnWei(_distributeTokenAddress, reward);
                         emit LogTaskValidated(task, _projectAddress, false);
                     } else {
-                      // there are no validators, reward must be sent back
+                      // there are no validators, reward & validator chunk must be sent back
                       task.markTaskClaimable(false);
                       reward = task.weiReward().mul(21).div(20);
                       tr.revertWei(reward);
@@ -249,7 +249,7 @@ library ProjectLibrary {
                       emit LogTaskValidated(task, _projectAddress, false);
                     }
                 } else {
-                  // reward must also be sent back if the task is incomplete
+                  // reward & validator chunk must also be sent back if the task is incomplete
                   reward = task.weiReward().mul(21).div(20);
                   tr.revertWei(reward);
                   project.returnWei(_distributeTokenAddress, reward);

@@ -6,6 +6,8 @@ const assertThrown = require('../utils/assertThrown')
 const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const taskDetails = require('../utils/taskDetails')
 
+const BigNumber = require('bignumber.js')
+
 contract('Validating State', function (accounts) {
   // set up project helper
   let projObj = projectHelper(accounts)
@@ -781,39 +783,52 @@ contract('Validating State', function (accounts) {
     it('checkVoting changes TR validating project to voting after time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT)
-      // let projWeiBalBefore = await project.getWeiBal(projAddrT, true)
-      // let DTBalBefore = await utils.getWeiPoolBal(true)
+      let projWeiBalBefore = await project.getWeiBal(projAddrT, true)
+      let DTBalBefore = await utils.getWeiPoolBal(true)
 
       // attempt to checkVoting
       await PR.checkVoting(projAddrT)
 
       // take stock of variables
       let stateAfter = await project.getState(projAddrT)
-      // let projWeiBalAfter = await project.getWeiBal(projAddrT, true)
-      // let DTBalAfter = await utils.getWeiPoolBal(true)
+      let projWeiBalAfter = await project.getWeiBal(projAddrT, true)
+      let DTBalAfter = await utils.getWeiPoolBal(true)
 
-      // let failedTaskWeiReward = new BigNumber(0)
+      let failedTaskWeiReward = new BigNumber(0)
       let pollNonce = []
       let taskClaimableByVal = []
       let taskClaimableByRep = []
 
+      // go through tasks and collect details
       for (let i = 0; i < taskSet1.length; i++) {
         let nonce = await task.getPollNonce(projAddrT, i)
         let claimable = await task.getClaimable(projAddrT, i)
         let claimableByRep = await task.getClaimableByRep(projAddrT, i)
-        // let complete = await task.getComplete(projAddrT, i)
-        // if ((claimable === true && claimableByRep === false && complete === true)) {
-        //   let weiReward = await task.getWeiReward(projAddrT, i)
-        //   failedTaskWeiReward.plus(weiReward)
-        // }
+        let complete = await task.getComplete(projAddrT, i)
+        let negativeIndex = await task.getValidationIndex(projAddrT, i, false)
+        let affirmativeIndex = await task.getValidationIndex(projAddrT, i, true)
+        let weiReward = await task.getWeiReward(projAddrT, i)
+        let weiAndValidatorReward = Math.floor((weiReward * 21) / 20)
+        if (claimable && !claimableByRep && complete) {
+          if (negativeIndex !== 0 && affirmativeIndex === 0) {
+            // there is at least one validator
+            failedTaskWeiReward = failedTaskWeiReward.plus(weiReward)
+          } else if (negativeIndex === 0 && affirmativeIndex === 0) {
+            // there is no validator
+            failedTaskWeiReward = failedTaskWeiReward.plus(weiAndValidatorReward)
+          }
+        } else if (!complete) {
+          // there is no validator
+          failedTaskWeiReward = failedTaskWeiReward.plus(weiAndValidatorReward)
+        }
         pollNonce.push(nonce)
         taskClaimableByVal.push(claimable)
         taskClaimableByRep.push(claimableByRep)
       }
 
       // interim calculations
-      // let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter)
-      // let weiPoolDifference = DTBalAfter.minus(DTBalBefore)
+      let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter)
+      let weiPoolDifference = DTBalAfter.minus(DTBalBefore)
 
       // checks
       assert.equal(stateBefore, 4, 'state before should be 4')
@@ -833,46 +848,59 @@ contract('Validating State', function (accounts) {
       assert.equal(taskClaimableByRep[indexNeither], false, 'should not be claimable by rep')
       assert.equal(taskClaimableByRep[indexIncomplete], false, 'should not be claimable by rep')
       assert.equal(taskClaimableByRep[indexBoth], false, 'should not be claimable by rep')
-      // assert.equal(weiBalDifference, weiPoolDifference, 'should be same amount')
-      // assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
+      assert.equal(weiBalDifference.minus(weiPoolDifference), 0, 'should be same amount')
+      assert.equal(weiPoolDifference.minus(failedTaskWeiReward), 0, 'should be same amount')
     })
 
     it('checkVoting changes RR validating project to voting after time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
-      // let projWeiBalBefore = await project.getWeiBal(projAddrR, true)
-      // let DTBalBefore = await utils.getWeiPoolBal(true)
+      let projWeiBalBefore = await project.getWeiBal(projAddrR, true)
+      let DTBalBefore = await utils.getWeiPoolBal(true)
 
       // attempt to checkVoting
       await PR.checkVoting(projAddrR)
 
       // take stock of variables
       let stateAfter = await project.getState(projAddrR)
-      // let projWeiBalAfter = await project.getWeiBal(projAddrR, true)
-      // let DTBalAfter = await utils.getWeiPoolBal(true)
+      let projWeiBalAfter = await project.getWeiBal(projAddrR, true)
+      let DTBalAfter = await utils.getWeiPoolBal(true)
 
-      // let failedTaskWeiReward = new BigNumber(0)
+      let failedTaskWeiReward = new BigNumber(0)
       let pollNonce = []
       let taskClaimableByVal = []
       let taskClaimableByRep = []
 
+      // go through tasks and collect details
       for (let i = 0; i < taskSet1.length; i++) {
         let nonce = await task.getPollNonce(projAddrR, i)
         let claimable = await task.getClaimable(projAddrR, i)
         let claimableByRep = await task.getClaimableByRep(projAddrR, i)
-        // let complete = await task.getComplete(projAddrR, i)
-        // if ((claimable === true && claimableByRep === false && complete === true)) {
-        //   let weiReward = await task.getWeiReward(projAddrR, i)
-        //   failedTaskWeiReward.plus(weiReward)
-        // }
+        let complete = await task.getComplete(projAddrR, i)
+        let negativeIndex = await task.getValidationIndex(projAddrR, i, false)
+        let affirmativeIndex = await task.getValidationIndex(projAddrR, i, true)
+        let weiReward = await task.getWeiReward(projAddrR, i)
+        let weiAndValidatorReward = Math.floor((weiReward * 21) / 20)
+        if (claimable && !claimableByRep && complete) {
+          if (negativeIndex !== 0 && affirmativeIndex === 0) {
+            // there is at least one validator
+            failedTaskWeiReward = failedTaskWeiReward.plus(weiReward)
+          } else if (negativeIndex === 0 && affirmativeIndex === 0) {
+            // there is no validator
+            failedTaskWeiReward = failedTaskWeiReward.plus(weiAndValidatorReward)
+          }
+        } else if (!complete) {
+          // there is no validator
+          failedTaskWeiReward = failedTaskWeiReward.plus(weiAndValidatorReward)
+        }
         pollNonce.push(nonce)
         taskClaimableByVal.push(claimable)
         taskClaimableByRep.push(claimableByRep)
       }
 
       // interim calculations
-      // let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter)
-      // let weiPoolDifference = DTBalAfter.minus(DTBalBefore)
+      let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter)
+      let weiPoolDifference = DTBalAfter.minus(DTBalBefore)
 
       // checks
       assert.equal(stateBefore, 4, 'state before should be 4')
@@ -889,11 +917,11 @@ contract('Validating State', function (accounts) {
       assert.equal(taskClaimableByVal[indexBoth], false, 'should not be claimable by validator')
       assert.equal(taskClaimableByRep[indexYes], true, 'should be claimable by rep')
       assert.equal(taskClaimableByRep[indexNo], false, 'should not be claimable by rep')
-      assert.equal(taskClaimableByRep[indexNeither], false, 'should notbe claimable by rep')
+      assert.equal(taskClaimableByRep[indexNeither], false, 'should not be claimable by rep')
       assert.equal(taskClaimableByRep[indexIncomplete], false, 'should not be claimable by rep')
       assert.equal(taskClaimableByRep[indexBoth], false, 'should not be claimable by rep')
-      // assert.equal(weiBalDifference, weiPoolDifference, 'should be same amount')
-      // assert.equal(weiPoolDifference, failedTaskWeiReward, 'should be same amount')
+      assert.equal(weiBalDifference.minus(weiPoolDifference), 0, 'should be same amount')
+      assert.equal(weiPoolDifference.minus(failedTaskWeiReward), 0, 'should be same amount')
     })
   })
 

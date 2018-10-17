@@ -149,7 +149,7 @@ module.exports = function projectHelper (accounts) {
     let user = await obj.contracts.RR.users(_user)
     let bal = user[0]
     let registered = user[1]
-    if (bal.toNumber() === 0 && registered === false) {
+    if (bal.toNumber() === 0 && !registered) {
       await obj.contracts.RR.register({from: _user})
     }
   }
@@ -177,7 +177,7 @@ module.exports = function projectHelper (accounts) {
 
   obj.utils.getRepBalance = async function (_user, _unadulterated) {
     let bal = await obj.contracts.RR.users(_user)
-    return _unadulterated === true
+    return _unadulterated
       ? bal[0]
       : bal[0].toNumber()
   }
@@ -194,14 +194,14 @@ module.exports = function projectHelper (accounts) {
 
   obj.utils.getWeiPoolBal = async function (_unadulterated) {
     let weiBal = await obj.contracts.DT.weiBal()
-    return _unadulterated === true
+    return _unadulterated
       ? weiBal
       : weiBal.toNumber()
   }
 
   obj.utils.getCurrentPrice = async function (_unadulterated) {
     let currPrice = await obj.contracts.DT.currentPrice()
-    return _unadulterated === true
+    return _unadulterated
       ? currPrice
       : currPrice.toNumber()
   }
@@ -260,7 +260,7 @@ module.exports = function projectHelper (accounts) {
   obj.project.getWeiCost = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let weiCost = await PROJ.weiCost()
-    return _unadulterated === true
+    return _unadulterated
       ? weiCost
       : weiCost.toNumber()
   }
@@ -268,7 +268,7 @@ module.exports = function projectHelper (accounts) {
   obj.project.getProposedWeiCost = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let weiCost = await PROJ.proposedCost()
-    return _unadulterated === true
+    return _unadulterated
       ? weiCost
       : weiCost.toNumber()
   }
@@ -276,7 +276,7 @@ module.exports = function projectHelper (accounts) {
   obj.project.getWeiBal = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let weiBal = await PROJ.weiBal()
-    return _unadulterated === true
+    return _unadulterated
       ? weiBal
       : weiBal.toNumber()
   }
@@ -290,7 +290,7 @@ module.exports = function projectHelper (accounts) {
   obj.project.getRepCost = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let repCost = await PROJ.reputationCost()
-    if (_unadulterated === true) {
+    if (_unadulterated) {
       return repCost
     } else {
       return repCost.toNumber()
@@ -300,7 +300,7 @@ module.exports = function projectHelper (accounts) {
   obj.project.getValidationReward = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let validationReward = await PROJ.validationReward()
-    return _unadulterated === true
+    return _unadulterated
       ? validationReward
       : validationReward.toNumber()
   }
@@ -448,16 +448,18 @@ module.exports = function projectHelper (accounts) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
     let weighting = await TASK.weighting()
-    return _unadulterated === true
+    return _unadulterated
       ? weighting
       : weighting.toNumber()
   }
 
-  obj.task.getWeiReward = async function (_projAddr, _index) {
+  obj.task.getWeiReward = async function (_projAddr, _index, _unadulterated) {
     let taskAddr = await obj.project.getTasks(_projAddr, _index)
     let TASK = await Task.at(taskAddr)
     let weiReward = await TASK.weiReward()
-    return weiReward.toNumber()
+    return _unadulterated
+      ? weiReward
+      : weiReward.toNumber()
   }
 
   obj.task.getRepReward = async function (_projAddr, _index) {
