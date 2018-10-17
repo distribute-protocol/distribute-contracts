@@ -8,12 +8,16 @@ const taskDetails = require('../utils/taskDetails')
 
 const BigNumber = require('bignumber.js')
 
+const Web3 = require('web3')
+const web3 = new Web3()
+web3.setProvider(new Web3.providers.HttpProvider('http://localhost:7545'))
+
 contract('Validating State', function (accounts) {
   // set up project helper
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let TR, PR, RR
+  let TR, PR, RR, DT
   let {user, project, utils, returnProject, task} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {validator1, validator2, notValidator} = user
@@ -43,6 +47,7 @@ contract('Validating State', function (accounts) {
     TR = projObj.contracts.TR
     PR = projObj.contracts.PR
     RR = projObj.contracts.RR
+    DT = projObj.contracts.DT
 
     // get validating projects
     projArray = await returnProject.validating(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, taskSet1, taskSet1.length - 1)
@@ -783,16 +788,20 @@ contract('Validating State', function (accounts) {
     it('checkVoting changes TR validating project to voting after time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT)
-      let projWeiBalBefore = await project.getWeiBal(projAddrT, true)
-      let DTBalBefore = await utils.getWeiPoolBal(true)
+      let projWeiBalVariableBefore = await project.getWeiBal(projAddrT, true)
+      let DTWeiBalVariableBefore = await utils.getWeiPoolBal(true)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
+      let DTWeiBalBefore = parseInt(await web3.eth.getBalance(DT.address))
 
       // attempt to checkVoting
       await PR.checkVoting(projAddrT)
 
       // take stock of variables
       let stateAfter = await project.getState(projAddrT)
-      let projWeiBalAfter = await project.getWeiBal(projAddrT, true)
-      let DTBalAfter = await utils.getWeiPoolBal(true)
+      let projWeiBalVariableAfter = await project.getWeiBal(projAddrT, true)
+      let DTWeiBalVariableAfter = await utils.getWeiPoolBal(true)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
+      let DTWeiBalAfter = parseInt(await web3.eth.getBalance(DT.address))
 
       let failedTaskWeiReward = new BigNumber(0)
       let pollNonce = []
@@ -817,9 +826,6 @@ contract('Validating State', function (accounts) {
             // there is no validator
             failedTaskWeiReward = failedTaskWeiReward.plus(weiAndValidatorReward)
           }
-        } else if (!complete) {
-          // there is no validator
-          failedTaskWeiReward = failedTaskWeiReward.plus(weiAndValidatorReward)
         }
         pollNonce.push(nonce)
         taskClaimableByVal.push(claimable)
@@ -827,8 +833,10 @@ contract('Validating State', function (accounts) {
       }
 
       // interim calculations
-      let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter)
-      let weiPoolDifference = DTBalAfter.minus(DTBalBefore)
+      let weiBalVariableDifference = projWeiBalVariableBefore.minus(projWeiBalVariableAfter)
+      let weiPoolVariableDifference = DTWeiBalVariableAfter.minus(DTWeiBalVariableBefore)
+      let weiBalDifference = projWeiBalBefore - projWeiBalAfter
+      let weiPoolDifference = DTWeiBalAfter - DTWeiBalBefore
 
       // checks
       assert.equal(stateBefore, 4, 'state before should be 4')
@@ -848,23 +856,29 @@ contract('Validating State', function (accounts) {
       assert.equal(taskClaimableByRep[indexNeither], false, 'should not be claimable by rep')
       assert.equal(taskClaimableByRep[indexIncomplete], false, 'should not be claimable by rep')
       assert.equal(taskClaimableByRep[indexBoth], false, 'should not be claimable by rep')
-      assert.equal(weiBalDifference.minus(weiPoolDifference), 0, 'should be same amount')
-      assert.equal(weiPoolDifference.minus(failedTaskWeiReward), 0, 'should be same amount')
+      assert.equal(weiBalVariableDifference.minus(weiPoolVariableDifference), 0, 'should be same amount')
+      assert.equal(weiPoolVariableDifference.minus(failedTaskWeiReward), 0, 'should be same amount')
+      assert.equal(weiBalDifference - weiPoolDifference, 0, 'should be same amount')
+      assert.equal(weiPoolDifference - failedTaskWeiReward, 0, 'should be same amount')
     })
 
     it('checkVoting changes RR validating project to voting after time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
-      let projWeiBalBefore = await project.getWeiBal(projAddrR, true)
-      let DTBalBefore = await utils.getWeiPoolBal(true)
+      let projWeiBalVariableBefore = await project.getWeiBal(projAddrR, true)
+      let DTWeiBalVariableBefore = await utils.getWeiPoolBal(true)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR))
+      let DTWeiBalBefore = parseInt(await web3.eth.getBalance(DT.address))
 
       // attempt to checkVoting
       await PR.checkVoting(projAddrR)
 
       // take stock of variables
       let stateAfter = await project.getState(projAddrR)
-      let projWeiBalAfter = await project.getWeiBal(projAddrR, true)
-      let DTBalAfter = await utils.getWeiPoolBal(true)
+      let projWeiBalVariableAfter = await project.getWeiBal(projAddrR, true)
+      let DTWeiBalVariableAfter = await utils.getWeiPoolBal(true)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR))
+      let DTWeiBalAfter = parseInt(await web3.eth.getBalance(DT.address))
 
       let failedTaskWeiReward = new BigNumber(0)
       let pollNonce = []
@@ -889,9 +903,6 @@ contract('Validating State', function (accounts) {
             // there is no validator
             failedTaskWeiReward = failedTaskWeiReward.plus(weiAndValidatorReward)
           }
-        } else if (!complete) {
-          // there is no validator
-          failedTaskWeiReward = failedTaskWeiReward.plus(weiAndValidatorReward)
         }
         pollNonce.push(nonce)
         taskClaimableByVal.push(claimable)
@@ -899,8 +910,10 @@ contract('Validating State', function (accounts) {
       }
 
       // interim calculations
-      let weiBalDifference = projWeiBalBefore.minus(projWeiBalAfter)
-      let weiPoolDifference = DTBalAfter.minus(DTBalBefore)
+      let weiBalVariableDifference = projWeiBalVariableBefore.minus(projWeiBalVariableAfter)
+      let weiPoolVariableDifference = DTWeiBalVariableAfter.minus(DTWeiBalVariableBefore)
+      let weiBalDifference = projWeiBalBefore - projWeiBalAfter
+      let weiPoolDifference = DTWeiBalAfter - DTWeiBalBefore
 
       // checks
       assert.equal(stateBefore, 4, 'state before should be 4')
@@ -920,8 +933,10 @@ contract('Validating State', function (accounts) {
       assert.equal(taskClaimableByRep[indexNeither], false, 'should not be claimable by rep')
       assert.equal(taskClaimableByRep[indexIncomplete], false, 'should not be claimable by rep')
       assert.equal(taskClaimableByRep[indexBoth], false, 'should not be claimable by rep')
-      assert.equal(weiBalDifference.minus(weiPoolDifference), 0, 'should be same amount')
-      assert.equal(weiPoolDifference.minus(failedTaskWeiReward), 0, 'should be same amount')
+      assert.equal(weiBalVariableDifference.minus(weiPoolVariableDifference), 0, 'should be same amount')
+      assert.equal(weiPoolVariableDifference.minus(failedTaskWeiReward), 0, 'should be same amount')
+      assert.equal(weiBalDifference - weiPoolDifference, 0, 'should be same amount')
+      assert.equal(weiPoolDifference - failedTaskWeiReward, 0, 'should be same amount')
     })
   })
 

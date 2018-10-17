@@ -7,12 +7,18 @@ const evmIncreaseTime = require('../utils/evmIncreaseTime')
 const keccakHashes = require('../utils/keccakHashes')
 const taskDetails = require('../utils/taskDetails')
 
+const BigNumber = require('bignumber.js')
+
+const Web3 = require('web3')
+const web3 = new Web3()
+web3.setProvider(new Web3.providers.HttpProvider('http://localhost:7545'))
+
 contract('Active State', function (accounts) {
   // set up project helper
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let TR, RR, PR
+  let TR, RR, PR, DT
   let {user, project, utils, returnProject, task} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {repStaker1} = user
@@ -44,6 +50,7 @@ contract('Active State', function (accounts) {
     TR = projObj.contracts.TR
     RR = projObj.contracts.RR
     PR = projObj.contracts.PR
+    DT = projObj.contracts.DT
 
     // get active projects
     projArray = await returnProject.active(projectCost, stakingPeriod + (fastForwards * 604800), ipfsHash, 1, taskSet1)
@@ -1025,31 +1032,91 @@ contract('Active State', function (accounts) {
     it('checkValidate changes TR active project to validating after time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrT)
+      let projWeiBalVariableBefore = await project.getWeiBal(projAddrT, true)
+      let DTWeiBalVariableBefore = await utils.getWeiPoolBal(true)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
+      let DTWeiBalBefore = parseInt(await web3.eth.getBalance(DT.address))
 
       // attempt to checkValidate
       await PR.checkValidate(projAddrT)
 
       // take stock of variables
       let stateAfter = await project.getState(projAddrT)
+      let projWeiBalVariableAfter = await project.getWeiBal(projAddrT, true)
+      let DTWeiBalVariableAfter = await utils.getWeiPoolBal(true)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
+      let DTWeiBalAfter = parseInt(await web3.eth.getBalance(DT.address))
+
+      let failedTaskWeiReward = new BigNumber(0)
+
+      // go through tasks and collect details
+      for (let i = 0; i < taskSet1.length; i++) {
+        let complete = await task.getComplete(projAddrT, i)
+        let weiReward = await task.getWeiReward(projAddrT, i)
+        let weiAndValidatorReward = Math.floor((weiReward * 21) / 20)
+        if (!complete) {
+          failedTaskWeiReward = failedTaskWeiReward.plus(weiAndValidatorReward)
+        }
+      }
+
+      // interim calculations
+      let weiBalVariableDifference = projWeiBalVariableBefore.minus(projWeiBalVariableAfter)
+      let weiPoolVariableDifference = DTWeiBalVariableAfter.minus(DTWeiBalVariableBefore)
+      let weiBalDifference = projWeiBalBefore - projWeiBalAfter
+      let weiPoolDifference = DTWeiBalAfter - DTWeiBalBefore
 
       // checks
       assert.equal(stateBefore, 3, 'state before should be 3')
       assert.equal(stateAfter, 4, 'state after should be 4')
+      assert.equal(weiBalVariableDifference.minus(weiPoolVariableDifference), 0, 'should be same amount')
+      assert.equal(weiPoolVariableDifference.minus(failedTaskWeiReward), 0, 'should be same amount')
+      assert.equal(weiBalDifference - weiPoolDifference, 0, 'should be same amount')
+      assert.equal(weiPoolDifference - failedTaskWeiReward, 0, 'should be same amount')
     })
 
     it('checkValidate changes RR active project to validating after time is up', async () => {
       // take stock of variables
       let stateBefore = await project.getState(projAddrR)
+      let projWeiBalVariableBefore = await project.getWeiBal(projAddrR, true)
+      let DTWeiBalVariableBefore = await utils.getWeiPoolBal(true)
+      let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR))
+      let DTWeiBalBefore = parseInt(await web3.eth.getBalance(DT.address))
 
       // attempt to checkValidate
       await PR.checkValidate(projAddrR)
 
       // take stock of variables
       let stateAfter = await project.getState(projAddrR)
+      let projWeiBalVariableAfter = await project.getWeiBal(projAddrR, true)
+      let DTWeiBalVariableAfter = await utils.getWeiPoolBal(true)
+      let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR))
+      let DTWeiBalAfter = parseInt(await web3.eth.getBalance(DT.address))
+
+      let failedTaskWeiReward = new BigNumber(0)
+
+      // go through tasks and collect details
+      for (let i = 0; i < taskSet1.length; i++) {
+        let complete = await task.getComplete(projAddrR, i)
+        let weiReward = await task.getWeiReward(projAddrR, i)
+        let weiAndValidatorReward = Math.floor((weiReward * 21) / 20)
+        if (!complete) {
+          failedTaskWeiReward = failedTaskWeiReward.plus(weiAndValidatorReward)
+        }
+      }
+
+      // interim calculations
+      let weiBalVariableDifference = projWeiBalVariableBefore.minus(projWeiBalVariableAfter)
+      let weiPoolVariableDifference = DTWeiBalVariableAfter.minus(DTWeiBalVariableBefore)
+      let weiBalDifference = projWeiBalBefore - projWeiBalAfter
+      let weiPoolDifference = DTWeiBalAfter - DTWeiBalBefore
 
       // checks
       assert.equal(stateBefore, 3, 'state before should be 3')
       assert.equal(stateAfter, 4, 'state after should be 4')
+      assert.equal(weiBalVariableDifference.minus(weiPoolVariableDifference), 0, 'should be same amount')
+      assert.equal(weiPoolVariableDifference.minus(failedTaskWeiReward), 0, 'should be same amount')
+      assert.equal(weiBalDifference - weiPoolDifference, 0, 'should be same amount')
+      assert.equal(weiPoolDifference - failedTaskWeiReward, 0, 'should be same amount')
     })
   })
 

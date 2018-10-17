@@ -182,11 +182,12 @@ library ProjectLibrary {
             TokenRegistry tr = TokenRegistry(_tokenRegistryAddress);
             for(uint i = 0; i < project.getTaskCount(); i++) {
                 Task task = Task(project.tasks(i));
-                if (task.complete() == false) {
+                if (!task.complete()) {
+                    // workers did not complete task, reward & validator chunk must be sent back
                     uint reward = task.weiReward();
+                    reward = task.weiReward().mul(21).div(20);
                     tr.revertWei(reward);
                     project.returnWei(_distributeTokenAddress, reward);
-                    task.setTaskReward(0, 0, 0);
                 }
             }
             return true;
@@ -248,12 +249,6 @@ library ProjectLibrary {
                       project.returnWei(_distributeTokenAddress, reward);
                       emit LogTaskValidated(task, _projectAddress, false);
                     }
-                } else {
-                  // reward & validator chunk must also be sent back if the task is incomplete
-                  reward = task.weiReward().mul(21).div(20);
-                  tr.revertWei(reward);
-                  project.returnWei(_distributeTokenAddress, reward);
-                  emit LogTaskValidated(task, _projectAddress, false);
                 }
             }
             return true;
