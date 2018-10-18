@@ -21,36 +21,51 @@ Its multifaceted incentive structure ensures that:
 4. the infrastructure itself is created, maintained, and operated by those who directly benefit from it;
 5. multiple utilities may interlock in the future to create a synergistic system of many distributed utilities and communal infrastructure projects.
 
-## Contracts
 
 ### Main Contract Summaries
 
 #### [DistributeToken.sol](../contracts/DistributeToken.sol)
+Rinkeby: [0x14fc303a77f9b9687f8079ecfee70d70d16416c4](https://rinkeby.etherscan.io/address/0x14fc303a77f9b9687f8079ecfee70d70d16416c4)
+
 The distribute token (DST) is continuously minted as the network gains more users, so there is no cap on the total number of tokens in circulation. The price of the token is determined by the total market share of the amount of tokens being minted or sold. The user exchanges ether (ETH) for tokens and then the ETH is held in the distribute token contract. Any function that involves minting, selling, transferring, or burning tokens goes through DistributeToken.sol. Minting and selling tokens can be called directly by the user while burning and transferring tokens are called by the token registry or reputation registry that the contract was initialized with. DST is based on a standard EIP20 token and uses EIP20.sol to import basic token functionality and EIP20Interface.sol to import a getter function for the total supply of tokens.
 
 #### [TokenRegistry.sol](../contracts/TokenRegistry.sol)
+Rinkeby: [0xa5a25c7427ac407ffddda903804a99fc63dfdc24](https://rinkeby.etherscan.io/address/0xa5a25c7427ac407ffddda903804a99fc63dfdc24)
+
 The token registry is the central contract by which the distribute protocol's users perform actions using tokens in the various stages of a project. It is the contract through which users are given the ability to propose projects using tokens. Users may also stake their tokens on projects, come to consensus on which tasks to perform, vote on completed tasks and more.
 
 #### [ReputationRegistry.sol](../contracts/ReputationRegistry.sol)
+Rinkeby: [0x86bdbb4b05df61d146e46fefa956cef5f00be61e](https://rinkeby.etherscan.io/address/0x86bdbb4b05df61d146e46fefa956cef5f00be61e)
+
 The reputation registry is the central contract for the distribute protocol to manage the reputation balances of each user. It is the contract through which users are given the ability to propose projects using reputation. Users may also stake their reputation on projects, come to consensus on which tasks to perform, then claim tasks, and subsequent task rewards, vote on completed tasks and more.
 
 #### [ProjectRegistry.sol](../contracts/ProjectRegistry.sol)
+Rinkeby: [0x35ceb91961bd66786c5492f1bd1409d14396f929](https://rinkeby.etherscan.io/address/0x35ceb91961bd66786c5492f1bd1409d14396f929)
+
 The project registry manages and records the state of projects and allows for the user to interact with projects by creating projects, add tasks after the project has been staked, submit hashed task lists to finalize the tasks for a project, claim tasks, and submit completed tasks for validation. The project registry contract provides a way for the user to manage the information in each project and return information to the token and reputation registries. The project registry does not initialize any projects, just handles the information within a project and the state of the projects. ProjectRegistry.sol calls ProjectLibrary.sol to check what stage a project is in and tell the token registry or reputation registry to burn tokens and reputation if needed.
 
 #### [ProjectLibrary.sol](../contracts/ProjectLibrary.sol)
+Rinkeby: [0x7c5d0c44028917f013a12327da45fa350652015c](https://rinkeby.etherscan.io/address/0x7c5d0c44028917f013a12327da45fa350652015c)
+
 The project library manages interactions with a project by acting as library with functions that can be imported. ProjectLibrary.sol records how a project is staked, the time a project has till it expires, the staking power a user has on an individual project, supports validation functionality, allows for a worker to claim their reward after completing a task, and refunds any user who staked reputation or tokens. Along with providing these function, the project library has functions that do the actual state checking of a project to return to the project registry.
 
 #### [Project.sol](../contracts/Project.sol)
+Rinkeby (main contract): [0xfeafacc324f775a1ffc0333f883ee44a658fe573](https://rinkeby.etherscan.io/address/0xfeafacc324f775a1ffc0333f883ee44a658fe573)
+
 The project contract manages each individual project and holds in the information recorded from ProjectRegistry.sol. As a project is proposed a new project contract is created to manage interactions with a unique project. Nothing in Project.sol can be directly called by the user and instead all calls go through the three registries. As staking, task claiming, and validation occurs, the users participating in these actions are recorded on each project with the amount of tokens or reputation staked by them.
 
 In order to reduce gas use, we deploy projects through a proxy, using AssertBytes.sol and BytesLib.sol.
 
 #### [Task.sol](../contracts/Task.sol)
+Rinkeby (main contract): [0xb9422d692b425cffc2260944b8192a03d229b543](https://rinkeby.etherscan.io/address/0xb9422d692b425cffc2260944b8192a03d229b543)
+
 Task contracts are instantiated for single tasks in every project to keep track of information such as its weighting, whether it has been completed, validation status, and more.
 
 ### Helper Contract Summaries
 
 #### [PLCRVoting.sol](../contracts/library/PLCRVoting.sol)
+Rinkeby: [0x15ce86d4278e86619c9354d109befeba5acea07a](https://rinkeby.etherscan.io/address/0x15ce86d4278e86619c9354d109befeba5acea07a)
+
 This is an extension of the [Partial-Lock-Commit-Reveal Voting scheme with ERC20 tokens](https://github.com/ConsenSys/PLCRVoting) that includes non-ERC20 tokens.
 
 #### [SafeMath.sol](../contracts/library/SafeMath.sol)

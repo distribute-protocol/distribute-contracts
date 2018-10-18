@@ -6,7 +6,6 @@ let secrets, mnemonic
 if (fs.existsSync('secrets.json')) {
   secrets = JSON.parse(fs.readFileSync('secrets.json', 'utf8'))
   mnemonic = secrets.mnemonic
-  // console.log(mnemonic)
 } else {
   console.log('no secrets.json found. You can only deploy to the testrpc.')
   mnemonic = ''
@@ -23,7 +22,9 @@ module.exports = {
     },
     rinkeby: {
       provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/'),
-      network_id: '*'
+      network_id: '*',
+      gas: 8000000,
+      gasPrice: 100000000000
     },
     mocha: {
       reporter: 'eth-gas-reporter',
