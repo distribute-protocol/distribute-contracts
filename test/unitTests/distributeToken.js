@@ -13,19 +13,52 @@ contract('Distribute Token', function (accounts) {
   // get project helper variables
   let spoofedDT
   let {tokenProposer} = projObj.user
-  let {spoofedTR, spoofedRR, spoofedPR, anyAddress, weiToReturn} = projObj.spoofed
+  let {spoofedTRAddress, spoofedRRAddress, spoofedPRAddress, anyAddress, weiToReturn} = projObj.spoofed
   let {tokensToMint, tokensToBurn} = projObj.minting
-  let {utils} = projObj
+  let {utils, dt} = projObj
 
   // local test variables
-  // let errorThrown
+  let errorThrown
 
   before(async () => {
     // get contracts from project helped
     await projObj.contracts.setContracts()
 
     // initialize spoofed DT
-    spoofedDT = await DistributeToken.new(spoofedTR, spoofedRR)
+    spoofedDT = await DistributeToken.new(spoofedTRAddress, spoofedRRAddress)
+  })
+
+  describe('constructor', () => {
+    it('correctly sets state variables', async () => {
+      let trAddress = await dt.getTRAddress(spoofedDT.address)
+      let rrAddress = await dt.getRRAddress(spoofedDT.address)
+      assert.equal(trAddress, spoofedTRAddress, 'incorrect token registry address stored by constructor')
+      assert.equal(rrAddress, spoofedRRAddress, 'incorrect reputation registry address stored by constructor')
+    })
+  })
+
+  describe('freezeContract', () => {
+    it('not owner is unable to freeze the contract', async () => {
+      // take stock of variables
+      let owner = await dt.getOwner(spoofedDT.address)
+      let freezeBefore = await dt.freeze(spoofedDT.address)
+
+      // checks
+      assert.equal(freezeBefore, false, 'at initialization freeze should be false')
+      assert.notEqual(owner, anyAddress, 'ensure attempted freezer is not the owner')
+
+      // not owner attempts to freeze the contract
+      errorThrown = false
+      try {
+        await spoofedDT.freezeContract({from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('owner is able to freeze the contract', async ())
   })
 
   it('correctly returns baseCost as the current price when no tokens are available', async () => {
@@ -113,15 +146,15 @@ contract('Distribute Token', function (accounts) {
     // take stock of variables before
     let weiRequired = await spoofedDT.weiRequired(tokensToMint)
     let totalSupplyBefore = await spoofedDT.totalSupply()
-    let TRBalBefore = await spoofedDT.balances(spoofedTR)
+    let TRBalBefore = await spoofedDT.balances(spoofedTRAddress)
 
     // mint some tokens so TR has tokens to burn, then burn tokens
-    await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
-    await spoofedDT.burn(tokensToBurn, {from: spoofedTR})
+    await spoofedDT.mint(tokensToMint, {from: spoofedTRAddress, value: weiRequired})
+    await spoofedDT.burn(tokensToBurn, {from: spoofedTRAddress})
 
     // take stock of variables after
     let totalSupplyAfter = await spoofedDT.totalSupply()
-    let TRBalAfter = await spoofedDT.balances(spoofedTR)
+    let TRBalAfter = await spoofedDT.balances(spoofedTRAddress)
 
     // checks
     assert.equal(totalSupplyAfter - totalSupplyBefore, tokensToMint - tokensToBurn, 'incorrectly updated total supply')
@@ -131,7 +164,7 @@ contract('Distribute Token', function (accounts) {
   it('only allows the tokenRegistry to call burn()', async () => {
     // mint some tokens so RR has tokens to burn
     let weiRequired = await spoofedDT.weiRequired(tokensToMint)
-    await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
+    await spoofedDT.mint(tokensToMint, {from: spoofedTRAddress, value: weiRequired})
 
     let errorThrown = false
     try {
@@ -145,13 +178,13 @@ contract('Distribute Token', function (accounts) {
   it('allows tokenRegistry to call transferWeiTo()', async () => {
     // mint some tokens so there is wei to transfer from the pool
     let weiRequired = await spoofedDT.weiRequired(tokensToMint)
-    await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
+    await spoofedDT.mint(tokensToMint, {from: spoofedTRAddress, value: weiRequired})
 
     // get wei pool bal before
     let weiPoolBalBefore = await spoofedDT.weiBal()
 
     // call transferWeiTo
-    await spoofedDT.transferWeiTo(spoofedTR, weiPoolBalBefore, {from: spoofedTR})
+    await spoofedDT.transferWeiTo(spoofedTRAddress, weiPoolBalBefore, {from: spoofedTRAddress})
 
     // get wei pool bal after
     let weiPoolBalAfter = await spoofedDT.weiBal()
@@ -164,13 +197,13 @@ contract('Distribute Token', function (accounts) {
   it('allows reputationRegistry to call transferWeiTo()', async () => {
     // mint some tokens so there is wei to transfer from the pool
     let weiRequired = await spoofedDT.weiRequired(tokensToMint)
-    await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
+    await spoofedDT.mint(tokensToMint, {from: spoofedTRAddress, value: weiRequired})
 
     // get wei pool bal before
     let weiPoolBalBefore = await spoofedDT.weiBal()
 
     // call transferWeiTo
-    await spoofedDT.transferWeiTo(spoofedTR, weiPoolBalBefore, {from: spoofedRR})
+    await spoofedDT.transferWeiTo(spoofedTRAddress, weiPoolBalBefore, {from: spoofedRRAddress})
 
     // get wei pool bal after
     let weiPoolBalAfter = await spoofedDT.weiBal()
@@ -183,14 +216,14 @@ contract('Distribute Token', function (accounts) {
   it('only allows the tokenRegistry or reputationRegistry to call transferWeiTo()', async () => {
     // mint some tokens so there is wei to transfer from the pool
     let weiRequired = await spoofedDT.weiRequired(tokensToMint)
-    await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
+    await spoofedDT.mint(tokensToMint, {from: spoofedTRAddress, value: weiRequired})
 
     // get wei pool bal before
     let weiPoolBalBefore = await spoofedDT.weiBal()
 
     let errorThrown = false
     try {
-      await spoofedDT.transferWeiTo(spoofedPR, weiPoolBalBefore, {from: spoofedPR})
+      await spoofedDT.transferWeiTo(spoofedPRAddress, weiPoolBalBefore, {from: spoofedPRAddress})
     } catch (e) {
       errorThrown = true
     }
@@ -202,7 +235,7 @@ contract('Distribute Token', function (accounts) {
     let weiPoolBalBefore = await spoofedDT.weiBal()
 
     // call transferWeiTo
-    await spoofedDT.returnWei(weiToReturn, {from: spoofedTR})
+    await spoofedDT.returnWei(weiToReturn, {from: spoofedTRAddress})
 
     // get wei pool bal after
     let weiPoolBalAfter = await spoofedDT.weiBal()
@@ -228,15 +261,15 @@ contract('Distribute Token', function (accounts) {
 
     // take stock of variables before
     let totalSupplyBefore = await spoofedDT.totalSupply()
-    let TRBalBefore = await spoofedDT.balances(spoofedTR)
+    let TRBalBefore = await spoofedDT.balances(spoofedTRAddress)
     let tpBalBefore = await spoofedDT.balances(tokenProposer)
 
     // transfer tokenProposer's tokens to escrow
-    await spoofedDT.transferToEscrow(tokenProposer, tokensToMint, {from: spoofedTR})
+    await spoofedDT.transferToEscrow(tokenProposer, tokensToMint, {from: spoofedTRAddress})
 
     // take stock of variables after
     let totalSupplyAfter = await spoofedDT.totalSupply()
-    let TRBalAfter = await spoofedDT.balances(spoofedTR)
+    let TRBalAfter = await spoofedDT.balances(spoofedTRAddress)
     let tpBalAfter = await spoofedDT.balances(tokenProposer)
 
     // checks
@@ -262,15 +295,15 @@ contract('Distribute Token', function (accounts) {
   it('allows tokenRegistry to call transferFromEscrow()', async () => {
     // take stock of variables before
     let totalSupplyBefore = await spoofedDT.totalSupply()
-    let TRBalBefore = await spoofedDT.balances(spoofedTR)
+    let TRBalBefore = await spoofedDT.balances(spoofedTRAddress)
     let tpBalBefore = await spoofedDT.balances(tokenProposer)
 
     // transfer tokenProposer's tokens to escrow
-    await spoofedDT.transferFromEscrow(tokenProposer, tokensToMint, {from: spoofedTR})
+    await spoofedDT.transferFromEscrow(tokenProposer, tokensToMint, {from: spoofedTRAddress})
 
     // take stock of variables after
     let totalSupplyAfter = await spoofedDT.totalSupply()
-    let TRBalAfter = await spoofedDT.balances(spoofedTR)
+    let TRBalAfter = await spoofedDT.balances(spoofedTRAddress)
     let tpBalAfter = await spoofedDT.balances(tokenProposer)
 
     // checks

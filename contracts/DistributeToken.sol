@@ -26,8 +26,8 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     // STATE VARIABLES
     // =====================================================================
 
-    address tokenRegistryAddress;
-    address reputationRegistryAddress;
+    address public tokenRegistryAddress;
+    address public reputationRegistryAddress;
 
     uint256 public weiBal;
 

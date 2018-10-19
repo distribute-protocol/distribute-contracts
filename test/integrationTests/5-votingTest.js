@@ -2212,7 +2212,7 @@ contract('Voting State', function (accounts) {
       for (let i = 2; i < 6; i++) {
         let claimable = await task.getClaimable(projAddrT, i)
         let claimableByRep = await task.getClaimableByRep(projAddrT, i)
-        let ended = await task.pollEnded(projAddrT, i)
+        let ended = await task.getPollEnded(projAddrT, i)
         taskClaimableByVal.push(claimable)
         taskClaimableByRep.push(claimableByRep)
         pollEnded.push(ended)
@@ -2256,7 +2256,7 @@ contract('Voting State', function (accounts) {
       for (let i = 2; i < 6; i++) {
         let claimable = await task.getClaimable(projAddrR, i)
         let claimableByRep = await task.getClaimableByRep(projAddrR, i)
-        let ended = await task.pollEnded(projAddrR, i)
+        let ended = await task.getPollEnded(projAddrR, i)
         taskClaimableByVal.push(claimable)
         taskClaimableByRep.push(claimableByRep)
         pollEnded.push(ended)

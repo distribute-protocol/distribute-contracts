@@ -28,6 +28,7 @@ module.exports = function projectHelper (accounts) {
   obj.task = {}
   obj.validating = {}
   obj.voting = {}
+  obj.dt = {}
 
   obj.user.tokenProposer = accounts[1]
   obj.user.repProposer = accounts[2]
@@ -59,12 +60,12 @@ module.exports = function projectHelper (accounts) {
   obj.user.notProject = accounts[1]
 
   // these will only be used in unit tests
-  obj.spoofed.spoofedDT = accounts[1]
-  obj.spoofed.spoofedTR = accounts[2]
-  obj.spoofed.spoofedRR = accounts[3]
-  obj.spoofed.spoofedPR = accounts[4]
+  obj.spoofed.spoofedDTAddress = accounts[1]
+  obj.spoofed.spoofedTRAddress = accounts[2]
+  obj.spoofed.spoofedRRAddress = accounts[3]
+  obj.spoofed.spoofedPRAddress = accounts[4]
   obj.spoofed.anyAddress = accounts[5]
-  obj.spoofed.spoofedPLCRVoting = accounts[6]
+  obj.spoofed.spoofedPLCRVotingAddress = accounts[6]
 
   obj.spoofed.weiToReturn = 10000000000000000000
 
@@ -556,10 +557,34 @@ module.exports = function projectHelper (accounts) {
     return pollMapNumber
   }
 
-  obj.task.pollEnded = async function (_projAddr, _index) {
+  obj.task.getPollEnded = async function (_projAddr, _index) {
     let pollId = await obj.task.getPollNonce(_projAddr, _index)
     let pollEnded = await obj.contracts.PLCR.pollEnded(pollId)
     return pollEnded
+  }
+
+  obj.dt.getTRAddress = async function (_dtAddress) {
+    let DT = await DistributeToken.at(_dtAddress)
+    let trAddress = await DT.tokenRegistryAddress()
+    return trAddress
+  }
+
+  obj.dt.getRRAddress = async function (_dtAddress) {
+    let DT = await DistributeToken.at(_dtAddress)
+    let rrAddress = await DT.tokenRegistryAddress()
+    return rrAddress
+  }
+
+  obj.dt.getOwner = async function (_dtAddress) {
+    let DT = await DistributeToken.at(_dtAddress)
+    let owner = await DT.owner()
+    return owner
+  }
+
+  obj.dt.getFreeze = async function (_dtAddress) {
+    let DT = await DistributeToken.at(_dtAddress)
+    let freeze = await DT.freeze()
+    return freeze
   }
 
   // project return functions
