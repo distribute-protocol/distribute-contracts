@@ -117,6 +117,92 @@ contract('Distribute Token', function (accounts) {
     })
   })
 
+  describe('updateTokenRegistry', () => {
+    it('not owner is unable to update the token registry', async () => {
+      // take stock of variables
+      let owner = await dt.getOwner(spoofedDT.address)
+      let trAddress = await dt.getTRAddress(spoofedDT.address)
+
+      // checks
+      assert.equal(trAddress, spoofedTRAddress, 'before updating, token registry address should be trAddress')
+      assert.notEqual(owner, anyAddress, 'ensure attempted updater is not the owner')
+
+      // not owner attempts to freeze the contract
+      errorThrown = false
+      try {
+        await spoofedDT.updateTokenRegistry(anyAddress, {from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('owner is able to update the token registry', async () => {
+      // take stock of variables
+      let owner = await dt.getOwner(spoofedDT.address)
+      let trAddressBefore = await dt.getTRAddress(spoofedDT.address)
+
+      // checks
+      assert.equal(trAddressBefore, spoofedTRAddress, 'before updating, token registry address should be trAddress')
+
+      // owner freezes the contract
+      await spoofedDT.updateTokenRegistry(anyAddress, {from: owner})
+
+      // take stock of variables
+      let trAddressAfter = await dt.getTRAddress(spoofedDT.address)
+
+      // checks
+      assert.equal(trAddressAfter, anyAddress, 'after updating, token registry address should be anyAddress')
+
+      // put it back
+      await spoofedDT.updateTokenRegistry(spoofedTRAddress, {from: owner})
+    })
+  })
+
+  describe('updateReputationRegistry', () => {
+    it('not owner is unable to update the reputation registry', async () => {
+      // take stock of variables
+      let owner = await dt.getOwner(spoofedDT.address)
+      let rrAddress = await dt.getRRAddress(spoofedDT.address)
+
+      // checks
+      assert.equal(rrAddress, spoofedRRAddress, 'before updating, reputation registry address should be trAddress')
+      assert.notEqual(owner, anyAddress, 'ensure attempted updater is not the owner')
+
+      // not owner attempts to freeze the contract
+      errorThrown = false
+      try {
+        await spoofedDT.updateReputationRegistry(anyAddress, {from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('owner is able to update the reputation registry', async () => {
+      // take stock of variables
+      let owner = await dt.getOwner(spoofedDT.address)
+      let rrAddressBefore = await dt.getRRAddress(spoofedDT.address)
+
+      // checks
+      assert.equal(rrAddressBefore, spoofedRRAddress, 'before updating, reputation registry address should be trAddress')
+
+      // owner freezes the contract
+      await spoofedDT.updateReputationRegistry(anyAddress, {from: owner})
+
+      // take stock of variables
+      let rrAddressAfter = await dt.getRRAddress(spoofedDT.address)
+
+      // checks
+      assert.equal(rrAddressAfter, anyAddress, 'after updating, reputation registry address should be anyAddress')
+
+      // put it back
+      await spoofedDT.updateTokenRegistry(spoofedRRAddress, {from: owner})
+    })
+  })
+
   it('correctly returns baseCost as the current price when no tokens are available', async () => {
     // current price, base cost getters
     let currentPrice = await utils.getCurrentPrice()
