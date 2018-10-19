@@ -283,6 +283,32 @@ contract('Distribute Token', function (accounts) {
     })
   })
 
+  describe('mint', () => {
+  })
+
+  describe('burn', () => {
+  })
+
+  describe('sell', () => {
+  })
+
+  describe('transferWeiTo', () => {
+  })
+
+  describe('transferTokensTo', () => {
+  })
+
+  describe('returnWei', () => {
+  })
+
+  describe('transferToEscrow', () => {
+  })
+
+  describe('transferFromEscrow', () => {
+  })
+
+  describe('fallback', () => {
+  })
   // it('mints tokens', async () => {
   //   // take stock of variables before
   //   let weiRequired = await utils.getWeiRequired(tokensToMint)
