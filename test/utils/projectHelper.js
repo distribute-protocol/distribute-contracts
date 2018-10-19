@@ -182,8 +182,14 @@ module.exports = function projectHelper (accounts) {
       : bal[0].toNumber()
   }
 
-  obj.utils.getTotalTokens = async () => {
-    let total = await obj.contracts.DT.totalSupply()
+  obj.utils.getTotalTokens = async (_altDT) => {
+    let total
+    if (_altDT !== undefined) {
+      let DT = await DistributeToken.at(_altDT)
+      total = await DT.totalSupply()
+    } else {
+      total = await obj.contracts.DT.totalSupply()
+    }
     return total.toNumber()
   }
 
@@ -199,8 +205,14 @@ module.exports = function projectHelper (accounts) {
       : weiBal.toNumber()
   }
 
-  obj.utils.getCurrentPrice = async function (_unadulterated) {
-    let currPrice = await obj.contracts.DT.currentPrice()
+  obj.utils.getCurrentPrice = async function (_unadulterated, _altDT) {
+    let currPrice
+    if (_altDT !== undefined) {
+      let DT = await DistributeToken.at(_altDT)
+      currPrice = DT.currentPrice()
+    } else {
+      currPrice = await obj.contracts.DT.currentPrice()
+    }
     return _unadulterated
       ? currPrice
       : currPrice.toNumber()
@@ -227,14 +239,19 @@ module.exports = function projectHelper (accounts) {
     return weiReq.toNumber()
   }
 
-  obj.utils.calculateWeiRequired = async function (_tokens) {
-    let targPrice = await obj.utils.calculateTargetPrice(_tokens)
+  obj.utils.calculateWeiRequired = async function (_tokens, _altDT) {
+    let targPrice
+    if (_altDT !== undefined) {
+      targPrice = await obj.utils.calculateTargetPrice(_tokens, _altDT)
+    } else {
+      targPrice = await obj.utils.calculateTargetPrice(_tokens)
+    }
     return targPrice.times(_tokens).toNumber()
   }
 
-  obj.utils.calculateTargetPrice = async function (_tokens) {
-    let currPrice = await obj.utils.getCurrentPrice(true) // get big number version
-    let totalSupply = await obj.utils.getTotalTokens()
+  obj.utils.calculateTargetPrice = async function (_tokens, _altDT) {
+    let currPrice = await obj.utils.getCurrentPrice(true, _altDT) // get big number version from spoofedDT
+    let totalSupply = await obj.utils.getTotalTokens(_altDT)
     let newSupply = totalSupply + _tokens
     let weiReq = currPrice.times(1000 + Math.round(_tokens * 1000 / newSupply)) // emulate Divison.percent() precision of 3
     return weiReq.div(1000)

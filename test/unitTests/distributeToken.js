@@ -242,8 +242,8 @@ contract('Distribute Token', function (accounts) {
   describe('weiRequired', () => {
     it('returns the correct wei required for positive token value', async () => {
       // take stock of variables
-      let weiRequiredFunc = await utils.getWeiRequired(tokensToMint)
-      let weiRequiredCalc = await utils.calculateWeiRequired(tokensToMint)
+      let weiRequiredFunc = await spoofedDT.weiRequired(tokensToMint)
+      let weiRequiredCalc = await utils.calculateWeiRequired(tokensToMint, spoofedDT.address)
 
       // checks
       assert.equal(weiRequiredFunc, weiRequiredCalc, 'weiRequired not returned correctly')
@@ -264,6 +264,19 @@ contract('Distribute Token', function (accounts) {
         await utils.getWeiRequired(0)
       } catch (e) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+  })
+
+  describe('targetPrice', () => {
+    it('cannot be called', async () => {
+      errorThrown = false
+      try {
+        await spoofedDT.targetPrice(tokensToMint)
+      } catch (e) {
+        assert.match(e.message, /spoofedDT.targetPrice is not a function/, 'throws an error')
         errorThrown = true
       }
       assertThrown(errorThrown, 'An error should have been thrown')
