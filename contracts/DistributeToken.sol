@@ -115,9 +115,8 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     */
     function currentPrice() public view returns (uint256) {
         //calculated current burn reward of 1 token at current weiBal and token supply
-        if (weiBal == 0 || totalSupply == 0) { return baseCost; }
-        // If totalTokenSupply is greater than weiBal this will fail
-        uint256 price = weiBal.div(totalSupply);     // added SafeMath
+        if (totalSupply == 0) { return baseCost; }
+        uint256 price = weiBal.div(totalSupply);
         return price < baseCost
             ? baseCost
             : price;
