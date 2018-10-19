@@ -41,7 +41,7 @@ contract('Distribute Token', function (accounts) {
     it('not owner is unable to freeze the contract', async () => {
       // take stock of variables
       let owner = await dt.getOwner(spoofedDT.address)
-      let freezeBefore = await dt.freeze(spoofedDT.address)
+      let freezeBefore = await dt.getFreeze(spoofedDT.address)
 
       // checks
       assert.equal(freezeBefore, false, 'at initialization freeze should be false')
@@ -58,7 +58,63 @@ contract('Distribute Token', function (accounts) {
       assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('owner is able to freeze the contract', async ())
+    it('owner is able to freeze the contract', async () => {
+      // take stock of variables
+      let owner = await dt.getOwner(spoofedDT.address)
+      let freezeBefore = await dt.getFreeze(spoofedDT.address)
+
+      // checks
+      assert.equal(freezeBefore, false, 'after failed freeze attempt, freeze should be false')
+
+      // owner freezes the contract
+      await spoofedDT.freezeContract({from: owner})
+
+      // take stock of variables
+      let freezeAfter = await dt.getFreeze(spoofedDT.address)
+
+      // checks
+      assert.equal(freezeAfter, true, 'owner should be able to freeze the contract')
+    })
+  })
+
+  describe('unfreezeContract', () => {
+    it('not owner is unable to freeze the contract', async () => {
+      // take stock of variables
+      let owner = await dt.getOwner(spoofedDT.address)
+      let freezeBefore = await dt.getFreeze(spoofedDT.address)
+
+      // checks
+      assert.equal(freezeBefore, true, 'after freezing, freeze should be true')
+      assert.notEqual(owner, anyAddress, 'ensure attempted unfreezer is not the owner')
+
+      // not owner attempts to freeze the contract
+      errorThrown = false
+      try {
+        await spoofedDT.unfreezeContract({from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('owner is able to unfreeze the contract', async () => {
+      // take stock of variables
+      let owner = await dt.getOwner(spoofedDT.address)
+      let freezeBefore = await dt.getFreeze(spoofedDT.address)
+
+      // checks
+      assert.equal(freezeBefore, true, 'after failed unfreeze attempt, freeze should be true')
+
+      // owner freezes the contract
+      await spoofedDT.unfreezeContract({from: owner})
+
+      // take stock of variables
+      let freezeAfter = await dt.getFreeze(spoofedDT.address)
+
+      // checks
+      assert.equal(freezeAfter, false, 'owner should be able to unfreeze the contract')
+    })
   })
 
   it('correctly returns baseCost as the current price when no tokens are available', async () => {

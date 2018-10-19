@@ -571,7 +571,7 @@ module.exports = function projectHelper (accounts) {
 
   obj.dt.getRRAddress = async function (_dtAddress) {
     let DT = await DistributeToken.at(_dtAddress)
-    let rrAddress = await DT.tokenRegistryAddress()
+    let rrAddress = await DT.reputationRegistryAddress()
     return rrAddress
   }
 
