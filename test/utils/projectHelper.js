@@ -130,37 +130,53 @@ module.exports = function projectHelper (accounts) {
   }
 
   // mint & register functions
-  obj.utils.mint = async function (_DT, _user, _numTokens) {
-    if (_numTokens === undefined) { // use default minting amount
-      _numTokens = obj.minting.tokensToMint
-    }
+  obj.utils.mint = async function (details) {
+    let _DT, _numTokens
+    details.DT === undefined
+      ? _DT = obj.contracts.DT
+      : _DT = details.DT
+    details.numTokens === undefined
+      ? _numTokens = obj.minting.tokensToMint
+      : _numTokens = details.numTokens
     let mintingCost = await obj.utils.get({fn: _DT.weiRequired, params: _numTokens, bn: false})
-    await _DT.mint(_numTokens, {from: _user, value: mintingCost})
+    await _DT.mint(_numTokens, {from: details.user, value: mintingCost})
   }
 
-  obj.utils.mintIfNecessary = async function (_DT, _user, _numTokens) {
-    if (_numTokens === undefined) { // use default minting amount
-      _numTokens = obj.minting.tokensToMint
-    }
-    let bal = await obj.utils.get({fn: _DT.balances, params: _user, bn: false})
+  obj.utils.mintIfNecessary = async function (details) {
+    let _DT, _numTokens
+    details.DT === undefined
+      ? _DT = obj.contracts.DT
+      : _DT = details.DT
+    details.numTokens === undefined
+      ? _numTokens = obj.minting.tokensToMint
+      : _numTokens = details.numTokens
+    let bal = await obj.utils.get({fn: _DT.balances, params: details.user, bn: false})
     if (_numTokens > bal) {
-      obj.utils.mint(_DT, _user, _numTokens - bal)
+      obj.utils.mint({DT: _DT, user: details.user, numTokens: _numTokens - bal})
     }
   }
 
-  obj.utils.sell = async function (_DT, _user, _numTokens) {
-    if (_numTokens === undefined) { // use default minting amount
-      _numTokens = await obj.utils.get({fn: _DT.balances, params: _user, bn: false})
-    }
-    await _DT.sell(_numTokens, {from: _user})
+  obj.utils.sell = async function (details) {
+    let _numTokens, _DT
+    details.DT === undefined
+      ? _DT = obj.contracts.DT
+      : _DT = details.DT
+    details.numTokens === undefined
+      ? _numTokens = await obj.utils.get({fn: _DT.balances, params: details.user, bn: false})
+      : _numTokens = details.numTokens
+    await _DT.sell(_numTokens, {from: details.user})
   }
 
-  obj.utils.register = async function (_RR, _user) {
-    let user = await obj.utils.get({fn: _RR.users, params: _user})
+  obj.utils.register = async function (details) {
+    let _RR
+    details.RR === undefined
+      ? _RR = obj.contracts.RR
+      : _RR = details.RR
+    let user = await obj.utils.get({fn: _RR.users, params: details.user})
     let bal = user[0]
     let registered = user[1]
     if (bal.toNumber() === 0 && !registered) {
-      await _RR.register({from: _user})
+      await _RR.register({from: details.user})
     }
   }
 
@@ -199,15 +215,6 @@ module.exports = function projectHelper (accounts) {
     return details.bn === false
       ? returnVal.toNumber()
       : returnVal
-  }
-
-  obj.task.getWeiReward = async function (_projAddr, _index, _unadulterated) {
-    let taskAddr = await obj.project.getTasks(_projAddr, _index)
-    let TASK = await Task.at(taskAddr)
-    let weiReward = await TASK.weiReward()
-    return _unadulterated
-      ? weiReward
-      : weiReward.toNumber()
   }
 
   obj.utils.getRepHolders = async function () {
@@ -649,19 +656,25 @@ module.exports = function projectHelper (accounts) {
 
   // project return functions
   // return project (address) proposed by token holder
-  obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash) {
+  obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash, _DT, _TR) {
+    if (_DT === undefined) {
+      _DT = obj.contracts.DT
+    }
+    if (_TR === undefined) {
+      _TR = obj.contracts.TR
+    }
     // seed the system with tokens and rep
-    await obj.utils.mintIfNecessary(obj.user.tokenProposer)
-    await obj.utils.register(obj.user.repProposer)
+    await obj.utils.mintIfNecessary(_DT, obj.user.tokenProposer)
+    await obj.utils.register(_DT, obj.user.repProposer)
 
     // ensure proposer has enough tokens
-    let weiBal = await obj.utils.getWeiPoolBal()
-    let totalTokens = await obj.utils.getTotalTokens()
+    let weiBal = await obj.utils.get({fn: _DT.weiBal, bn: false})
+    let totalTokens = await obj.utils.get({fn: _DT.totalSupply, bn: false})
     let proposerTokenCost = Math.floor((_cost / weiBal / obj.project.proposeProportion) * totalTokens)
     await obj.utils.mintIfNecessary(obj.user.tokenProposer, proposerTokenCost)
 
     // propose project
-    let tx = await obj.contracts.TR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.tokenProposer})
+    let tx = await _TR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.tokenProposer})
     return tx.receipt.logs[0].address // return project address
   }
 

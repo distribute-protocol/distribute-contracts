@@ -42,8 +42,8 @@ contract('Propose Projects', function (accounts) {
     DT = projObj.contracts.DT
 
     // fund users with tokens and reputation
-    await utils.mintIfNecessary(DT, tokenProposer, tokensToMint) // mint 10000 tokens for token proposer
-    await utils.register(RR, repProposer) // register 10000 reputation for rep proposer
+    await utils.mintIfNecessary({user: tokenProposer}) // mint 10000 tokens for token proposer
+    await utils.register({user: repProposer}) // register 10000 reputation for rep proposer
 
     // take stock of variables after minting and registering
     ttBal = await utils.get({fn: DT.balances, params: tokenProposer, bn: false})
