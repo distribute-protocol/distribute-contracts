@@ -130,37 +130,37 @@ module.exports = function projectHelper (accounts) {
   }
 
   // mint & register functions
-  obj.utils.mint = async function (_user, _numTokens, _altDT) {
+  obj.utils.mint = async function (_DT, _user, _numTokens) {
     if (_numTokens === undefined) { // use default minting amount
       _numTokens = obj.minting.tokensToMint
     }
-    let mintingCost = await obj.contracts.DT.weiRequired(_numTokens, {from: _user})
-    await obj.contracts.DT.mint(_numTokens, {from: _user, value: mintingCost})
+    let mintingCost = await obj.utils.get({fn: _DT.weiRequired, params: _numTokens, bn: false})
+    await _DT.mint(_numTokens, {from: _user, value: mintingCost})
   }
 
-  obj.utils.mintIfNecessary = async function (_user, _numTokens) {
+  obj.utils.mintIfNecessary = async function (_DT, _user, _numTokens) {
     if (_numTokens === undefined) { // use default minting amount
       _numTokens = obj.minting.tokensToMint
     }
-    let bal = await obj.utils.getTokenBalance(_user)
+    let bal = await obj.utils.get({fn: _DT.balances, params: _user, bn: false})
     if (_numTokens > bal) {
-      obj.utils.mint(_user, _numTokens - bal)
+      obj.utils.mint(_DT, _user, _numTokens - bal)
     }
   }
 
-  obj.utils.sell = async function (_user, _numTokens) {
+  obj.utils.sell = async function (_DT, _user, _numTokens) {
     if (_numTokens === undefined) { // use default minting amount
-      _numTokens = await obj.utils.getTokenBalance(_user)
+      _numTokens = await obj.utils.get({fn: _DT.balances, params: _user, bn: false})
     }
-    await obj.contracts.DT.sell(_numTokens, {from: _user})
+    await _DT.sell(_numTokens, {from: _user})
   }
 
-  obj.utils.register = async function (_user) {
-    let user = await obj.contracts.RR.users(_user)
+  obj.utils.register = async function (_RR, _user) {
+    let user = await obj.utils.get({fn: _RR.users, params: _user})
     let bal = user[0]
     let registered = user[1]
     if (bal.toNumber() === 0 && !registered) {
-      await obj.contracts.RR.register({from: _user})
+      await _RR.register({from: _user})
     }
   }
 
@@ -170,7 +170,10 @@ module.exports = function projectHelper (accounts) {
     details.params !== undefined
       ? returnVal = await details.fn(details.params)
       : returnVal = await details.fn()
-    return details.bn !== undefined && details.bn === true
+    if (details.position !== undefined) {
+      returnVal = returnVal[details.position]
+    }
+    return details.bn === false
       ? returnVal.toNumber()
       : returnVal
   }
@@ -180,7 +183,7 @@ module.exports = function projectHelper (accounts) {
     details.params !== undefined
       ? returnVal = await Project.at(details.projAddr)[details.fn](details.params)
       : returnVal = await Project.at(details.projAddr)[details.fn]()
-    return details.bn !== undefined && details.bn === true
+    return details.bn === false
       ? returnVal.toNumber()
       : returnVal
   }
@@ -193,7 +196,7 @@ module.exports = function projectHelper (accounts) {
     details.params !== undefined
       ? returnVal = await Task.at(taskAddr)[details.fn](details.params)
       : returnVal = await Task.at(taskAddr)[details.fn]()
-    return details.bn !== undefined && details.bn === true
+    return details.bn === false
       ? returnVal.toNumber()
       : returnVal
   }
