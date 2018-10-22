@@ -67,7 +67,8 @@ contract('Proposed State', function (accounts) {
 
       let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
       let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let weiBalBefore = await project.getWeiBal(projAddrT1)
+      let weiBalBefore = await project.get({fn: 'weiBal', projAddr: projAddrT1})
+      // let weiBalBefore = await project.getWeiBal(projAddrT1)
       let weiPoolBefore = await utils.getWeiPoolBal(true)
       let tsStakedTokensBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT1)
       let stakedTokensBefore = await project.getStakedTokens(projAddrT1)

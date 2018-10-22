@@ -14,7 +14,7 @@ contract('Distribute Token', function (accounts) {
   let spoofedDT
   let {tokenProposer} = projObj.user
   let {spoofedTRAddress, spoofedRRAddress, spoofedPRAddress, anyAddress, weiToReturn} = projObj.spoofed
-  let {tokensToMint, tokensToBurn} = projObj.minting
+  let {tokensToMint} = projObj.minting
   let {utils, dt} = projObj
 
   // local test variables
@@ -30,7 +30,7 @@ contract('Distribute Token', function (accounts) {
 
   describe('constructor', () => {
     it('correctly sets state variables', async () => {
-      let trAddress = await dt.getTRAddress(spoofedDT.address)
+      let trAddress = await utils.get({fn: spoofedDT.tokenRegistryAddress})
       let rrAddress = await dt.getRRAddress(spoofedDT.address)
       assert.equal(trAddress, spoofedTRAddress, 'incorrect token registry address stored by constructor')
       assert.equal(rrAddress, spoofedRRAddress, 'incorrect reputation registry address stored by constructor')
@@ -284,6 +284,23 @@ contract('Distribute Token', function (accounts) {
   })
 
   describe('mint', () => {
+    it('cannot be called if contract is frozen', async () => {
+      // freeze contract
+      let owner = await dt.getOwner(spoofedDT.address)
+      await spoofedDT.freezeContract({from: owner})
+
+      errorThrown = false
+      try {
+        await utils.getWeiRequired(0)
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
+
+      // unfreeze contract
+      await spoofedDT.unfreezeContract({from: owner})
+    })
   })
 
   describe('burn', () => {

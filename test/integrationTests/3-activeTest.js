@@ -282,7 +282,8 @@ contract('Active State', function (accounts) {
 
       let workerRepBalBefore = await utils.getRepBalance(worker1)
       let taskWeightingBefore = await task.getWeighting(projAddrT, indexNoReclaimPre)
-      let taskWeiRewardBefore = await task.getWeiReward(projAddrT, indexNoReclaimPre)
+      // let taskWeiRewardBefore = await task.getWeiReward(projAddrT, indexNoReclaimPre)
+      let taskWeiRewardBefore = await task.get({projAddr: projAddrT, index: indexNoReclaimPre, fn: 'weiReward'})
       let taskRepRewardBefore = await task.getRepReward(projAddrT, indexNoReclaimPre)
       let taskCompleteBefore = await task.getComplete(projAddrT, indexNoReclaimPre)
       let taskClaimerBefore = await task.getClaimer(projAddrT, indexNoReclaimPre)

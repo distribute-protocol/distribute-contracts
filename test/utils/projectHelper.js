@@ -115,8 +115,8 @@ module.exports = function projectHelper (accounts) {
   obj.voting.voteTrueMore = 3
   obj.voting.voteFalseMore = 4
 
-  // contracts
-  obj.contracts.setContracts = async () => {
+  // set up contracts
+  obj.contracts.setContracts = async function () {
     obj.contracts.TR = await TokenRegistry.deployed()
     obj.contracts.RR = await ReputationRegistry.deployed()
     obj.contracts.DT = await DistributeToken.deployed()
@@ -129,13 +129,23 @@ module.exports = function projectHelper (accounts) {
     obj.contracts[type] = contract
   }
 
-  // helper functions
-  obj.utils.mint = async function (_user, _numTokens) {
+  // mint & register functions
+  obj.utils.mint = async function (_user, _numTokens, _altDT) {
     if (_numTokens === undefined) { // use default minting amount
       _numTokens = obj.minting.tokensToMint
     }
     let mintingCost = await obj.contracts.DT.weiRequired(_numTokens, {from: _user})
     await obj.contracts.DT.mint(_numTokens, {from: _user, value: mintingCost})
+  }
+
+  obj.utils.mintIfNecessary = async function (_user, _numTokens) {
+    if (_numTokens === undefined) { // use default minting amount
+      _numTokens = obj.minting.tokensToMint
+    }
+    let bal = await obj.utils.getTokenBalance(_user)
+    if (_numTokens > bal) {
+      obj.utils.mint(_user, _numTokens - bal)
+    }
   }
 
   obj.utils.sell = async function (_user, _numTokens) {
@@ -154,18 +164,50 @@ module.exports = function projectHelper (accounts) {
     }
   }
 
-  obj.utils.mintIfNecessary = async function (_user, _numTokens) {
-    if (_numTokens === undefined) { // use default minting amount
-      _numTokens = obj.minting.tokensToMint
-    }
-    let bal = await obj.utils.getTokenBalance(_user)
-    if (_numTokens > bal) {
-      obj.utils.mint(_user, _numTokens - bal)
-    }
+  // general getters
+  obj.utils.get = async function (details) {
+    let returnVal
+    details.params !== undefined
+      ? returnVal = await details.fn(details.params)
+      : returnVal = await details.fn()
+    return details.bn !== undefined && details.bn === true
+      ? returnVal.toNumber()
+      : returnVal
   }
 
-  // getters
-  obj.utils.getRepHolders = async () => {
+  obj.project.get = async function (details) {
+    let returnVal
+    details.params !== undefined
+      ? returnVal = await Project.at(details.projAddr)[details.fn](details.params)
+      : returnVal = await Project.at(details.projAddr)[details.fn]()
+    return details.bn !== undefined && details.bn === true
+      ? returnVal.toNumber()
+      : returnVal
+  }
+
+  obj.task.get = async function (details) {
+    let taskAddr, returnVal
+    details.taskAddr !== undefined
+      ? taskAddr = details.taskAddr
+      : taskAddr = await obj.project.get({projAddr: details.projAddr, fn: 'tasks', params: details.index})
+    details.params !== undefined
+      ? returnVal = await Task.at(taskAddr)[details.fn](details.params)
+      : returnVal = await Task.at(taskAddr)[details.fn]()
+    return details.bn !== undefined && details.bn === true
+      ? returnVal.toNumber()
+      : returnVal
+  }
+
+  obj.task.getWeiReward = async function (_projAddr, _index, _unadulterated) {
+    let taskAddr = await obj.project.getTasks(_projAddr, _index)
+    let TASK = await Task.at(taskAddr)
+    let weiReward = await TASK.weiReward()
+    return _unadulterated
+      ? weiReward
+      : weiReward.toNumber()
+  }
+
+  obj.utils.getRepHolders = async function () {
     let repHolders = await obj.contracts.RR.totalUsers()
     return repHolders.toNumber()
   }
@@ -182,7 +224,7 @@ module.exports = function projectHelper (accounts) {
       : bal[0].toNumber()
   }
 
-  obj.utils.getTotalTokens = async (_altDT) => {
+  obj.utils.getTotalTokens = async function (_altDT) {
     let total
     if (_altDT !== undefined) {
       let DT = await DistributeToken.at(_altDT)
@@ -193,7 +235,7 @@ module.exports = function projectHelper (accounts) {
     return total.toNumber()
   }
 
-  obj.utils.getTotalRep = async () => {
+  obj.utils.getTotalRep = async function () {
     let total = await obj.contracts.RR.totalSupply()
     return total.toNumber()
   }
@@ -218,7 +260,7 @@ module.exports = function projectHelper (accounts) {
       : currPrice.toNumber()
   }
 
-  obj.utils.calculateCurrentPrice = async () => { // will fail if totalSupply == 0
+  obj.utils.calculateCurrentPrice = async function () { // will fail if totalSupply == 0
     let baseCost = await obj.utils.getBaseCost()
     let weiBal = await obj.utils.getWeiPoolBal()
     let totalSupply = await obj.utils.getTotalTokens()
@@ -229,7 +271,7 @@ module.exports = function projectHelper (accounts) {
     return price
   }
 
-  obj.utils.getBaseCost = async () => {
+  obj.utils.getBaseCost = async function () {
     let baseCost = await obj.contracts.DT.baseCost()
     return baseCost.toNumber()
   }
@@ -257,7 +299,7 @@ module.exports = function projectHelper (accounts) {
     return weiReq.div(1000)
   }
 
-  obj.utils.getBurnPrice = async function (_tokens) {
+  obj.utils.calculateBurnPrice = async function (_tokens) {
     let currPrice = await obj.utils.getCurrentPrice(true) // get big number version
     return currPrice.times(_tokens).toNumber()
   }
@@ -298,7 +340,7 @@ module.exports = function projectHelper (accounts) {
       : weiBal.toNumber()
   }
 
-  obj.project.getWeiRemaining = async function (_projAddr) {
+  obj.project.calculateWeiRemaining = async function (_projAddr) {
     let weiCost = await obj.project.getWeiCost(_projAddr, true)
     let weiBal = await obj.project.getWeiBal(_projAddr, true)
     return weiCost.minus(weiBal)
@@ -307,11 +349,9 @@ module.exports = function projectHelper (accounts) {
   obj.project.getRepCost = async function (_projAddr, _unadulterated) {
     let PROJ = await Project.at(_projAddr)
     let repCost = await PROJ.reputationCost()
-    if (_unadulterated) {
-      return repCost
-    } else {
-      return repCost.toNumber()
-    }
+    return _unadulterated
+      ? repCost
+      : repCost.toNumber()
   }
 
   obj.project.getValidationReward = async function (_projAddr, _unadulterated) {
@@ -331,7 +371,7 @@ module.exports = function projectHelper (accounts) {
   }
 
   obj.project.calculateRequiredTokens = async function (_projAddr) {
-    let weiRemaining = await obj.project.getWeiRemaining(_projAddr)
+    let weiRemaining = await obj.project.calculateWeiRemaining(_projAddr)
     let currentPrice = await obj.utils.getCurrentPrice(true)
     let requiredTokens = Math.ceil(weiRemaining.div(currentPrice))
     return requiredTokens
