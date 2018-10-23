@@ -14,13 +14,13 @@ contract('Voting State', function (accounts) {
 
   // get project helper variables
   let TR, RR, PR, PLCR
-  let {user, project, utils, returnProject, task, validating, voting} = projObj
+  let {user, project, variables, utils, returnProject, task} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {worker1, worker2, notWorker} = user
   let {validator1, validator2, notValidator} = user
   let {repYesVoter, repNoVoter, tokenYesVoter, tokenNoVoter, notVoter, cheekyYesVoter, cheekyNoVoter} = user
-  let {projectCost, stakingPeriod, ipfsHash} = project
-  let {voteAmount, voteAmountMore} = voting
+  let {projectCost, stakingPeriod, ipfsHash} = variables
+  let {voteAmount, voteAmountMore} = variables
 
   // set up task details & hashing functions
   let {taskSet3} = taskDetails
@@ -39,7 +39,7 @@ contract('Voting State', function (accounts) {
   let valFalseMore2 = 5
   let valNeither = 6
 
-  let valType = [validating.valTrueOnly, validating.valFalseOnly, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valNeither]
+  let valType = [variables.valTrueOnly, variables.valFalseOnly, variables.valTrueMore, variables.valFalseMore, variables.valTrueMore, variables.valFalseMore, variables.valNeither]
 
   let secretSalt = 10000
   let voteYes = 1

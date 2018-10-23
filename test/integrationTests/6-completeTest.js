@@ -11,14 +11,14 @@ contract('Complete State', function (accounts) {
 
   // get project helper variables
   let TR, RR, PLCR
-  let {user, project, task, utils, returnProject, validating, voting} = projObj
+  let {user, project, task, variables, utils, returnProject} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {tokenStaker1, tokenStaker2, repStaker1, repStaker2, notStaker} = user
   let {worker1, worker2, notWorker} = user
   let {validator1, validator2, validator3, notValidator} = user
   let {tokenYesVoter, tokenNoVoter, repYesVoter, repNoVoter, notVoter} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
-  let {voteAmount, voteAmountMore} = voting
+  let {voteAmount, voteAmountMore} = variables
 
   // set up task details & hashing functions
   let {taskSet4} = taskDetails
@@ -33,8 +33,8 @@ contract('Complete State', function (accounts) {
   let valTrueMoreVoteTrueMore = 1
   let valFalseMoreVoteTrueMore = 2
 
-  let valType = [validating.valTrueOnly, validating.valTrueMore, validating.valFalseMore]
-  let voteType = [voting.voteNeither, voting.voteTrueMore, voting.voteTrueMore]
+  let valType = [variables.valTrueOnly, variables.valTrueMore, variables.valFalseMore]
+  let voteType = [variables.voteNeither, variables.voteTrueMore, variables.voteTrueMore]
 
   let fastForwards = 17 // testrpc is 17 weeks ahead at this point
 

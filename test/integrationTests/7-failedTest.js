@@ -11,14 +11,14 @@ contract('Failed State', function (accounts) {
 
   // get project helper variables
   let TR, RR, PLCR
-  let {user, project, task, utils, returnProject, validating, voting} = projObj
+  let {user, project, task, variables, utils, returnProject, validating, voting} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {tokenStaker1, tokenStaker2, repStaker1, repStaker2, notStaker} = user
   let {worker1, worker2, notWorker} = user
   let {validator1, validator2, validator3, notValidator} = user
   let {tokenYesVoter, tokenNoVoter, repYesVoter, repNoVoter, notVoter} = user
   let {projectCost, stakingPeriod, ipfsHash} = project
-  let {voteAmount, voteAmountMore} = voting
+  let {voteAmount, voteAmountMore} = variables
 
   // set up task details & hashing functions
   let {taskSet5} = taskDetails
@@ -41,8 +41,8 @@ contract('Failed State', function (accounts) {
   let valFalseMoreVoteFalseMore = 9
   let valNeither = 10
 
-  let valType = [validating.valTrueOnly, validating.valFalseOnly, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valNeither]
-  let voteType = [voting.voteNeither, voting.voteNeither, voting.voteTrueOnly, voting.voteTrueOnly, voting.voteFalseOnly, voting.voteFalseOnly, voting.voteTrueMore, voting.voteTrueMore, voting.voteFalseMore, voting.voteFalseMore, voting.voteNeither]
+  let valType = [variables.valTrueOnly, variables.valFalseOnly, variables.valTrueMore, variables.valFalseMore, variables.valTrueMore, variables.valFalseMore, variables.valTrueMore, variables.valFalseMore, variables.valTrueMore, variables.valFalseMore, variables.valNeither]
+  let voteType = [variables.voteNeither, variables.voteNeither, variables.voteTrueOnly, variables.voteTrueOnly, variables.voteFalseOnly, variables.voteFalseOnly, variables.voteTrueMore, variables.voteTrueMore, variables.voteFalseMore, variables.voteFalseMore, variables.voteNeither]
 
   let fastForwards = 23 // testrpc is 23 weeks ahead at this point
 

@@ -16,10 +16,9 @@ contract('Propose Projects', function (accounts) {
   // get project helper variables
   let DT, TR, RR, PR
   let {tokenProposer, repProposer, notProposer} = projObj.user
-  let {tokensToMint} = projObj.minting
-  let {registeredRep} = projObj.reputation
+  let {tokensToMint, registeredRep} = projObj.variables
+  let {stakingPeriod, expiredStakingPeriod, projectCost, ipfsHash, incorrectIpfsHash, proposeProportion} = projObj.variables
   let {utils} = projObj
-  let {stakingPeriod, expiredStakingPeriod, projectCost, ipfsHash, incorrectIpfsHash, proposeProportion} = projObj.project
 
   // local test variables
   let projAddr

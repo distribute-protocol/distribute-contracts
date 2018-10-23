@@ -13,9 +13,9 @@ contract('Distribute Token', function (accounts) {
   // get project helper variables
   let spoofedDT
   let {tokenProposer} = projObj.user
-  let {spoofedTRAddress, spoofedRRAddress, spoofedPRAddress, anyAddress, weiToReturn} = projObj.spoofed
-  let {tokensToMint} = projObj.minting
-  let {utils, dt} = projObj
+  let {spoofedTRAddress, spoofedRRAddress, spoofedPRAddress, anyAddress} = projObj.spoofed
+  let {tokensToMint, weiToReturn} = projObj.variables
+  let {utils} = projObj
 
   // local test variables
   let errorThrown
@@ -31,7 +31,7 @@ contract('Distribute Token', function (accounts) {
   describe('constructor', () => {
     it('correctly sets state variables', async () => {
       let trAddress = await utils.get({fn: spoofedDT.tokenRegistryAddress})
-      let rrAddress = await dt.getRRAddress(spoofedDT.address)
+      let rrAddress = await utils.get({fn: spoofedDT.reputationRegistryAddress})
       assert.equal(trAddress, spoofedTRAddress, 'incorrect token registry address stored by constructor')
       assert.equal(rrAddress, spoofedRRAddress, 'incorrect reputation registry address stored by constructor')
     })
@@ -40,8 +40,8 @@ contract('Distribute Token', function (accounts) {
   describe('freezeContract', () => {
     it('not owner is unable to freeze the contract', async () => {
       // take stock of variables
-      let owner = await dt.getOwner(spoofedDT.address)
-      let freezeBefore = await dt.getFreeze(spoofedDT.address)
+      let owner = await utils.get({fn: spoofedDT.owner})
+      let freezeBefore = await utils.get({fn: spoofedDT.freeze})
 
       // checks
       assert.equal(freezeBefore, false, 'at initialization freeze should be false')
@@ -60,8 +60,8 @@ contract('Distribute Token', function (accounts) {
 
     it('owner is able to freeze the contract', async () => {
       // take stock of variables
-      let owner = await dt.getOwner(spoofedDT.address)
-      let freezeBefore = await dt.getFreeze(spoofedDT.address)
+      let owner = await utils.get({fn: spoofedDT.owner})
+      let freezeBefore = await utils.get({fn: spoofedDT.freeze})
 
       // checks
       assert.equal(freezeBefore, false, 'after failed freeze attempt, freeze should be false')
@@ -70,7 +70,7 @@ contract('Distribute Token', function (accounts) {
       await spoofedDT.freezeContract({from: owner})
 
       // take stock of variables
-      let freezeAfter = await dt.getFreeze(spoofedDT.address)
+      let freezeAfter = await utils.get({fn: spoofedDT.freeze})
 
       // checks
       assert.equal(freezeAfter, true, 'owner should be able to freeze the contract')
@@ -80,8 +80,8 @@ contract('Distribute Token', function (accounts) {
   describe('unfreezeContract', () => {
     it('not owner is unable to freeze the contract', async () => {
       // take stock of variables
-      let owner = await dt.getOwner(spoofedDT.address)
-      let freezeBefore = await dt.getFreeze(spoofedDT.address)
+      let owner = await utils.get({fn: spoofedDT.owner})
+      let freezeBefore = await utils.get({fn: spoofedDT.freeze})
 
       // checks
       assert.equal(freezeBefore, true, 'after freezing, freeze should be true')
@@ -100,8 +100,8 @@ contract('Distribute Token', function (accounts) {
 
     it('owner is able to unfreeze the contract', async () => {
       // take stock of variables
-      let owner = await dt.getOwner(spoofedDT.address)
-      let freezeBefore = await dt.getFreeze(spoofedDT.address)
+      let owner = await utils.get({fn: spoofedDT.owner})
+      let freezeBefore = await utils.get({fn: spoofedDT.freeze})
 
       // checks
       assert.equal(freezeBefore, true, 'after failed unfreeze attempt, freeze should be true')
@@ -110,7 +110,7 @@ contract('Distribute Token', function (accounts) {
       await spoofedDT.unfreezeContract({from: owner})
 
       // take stock of variables
-      let freezeAfter = await dt.getFreeze(spoofedDT.address)
+      let freezeAfter = await utils.get({fn: spoofedDT.freeze})
 
       // checks
       assert.equal(freezeAfter, false, 'owner should be able to unfreeze the contract')
@@ -120,8 +120,8 @@ contract('Distribute Token', function (accounts) {
   describe('updateTokenRegistry', () => {
     it('not owner is unable to update the token registry', async () => {
       // take stock of variables
-      let owner = await dt.getOwner(spoofedDT.address)
-      let trAddress = await dt.getTRAddress(spoofedDT.address)
+      let owner = await utils.get({fn: spoofedDT.owner})
+      let trAddress = await utils.get({fn: spoofedDT.tokenRegistryAddress})
 
       // checks
       assert.equal(trAddress, spoofedTRAddress, 'before updating, token registry address should be trAddress')
@@ -140,8 +140,8 @@ contract('Distribute Token', function (accounts) {
 
     it('owner is able to update the token registry', async () => {
       // take stock of variables
-      let owner = await dt.getOwner(spoofedDT.address)
-      let trAddressBefore = await dt.getTRAddress(spoofedDT.address)
+      let owner = await utils.get({fn: spoofedDT.owner})
+      let trAddressBefore = await utils.get({fn: spoofedDT.tokenRegistryAddress})
 
       // checks
       assert.equal(trAddressBefore, spoofedTRAddress, 'before updating, token registry address should be trAddress')
@@ -150,7 +150,7 @@ contract('Distribute Token', function (accounts) {
       await spoofedDT.updateTokenRegistry(anyAddress, {from: owner})
 
       // take stock of variables
-      let trAddressAfter = await dt.getTRAddress(spoofedDT.address)
+      let trAddressAfter = await utils.get({fn: spoofedDT.tokenRegistryAddress})
 
       // checks
       assert.equal(trAddressAfter, anyAddress, 'after updating, token registry address should be anyAddress')
@@ -163,8 +163,8 @@ contract('Distribute Token', function (accounts) {
   describe('updateReputationRegistry', () => {
     it('not owner is unable to update the reputation registry', async () => {
       // take stock of variables
-      let owner = await dt.getOwner(spoofedDT.address)
-      let rrAddress = await dt.getRRAddress(spoofedDT.address)
+      let owner = await utils.get({fn: spoofedDT.owner})
+      let rrAddress = await utils.get({fn: spoofedDT.reputationRegistryAddress})
 
       // checks
       assert.equal(rrAddress, spoofedRRAddress, 'before updating, reputation registry address should be trAddress')
@@ -183,8 +183,8 @@ contract('Distribute Token', function (accounts) {
 
     it('owner is able to update the reputation registry', async () => {
       // take stock of variables
-      let owner = await dt.getOwner(spoofedDT.address)
-      let rrAddressBefore = await dt.getRRAddress(spoofedDT.address)
+      let owner = await utils.get({fn: spoofedDT.owner})
+      let rrAddressBefore = await utils.get({fn: spoofedDT.reputationRegistryAddress})
 
       // checks
       assert.equal(rrAddressBefore, spoofedRRAddress, 'before updating, reputation registry address should be trAddress')
@@ -193,23 +193,23 @@ contract('Distribute Token', function (accounts) {
       await spoofedDT.updateReputationRegistry(anyAddress, {from: owner})
 
       // take stock of variables
-      let rrAddressAfter = await dt.getRRAddress(spoofedDT.address)
+      let rrAddressAfter = await utils.get({fn: spoofedDT.reputationRegistryAddress})
 
       // checks
       assert.equal(rrAddressAfter, anyAddress, 'after updating, reputation registry address should be anyAddress')
 
       // put it back
-      await spoofedDT.updateTokenRegistry(spoofedRRAddress, {from: owner})
+      await spoofedDT.updateReputationRegistry(spoofedRRAddress, {from: owner})
     })
   })
 
   describe('currentPrice', () => {
     it('returns baseCost as the current price when there are no tokens or wei', async () => {
       // take stock of variables
-      let totalSupply = await utils.getTotalTokens()
-      let weiBal = await utils.getWeiPoolBal()
-      let currentPrice = await utils.getCurrentPrice()
-      let baseCost = await utils.getBaseCost()
+      let totalSupply = await utils.get({fn: spoofedDT.totalSupply, bn: false})
+      let weiBal = await utils.get({fn: spoofedDT.weiBal, bn: false})
+      let currentPrice = await utils.get({fn: spoofedDT.currentPrice, bn: false})
+      let baseCost = await utils.get({fn: spoofedDT.baseCost, bn: false})
 
       // checks
       assert.equal(totalSupply, 0, 'total supply should be 0')
@@ -219,12 +219,12 @@ contract('Distribute Token', function (accounts) {
 
     it('returns weiBal / totalSupply as the current price when there are tokens and wei', async () => {
       // mint some tokens
-      await utils.mint(tokenProposer, tokensToMint)
+      await utils.mint({user: tokenProposer, numTokens: tokensToMint, DT: spoofedDT})
 
       // take stock of variables
-      let totalSupply = await utils.getTotalTokens()
-      let weiBal = await utils.getWeiPoolBal()
-      let currentPrice = await utils.getCurrentPrice()
+      let totalSupply = await utils.get({fn: spoofedDT.totalSupply, bn: false})
+      let weiBal = await utils.get({fn: spoofedDT.weiBal, bn: false})
+      let currentPrice = await utils.get({fn: spoofedDT.currentPrice, bn: false})
 
       // interim calculations
       let price = Math.floor(weiBal / totalSupply)
@@ -235,15 +235,15 @@ contract('Distribute Token', function (accounts) {
       assert.equal(currentPrice, price, 'currPrice not returned correctly')
 
       // burn the tokens
-      await utils.sell(tokenProposer, tokensToMint)
+      await utils.sell({user: tokenProposer, numTokens: tokensToMint, DT: spoofedDT})
     })
   })
 
   describe('weiRequired', () => {
     it('returns the correct wei required for positive token value', async () => {
       // take stock of variables
-      let weiRequiredFunc = await spoofedDT.weiRequired(tokensToMint)
-      let weiRequiredCalc = await utils.calculateWeiRequired(tokensToMint, spoofedDT.address)
+      let weiRequiredFunc = await utils.get({fn: spoofedDT.weiRequired, params: tokensToMint})
+      let weiRequiredCalc = await utils.calculateWeiRequired({tokens: tokensToMint, DT: spoofedDT})
 
       // checks
       assert.equal(weiRequiredFunc, weiRequiredCalc, 'weiRequired not returned correctly')
@@ -252,7 +252,7 @@ contract('Distribute Token', function (accounts) {
     it('reverts for non-positive token value', async () => {
       errorThrown = false
       try {
-        await utils.getWeiRequired(-1 * tokensToMint)
+        await utils.get({fn: spoofedDT.weiRequired, params: -1 * tokensToMint})
       } catch (e) {
         assert.match(e.message, /VM Exception while processing transaction: invalid opcode/, 'throws an error')
         errorThrown = true
@@ -261,7 +261,7 @@ contract('Distribute Token', function (accounts) {
 
       errorThrown = false
       try {
-        await utils.getWeiRequired(0)
+        await utils.get({fn: spoofedDT.weiRequired, params: 0})
       } catch (e) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
@@ -286,12 +286,12 @@ contract('Distribute Token', function (accounts) {
   describe('mint', () => {
     it('cannot be called if contract is frozen', async () => {
       // freeze contract
-      let owner = await dt.getOwner(spoofedDT.address)
+      let owner = await utils.get({fn: spoofedDT.owner})
       await spoofedDT.freezeContract({from: owner})
 
       errorThrown = false
       try {
-        await utils.getWeiRequired(0)
+        await utils.mint({DT: spoofedDT, numTokens: tokensToMint, user: anyAddress})
       } catch (e) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
