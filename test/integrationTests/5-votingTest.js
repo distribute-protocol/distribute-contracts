@@ -179,7 +179,7 @@ contract('Voting State', function (accounts) {
       let projWeiBalVariableBefore = await project.get({projAddr: projAddrT, fn: 'weiBal', bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
       let repRewardBefore = await task.get({projAddr: projAddrT, index: index, fn: 'reputationReward', bn: false})
-      let weiRewardBefore = await task.get({projAddr: projAddrR, index: index, fn: 'weiReward', bn: false})
+      let weiRewardBefore = await task.get({projAddr: projAddrT, index: index, fn: 'weiReward', bn: false})
 
       // reward worker
       await RR.rewardTask(projAddrT, index, {from: worker1})
