@@ -461,7 +461,7 @@ module.exports = function projectHelper (accounts) {
   // }
 
   obj.project.calculateWeiVal = async function (details) {
-    let weiCost = await obj.project.get({projAddr: details.projAddr, fn: 'proposedWeiCost'})
+    let weiCost = await obj.project.get({projAddr: details.projAddr, fn: 'proposedCost'})
     let weiVal = Math.floor((weiCost.times(details.weighting).div(100)))
     return weiVal
   }
