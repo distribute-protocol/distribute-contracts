@@ -621,23 +621,26 @@ module.exports = function projectHelper (accounts) {
 
   // project return functions
   // return project (address) proposed by token holder
-  obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash, _DT, _TR) {
+  obj.returnProject.proposed_T = async function (_cost, _stakingPeriod, _ipfsHash, _DT, _TR, _RR) {
     if (_DT === undefined) {
       _DT = obj.contracts.DT
     }
     if (_TR === undefined) {
       _TR = obj.contracts.TR
     }
+    if (_RR === undefined) {
+      _RR = obj.contracts.RR
+    }
 
     // seed the system with tokens and rep
-    await obj.utils.mintIfNecessary({user: obj.user.tokenProposer})
-    await obj.utils.register({user: obj.user.repProposer})
+    await obj.utils.mintIfNecessary({user: obj.user.tokenProposer, DT: _DT})
+    await obj.utils.register({user: obj.user.repProposer, RR: _RR})
 
     // ensure proposer has enough tokens
     let weiBal = await obj.utils.get({fn: _DT.weiBal, bn: false})
     let totalTokens = await obj.utils.get({fn: _DT.totalSupply, bn: false})
     let proposerTokenCost = Math.floor((_cost / weiBal / obj.variables.proposeProportion) * totalTokens)
-    await obj.utils.mintIfNecessary({user: obj.user.tokenProposer, numTokens: proposerTokenCost})
+    await obj.utils.mintIfNecessary({user: obj.user.tokenProposer, numTokens: proposerTokenCost, DT: _DT})
 
     // propose project
     let tx = await _TR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.tokenProposer})
@@ -653,8 +656,8 @@ module.exports = function projectHelper (accounts) {
       _RR = obj.contracts.RR
     }
     // seed the system with tokens and rep
-    await obj.utils.mintIfNecessary({user: obj.user.tokenProposer})
-    await obj.utils.register({user: obj.user.repProposer})
+    await obj.utils.mintIfNecessary({user: obj.user.tokenProposer, DT: _DT})
+    await obj.utils.register({user: obj.user.repProposer, RR: _RR})
 
     // propose project
     let tx = await _RR.proposeProject(_cost, _stakingPeriod, _ipfsHash, {from: obj.user.repProposer})
@@ -681,7 +684,7 @@ module.exports = function projectHelper (accounts) {
 
     for (let i = 0; i < _numSets; i++) {
       // get proposed projects
-      let temp1 = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash, _DT, _TR)
+      let temp1 = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash, _DT, _TR, _RR)
       let temp2 = await obj.returnProject.proposed_R(_cost, _stakingPeriod, _ipfsHash, _DT, _RR)
       projArray.push([temp1, temp2])
     }
@@ -689,7 +692,7 @@ module.exports = function projectHelper (accounts) {
     for (let i = 0; i < _numSets; i++) {
       for (let j = 0; j < 2; j++) {
         // get tokens required to fully stake the project and stake half of them
-        await obj.utils.mintIfNecessary({user: obj.user.tokenStaker1, numTokens: 5000})
+        await obj.utils.mintIfNecessary({user: obj.user.tokenStaker1, numTokens: 5000, DT: _DT})
 
         let requiredTokens = await obj.project.calculateRequiredTokens({DT: _DT, projAddr: projArray[i][j]})
         let tokensToStake = Math.floor(requiredTokens / 2)
@@ -702,7 +705,7 @@ module.exports = function projectHelper (accounts) {
         await _TR.stakeTokens(projArray[i][j], tokensToStake, {from: obj.user.tokenStaker1})
 
         // register reputation stakers
-        await obj.utils.register({user: obj.user.repStaker1})
+        await obj.utils.register({user: obj.user.repStaker1, RR: _RR})
 
         // get reputation required to fully stake the project and stake half of it
         let requiredRep = await obj.project.get({projAddr: projArray[i][j], fn: 'reputationCost'})
@@ -748,9 +751,8 @@ module.exports = function projectHelper (accounts) {
     if (_PR === undefined) {
       _PR = obj.contracts.PR
     }
-
     // get proposed project
-    let _projAddr = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash, _DT, _TR)
+    let _projAddr = await obj.returnProject.proposed_T(_cost, _stakingPeriod, _ipfsHash, _DT, _TR, _RR)
 
     // stake tokens & reputation
     await obj.returnProject.stakeTokens(_projAddr, _DT, _TR)
@@ -782,7 +784,7 @@ module.exports = function projectHelper (accounts) {
 
     // stake tokens & reputation
     await obj.returnProject.stakeTokens(_projAddr, _DT, _TR)
-    await obj.returnProject.stakeReputation(_projAddr, _DT, _RR)
+    await obj.returnProject.stakeReputation(_projAddr, _RR)
 
     // check that the project is in state 2
     let state = await obj.project.get({projAddr: _projAddr, fn: 'state'})
@@ -864,8 +866,8 @@ module.exports = function projectHelper (accounts) {
     let projArray = await obj.returnProject.active(_cost, _stakingPeriod, _ipfsHash, 1, _tasks, _DT, _TR, _RR, _PR)
 
     // register workers
-    await obj.utils.register({user: obj.user.worker1})
-    await obj.utils.register({user: obj.user.worker2})
+    await obj.utils.register({user: obj.user.worker1, RR: _RR})
+    await obj.utils.register({user: obj.user.worker2, RR: _RR})
 
     // make worker array
     let workerArray = [obj.user.worker1, obj.user.worker2]
@@ -931,9 +933,9 @@ module.exports = function projectHelper (accounts) {
       let validationEntryFee1 = parseInt(await obj.task.get({projAddr: projArray[0][0], index: j, fn: 'validationEntryFee'}))
       let validationEntryFee2 = parseInt(await obj.task.get({projAddr: projArray[0][1], index: j, fn: 'validationEntryFee'}))
       let totalValEntryFee = validationEntryFee1 + validationEntryFee2
-      await obj.utils.mintIfNecessary({user: obj.user.validator1, numTokens: totalValEntryFee})
-      await obj.utils.mintIfNecessary({user: obj.user.validator2, numTokens: totalValEntryFee})
-      await obj.utils.mintIfNecessary({user: obj.user.validator3, numTokens: totalValEntryFee})
+      await obj.utils.mintIfNecessary({user: obj.user.validator1, numTokens: totalValEntryFee, DT: _DT})
+      await obj.utils.mintIfNecessary({user: obj.user.validator2, numTokens: totalValEntryFee, DT: _DT})
+      await obj.utils.mintIfNecessary({user: obj.user.validator3, numTokens: totalValEntryFee, DT: _DT})
 
       if (_valType[j] === obj.variables.valTrueOnly) {
         await _TR.validateTask(projArray[0][0], j, true, {from: obj.user.validator1})
@@ -1003,10 +1005,10 @@ module.exports = function projectHelper (accounts) {
     // vote commit as necessary
     for (let j = 0; j < _numComplete; j++) {
       let secretHash
-      await obj.utils.mintIfNecessary({user: obj.user.tokenYesVoter})
-      await obj.utils.mintIfNecessary({user: obj.user.tokenNoVoter})
-      await obj.utils.register({user: obj.user.repYesVoter})
-      await obj.utils.register({user: obj.user.repNoVoter})
+      await obj.utils.mintIfNecessary({user: obj.user.tokenYesVoter, DT: _DT})
+      await obj.utils.mintIfNecessary({user: obj.user.tokenNoVoter, DT: _DT})
+      await obj.utils.register({user: obj.user.repYesVoter, RR: _RR})
+      await obj.utils.register({user: obj.user.repNoVoter, RR: _RR})
 
       if (_voteType[j] === obj.variables.voteNeither) {
         // do nothing
@@ -1089,9 +1091,16 @@ module.exports = function projectHelper (accounts) {
 
   // fully stake project with tokens via two stakers
   obj.returnProject.stakeTokens = async function (_projAddr, _DT, _TR) {
+    if (_DT === undefined) {
+      _DT = obj.contracts.DT
+    }
+    if (_TR === undefined) {
+      _TR = obj.contracts.TR
+    }
+
     // fuel token stakers
-    await obj.utils.mintIfNecessary({user: obj.user.tokenStaker1, numTokens: 5000})
-    await obj.utils.mintIfNecessary({user: obj.user.tokenStaker2, numTokens: 5000})
+    await obj.utils.mintIfNecessary({user: obj.user.tokenStaker1, numTokens: 5000, DT: _DT})
+    await obj.utils.mintIfNecessary({user: obj.user.tokenStaker2, numTokens: 5000, DT: _DT})
 
     // get tokens required to fully stake the project and stake half of them
     let requiredTokens = await obj.project.calculateRequiredTokens({DT: _DT, projAddr: _projAddr})
@@ -1117,12 +1126,16 @@ module.exports = function projectHelper (accounts) {
 
   // fully stake project with reputation via two stakers
   obj.returnProject.stakeReputation = async function (_projAddr, _RR) {
+    if (_RR === undefined) {
+      _RR = obj.contracts.RR
+    }
+
     // register reputation stakers
-    await obj.utils.register({user: obj.user.repStaker1})
-    await obj.utils.register({user: obj.user.repStaker2})
+    await obj.utils.register({user: obj.user.repStaker1, RR: _RR})
+    await obj.utils.register({user: obj.user.repStaker2, RR: _RR})
 
     // get reputation required to fully stake the project and stake half of it
-    let requiredRep = await obj.project.get({projAddr: _projAddr, fn: 'reputationCost'})
+    let requiredRep = await obj.project.get({projAddr: _projAddr, fn: 'reputationCost', bn: false})
 
     let repToStake = Math.floor(requiredRep / 2)
 
@@ -1134,7 +1147,7 @@ module.exports = function projectHelper (accounts) {
     await _RR.stakeReputation(_projAddr, repToStake, {from: obj.user.repStaker1})
 
     // get reputation left to fully stake the project and stake it
-    requiredRep = await obj.project.get({projAddr: _projAddr, fn: 'reputationCost'}) + 1
+    requiredRep = await obj.project.get({projAddr: _projAddr, fn: 'reputationCost', bn: false}) + 1
 
     // assert that repStaker2 has the reputation to stake
     rsBal = await obj.utils.get({fn: _RR.users, params: obj.user.repStaker2, bn: false, position: 0})

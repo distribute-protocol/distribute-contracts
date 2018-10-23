@@ -13,12 +13,12 @@ contract('Staked State', function (accounts) {
 
   // get project helper variables
   let PR, TR, RR, DT
-  let {user, project, returnProject, utils} = projObj
+  let {user, project, variables, returnProject, utils} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {tokenStaker1, tokenStaker2} = user
   let {repStaker1} = user
   let {notStaker, notProject} = user
-  let {projectCost, stakingPeriod, ipfsHash} = project
+  let {projectCost, stakingPeriod, ipfsHash} = variables
 
   // set up task details & hashing functions
   let {taskSet1, taskSet2} = taskDetails
@@ -75,21 +75,21 @@ contract('Staked State', function (accounts) {
     // these two tests must come after not proposer refund proposer tests
     it('refund proposer can be called on TR complete project', async () => {
       // take stock of variables
-      let proposedWeiCost = await project.getProposedWeiCost(projAddrT1)
+      let proposedWeiCost = await project.get({projAddr: projAddrT1, fn: 'proposedCost', bn: false})
 
-      let tpBalBefore = await utils.getTokenBalance(tokenProposer)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let weiPoolBefore = await utils.getWeiPoolBal()
-      let proposerStakeBefore = await project.getProposerStake(projAddrT1)
+      let tpBalBefore = await utils.get({fn: DT.balances, params: tokenProposer, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let weiPoolBefore = await utils.get({fn: DT.weiBal, bn: false})
+      let proposerStakeBefore = await project.get({projAddr: projAddrT1, fn: 'proposerStake', bn: false})
 
       // call refund proposer
       await TR.refundProposer(projAddrT1, {from: tokenProposer})
 
       // take stock of variables
-      let tpBalAfter = await utils.getTokenBalance(tokenProposer)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let weiPoolAfter = await utils.getWeiPoolBal()
-      let proposerStakeAfter = await project.getProposerStake(projAddrT1)
+      let tpBalAfter = await utils.get({fn: DT.balances, params: tokenProposer, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let weiPoolAfter = await utils.get({fn: DT.weiBal, bn: false})
+      let proposerStakeAfter = await project.get({projAddr: projAddrT1, fn: 'proposerStake'})
 
       // checks
       assert.equal(tpBalBefore + proposerStakeBefore, tpBalAfter, 'tokenProposer balance updated incorrectly')
@@ -100,19 +100,19 @@ contract('Staked State', function (accounts) {
 
     it('refund proposer can be called on RR complete project', async () => {
       // take stock of variables
-      let proposedWeiCost = await project.getProposedWeiCost(projAddrR1)
+      let proposedWeiCost = await project.get({projAddr: projAddrR1, fn: 'proposedCost', bn: false})
 
-      let rpBalBefore = await utils.getRepBalance(repProposer)
-      let weiPoolBefore = await utils.getWeiPoolBal()
-      let proposerStakeBefore = await project.getProposerStake(projAddrR1)
+      let rpBalBefore = await utils.get({fn: RR.users, params: repProposer, bn: false, position: 0})
+      let weiPoolBefore = await utils.get({fn: DT.weiBal, bn: false})
+      let proposerStakeBefore = await project.get({projAddr: projAddrR1, fn: 'proposerStake', bn: false})
 
       // call refund proposer
       await RR.refundProposer(projAddrR1, {from: repProposer})
 
       // take stock of variables
-      let rpBalAfter = await utils.getRepBalance(repProposer)
-      let weiPoolAfter = await utils.getWeiPoolBal()
-      let proposerStakeAfter = await project.getProposerStake(projAddrR1)
+      let rpBalAfter = await utils.get({fn: RR.users, params: repProposer, bn: false, position: 0})
+      let weiPoolAfter = await utils.get({fn: DT.weiBal, bn: false})
+      let proposerStakeAfter = await project.get({projAddr: projAddrR1, fn: 'proposerStake'})
 
       // checks
       assert.equal(rpBalBefore + proposerStakeBefore, rpBalAfter, 'tokenProposer balance updated incorrectly')
@@ -178,8 +178,8 @@ contract('Staked State', function (accounts) {
       // take stock of variables before
       let topTaskHashBefore = await PR.stakedProjects(projAddrT1)
 
-      let repStaker1Weighting = project.calculateWeightOfAddress(repStaker1, projAddrT1)
-      let tokenStaker1Weighting = project.calculateWeightOfAddress(tokenStaker1, projAddrT1)
+      let repStaker1Weighting = project.calculateWeightOfAddress({user: repStaker1, projAddr: projAddrT1})
+      let tokenStaker1Weighting = project.calculateWeightOfAddress({user: tokenStaker1, projAddr: projAddrT1})
 
       // token staker submits
       await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet2), {from: repStaker1})
@@ -199,8 +199,8 @@ contract('Staked State', function (accounts) {
       // take stock of variables before
       let topTaskHashBefore = await PR.stakedProjects(projAddrT1)
 
-      let repStaker1Weighting = project.calculateWeightOfAddress(repStaker1, projAddrT1)
-      let tokenStaker1Weighting = project.calculateWeightOfAddress(tokenStaker1, projAddrT1)
+      let repStaker1Weighting = project.calculateWeightOfAddress({user: repStaker1, projAddr: projAddrT1})
+      let tokenStaker1Weighting = project.calculateWeightOfAddress({user: tokenStaker1, projAddr: projAddrT1})
 
       // token staker submits
       await PR.addTaskHash(projAddrT1, hashTasksArray(taskSet1), {from: repStaker1})
@@ -222,8 +222,8 @@ contract('Staked State', function (accounts) {
       // take stock of variables before
       let topTaskHashBefore = await PR.stakedProjects(projAddrR1)
 
-      let repStaker1Weighting = project.calculateWeightOfAddress(repStaker1, projAddrR1)
-      let tokenStaker1Weighting = project.calculateWeightOfAddress(tokenStaker1, projAddrR1)
+      let repStaker1Weighting = project.calculateWeightOfAddress({user: repStaker1, projAddr: projAddrR1})
+      let tokenStaker1Weighting = project.calculateWeightOfAddress({user: tokenStaker1, projAddr: projAddrR1})
 
       // token staker submits
       await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet2), {from: repStaker1})
@@ -244,8 +244,8 @@ contract('Staked State', function (accounts) {
       // take stock of variables before
       let topTaskHashBefore = await PR.stakedProjects(projAddrR1)
 
-      let repStaker1Weighting = project.calculateWeightOfAddress(repStaker1, projAddrR1)
-      let tokenStaker1Weighting = project.calculateWeightOfAddress(tokenStaker1, projAddrR1)
+      let repStaker1Weighting = project.calculateWeightOfAddress({user: repStaker1, projAddr: projAddrR1})
+      let tokenStaker1Weighting = project.calculateWeightOfAddress({user: tokenStaker1, projAddr: projAddrR1})
 
       // token staker submits
       await PR.addTaskHash(projAddrR1, hashTasksArray(taskSet1), {from: repStaker1})
@@ -371,13 +371,13 @@ contract('Staked State', function (accounts) {
 
     it('TR staked project becomes active if task hashes are submitted by the staking deadline', async () => {
       // take stock of variables
-      let stateBefore = await project.getState(projAddrT1)
+      let stateBefore = await project.get({projAddr: projAddrT1, fn: 'state'})
 
       // call checkActive
       await PR.checkActive(projAddrT1)
 
       // take stock of variables
-      let stateAfter = await project.getState(projAddrT1)
+      let stateAfter = await project.get({projAddr: projAddrT1, fn: 'state'})
 
       // checks
       assert.equal(stateBefore, 2, 'state before should be 2')
@@ -386,13 +386,13 @@ contract('Staked State', function (accounts) {
 
     it('RR staked project becomes active if task hashes are submitted by the staking deadline', async () => {
       // take stock of variables
-      let stateBefore = await project.getState(projAddrR1)
+      let stateBefore = await project.get({projAddr: projAddrR1, fn: 'state'})
 
       // call checkActive
       await PR.checkActive(projAddrR1)
 
       // take stock of variables
-      let stateAfter = await project.getState(projAddrR1)
+      let stateAfter = await project.get({projAddr: projAddrR1, fn: 'state'})
 
       // checks
       assert.equal(stateBefore, 2, 'state before should be 2')
@@ -403,31 +403,31 @@ contract('Staked State', function (accounts) {
   describe('time out state changes', () => {
     it('TR staked project becomes failed if no task hashes are submitted by the staking deadline', async () => {
       // take stock of variables
-      let stateBefore = await project.getState(projAddrT2)
-      let tokensStakedBefore = await project.getStakedTokens(projAddrT2)
-      let repStakedBefore = await project.getStakedRep(projAddrT2)
-      let totalTokensBefore = await utils.getTotalTokens()
-      let totalRepBefore = await utils.getTotalRep()
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let projWeiBalVariableBefore = await project.getWeiBal(projAddrT2)
+      let stateBefore = await project.get({projAddr: projAddrT2, fn: 'state'})
+      let tokensStakedBefore = await project.get({projAddr: projAddrT2, fn: 'tokensStaked', bn: false})
+      let repStakedBefore = await project.get({projAddr: projAddrT2, fn: 'reputationStaked', bn: false})
+      let totalTokensBefore = await utils.get({fn: DT.totalSupply, bn: false})
+      let totalRepBefore = await utils.get({fn: RR.totalSupply, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projWeiBalVariableBefore = await project.get({projAddr: projAddrT2, fn: 'weiBal', bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT2))
       let DTWeiBalBefore = parseInt(await web3.eth.getBalance(DT.address))
-      let totalWeiPoolBefore = await utils.getWeiPoolBal()
+      let totalWeiPoolBefore = await utils.get({fn: DT.weiBal, bn: false})
 
       // call checkActive
       await PR.checkActive(projAddrT2)
 
       // take stock of variables
-      let stateAfter = await project.getState(projAddrT2)
-      let tokensStakedAfter = await project.getStakedTokens(projAddrT2)
-      let repStakedAfter = await project.getStakedRep(projAddrT2)
-      let totalTokensAfter = await utils.getTotalTokens()
-      let totalRepAfter = await utils.getTotalRep()
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let projWeiBalVariableAfter = await project.getWeiBal(projAddrT2)
+      let stateAfter = await project.get({projAddr: projAddrT2, fn: 'state'})
+      let tokensStakedAfter = await project.get({projAddr: projAddrT2, fn: 'tokensStaked', bn: false})
+      let repStakedAfter = await project.get({projAddr: projAddrT2, fn: 'reputationStaked', bn: false})
+      let totalTokensAfter = await utils.get({fn: DT.totalSupply, bn: false})
+      let totalRepAfter = await utils.get({fn: RR.totalSupply, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projWeiBalVariableAfter = await project.get({projAddr: projAddrT2, fn: 'weiBal', bn: false})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT2))
       let DTWeiBalAfter = parseInt(await web3.eth.getBalance(DT.address))
-      let totalWeiPoolAfter = await utils.getWeiPoolBal()
+      let totalWeiPoolAfter = await utils.get({fn: DT.weiBal, bn: false})
 
       // checks
       assert.equal(stateBefore, 2, 'state before should be 2')
@@ -445,31 +445,31 @@ contract('Staked State', function (accounts) {
 
     it('RR staked project becomes failed if no task hashes are submitted by the staking deadline', async () => {
       // take stock of variables
-      let stateBefore = await project.getState(projAddrR2)
-      let tokensStakedBefore = await project.getStakedTokens(projAddrR2)
-      let repStakedBefore = await project.getStakedRep(projAddrR2)
-      let totalTokensBefore = await utils.getTotalTokens()
-      let totalRepBefore = await utils.getTotalRep()
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let projWeiBalVariableBefore = await project.getWeiBal(projAddrR2)
+      let stateBefore = await project.get({projAddr: projAddrR2, fn: 'state'})
+      let tokensStakedBefore = await project.get({projAddr: projAddrR2, fn: 'tokensStaked', bn: false})
+      let repStakedBefore = await project.get({projAddr: projAddrR2, fn: 'reputationStaked', bn: false})
+      let totalTokensBefore = await utils.get({fn: DT.totalSupply, bn: false})
+      let totalRepBefore = await utils.get({fn: RR.totalSupply, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projWeiBalVariableBefore = await project.get({projAddr: projAddrR2, fn: 'weiBal', bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR2))
       let DTWeiBalBefore = parseInt(await web3.eth.getBalance(DT.address))
-      let totalWeiPoolBefore = await utils.getWeiPoolBal()
+      let totalWeiPoolBefore = await utils.get({fn: DT.weiBal, bn: false})
 
       // call checkActive
       await PR.checkActive(projAddrR2)
 
       // take stock of variables
-      let stateAfter = await project.getState(projAddrR2)
-      let tokensStakedAfter = await project.getStakedTokens(projAddrR2)
-      let repStakedAfter = await project.getStakedRep(projAddrR2)
-      let totalTokensAfter = await utils.getTotalTokens()
-      let totalRepAfter = await utils.getTotalRep()
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let projWeiBalVariableAfter = await project.getWeiBal(projAddrR2)
+      let stateAfter = await project.get({projAddr: projAddrR2, fn: 'state'})
+      let tokensStakedAfter = await project.get({projAddr: projAddrR2, fn: 'tokensStaked', bn: false})
+      let repStakedAfter = await project.get({projAddr: projAddrR2, fn: 'reputationStaked', bn: false})
+      let totalTokensAfter = await utils.get({fn: DT.totalSupply, bn: false})
+      let totalRepAfter = await utils.get({fn: RR.totalSupply, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projWeiBalVariableAfter = await project.get({projAddr: projAddrR2, fn: 'weiBal', bn: false})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR2))
       let DTWeiBalAfter = parseInt(await web3.eth.getBalance(DT.address))
-      let totalWeiPoolAfter = await utils.getWeiPoolBal()
+      let totalWeiPoolAfter = await utils.get({fn: DT.weiBal, bn: false})
 
       // checks
       assert.equal(stateBefore, 2, 'state before should be 2')
