@@ -603,21 +603,21 @@ module.exports = function projectHelper (accounts) {
   //   return poll.toNumber()
   // }
   //
-  // obj.task.getPollMap = async function (_projAddr, _index) {
-  //   let pollNonce = await obj.task.getPollNonce(_projAddr, _index)
-  //   let pollMap = await obj.contracts.PLCR.pollMap(pollNonce)
-  //   let pollMapNumber = []
-  //   for (let i = 0; i < pollMap.length; i++) {
-  //     pollMapNumber[i] = pollMap[i].toNumber()
-  //   }
-  //   return pollMapNumber
-  // }
-  //
-  // obj.task.getPollEnded = async function (_projAddr, _index) {
-  //   let pollId = await obj.task.getPollNonce(_projAddr, _index)
-  //   let pollEnded = await obj.contracts.PLCR.pollEnded(pollId)
-  //   return pollEnded
-  // }
+  obj.task.getPollMap = async function (_projAddr, _index) {
+    let pollNonce = await obj.task.get({projAddr: _projAddr, index: _index, fn: 'pollId', bn: false})
+    let pollMap = await obj.contracts.PLCR.pollMap(pollNonce)
+    let pollMapNumber = []
+    for (let i = 0; i < pollMap.length; i++) {
+      pollMapNumber[i] = pollMap[i].toNumber()
+    }
+    return pollMapNumber
+  }
+
+  obj.task.getPollEnded = async function (_projAddr, _index) {
+    let pollId = await obj.task.get({projAddr: _projAddr, index: _index, fn: 'pollId', bn: false})
+    let pollEnded = await obj.contracts.PLCR.pollEnded(pollId)
+    return pollEnded
+  }
 
   // project return functions
   // return project (address) proposed by token holder
