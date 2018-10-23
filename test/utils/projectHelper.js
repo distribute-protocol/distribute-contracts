@@ -53,7 +53,6 @@ module.exports = function projectHelper (accounts) {
 
   obj.user.notProject = accounts[1]
 
-  // these will only be used in unit tests
   obj.spoofed.spoofedDTAddress = accounts[1]
   obj.spoofed.spoofedTRAddress = accounts[2]
   obj.spoofed.spoofedRRAddress = accounts[3]
@@ -63,14 +62,11 @@ module.exports = function projectHelper (accounts) {
 
   obj.variables.weiToReturn = 10000000000000000000
 
-  // mutable minting details for each user
   obj.variables.tokensToMint = 10000
   obj.variables.tokensToBurn = 100
 
-  // immutable registration reputation amount
   obj.variables.registeredRep = 10000
 
-  // mutable project details
   obj.variables.now = Math.floor(new Date().getTime() / 1000) // in seconds
   obj.variables.stakingPeriod = obj.variables.now + 604800 // one week from now
 
@@ -79,22 +75,18 @@ module.exports = function projectHelper (accounts) {
   obj.variables.ipfsHash = 'ipfsHashlalalalalalalalalalalalalalalalalalala' // length === 46
   obj.variables.incorrectIpfsHash = 'whyiseveryspokeleadawhiteman' // length != 46
 
-  // immutable project details
   obj.variables.proposerTypeToken = 1
   obj.variables.proposerTypeRep = 2
 
-  // immutable project details
   obj.variables.proposeProportion = 20
   obj.variables.proposeReward = 100
 
-  // validating details
   obj.variables.valTrueOnly = 0
   obj.variables.valFalseOnly = 1
   obj.variables.valTrueMore = 2
   obj.variables.valFalseMore = 3
   obj.variables.valNeither = 4
 
-  // voting details
   obj.variables.secretSalt = 10000
   obj.variables.voteYes = 1
   obj.variables.voteNo = 0
@@ -211,68 +203,7 @@ module.exports = function projectHelper (accounts) {
       : returnVal
   }
 
-  // obj.utils.getRepHolders = async function () {
-  //   let repHolders = await obj.contracts.RR.totalUsers()
-  //   return repHolders.toNumber()
-  // }
-  //
-  // obj.utils.getTokenBalance = async function (_user) {
-  //   let bal = await obj.contracts.DT.balances(_user)
-  //   return bal.toNumber()
-  // }
-  //
-  // obj.utils.getRepBalance = async function (_user, _unadulterated) {
-  //   let bal = await obj.contracts.RR.users(_user)
-  //   return _unadulterated
-  //     ? bal[0]
-  //     : bal[0].toNumber()
-  // }
-  //
-  // obj.utils.getTotalTokens = async function (_altDT) {
-  //   let total
-  //   if (_altDT !== undefined) {
-  //     let DT = await DistributeToken.at(_altDT)
-  //     total = await DT.totalSupply()
-  //   } else {
-  //     total = await obj.contracts.DT.totalSupply()
-  //   }
-  //   return total.toNumber()
-  // }
-  //
-  // obj.utils.getTotalRep = async function () {
-  //   let total = await obj.contracts.RR.totalSupply()
-  //   return total.toNumber()
-  // }
-  //
-  // obj.utils.getWeiPoolBal = async function (_unadulterated) {
-  //   let weiBal = await obj.contracts.DT.weiBal()
-  //   return _unadulterated
-  //     ? weiBal
-  //     : weiBal.toNumber()
-  // }
-  //
-  // obj.utils.getCurrentPrice = async function (_unadulterated, _altDT) {
-  //   let currPrice
-  //   if (_altDT !== undefined) {
-  //     let DT = await DistributeToken.at(_altDT)
-  //     currPrice = DT.currentPrice()
-  //   } else {
-  //     currPrice = await obj.contracts.DT.currentPrice()
-  //   }
-  //   return _unadulterated
-  //     ? currPrice
-  //     : currPrice.toNumber()
-  // }
-  // obj.utils.getBaseCost = async function () {
-  //   let baseCost = await obj.contracts.DT.baseCost()
-  //   return baseCost.toNumber()
-  // }
-  //
-  // obj.utils.getWeiRequired = async function (_tokens) {
-  //   let weiReq = await obj.contracts.DT.weiRequired(_tokens)
-  //   return weiReq.toNumber()
-  // }
-
+  // calculation functions
   obj.utils.calculateWeiRequired = async function (details) {
     let _DT
     details.DT === undefined
@@ -299,71 +230,11 @@ module.exports = function projectHelper (accounts) {
     return currPrice.times(details.tokens).toNumber()
   }
 
-  // obj.utils.getRewardWeighting = async function (_index) {
-  //   return (_index >= 0 && _index < 5)
-  //     ? obj.contracts.PR.validationRewardWeightings(_index)
-  //     : null
-  // }
-  //
-  // obj.project.getState = async function (_projAddr) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let state = await PROJ.state()
-  //   return state.toNumber()
-  // }
-  //
-  // obj.project.getWeiCost = async function (_projAddr, _unadulterated) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let weiCost = await PROJ.weiCost()
-  //   return _unadulterated
-  //     ? weiCost
-  //     : weiCost.toNumber()
-  // }
-  //
-  // obj.project.getProposedWeiCost = async function (_projAddr, _unadulterated) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let weiCost = await PROJ.proposedCost()
-  //   return _unadulterated
-  //     ? weiCost
-  //     : weiCost.toNumber()
-  // }
-  //
-  // obj.project.getWeiBal = async function (_projAddr, _unadulterated) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let weiBal = await PROJ.weiBal()
-  //   return _unadulterated
-  //     ? weiBal
-  //     : weiBal.toNumber()
-  // }
-
   obj.project.calculateWeiRemaining = async function (details) {
     let weiCost = await obj.project.get({projAddr: details.projAddr, fn: 'weiCost'})
     let weiBal = await obj.project.get({projAddr: details.projAddr, fn: 'weiBal'})
     return weiCost.minus(weiBal)
   }
-
-  // obj.project.getRepCost = async function (_projAddr, _unadulterated) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let repCost = await PROJ.reputationCost()
-  //   return _unadulterated
-  //     ? repCost
-  //     : repCost.toNumber()
-  // }
-  //
-  // obj.project.getValidationReward = async function (_projAddr, _unadulterated) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let validationReward = await PROJ.validationReward()
-  //   return _unadulterated
-  //     ? validationReward
-  //     : validationReward.toNumber()
-  // }
-  //
-  // obj.project.getOriginatorReward = async function (_projAddr, _unadulterated) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let originatorReward = await PROJ.originatorReward()
-  //   return _unadulterated
-  //     ? originatorReward
-  //     : originatorReward.toNumber()
-  // }
 
   obj.project.calculateRequiredTokens = async function (details) {
     let _DT
@@ -375,66 +246,6 @@ module.exports = function projectHelper (accounts) {
     let requiredTokens = Math.ceil(weiRemaining.div(currPrice))
     return parseInt(requiredTokens)
   }
-
-  // obj.project.getRequiredReputation = async function (_projAddr) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let requiredRep = await PROJ.reputationCost()
-  //   return requiredRep.toNumber()
-  // }
-  //
-  // obj.project.getStakedTokens = async function (_projAddr) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let stakedTokens = await PROJ.tokensStaked()
-  //   return stakedTokens.toNumber()
-  // }
-  //
-  // obj.project.getStakedRep = async function (_projAddr) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let stakedRep = await PROJ.reputationStaked()
-  //   return stakedRep.toNumber()
-  // }
-  //
-  // obj.project.getUserStakedTokens = async function (_user, _projAddr) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let stakedTokens = await PROJ.tokenBalances(_user)
-  //   return stakedTokens.toNumber()
-  // }
-  //
-  // obj.project.getUserStakedRep = async function (_user, _projAddr) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let stakedRep = await PROJ.reputationBalances(_user)
-  //   return stakedRep.toNumber()
-  // }
-  //
-  // obj.project.getProposerStake = async function (_projAddr) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let propStake = await PROJ.proposerStake()
-  //   return propStake.toNumber()
-  // }
-  //
-  // obj.project.getProposerType = async function (_projAddr) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let propStake = await PROJ.proposerType()
-  //   return propStake.toNumber()
-  // }
-  //
-  // obj.project.getNextDeadline = async function (_projAddr) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let nextDeadline = await PROJ.nextDeadline()
-  //   return nextDeadline.toNumber()
-  // }
-  //
-  // obj.project.getStakedStatePeriod = async function (_projAddr) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let stakedStatePeriod = await PROJ.stakedStatePeriod()
-  //   return stakedStatePeriod.toNumber()
-  // }
-  //
-  // obj.project.getProposer = async function (_projAddr) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let proposer = await PROJ.proposer()
-  //   return proposer
-  // }
 
   obj.project.calculateWeightOfAddress = async function (details) {
     let stakedRep = await obj.project.get({projAddr: details.projAddr, fn: 'reputationBalances', params: details.user})
@@ -448,18 +259,6 @@ module.exports = function projectHelper (accounts) {
     return Math.floor((repWeighting + tokenWeighting) / 2)
   }
 
-  // obj.project.getTasks = async function (_projAddr, _index) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let task = await PROJ.tasks(_index)
-  //   return task
-  // }
-  //
-  // obj.project.getHashListSubmitted = async function (_projAddr) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let submitted = await PROJ.hashListSubmitted()
-  //   return submitted
-  // }
-
   obj.project.calculateWeiVal = async function (details) {
     let weiCost = await obj.project.get({projAddr: details.projAddr, fn: 'proposedCost'})
     let weiVal = Math.floor((weiCost.times(details.weighting).div(100)))
@@ -472,137 +271,7 @@ module.exports = function projectHelper (accounts) {
     return repVal
   }
 
-  // obj.project.getTaskCount = async function (_projAddr) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let taskCount = await PROJ.getTaskCount()
-  //   return taskCount
-  // }
-  //
-  // obj.project.getPassAmount = async function (_projAddr) {
-  //   let PROJ = await Project.at(_projAddr)
-  //   let passAmount = await PROJ.passAmount()
-  //   return passAmount
-  // }
-  //
-  // obj.task.getTaskHash = async function (_taskAddr) {
-  //   let TASK = await Task.at(_taskAddr)
-  //   let taskHash = await TASK.taskHash()
-  //   return taskHash
-  // }
-  //
-  // obj.task.getPRAddress = async function (_taskAddr) {
-  //   let TASK = await Task.at(_taskAddr)
-  //   let PRAddress = await TASK.projectRegistryAddress()
-  //   return PRAddress
-  // }
-  //
-  // obj.task.getTRAddress = async function (_taskAddr) {
-  //   let TASK = await Task.at(_taskAddr)
-  //   let TRAddress = await TASK.tokenRegistryAddress()
-  //   return TRAddress
-  // }
-  //
-  // obj.task.getRRAddress = async function (_taskAddr) {
-  //   let TASK = await Task.at(_taskAddr)
-  //   let RRAddress = await TASK.reputationRegistryAddress()
-  //   return RRAddress
-  // }
-  //
-  // obj.task.getWeighting = async function (_projAddr, _index, _unadulterated) {
-  //   let taskAddr = await obj.project.getTasks(_projAddr, _index)
-  //   let TASK = await Task.at(taskAddr)
-  //   let weighting = await TASK.weighting()
-  //   return _unadulterated
-  //     ? weighting
-  //     : weighting.toNumber()
-  // }
-  //
-  // obj.task.getWeiReward = async function (_projAddr, _index, _unadulterated) {
-  //   let taskAddr = await obj.project.getTasks(_projAddr, _index)
-  //   let TASK = await Task.at(taskAddr)
-  //   let weiReward = await TASK.weiReward()
-  //   return _unadulterated
-  //     ? weiReward
-  //     : weiReward.toNumber()
-  // }
-  //
-  // obj.task.getRepReward = async function (_projAddr, _index) {
-  //   let taskAddr = await obj.project.getTasks(_projAddr, _index)
-  //   let TASK = await Task.at(taskAddr)
-  //   let repReward = await TASK.reputationReward()
-  //   return repReward.toNumber()
-  // }
-  //
-  // obj.task.getComplete = async function (_projAddr, _index) {
-  //   let taskAddr = await obj.project.getTasks(_projAddr, _index)
-  //   let TASK = await Task.at(taskAddr)
-  //   let complete = await TASK.complete()
-  //   return complete
-  // }
-  //
-  // obj.task.getClaimer = async function (_projAddr, _index) {
-  //   let taskAddr = await obj.project.getTasks(_projAddr, _index)
-  //   let TASK = await Task.at(taskAddr)
-  //   let claimer = await TASK.claimer()
-  //   return claimer
-  // }
-  //
-  // obj.task.getValidationEntryFee = async function (_projAddr, _index) {
-  //   let taskAddr = await obj.project.getTasks(_projAddr, _index)
-  //   let TASK = await Task.at(taskAddr)
-  //   let validationEntryFee = await TASK.validationEntryFee()
-  //   return validationEntryFee.toNumber()
-  // }
-  //
-  // obj.task.getValDetails = async function (_projAddr, _index, _user) {
-  //   let taskAddr = await obj.project.getTasks(_projAddr, _index)
-  //   let TASK = await Task.at(taskAddr)
-  //   // struct elements: status, index, initialized
-  //   let valBal = await TASK.validators(_user)
-  //   return valBal
-  // }
-  //
-  // obj.task.getValidationIndex = async function (_projAddr, _index, _bool) {
-  //   let taskAddr = await obj.project.getTasks(_projAddr, _index)
-  //   let TASK = await Task.at(taskAddr)
-  //   let index
-  //   _bool
-  //     ? index = await TASK.affirmativeIndex()
-  //     : index = await TASK.negativeIndex()
-  //   return index.toNumber()
-  // }
-  //
-  // obj.task.getValidatorAtIndex = async function (_projAddr, _taskIndex, _valIndex, _bool) {
-  //   let taskAddr = await obj.project.getTasks(_projAddr, _taskIndex)
-  //   let TASK = await Task.at(taskAddr)
-  //   let valAtIndex
-  //   _bool
-  //     ? valAtIndex = await TASK.affirmativeValidators(_valIndex)
-  //     : valAtIndex = await TASK.negativeValidators(_valIndex)
-  //   return valAtIndex
-  // }
-  //
-  // obj.task.getClaimable = async function (_projAddr, _index) {
-  //   let taskAddr = await obj.project.getTasks(_projAddr, _index)
-  //   let TASK = await Task.at(taskAddr)
-  //   let claimable = await TASK.claimable()
-  //   return claimable
-  // }
-  //
-  // obj.task.getClaimableByRep = async function (_projAddr, _index) {
-  //   let taskAddr = await obj.project.getTasks(_projAddr, _index)
-  //   let TASK = await Task.at(taskAddr)
-  //   let claimable = await TASK.claimableByRep()
-  //   return claimable
-  // }
-  //
-  // obj.task.getPollNonce = async function (_projAddr, _index) {
-  //   let taskAddr = await obj.project.getTasks(_projAddr, _index)
-  //   let TASK = await Task.at(taskAddr)
-  //   let poll = await TASK.pollId()
-  //   return poll.toNumber()
-  // }
-  //
+  // complex PLCR getters
   obj.task.getPollMap = async function (_projAddr, _index) {
     let pollNonce = await obj.task.get({projAddr: _projAddr, index: _index, fn: 'pollId', bn: false})
     let pollMap = await obj.contracts.PLCR.pollMap(pollNonce)
@@ -665,7 +334,7 @@ module.exports = function projectHelper (accounts) {
   }
 
   // return expired projects (addresses) proposed by token holder and reputation holder
-  // moves ganache forward 1 week
+  // moves testrpc forward 1 week
   obj.returnProject.expired = async function (_cost, _stakingPeriod, _ipfsHash, _numSets, _DT, _TR, _RR, _PR) {
     if (_DT === undefined) {
       _DT = obj.contracts.DT
@@ -793,7 +462,7 @@ module.exports = function projectHelper (accounts) {
   }
 
   // return active projects (addresses) proposed by token holder and reputation holder
-  // moves ganache forward 1 week
+  // moves testrpc forward 1 week
   obj.returnProject.active = async function (_cost, _stakingPeriod, _ipfsHash, _numSets, _tasks, _DT, _TR, _RR, _PR) {
     if (_DT === undefined) {
       _DT = obj.contracts.DT
@@ -846,7 +515,7 @@ module.exports = function projectHelper (accounts) {
 
   // return validating projects (addresses) proposed by token holder and reputation holder
   // takes a list of tasks and a _numComplete integer parameter of how many tasks should be marked complete
-  // moves ganache forward 3 weeks
+  // moves testrpc forward 3 weeks
   obj.returnProject.validating = async function (_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete, _DT, _TR, _RR, _PR) {
     if (_DT === undefined) {
       _DT = obj.contracts.DT
@@ -862,7 +531,7 @@ module.exports = function projectHelper (accounts) {
     }
 
     // get array of active projects
-    // moves ganache forward 1 week
+    // moves testrpc forward 1 week
     let projArray = await obj.returnProject.active(_cost, _stakingPeriod, _ipfsHash, 1, _tasks, _DT, _TR, _RR, _PR)
 
     // register workers
@@ -911,7 +580,7 @@ module.exports = function projectHelper (accounts) {
   // 2: validate both (true > false)
   // 3: validate both (false > true)
   // 4: validate neither
-  // moves ganache forward 4 weeks
+  // moves testrpc forward 4 weeks
   obj.returnProject.voting = async function (_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete, _valType, _DT, _TR, _RR, _PR) {
     if (_DT === undefined) {
       _DT = obj.contracts.DT
@@ -985,7 +654,7 @@ module.exports = function projectHelper (accounts) {
   // 2: vote false only
   // 3: vote both (true > false)
   // 4: vote both (false > true)
-  // moves ganache forward 6 weeks
+  // moves testrpc forward 6 weeks
   obj.returnProject.finished = async function (_cost, _stakingPeriod, _ipfsHash, _tasks, _numComplete, _valType, _voteType, _intendedState, _DT, _TR, _RR, _PR) {
     if (_DT === undefined) {
       _DT = obj.contracts.DT

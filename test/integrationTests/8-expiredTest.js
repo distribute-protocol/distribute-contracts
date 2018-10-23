@@ -9,11 +9,11 @@ contract('Expired State', function (accounts) {
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let TR, RR
-  let {user, project, utils, returnProject} = projObj
+  let DT, TR, RR
+  let {user, project, variables, utils, returnProject} = projObj
   let {tokenProposer, repProposer} = user
   let {tokenStaker1, repStaker1, notStaker} = user
-  let {projectCost, stakingPeriod, ipfsHash} = project
+  let {projectCost, stakingPeriod, ipfsHash} = variables
 
   // local test variables
   let projArray
@@ -25,6 +25,7 @@ contract('Expired State', function (accounts) {
   before(async function () {
     // get contract
     await projObj.contracts.setContracts()
+    DT = projObj.contracts.DT
     TR = projObj.contracts.TR
     RR = projObj.contracts.RR
 
@@ -62,11 +63,11 @@ contract('Expired State', function (accounts) {
   describe('handle stakers', () => {
     it('token staker can ask for refund from TR expired project', async () => {
       // take stock of variables before
-      let totalTokensBefore = await utils.getTotalTokens()
-      let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let projTokensBefore = await project.getStakedTokens(projAddrT)
-      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT)
+      let totalTokensBefore = await utils.get({fn: DT.totalSupply, bn: false})
+      let tsBalBefore = await utils.get({fn: DT.balances, params: tokenStaker1, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projTokensBefore = await project.get({projAddr: projAddrT, fn: 'tokensStaked', bn: false})
+      let tsProjBalBefore = await project.get({projAddr: projAddrT, fn: 'tokenBalances', params: tokenStaker1, bn: false})
 
       // calculate refund & reward
       let refund = tsProjBalBefore
@@ -75,11 +76,11 @@ contract('Expired State', function (accounts) {
       await TR.refundStaker(projAddrT, {from: tokenStaker1})
 
       // take stock of variables after
-      let totalTokensAfter = await utils.getTotalTokens()
-      let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let projTokensAfter = await project.getStakedTokens(projAddrT)
-      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker1, projAddrT)
+      let totalTokensAfter = await utils.get({fn: DT.totalSupply, bn: false})
+      let tsBalAfter = await utils.get({fn: DT.balances, params: tokenStaker1, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projTokensAfter = await project.get({projAddr: projAddrT, fn: 'tokensStaked', bn: false})
+      let tsProjBalAfter = await project.get({projAddr: projAddrT, fn: 'tokenBalances', params: tokenStaker1, bn: false})
 
       // checks
       assert.equal(totalTokensBefore, totalTokensAfter, 'incorrect token reward minted')
@@ -92,11 +93,11 @@ contract('Expired State', function (accounts) {
 
     it('token staker can ask for refund from RR expired project', async () => {
       // take stock of variables before
-      let totalTokensBefore = await utils.getTotalTokens()
-      let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let projTokensBefore = await project.getStakedTokens(projAddrR)
-      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker1, projAddrR)
+      let totalTokensBefore = await utils.get({fn: DT.totalSupply, bn: false})
+      let tsBalBefore = await utils.get({fn: DT.balances, params: tokenStaker1, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projTokensBefore = await project.get({projAddr: projAddrR, fn: 'tokensStaked', bn: false})
+      let tsProjBalBefore = await project.get({projAddr: projAddrR, fn: 'tokenBalances', params: tokenStaker1, bn: false})
 
       // calculate refund & reward
       let refund = tsProjBalBefore
@@ -105,11 +106,11 @@ contract('Expired State', function (accounts) {
       await TR.refundStaker(projAddrR, {from: tokenStaker1})
 
       // take stock of variables after
-      let totalTokensAfter = await utils.getTotalTokens()
-      let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let projTokensAfter = await project.getStakedTokens(projAddrR)
-      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR)
+      let totalTokensAfter = await utils.get({fn: DT.totalSupply, bn: false})
+      let tsBalAfter = await utils.get({fn: DT.balances, params: tokenStaker1, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projTokensAfter = await project.get({projAddr: projAddrR, fn: 'tokensStaked', bn: false})
+      let tsProjBalAfter = await project.get({projAddr: projAddrR, fn: 'tokenBalances', params: tokenStaker1, bn: false})
 
       // checks
       assert.equal(totalTokensBefore, totalTokensAfter, 'incorrect token reward minted')
@@ -122,10 +123,10 @@ contract('Expired State', function (accounts) {
 
     it('reputation staker can ask for refund from TR expired project', async () => {
       // take stock of variables before
-      let totalRepBefore = await utils.getTotalRep()
-      let rsBalBefore = await utils.getRepBalance(repStaker1)
-      let projRepBefore = await project.getStakedRep(projAddrT)
-      let rsProjBalBefore = await project.getUserStakedRep(repStaker1, projAddrT)
+      let totalRepBefore = await utils.get({fn: RR.totalSupply, bn: false})
+      let rsBalBefore = await utils.get({fn: RR.users, params: repStaker1, bn: false, position: 0})
+      let projRepBefore = await project.get({projAddr: projAddrT, fn: 'reputationStaked', bn: false})
+      let rsProjBalBefore = await project.get({projAddr: projAddrT, fn: 'reputationBalances', params: repStaker1, bn: false})
 
       // calculate refund & reward
       let refund = rsProjBalBefore
@@ -134,10 +135,10 @@ contract('Expired State', function (accounts) {
       await RR.refundStaker(projAddrT, {from: repStaker1})
 
       // take stock of variables after
-      let totalRepAfter = await utils.getTotalRep()
-      let rsBalAfter = await utils.getRepBalance(repStaker1)
-      let projRepAfter = await project.getStakedRep(projAddrT)
-      let rsProjBalAfter = await project.getUserStakedRep(repStaker1, projAddrT)
+      let totalRepAfter = await utils.get({fn: RR.totalSupply, bn: false})
+      let rsBalAfter = await utils.get({fn: RR.users, params: repStaker1, bn: false, position: 0})
+      let projRepAfter = await project.get({projAddr: projAddrT, fn: 'reputationStaked', bn: false})
+      let rsProjBalAfter = await project.get({projAddr: projAddrT, fn: 'reputationBalances', params: repStaker1, bn: false})
 
       // checks
       assert.equal(totalRepBefore, totalRepAfter, 'incorrect rep reward calculated')
@@ -149,10 +150,10 @@ contract('Expired State', function (accounts) {
 
     it('reputation staker can ask for refund from RR expired project', async () => {
       // take stock of variables before
-      let totalRepBefore = await utils.getTotalRep()
-      let rsBalBefore = await utils.getRepBalance(repStaker1)
-      let projRepBefore = await project.getStakedRep(projAddrR)
-      let rsProjBalBefore = await project.getUserStakedRep(repStaker1, projAddrR)
+      let totalRepBefore = await utils.get({fn: RR.totalSupply, bn: false})
+      let rsBalBefore = await utils.get({fn: RR.users, params: repStaker1, bn: false, position: 0})
+      let projRepBefore = await project.get({projAddr: projAddrR, fn: 'reputationStaked', bn: false})
+      let rsProjBalBefore = await project.get({projAddr: projAddrR, fn: 'reputationBalances', params: repStaker1, bn: false})
 
       // calculate refund & reward
       let refund = rsProjBalBefore
@@ -161,10 +162,10 @@ contract('Expired State', function (accounts) {
       await RR.refundStaker(projAddrR, {from: repStaker1})
 
       // take stock of variables after
-      let totalRepAfter = await utils.getTotalRep()
-      let rsBalAfter = await utils.getRepBalance(repStaker1)
-      let projRepAfter = await project.getStakedRep(projAddrR)
-      let rsProjBalAfter = await project.getUserStakedRep(repStaker1, projAddrR)
+      let totalRepAfter = await utils.get({fn: RR.totalSupply, bn: false})
+      let rsBalAfter = await utils.get({fn: RR.users, params: repStaker1, bn: false, position: 0})
+      let projRepAfter = await project.get({projAddr: projAddrR, fn: 'reputationStaked', bn: false})
+      let rsProjBalAfter = await project.get({projAddr: projAddrR, fn: 'reputationBalances', params: repStaker1, bn: false})
 
       // checks
       assert.equal(totalRepBefore, totalRepAfter, 'incorrect rep reward calculated')
