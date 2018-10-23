@@ -551,7 +551,7 @@ contract('Proposed State', function (accounts) {
 
     it('multiple token stakers can stake TR proposed project', async () => {
       // refuel token stakers
-      // await utils.mintIfNecessary({user: tokenStaker1})
+      await utils.mintIfNecessary({user: tokenStaker1})
       await utils.mintIfNecessary({user: tokenStaker2})
 
       // get tokens required to fully stake the project
@@ -828,10 +828,10 @@ contract('Proposed State', function (accounts) {
       let rs1BalBefore = await utils.get({fn: RR.users, params: repStaker1, bn: false, position: 0})
       let rs2BalBefore = await utils.get({fn: RR.users, params: repStaker2, bn: false, position: 0})
       let weiBalBefore = await project.get({fn: 'weiBal', projAddr: projAddrR3, bn: false})
-      let weiPoolBefore = await utils.get({fn: DT.weiBal, bn: false})
+      let weiPoolBefore = await utils.get({fn: DT.weiBal})
       let rs1StakedRepBefore = await project.get({projAddr: projAddrR3, fn: 'reputationBalances', params: repStaker1})
       let rs2StakedRepBefore = await project.get({projAddr: projAddrR3, fn: 'reputationBalances', params: repStaker2})
-      let stakedTokensBefore = await project.get({projAddr: projAddrR3, fn: 'tokensStaked'})
+      let stakedTokensBefore = await project.get({projAddr: projAddrR3, fn: 'tokensStaked', bn: false})
       let stakedRepBefore = await project.get({projAddr: projAddrR3, fn: 'reputationStaked', bn: false})
 
       // assert that repStaker1 has enough reputation for this
@@ -847,7 +847,7 @@ contract('Proposed State', function (accounts) {
       let weiPoolMiddle = await utils.get({fn: DT.weiBal, bn: false})
       let rs1StakedRepMiddle = await project.get({projAddr: projAddrR3, fn: 'reputationBalances', params: repStaker1})
       let rs2StakedRepMiddle = await project.get({projAddr: projAddrR3, fn: 'reputationBalances', params: repStaker2})
-      let stakedTokensMiddle = await project.get({projAddr: projAddrR3, fn: 'tokensStaked'})
+      let stakedTokensMiddle = await project.get({projAddr: projAddrR3, fn: 'tokensStaked', bn: false})
       let stakedRepMiddle = await project.get({projAddr: projAddrR3, fn: 'reputationStaked', bn: false})
 
       // checks

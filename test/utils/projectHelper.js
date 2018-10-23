@@ -132,8 +132,8 @@ module.exports = function projectHelper (accounts) {
     details.numTokens === undefined
       ? _numTokens = obj.variables.tokensToMint
       : _numTokens = details.numTokens
-    let mintingCost = await obj.utils.get({fn: _DT.weiRequired, params: _numTokens, bn: false})
-    await _DT.mint(_numTokens, {from: details.user, value: mintingCost + 1})
+    let mintingCost = await obj.utils.get({fn: _DT.weiRequired, params: _numTokens})
+    await _DT.mint(_numTokens, {from: details.user, value: mintingCost})
   }
 
   obj.utils.mintIfNecessary = async function (details) {
@@ -144,7 +144,7 @@ module.exports = function projectHelper (accounts) {
     details.numTokens === undefined
       ? _numTokens = obj.variables.tokensToMint
       : _numTokens = details.numTokens
-    let bal = await obj.utils.get({fn: _DT.balances, params: details.user, bn: false})
+    let bal = await obj.utils.get({fn: _DT.balances, params: details.user})
     if (_numTokens > bal) {
       await obj.utils.mint({DT: _DT, user: details.user, numTokens: _numTokens - bal})
     }
