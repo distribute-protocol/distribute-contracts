@@ -117,15 +117,17 @@ module.exports = function projectHelper (accounts) {
 
   // mint & register functions
   obj.utils.mint = async function (details) {
-    let _DT, _numTokens
+    let _DT, _numTokens, _mintingCost
     details.DT === undefined
       ? _DT = obj.contracts.DT
       : _DT = details.DT
     details.numTokens === undefined
       ? _numTokens = obj.variables.tokensToMint
       : _numTokens = details.numTokens
-    let mintingCost = await obj.utils.get({fn: _DT.weiRequired, params: _numTokens})
-    await _DT.mint(_numTokens, {from: details.user, value: mintingCost})
+    details.mintingCost === undefined
+      ? _mintingCost = await obj.utils.get({fn: _DT.weiRequired, params: _numTokens})
+      : _mintingCost = details.mintingCost
+    await _DT.mint(_numTokens, {from: details.user, value: _mintingCost})
   }
 
   obj.utils.mintIfNecessary = async function (details) {

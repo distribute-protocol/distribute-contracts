@@ -271,7 +271,7 @@ contract('Distribute Token', function (accounts) {
   })
 
   describe('targetPrice', () => {
-    it('cannot be called', async () => {
+    it('can\'t be called', async () => {
       errorThrown = false
       try {
         await spoofedDT.targetPrice(tokensToMint)
@@ -284,7 +284,7 @@ contract('Distribute Token', function (accounts) {
   })
 
   describe('mint', () => {
-    it('cannot be called if contract is frozen', async () => {
+    it('can\'t be called if contract is frozen', async () => {
       // freeze contract
       let owner = await utils.get({fn: spoofedDT.owner})
       await spoofedDT.freezeContract({from: owner})
@@ -300,6 +300,20 @@ contract('Distribute Token', function (accounts) {
 
       // unfreeze contract
       await spoofedDT.unfreezeContract({from: owner})
+    })
+
+    it('reverts if not enough wei is sent', async () => {
+      // get wei required
+      let weiRequired = await utils.get({fn: spoofedDT.weiRequired, params: tokensToMint, bn: false})
+
+      errorThrown = false
+      try {
+        await utils.mint({DT: spoofedDT, numTokens: tokensToMint, mintingCost: weiRequired - 1, user: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
