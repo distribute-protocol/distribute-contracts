@@ -35,7 +35,7 @@ contract ProjectRegistry is Ownable {
     event LogSubmitTaskComplete(address projectAddress, uint256 index, uint256 validationFee);
     event LogProjectValidate(address projectAddress, bool validate);
     event LogProjectVoting(address projectAddress, bool vote);
-    event LogProjectEnd(address projectAddress, uint end);
+    event LogProjectEnd(address projectAddress, bool end);
     event LogRewardOriginator(address projectAddress, address originator, uint256 reward);
     event LogRefundProposer(address projectAddress, uint256 contractCaller, address proposer, uint256 proposedCost, uint256 proposedStake);
 
@@ -355,7 +355,7 @@ contract ProjectRegistry is Ownable {
     function checkEnd(address _projectAddress) external {
         require(!freeze);
         require(projects[_projectAddress] == true);
-        uint end = _projectAddress.checkEnd(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting), reputationRegistryAddress);
+        bool end = _projectAddress.checkEnd(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting), reputationRegistryAddress);
         emit LogProjectEnd(_projectAddress, end);
     }
 
@@ -496,7 +496,7 @@ contract ProjectRegistry is Ownable {
     function rewardOriginator(
       address _projectAddress,
       address _claimer
-    ) onlyTR public {
+    ) onlyTRorRR public {
       require(projects[_projectAddress] == true);
       StakedState storage ss = stakedProjects[_projectAddress];
       require(_claimer == ss.originator[ss.topTaskHash]);

@@ -191,9 +191,7 @@ contract ReputationRegistry is Ownable {
         require(block.timestamp < _stakingPeriod && _cost > 0);
         uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
         uint256 proposerReputationCost = ( //divide by 20 to get 5 percent of reputation
-        Division.percent(costProportion, proposeProportion, 10) *
-        totalSupply) /
-        10000000000;
+        Division.percent(costProportion, proposeProportion, 10).mul(totalSupply).div(10000000000));
         require(users[msg.sender].balance >= proposerReputationCost);
         users[msg.sender].balance -= proposerReputationCost;
         address projectAddress = projectRegistry.createProject(
@@ -221,7 +219,19 @@ contract ReputationRegistry is Ownable {
 
         uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress, msg.sender);   //call project to "send back" staked tokens to put in proposer's balances
         users[msg.sender].balance += proposerVals[1];
-        distributeToken.transferWeiTo(msg.sender, proposerVals[0] / 20);
+        distributeToken.transferWeiTo(msg.sender, proposerVals[0].div(20));
+    }
+
+    /**
+    @notice Rewards the originator of a project plan in tokens.
+    @param _projectAddress Address of the project
+    */
+    function rewardOriginator(address _projectAddress) external {
+      require(!freeze);
+      Project project = Project(_projectAddress);
+      require(project.state() == 6);
+      projectRegistry.rewardOriginator(_projectAddress, msg.sender);
+      project.transferWeiReward(msg.sender, project.originatorReward().mul(project.passAmount()).div(100));
     }
 
     // =====================================================================
@@ -308,9 +318,9 @@ contract ReputationRegistry is Ownable {
         require(projectRegistry.projects(_projectAddress) == true);
         Project project = Project(_projectAddress);
         require(project.hashListSubmitted() == true);
-        uint reputationVal = project.reputationCost() * _weighting / 100;
+        uint reputationVal = project.reputationCost().mul(_weighting).div(100);
         require(users[msg.sender].balance >= reputationVal);
-        uint weiVal = project.proposedCost() * _weighting / 100;
+        uint weiVal = project.proposedCost().mul(_weighting).div(100);
         users[msg.sender].balance -= reputationVal;
         projectRegistry.claimTask(
             _projectAddress,
@@ -414,15 +424,16 @@ contract ReputationRegistry is Ownable {
     @notice Refund a reputation staker from project at `_projectAddress`
     @param _projectAddress Address of the project
     */
-    function refundStaker(address _projectAddress) external {     //called by worker who staked or voted
+    function refundStaker(address _projectAddress) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 refund = _projectAddress.refundStaker(msg.sender, address(this));
         require(refund > 0);
         Project(_projectAddress).clearReputationStake(msg.sender);
         users[msg.sender].balance = users[msg.sender].balance.add(refund);
-        if (Project(_projectAddress).state() == 6) {
-          uint256 reward = refund / 2;
+        // Inflationary reward mechanic for full completion
+        if (Project(_projectAddress).state() == 6 && Project(_projectAddress).passAmount() == 100) {
+          uint256 reward = refund.div(20);
           users[msg.sender].balance = users[msg.sender].balance.add(reward);
           totalSupply = totalSupply.add(reward);
         }

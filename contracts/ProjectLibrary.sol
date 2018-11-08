@@ -141,6 +141,7 @@ library ProjectLibrary {
 
         if(timesUp(_projectAddress)) {
             uint256 nextDeadline;
+            // Majority Check
             if(_taskHash != 0 && _taskListWeighting > 50) {
                 nextDeadline = block.timestamp + project.activeStatePeriod();
                 project.setState(3, nextDeadline);
@@ -277,7 +278,7 @@ library ProjectLibrary {
         address _distributeTokenAddress,
         address _plcrVoting,
         address _reputationRegistryAddress
-    ) public returns (uint) {
+    ) public returns (bool) {
         Project project = Project(_projectAddress);
         require(project.state() == 5);
 
@@ -300,21 +301,20 @@ library ProjectLibrary {
                 }
             }
             calculatePassAmount(_projectAddress);
-            if (project.passAmount() >= project.passThreshold()) {
-              project.setState(6, 0);
-              return 1;
-            } else {
-              uint originatorReward = project.originatorReward();
-              tr.revertWei(originatorReward);
-              project.returnWei(_distributeTokenAddress, originatorReward);
-              project.setState(7, 0);
-              TokenRegistry(_tokenRegistryAddress).burnTokens(project.tokensStaked());
-              ReputationRegistry(_reputationRegistryAddress).burnReputation(project.reputationStaked());
-              project.clearStake();
-              return 2;
-            }
+            uint256 passAmount = project.passAmount();
+            project.setState(6, 0);
+            uint originatorReward = project.originatorReward();
+            tr.revertWei(remainingCalc(originatorReward, passAmount));
+            project.returnWei(_distributeTokenAddress, remainingCalc(originatorReward, passAmount));
+            TokenRegistry(_tokenRegistryAddress).burnTokens(remainingCalc(project.tokensStaked(), passAmount));
+            ReputationRegistry(_reputationRegistryAddress).burnReputation(remainingCalc(project.reputationStaked(), passAmount));
+            return true;
         }
-        return 0;
+        return false;
+    }
+
+    function remainingCalc(uint256 val, uint256 passAmount) internal returns (uint) {
+      return val.mul(100 - passAmount).div(100);
     }
 
     // =====================================================================
@@ -425,9 +425,7 @@ library ProjectLibrary {
         uint256 refund;
         // account for proportion of successful tasks
         if(_project.tokensStaked() != 0) {
-            _project.state() == 6
-                ? refund = _project.tokenBalances(_staker).mul( _project.passAmount()).div(100)
-                : refund = _project.tokenBalances(_staker);
+          refund = _project.tokenBalances(_staker).mul(_project.passAmount()).div(100);
         }
         emit TokenRefund(_staker, refund);
         return refund;
@@ -443,9 +441,7 @@ library ProjectLibrary {
     function handleReputationStaker(Project _project, address _staker) internal returns (uint256) {
         uint256 refund;
         if(_project.reputationStaked() != 0) {
-          _project.state() == 6
-              ? refund = _project.reputationBalances(_staker).mul( _project.passAmount()).div(100)
-              : refund = _project.reputationBalances(_staker);
+          refund = _project.reputationBalances(_staker).mul(_project.passAmount()).div(100);
         }
         emit ReputationRefund(address(_project), _staker, refund);
         return refund;
