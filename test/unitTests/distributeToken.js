@@ -772,7 +772,4 @@ contract('Distribute Token', function (accounts) {
       assert.equal(trBalanceBefore - trBalanceAfter, trBalanceBefore, 'incorrect amount of tokens transferred to escrow')
     })
   })
-
-  describe('fallback', () => {
-  })
 })
