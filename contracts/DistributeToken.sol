@@ -190,7 +190,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     @param _tokens The number of tokens to sell.
     */
     function sell(uint256 _tokens) external {
-        require(_tokens > 0 && (_tokens <= balances[msg.sender]));
+        require(_tokens > 0 && _tokens <= balances[msg.sender]);
 
         uint256 weiVal = _tokens * currentPrice();
         balances[msg.sender] = balances[msg.sender].sub(_tokens);

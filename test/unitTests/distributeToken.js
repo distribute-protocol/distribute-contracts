@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-/* global assert contract artifacts */
+/* global assert contract artifacts web3 */
 
 const DistributeToken = artifacts.require('DistributeToken')
 
@@ -414,7 +414,7 @@ contract('Distribute Token', function (accounts) {
       await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
-    it('token registry is able to burn tokens', async () => {
+    it('token registry is able to burn tokens it has', async () => {
       // get user balance
       let trBalance = await utils.get({fn: spoofedDT.balances, params: spoofedTRAddress, bn: false})
 
@@ -435,6 +435,56 @@ contract('Distribute Token', function (accounts) {
   })
 
   describe('sell', () => {
+    it('can\'t be called to sell 0 tokens', async () => {
+      errorThrown = false
+      try {
+        await spoofedDT.sell(0, {from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('user can\'t sell more tokens than they have', async () => {
+      // get user balance
+      let userBalance = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
+
+      errorThrown = false
+      try {
+        await spoofedDT.sell(userBalance + 1, {from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('user can sell tokens they have', async () => {
+      // get user balance & current price
+      let userBalance = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
+      let burnPrice = await utils.calculateBurnPrice({DT: spoofedDT, tokens: userBalance})
+
+      // take stock of variables
+      let tokenSupplyBefore = await utils.get({fn: spoofedDT.totalSupply, bn: false})
+      let weiBalBefore = await utils.get({fn: spoofedDT.weiBal})
+      let minterBalanceBefore = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
+      let dtWeiBalBefore = parseInt(await web3.eth.getBalance(spoofedDT.address))
+
+      await spoofedDT.sell(userBalance, {from: anyAddress})
+
+      // take stock of variables
+      let tokenSupplyAfter = await utils.get({fn: spoofedDT.totalSupply, bn: false})
+      let weiBalAfter = await utils.get({fn: spoofedDT.weiBal})
+      let minterBalanceAfter = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
+      let dtWeiBalAfter = parseInt(await web3.eth.getBalance(spoofedDT.address))
+
+      // checks
+      assert.equal(tokenSupplyBefore, tokenSupplyAfter + userBalance, 'incorrect number of tokens minted')
+      assert.equal(minterBalanceBefore, minterBalanceAfter + userBalance, 'incorrect number of tokens minted')
+      assert.equal(weiBalBefore.minus(weiBalAfter), burnPrice, 'incorrect amount of wei kept by contract in variable')
+      assert.equal(dtWeiBalBefore - dtWeiBalAfter, burnPrice, 'incorrect amount of wei kept by contract in actual wei')
+    })
   })
 
   describe('transferWeiTo', () => {
