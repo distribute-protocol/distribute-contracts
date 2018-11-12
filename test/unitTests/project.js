@@ -2,10 +2,9 @@
 /* global contract artifacts */
 
 const Project = artifacts.require('Project')
-const SpoofedRR = artifacts.require('SpoofedRR')
 
 const projectHelper = require('../utils/projectHelper')
-// const assertThrown = require('../utils/assertThrown')
+const assertThrown = require('../utils/assertThrown')
 // const hexToAscii = require('../utils/hexToAscii')
 
 contract('Project', function (accounts) {
@@ -147,7 +146,7 @@ contract('Project', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   //
   //   errorThrown = false
   //   try {
@@ -155,7 +154,7 @@ contract('Project', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
 
   it('allows tokenRegistry to call stakeTokens()')
@@ -203,7 +202,7 @@ contract('Project', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   //
   //   errorThrown = false
   //   try {
@@ -211,7 +210,7 @@ contract('Project', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
 
   // SOLIDITY REVERTS - FIX IT
@@ -255,7 +254,7 @@ contract('Project', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   //
   //   errorThrown = false
   //   try {
@@ -263,7 +262,7 @@ contract('Project', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
 
   // it('returns a bool for an address whether they are a project staker', async () => {
@@ -430,7 +429,7 @@ contract('Project', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
   // it('only allows the TokenRegistry to call unstakeTokens', async () => {
@@ -440,7 +439,7 @@ contract('Project', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
   // it('only allows the TokenRegistry to call validate', async () => {
@@ -450,7 +449,7 @@ contract('Project', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
   // it('only allows the ReputationRegistry to call stakeReputation', async () => {
@@ -460,7 +459,7 @@ contract('Project', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
   // it('only allows the ReputationRegistry to call unstakeReputation', async () => {
@@ -470,7 +469,7 @@ contract('Project', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
   // it('only allows the projectRegistry to call clearStake', async () => {
@@ -480,7 +479,7 @@ contract('Project', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
   // it('only allows the projectRegistry to call setState', async () => {
@@ -490,7 +489,7 @@ contract('Project', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
 
   // it('returns true if time is up', async () => {

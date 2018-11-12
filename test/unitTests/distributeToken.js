@@ -13,8 +13,8 @@ contract('Distribute Token', function (accounts) {
   // get project helper variables
   let spoofedDT
   let {tokenProposer} = projObj.user
-  let {spoofedTRAddress, spoofedRRAddress, spoofedPRAddress, anyAddress} = projObj.spoofed
-  let {tokensToMint, weiToReturn} = projObj.variables
+  let {spoofedTRAddress, spoofedRRAddress, anyAddress} = projObj.spoofed
+  let {tokensToMint} = projObj.variables
   let {utils} = projObj
 
   // local test variables
@@ -55,7 +55,7 @@ contract('Distribute Token', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('owner is able to freeze the contract', async () => {
@@ -95,7 +95,7 @@ contract('Distribute Token', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('owner is able to unfreeze the contract', async () => {
@@ -135,7 +135,7 @@ contract('Distribute Token', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('owner is able to update the token registry', async () => {
@@ -178,7 +178,7 @@ contract('Distribute Token', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('owner is able to update the reputation registry', async () => {
@@ -257,7 +257,7 @@ contract('Distribute Token', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: invalid opcode/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
 
       errorThrown = false
       try {
@@ -266,7 +266,7 @@ contract('Distribute Token', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
@@ -279,7 +279,7 @@ contract('Distribute Token', function (accounts) {
         assert.match(e.message, /spoofedDT.targetPrice is not a function/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
@@ -296,7 +296,7 @@ contract('Distribute Token', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
 
       // unfreeze contract
       await spoofedDT.unfreezeContract({from: owner})
@@ -305,15 +305,37 @@ contract('Distribute Token', function (accounts) {
     it('reverts if not enough wei is sent', async () => {
       // get wei required
       let weiRequired = await utils.get({fn: spoofedDT.weiRequired, params: tokensToMint, bn: false})
-
       errorThrown = false
       try {
-        await utils.mint({DT: spoofedDT, numTokens: tokensToMint, mintingCost: weiRequired - 1, user: anyAddress})
+        await utils.mint({DT: spoofedDT, numTokens: tokensToMint, mintingCost: weiRequired - 100, user: anyAddress})
       } catch (e) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('mints tokens and returns leftover wei if enough wei is sent', async () => {
+      // get wei required
+      let weiRequired = await utils.get({fn: spoofedDT.weiRequired, params: tokensToMint, bn: false})
+
+      // take stock of variables
+      let tokenSupplyBefore = await utils.get({fn: spoofedDT.totalSupply, bn: false})
+      let weiBalBefore = await utils.get({fn: spoofedDT.weiBal})
+      let minterBalanceBefore = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
+
+      // mint tokens
+      await utils.mint({DT: spoofedDT, numTokens: tokensToMint, mintingCost: weiRequired + 100, user: anyAddress})
+
+      // take stock of variables
+      let tokenSupplyAfter = await utils.get({fn: spoofedDT.totalSupply, bn: false})
+      let weiBalAfter = await utils.get({fn: spoofedDT.weiBal})
+      let minterBalanceAfter = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
+
+      // checks
+      assert.equal(tokenSupplyAfter, tokenSupplyBefore + tokensToMint, 'incorrect number of tokens minted')
+      assert.equal(minterBalanceAfter, minterBalanceBefore + tokensToMint, 'incorrect number of tokens minted')
+      assert.equal(weiBalAfter.minus(weiBalBefore), weiRequired, 'incorrect amount of wei kept by contract')
     })
   })
 
@@ -433,7 +455,7 @@ contract('Distribute Token', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
   // it('allows tokenRegistry to call transferWeiTo()', async () => {
@@ -488,7 +510,7 @@ contract('Distribute Token', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
   // it('allows tokenRegistry to call returnWei()', async () => {
@@ -512,7 +534,7 @@ contract('Distribute Token', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
   // it('allows tokenRegistry to call transferToEscrow()', async () => {
@@ -550,7 +572,7 @@ contract('Distribute Token', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
   //
   // it('allows tokenRegistry to call transferFromEscrow()', async () => {
@@ -580,6 +602,6 @@ contract('Distribute Token', function (accounts) {
   //   } catch (e) {
   //     errorThrown = true
   //   }
-  //   assertThrown(errorThrown, 'An error should have been thrown')
+  //   await assertThrown(errorThrown, 'An error should have been thrown')
   // })
 })
