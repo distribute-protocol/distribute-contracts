@@ -12,8 +12,8 @@ contract('Token Registry', function (accounts) {
 
   // get project helper variables
   let spoofedTR
-  let {tokenProposer} = projObj.user
-  let {spoofedRR, spoofedPR, spoofedDT, spoofedPLCRVoting, anyAddress, weiToReturn} = projObj.spoofed
+  let {spoofedDTAddress, spoofedPRAddress, spoofedPLCRVotingAddress, anyAddress} = projObj.spoofed
+  let {utils} = projObj
 
   // local test variables
   let errorThrown
@@ -23,268 +23,231 @@ contract('Token Registry', function (accounts) {
     await projObj.contracts.setContracts()
 
     // initialize spoofed TR
-    spoofedTR = await TokenRegistry.new(spoofedDT, spoofedPR, spoofedPLCRVoting)
+    spoofedTR = await TokenRegistry.new()
   })
 
-  it('correctly returns baseCost as the current price when no tokens are available', async () => {
+  describe('init', () => {
+    it('correctly sets state variables', async () => {
+      // initialize contract addresses
+      await spoofedTR.init(spoofedDTAddress, spoofedPRAddress, spoofedPLCRVotingAddress)
+
+      // take stock of variables
+      let dtAddress = await utils.get({fn: spoofedTR.distributeToken})
+      let prAddress = await utils.get({fn: spoofedTR.projectRegistry})
+      let plcrAddress = await utils.get({fn: spoofedTR.plcrVoting})
+      // checks
+      assert.equal(dtAddress, spoofedDTAddress, 'incorrect distribute token address stored by constructor')
+      assert.equal(prAddress, spoofedPRAddress, 'incorrect project registry address stored by constructor')
+      assert.equal(plcrAddress, spoofedPLCRVotingAddress, 'incorrect plcr voting address stored by constructor')
+    })
   })
-  //   // current price, base cost getters
-  //   let currentPrice = await utils.getCurrentPrice()
-  //   let baseCost = await utils.getBaseCost()
-  //
-  //   // checks
-  //   assert.equal(currentPrice, baseCost, 'currPrice not returned correctly')
-  // })
-  //
-  // it('returns the correct wei required when no tokens have been minted', async () => {
-  //   // wei required getters
-  //   let weiRequiredFunc = await utils.getWeiRequired(tokensToMint)
-  //   let weiRequiredCalc = await utils.calculateWeiRequired(tokensToMint)
-  //
-  //   // checks
-  //   assert.equal(weiRequiredFunc, weiRequiredCalc, 'weiRequired not returned correctly')
-  // })
-  //
-  // it('mints tokens', async () => {
-  //   // take stock of variables before
-  //   let weiRequired = await utils.getWeiRequired(tokensToMint)
-  //   let totalSupplyBefore = await utils.getTotalTokens()
-  //   let weiPoolBalBefore = await utils.getWeiPoolBal()
-  //   let tpBalBefore = await utils.getTokenBalance(tokenProposer)
-  //
-  //   // mint tokensToMint tokens with weiRequired amount of ether
-  //   await utils.mint(tokenProposer, tokensToMint, weiRequired)
-  //
-  //   // take stock of variables after
-  //   let totalSupplyAfter = await utils.getTotalTokens()
-  //   let weiPoolBalAfter = await utils.getWeiPoolBal()
-  //   let tpBalAfter = await utils.getTokenBalance(tokenProposer)
-  //
-  //   // checks
-  //   assert.equal(totalSupplyBefore, 0, 'there should be no tokens in existence before minting')
-  //   assert.equal(weiPoolBalBefore, 0, 'there should be no wei in the DT pool before minting')
-  //   assert.equal(tpBalBefore, 0, 'there should be no tokens in tokenProposer\'s balance before minting')
-  //   assert.equal(totalSupplyAfter, tokensToMint, 'there should be tokensToMint tokens in existence after minting')
-  //   assert.equal(weiPoolBalAfter, weiRequired, 'there should be weiRequired wei in the DT pool after minting')
-  //   assert.equal(tpBalAfter, tokensToMint, 'there should be tokensToMint tokens in tokenProposer\'s balance after minting')
-  // })
-  //
-  // it('returns the correct wei required when tokens are available', async () => {
-  //   // wei required getters
-  //   let weiRequiredFunc = await utils.getWeiRequired(tokensToMint)
-  //   let weiRequiredCalc = await utils.calculateWeiRequired(tokensToMint)
-  //
-  //   // checks
-  //   assert.equal(weiRequiredFunc, weiRequiredCalc, 'weiRequired not returned correctly')
-  // })
-  //
-  // it('correctly returns the current price when tokens are available', async () => {
-  //   // current price getters
-  //   let currentPriceFunc = await utils.getCurrentPrice()
-  //   let currentPriceCalc = await utils.calculateCurrentPrice()
-  //
-  //   // checks
-  //   assert.equal(currentPriceFunc, currentPriceCalc, 'currPrice not returned correctly')
-  // })
-  //
-  // it('sells tokens', async () => {
-  //   // take stock of variables before
-  //   let burnVal = await utils.getBurnPrice(tokensToBurn)
-  //   let totalSupplyBefore = await utils.getTotalTokens()
-  //   let weiPoolBalBefore = await utils.getWeiPoolBal()
-  //   let tpBalBefore = await utils.getTokenBalance(tokenProposer)
-  //
-  //   // burn tokensToMint tokens with weiRequired amount of ether
-  //   await utils.sell(tokenProposer, tokensToBurn)
-  //
-  //   // take stock of variables after
-  //   let totalSupplyAfter = await utils.getTotalTokens()
-  //   let weiPoolBalAfter = await utils.getWeiPoolBal()
-  //   let tpBalAfter = await utils.getTokenBalance(tokenProposer)
-  //
-  //   // checks
-  //   assert.equal(totalSupplyBefore - totalSupplyAfter, tokensToBurn, 'incorrectly updated total supply')
-  //   assert.equal(weiPoolBalBefore - weiPoolBalAfter, burnVal, 'incorrectly updated DT\'s weiBal')
-  //   assert.equal(tpBalBefore - tpBalAfter, tokensToBurn, 'incorrectly updated tokenProposer\'s token balance')
-  // })
-  //
-  // it('allows tokenRegistry to call burn()', async () => {
-  //   // take stock of variables before
-  //   let weiRequired = await spoofedDT.weiRequired(tokensToMint)
-  //   let totalSupplyBefore = await spoofedDT.totalSupply()
-  //   let TRBalBefore = await spoofedDT.balances(spoofedTR)
-  //
-  //   // mint some tokens so TR has tokens to burn, then burn tokens
-  //   await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
-  //   await spoofedDT.burn(tokensToBurn, {from: spoofedTR})
-  //
-  //   // take stock of variables after
-  //   let totalSupplyAfter = await spoofedDT.totalSupply()
-  //   let TRBalAfter = await spoofedDT.balances(spoofedTR)
-  //
-  //   // checks
-  //   assert.equal(totalSupplyAfter - totalSupplyBefore, tokensToMint - tokensToBurn, 'incorrectly updated total supply')
-  //   assert.equal(TRBalAfter - TRBalBefore, tokensToMint - tokensToBurn, 'incorretly updated TR token balance')
-  // })
-  //
-  // it('only allows the tokenRegistry to call burn()', async () => {
-  //   // mint some tokens so RR has tokens to burn
-  //   let weiRequired = await spoofedDT.weiRequired(tokensToMint)
-  //   await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
-  //
-  //   let errorThrown = false
-  //   try {
-  //     await spoofedDT.burn(tokensToBurn, {from: anyAddress})
-  //   } catch (e) {
-  //     errorThrown = true
-  //   }
-  //   await assertThrown(errorThrown, 'An error should have been thrown')
-  // })
-  //
-  // it('allows tokenRegistry to call transferWeiTo()', async () => {
-  //   // mint some tokens so there is wei to transfer from the pool
-  //   let weiRequired = await spoofedDT.weiRequired(tokensToMint)
-  //   await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
-  //
-  //   // get wei pool bal before
-  //   let weiPoolBalBefore = await spoofedDT.weiBal()
-  //
-  //   // call transferWeiTo
-  //   await spoofedDT.transferWeiTo(spoofedTR, weiPoolBalBefore, {from: spoofedTR})
-  //
-  //   // get wei pool bal after
-  //   let weiPoolBalAfter = await spoofedDT.weiBal()
-  //
-  //   // checks
-  //   assert.notEqual(weiPoolBalBefore, 0, 'weiPoolBal is 0')
-  //   assert.equal(weiPoolBalAfter, 0, 'doesn\'t transfer wei correctly')
-  // })
-  //
-  // it('allows reputationRegistry to call transferWeiTo()', async () => {
-  //   // mint some tokens so there is wei to transfer from the pool
-  //   let weiRequired = await spoofedDT.weiRequired(tokensToMint)
-  //   await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
-  //
-  //   // get wei pool bal before
-  //   let weiPoolBalBefore = await spoofedDT.weiBal()
-  //
-  //   // call transferWeiTo
-  //   await spoofedDT.transferWeiTo(spoofedTR, weiPoolBalBefore, {from: spoofedRR})
-  //
-  //   // get wei pool bal after
-  //   let weiPoolBalAfter = await spoofedDT.weiBal()
-  //
-  //   // checks
-  //   assert.notEqual(weiPoolBalBefore, 0, 'weiPoolBal is 0')
-  //   assert.equal(weiPoolBalAfter, 0, 'doesn\'t transfer wei correctly')
-  // })
-  //
-  // it('only allows the tokenRegistry or reputationRegistry to call transferWeiTo()', async () => {
-  //   // mint some tokens so there is wei to transfer from the pool
-  //   let weiRequired = await spoofedDT.weiRequired(tokensToMint)
-  //   await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
-  //
-  //   // get wei pool bal before
-  //   let weiPoolBalBefore = await spoofedDT.weiBal()
-  //
-  //   let errorThrown = false
-  //   try {
-  //     await spoofedDT.transferWeiTo(spoofedPR, weiPoolBalBefore, {from: spoofedPR})
-  //   } catch (e) {
-  //     errorThrown = true
-  //   }
-  //   await assertThrown(errorThrown, 'An error should have been thrown')
-  // })
-  //
-  // it('allows tokenRegistry to call returnWei()', async () => {
-  //   // get wei pool bal before
-  //   let weiPoolBalBefore = await spoofedDT.weiBal()
-  //
-  //   // call transferWeiTo
-  //   await spoofedDT.returnWei(weiToReturn, {from: spoofedTR})
-  //
-  //   // get wei pool bal after
-  //   let weiPoolBalAfter = await spoofedDT.weiBal()
-  //
-  //   // check
-  //   assert.equal(weiPoolBalAfter - weiPoolBalBefore, weiToReturn, 'doesn\'t increment weiBal correctly')
-  // })
-  //
-  // it('only allows the tokenRegistry to call returnWei()', async () => {
-  //   let errorThrown = false
-  //   try {
-  //     await spoofedDT.returnWei(weiToReturn, {from: anyAddress})
-  //   } catch (e) {
-  //     errorThrown = true
-  //   }
-  //   await assertThrown(errorThrown, 'An error should have been thrown')
-  // })
-  //
-  // it('allows tokenRegistry to call transferToEscrow()', async () => {
-  //   // mint some tokens so there are tokens to transfer to escrow
-  //   let weiRequired = await spoofedDT.weiRequired(tokensToMint)
-  //   await spoofedDT.mint(tokensToMint, {from: tokenProposer, value: weiRequired})
-  //
-  //   // take stock of variables before
-  //   let totalSupplyBefore = await spoofedDT.totalSupply()
-  //   let TRBalBefore = await spoofedDT.balances(spoofedTR)
-  //   let tpBalBefore = await spoofedDT.balances(tokenProposer)
-  //
-  //   // transfer tokenProposer's tokens to escrow
-  //   await spoofedDT.transferToEscrow(tokenProposer, tokensToMint, {from: spoofedTR})
-  //
-  //   // take stock of variables after
-  //   let totalSupplyAfter = await spoofedDT.totalSupply()
-  //   let TRBalAfter = await spoofedDT.balances(spoofedTR)
-  //   let tpBalAfter = await spoofedDT.balances(tokenProposer)
-  //
-  //   // checks
-  //   assert.equal(totalSupplyAfter.toNumber(), totalSupplyBefore.toNumber(), 'should not change')
-  //   assert.equal(TRBalAfter - TRBalBefore, tokensToMint, 'doesn\'t update balance correctly')
-  //   assert.equal(tpBalBefore - tpBalAfter, tokensToMint, 'doesn\'t update balance correctly')
-  // })
-  //
-  // it('only allows the tokenRegistry to call transferToEscrow()', async () => {
-  //   // mint some tokens so there are tokens to transfer to escrow
-  //   let weiRequired = await spoofedDT.weiRequired(tokensToMint)
-  //   await spoofedDT.mint(tokensToMint, {from: tokenProposer, value: weiRequired})
-  //
-  //   let errorThrown = false
-  //   try {
-  //     await spoofedDT.transferToEscrow(tokenProposer, tokensToMint, {from: anyAddress})
-  //   } catch (e) {
-  //     errorThrown = true
-  //   }
-  //   await assertThrown(errorThrown, 'An error should have been thrown')
-  // })
-  //
-  // it('allows tokenRegistry to call transferFromEscrow()', async () => {
-  //   // take stock of variables before
-  //   let totalSupplyBefore = await spoofedDT.totalSupply()
-  //   let TRBalBefore = await spoofedDT.balances(spoofedTR)
-  //   let tpBalBefore = await spoofedDT.balances(tokenProposer)
-  //
-  //   // transfer tokenProposer's tokens to escrow
-  //   await spoofedDT.transferFromEscrow(tokenProposer, tokensToMint, {from: spoofedTR})
-  //
-  //   // take stock of variables after
-  //   let totalSupplyAfter = await spoofedDT.totalSupply()
-  //   let TRBalAfter = await spoofedDT.balances(spoofedTR)
-  //   let tpBalAfter = await spoofedDT.balances(tokenProposer)
-  //
-  //   // checks
-  //   assert.equal(totalSupplyAfter.toNumber(), totalSupplyBefore.toNumber(), 'should not change')
-  //   assert.equal(TRBalBefore - TRBalAfter, tokensToMint, 'doesn\'t update balance correctly')
-  //   assert.equal(tpBalAfter - tpBalBefore, tokensToMint, 'doesn\'t update balance correctly')
-  // })
-  //
-  // it('only allows the tokenRegistry to call transferFromEscrow()', async () => {
-  //   let errorThrown = false
-  //   try {
-  //     await spoofedDT.transferFromEscrow(tokenProposer, tokensToMint, {from: anyAddress})
-  //   } catch (e) {
-  //     errorThrown = true
-  //   }
-  //   await assertThrown(errorThrown, 'An error should have been thrown')
-  // })
+
+  describe('freezeContract', () => {
+    it('not owner is unable to freeze the contract', async () => {
+      // take stock of variables
+      let owner = await utils.get({fn: spoofedTR.owner})
+      let freezeBefore = await utils.get({fn: spoofedTR.freeze})
+
+      // checks
+      assert.equal(freezeBefore, false, 'at initialization freeze should be false')
+      assert.notEqual(owner, anyAddress, 'ensure attempted freezer is not the owner')
+
+      // not owner attempts to freeze the contract
+      errorThrown = false
+      try {
+        await spoofedTR.freezeContract({from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('owner is able to freeze the contract', async () => {
+      // take stock of variables
+      let owner = await utils.get({fn: spoofedTR.owner})
+      let freezeBefore = await utils.get({fn: spoofedTR.freeze})
+
+      // checks
+      assert.equal(freezeBefore, false, 'after failed freeze attempt, freeze should be false')
+
+      // owner freezes the contract
+      await spoofedTR.freezeContract({from: owner})
+
+      // take stock of variables
+      let freezeAfter = await utils.get({fn: spoofedTR.freeze})
+
+      // checks
+      assert.equal(freezeAfter, true, 'owner should be able to freeze the contract')
+    })
+  })
+
+  describe('unfreezeContract', () => {
+    it('not owner is unable to freeze the contract', async () => {
+      // take stock of variables
+      let owner = await utils.get({fn: spoofedTR.owner})
+      let freezeBefore = await utils.get({fn: spoofedTR.freeze})
+
+      // checks
+      assert.equal(freezeBefore, true, 'after freezing, freeze should be true')
+      assert.notEqual(owner, anyAddress, 'ensure attempted unfreezer is not the owner')
+
+      // not owner attempts to freeze the contract
+      errorThrown = false
+      try {
+        await spoofedTR.unfreezeContract({from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('owner is able to unfreeze the contract', async () => {
+      // take stock of variables
+      let owner = await utils.get({fn: spoofedTR.owner})
+      let freezeBefore = await utils.get({fn: spoofedTR.freeze})
+
+      // checks
+      assert.equal(freezeBefore, true, 'after failed unfreeze attempt, freeze should be true')
+
+      // owner freezes the contract
+      await spoofedTR.unfreezeContract({from: owner})
+
+      // take stock of variables
+      let freezeAfter = await utils.get({fn: spoofedTR.freeze})
+
+      // checks
+      assert.equal(freezeAfter, false, 'owner should be able to unfreeze the contract')
+    })
+  })
+
+  describe('updatePLCRVoting', () => {
+    it('not owner is unable to update the plcr voting', async () => {
+      // take stock of variables
+      let owner = await utils.get({fn: spoofedTR.owner})
+      let plcrAddress = await utils.get({fn: spoofedTR.plcrVoting})
+
+      // checks
+      assert.equal(plcrAddress, spoofedPLCRVotingAddress, 'before updating, plcr voting address should be plcrAddress')
+      assert.notEqual(owner, anyAddress, 'ensure attempted updater is not the owner')
+
+      // not owner attempts to freeze the contract
+      errorThrown = false
+      try {
+        await spoofedTR.updatePLCRVoting(anyAddress, {from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('owner is able to update the plcr voting', async () => {
+      // take stock of variables
+      let owner = await utils.get({fn: spoofedTR.owner})
+      let plcrAddressBefore = await utils.get({fn: spoofedTR.plcrVoting})
+
+      // checks
+      assert.equal(plcrAddressBefore, spoofedPLCRVotingAddress, 'before updating, plcr voting address should be plcrAddress')
+
+      // owner freezes the contract
+      await spoofedTR.updatePLCRVoting(anyAddress, {from: owner})
+
+      // take stock of variables
+      let plcrVotingAddressAfter = await utils.get({fn: spoofedTR.plcrVoting})
+
+      // checks
+      assert.equal(plcrVotingAddressAfter, anyAddress, 'after updating, plcr voting address should be anyAddress')
+
+      // put it back
+      await spoofedTR.updatePLCRVoting(spoofedPLCRVotingAddress, {from: owner})
+    })
+  })
+
+  describe('updateDistributeToken', () => {
+    it('not owner is unable to update the distribute token', async () => {
+      // take stock of variables
+      let owner = await utils.get({fn: spoofedTR.owner})
+      let dtAddress = await utils.get({fn: spoofedTR.distributeToken})
+
+      // checks
+      assert.equal(dtAddress, spoofedDTAddress, 'before updating, distribute token address should be trAddress')
+      assert.notEqual(owner, anyAddress, 'ensure attempted updater is not the owner')
+
+      // not owner attempts to freeze the contract
+      errorThrown = false
+      try {
+        await spoofedTR.updateDistributeToken(anyAddress, {from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('owner is able to update the distribute token', async () => {
+      // take stock of variables
+      let owner = await utils.get({fn: spoofedTR.owner})
+      let dtAddressBefore = await utils.get({fn: spoofedTR.distributeToken})
+
+      // checks
+      assert.equal(dtAddressBefore, spoofedDTAddress, 'before updating, distribute token address should be plcrVotingAddress')
+
+      // owner freezes the contract
+      await spoofedTR.updateDistributeToken(anyAddress, {from: owner})
+
+      // take stock of variables
+      let dtAddressAfter = await utils.get({fn: spoofedTR.distributeToken})
+
+      // checks
+      assert.equal(dtAddressAfter, anyAddress, 'after updating, distribute token address should be anyAddress')
+
+      // put it back
+      await spoofedTR.updateDistributeToken(spoofedDTAddress, {from: owner})
+    })
+  })
+
+  describe('updateProjectRegistry', () => {
+    it('not owner is unable to update the project registry', async () => {
+      // take stock of variables
+      let owner = await utils.get({fn: spoofedTR.owner})
+      let prAddress = await utils.get({fn: spoofedTR.projectRegistry})
+
+      // checks
+      assert.equal(prAddress, spoofedPRAddress, 'before updating, project registry address should be trAddress')
+      assert.notEqual(owner, anyAddress, 'ensure attempted updater is not the owner')
+
+      // not owner attempts to freeze the contract
+      errorThrown = false
+      try {
+        await spoofedTR.updateProjectRegistry(anyAddress, {from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('owner is able to update the project registry', async () => {
+      // take stock of variables
+      let owner = await utils.get({fn: spoofedTR.owner})
+      let prAddressBefore = await utils.get({fn: spoofedTR.projectRegistry})
+
+      // checks
+      assert.equal(prAddressBefore, spoofedPRAddress, 'before updating, project registry address should be prAddress')
+
+      // owner freezes the contract
+      await spoofedTR.updateProjectRegistry(anyAddress, {from: owner})
+
+      // take stock of variables
+      let prAddressAfter = await utils.get({fn: spoofedTR.projectRegistry})
+
+      // checks
+      assert.equal(prAddressAfter, anyAddress, 'after updating, project registry address should be anyAddress')
+
+      // put it back
+      await spoofedTR.updateProjectRegistry(spoofedPRAddress, {from: owner})
+    })
+  })
 })
