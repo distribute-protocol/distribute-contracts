@@ -559,6 +559,34 @@ contract('Distribute Token', function (accounts) {
   })
 
   describe('transferTokensTo', () => {
+    it('can\'t be called by not token registry', async () => {
+      errorThrown = false
+      try {
+        await spoofedDT.transferTokensTo(anyAddress, 100000, {from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('can be called by token registry', async () => {
+      let tokensToTransfer = 100000
+
+      // take stock of variables
+      let tokenSupplyBefore = await utils.get({fn: spoofedDT.totalSupply, bn: false})
+      let userBalanceBefore = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
+
+      await spoofedDT.transferTokensTo(anyAddress, tokensToTransfer, {from: spoofedTRAddress})
+
+      // take stock of variables
+      let tokenSupplyAfter = await utils.get({fn: spoofedDT.totalSupply, bn: false})
+      let userBalanceAfter = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
+
+      // checks
+      assert.equal(tokenSupplyAfter - tokenSupplyBefore, tokensToTransfer, 'total supply does not reflect number of tokens transferred')
+      assert.equal(userBalanceAfter - userBalanceBefore, tokensToTransfer, 'user balance does not reflect number of tokens transferred')
+    })
   })
 
   describe('returnWei', () => {
