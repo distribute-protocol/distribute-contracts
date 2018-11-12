@@ -590,6 +590,53 @@ contract('Distribute Token', function (accounts) {
   })
 
   describe('returnWei', () => {
+    it('can\'t be called if contract is frozen', async () => {
+      // freeze contract
+      let owner = await utils.get({fn: spoofedDT.owner})
+      await spoofedDT.freezeContract({from: owner})
+
+      let weiVal = 10000000000
+
+      errorThrown = false
+      try {
+        await spoofedDT.returnWei(weiVal, {from: spoofedTRAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+
+      // unfreeze contract
+      await spoofedDT.unfreezeContract({from: owner})
+    })
+
+    it('can\'t be called by not token registry', async () => {
+      let weiVal = 10000000000
+
+      errorThrown = false
+      try {
+        await spoofedDT.returnWei(weiVal, {from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('can be called by token registry', async () => {
+      let weiVal = 10000000000
+
+      // take stock of variables
+      let weiBalBefore = await utils.get({fn: spoofedDT.weiBal})
+
+      await spoofedDT.returnWei(weiVal, {from: spoofedTRAddress})
+
+      // take stock of variables
+      let weiBalAfter = await utils.get({fn: spoofedDT.weiBal})
+
+      // checks
+      assert.equal(weiBalAfter.minus(weiBalBefore), weiVal, 'incorrect amount of wei returned')
+    })
   })
 
   describe('transferToEscrow', () => {
