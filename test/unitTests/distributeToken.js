@@ -340,6 +340,95 @@ contract('Distribute Token', function (accounts) {
   })
 
   describe('burn', () => {
+    it('can\'t be called if contract is frozen', async () => {
+      // freeze contract
+      let owner = await utils.get({fn: spoofedDT.owner})
+      await spoofedDT.freezeContract({from: owner})
+
+      // transfer some tokens to TR
+      await spoofedDT.transferTokensTo(spoofedTRAddress, tokensToMint, {from: spoofedTRAddress})
+
+      errorThrown = false
+      try {
+        await spoofedDT.burn(tokensToMint, {from: spoofedTRAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+
+      // unfreeze contract
+      await spoofedDT.unfreezeContract({from: owner})
+    })
+
+    it('not token registry is unable to burn tokens', async () => {
+      // get user balance
+      let userBalance = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
+
+      errorThrown = false
+      try {
+        await spoofedDT.burn(userBalance, {from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('token registry is unable to burn more tokens than it has', async () => {
+      // get user balance
+      let userBalance = await utils.get({fn: spoofedDT.balances, params: spoofedTRAddress, bn: false})
+
+      errorThrown = false
+      try {
+        await spoofedDT.burn(userBalance + 1, {from: spoofedTRAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: invalid opcode/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('token registry is unable to burn more tokens than in the total supply', async () => {
+      // get user balance
+      let tokenSupply = await utils.get({fn: spoofedDT.totalSupply, bn: false})
+
+      errorThrown = false
+      try {
+        await spoofedDT.burn(tokenSupply + 1, {from: spoofedTRAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('token registry is unable to burn zero tokens', async () => {
+      errorThrown = false
+      try {
+        await spoofedDT.burn(0, {from: spoofedTRAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('token registry is able to burn tokens', async () => {
+      // take stock of variables
+      let tokenSupplyBefore = await utils.get({fn: spoofedDT.totalSupply, bn: false})
+      let trBalanceBefore = await utils.get({fn: spoofedDT.balances, params: spoofedTRAddress, bn: false})
+
+      await spoofedDT.burn(tokensToMint, {from: spoofedTRAddress})
+
+      // take stock of variables
+      let tokenSupplyAfter = await utils.get({fn: spoofedDT.totalSupply, bn: false})
+      let trBalanceAfter = await utils.get({fn: spoofedDT.balances, params: spoofedTRAddress, bn: false})
+
+      // checks
+      assert.equal(tokenSupplyBefore, tokenSupplyAfter + tokensToMint, 'incorrectly updated total supply')
+      assert.equal(trBalanceBefore, trBalanceAfter + tokensToMint, 'incorrectly updated TR token balance')
+    })
   })
 
   describe('sell', () => {
