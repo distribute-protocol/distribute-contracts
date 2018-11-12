@@ -39,14 +39,14 @@ contract TokenRegistry is Ownable {
     // STATE VARIABLES
     // =====================================================================
 
-    ProjectRegistry projectRegistry;
-    DistributeToken distributeToken;
-    PLCRVoting plcrVoting;
+    ProjectRegistry public projectRegistry;
+    DistributeToken public distributeToken;
+    PLCRVoting public plcrVoting;
 
     uint256 proposeProportion = 200000000000;  // tokensupply/proposeProportion is the number of tokens the proposer must stake
     uint256 rewardProportion = 100;
 
-    bool freeze;
+    bool public freeze;
 
     // =====================================================================
     // MODIFIERS

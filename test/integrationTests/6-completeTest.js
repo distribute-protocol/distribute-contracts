@@ -10,15 +10,15 @@ contract('Complete State', function (accounts) {
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let TR, RR, PLCR
-  let {user, project, task, utils, returnProject, validating, voting} = projObj
+  let DT, TR, RR, PLCR
+  let {user, project, task, variables, utils, returnProject} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {tokenStaker1, tokenStaker2, repStaker1, repStaker2, notStaker} = user
   let {worker1, worker2, notWorker} = user
   let {validator1, validator2, validator3, notValidator} = user
   let {tokenYesVoter, tokenNoVoter, repYesVoter, repNoVoter, notVoter} = user
-  let {projectCost, stakingPeriod, ipfsHash} = project
-  let {voteAmount, voteAmountMore} = voting
+  let {projectCost, stakingPeriod, ipfsHash} = variables
+  let {voteAmount, voteAmountMore} = variables
 
   // set up task details & hashing functions
   let {taskSet4} = taskDetails
@@ -33,14 +33,15 @@ contract('Complete State', function (accounts) {
   let valTrueMoreVoteTrueMore = 1
   let valFalseMoreVoteTrueMore = 2
 
-  let valType = [validating.valTrueOnly, validating.valTrueMore, validating.valFalseMore]
-  let voteType = [voting.voteNeither, voting.voteTrueMore, voting.voteTrueMore]
+  let valType = [variables.valTrueOnly, variables.valTrueMore, variables.valFalseMore]
+  let voteType = [variables.voteNeither, variables.voteTrueMore, variables.voteTrueMore]
 
   let fastForwards = 17 // testrpc is 17 weeks ahead at this point
 
   before(async function () {
     // get contract
     await projObj.contracts.setContracts()
+    DT = projObj.contracts.DT
     TR = projObj.contracts.TR
     RR = projObj.contracts.RR
     PLCR = projObj.contracts.PLCR
@@ -61,7 +62,7 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not proposer can\'t call refund proposer from reputation registry', async () => {
@@ -72,27 +73,27 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     // these two tests must come after not proposer refund proposer tests
     it('refund proposer can be called on TR complete project', async () => {
       // take stock of variables
-      let proposedWeiCost = await project.getProposedWeiCost(projAddrT)
+      let proposedWeiCost = await project.get({projAddr: projAddrT, fn: 'proposedCost', bn: false})
 
-      let tpBalBefore = await utils.getTokenBalance(tokenProposer)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let weiPoolBefore = await utils.getWeiPoolBal()
-      let proposerStakeBefore = await project.getProposerStake(projAddrT)
+      let tpBalBefore = await utils.get({fn: DT.balances, params: tokenProposer, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let weiPoolBefore = await utils.get({fn: DT.weiBal})
+      let proposerStakeBefore = await project.get({projAddr: projAddrT, fn: 'proposerStake', bn: false})
 
       // call refund proposer
       await TR.refundProposer(projAddrT, {from: tokenProposer})
 
       // take stock of variables
-      let tpBalAfter = await utils.getTokenBalance(tokenProposer)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let weiPoolAfter = await utils.getWeiPoolBal()
-      let proposerStakeAfter = await project.getProposerStake(projAddrT)
+      let tpBalAfter = await utils.get({fn: DT.balances, params: tokenProposer, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let weiPoolAfter = await utils.get({fn: DT.weiBal})
+      let proposerStakeAfter = await project.get({projAddr: projAddrT, fn: 'proposerStake', bn: false})
 
       // checks
       assert.equal(tpBalBefore + proposerStakeBefore, tpBalAfter, 'tokenProposer balance updated incorrectly')
@@ -103,19 +104,19 @@ contract('Complete State', function (accounts) {
 
     it('refund proposer can be called on RR complete project', async () => {
       // take stock of variables
-      let proposedWeiCost = await project.getProposedWeiCost(projAddrR)
+      let proposedWeiCost = await project.get({projAddr: projAddrR, fn: 'proposedCost', bn: false})
 
-      let rpBalBefore = await utils.getRepBalance(repProposer)
-      let weiPoolBefore = await utils.getWeiPoolBal()
-      let proposerStakeBefore = await project.getProposerStake(projAddrR)
+      let rpBalBefore = await utils.get({fn: RR.users, params: repProposer, bn: false, position: 0})
+      let weiPoolBefore = await utils.get({fn: DT.weiBal})
+      let proposerStakeBefore = await project.get({projAddr: projAddrR, fn: 'proposerStake', bn: false})
 
       // call refund proposer
       await RR.refundProposer(projAddrR, {from: repProposer})
 
       // take stock of variables
-      let rpBalAfter = await utils.getRepBalance(repProposer)
-      let weiPoolAfter = await utils.getWeiPoolBal()
-      let proposerStakeAfter = await project.getProposerStake(projAddrR)
+      let rpBalAfter = await utils.get({fn: RR.users, params: repProposer, bn: false, position: 0})
+      let weiPoolAfter = await utils.get({fn: DT.weiBal})
+      let proposerStakeAfter = await project.get({projAddr: projAddrR, fn: 'proposerStake', bn: false})
 
       // checks
       assert.equal(rpBalBefore + proposerStakeBefore, rpBalAfter, 'tokenProposer balance updated incorrectly')
@@ -131,7 +132,7 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('proposer can\'t call refund proposer multiple times from reputation registry', async () => {
@@ -142,19 +143,19 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
   describe('handle stakers', () => {
     it('token staker can ask for refund from TR complete project', async () => {
       // take stock of variables before
-      let totalTokensBefore = await utils.getTotalTokens()
-      let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let projTokensBefore = await project.getStakedTokens(projAddrT)
-      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker1, projAddrT)
-      let passAmount = await project.getPassAmount(projAddrT)
+      let totalTokensBefore = await utils.get({fn: DT.totalSupply, bn: false})
+      let tsBalBefore = await utils.get({fn: DT.balances, params: tokenStaker1, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projTokensBefore = await project.get({projAddr: projAddrT, fn: 'tokensStaked', bn: false})
+      let tsProjBalBefore = await project.get({projAddr: projAddrT, fn: 'tokenBalances', params: tokenStaker1, bn: false})
+      let passAmount = await project.get({projAddr: projAddrT, fn: 'passAmount', bn: false})
 
       // calculate refund & reward
       let refund = Math.floor((tsProjBalBefore * passAmount) / 100)
@@ -164,11 +165,11 @@ contract('Complete State', function (accounts) {
       await TR.refundStaker(projAddrT, {from: tokenStaker1})
 
       // take stock of variables after
-      let totalTokensAfter = await utils.getTotalTokens()
-      let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let projTokensAfter = await project.getStakedTokens(projAddrT)
-      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker1, projAddrT)
+      let totalTokensAfter = await utils.get({fn: DT.totalSupply, bn: false})
+      let tsBalAfter = await utils.get({fn: DT.balances, params: tokenStaker1, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projTokensAfter = await project.get({projAddr: projAddrT, fn: 'tokensStaked', bn: false})
+      let tsProjBalAfter = await project.get({projAddr: projAddrT, fn: 'tokenBalances', params: tokenStaker1, bn: false})
 
       // checks
       assert.equal(totalTokensBefore + reward, totalTokensAfter, 'incorrect token reward minted')
@@ -181,12 +182,12 @@ contract('Complete State', function (accounts) {
 
     it('token staker can ask for refund from RR complete project', async () => {
       // take stock of variables before
-      let totalTokensBefore = await utils.getTotalTokens()
-      let tsBalBefore = await utils.getTokenBalance(tokenStaker1)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let projTokensBefore = await project.getStakedTokens(projAddrR)
-      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker1, projAddrR)
-      let passAmount = await project.getPassAmount(projAddrR)
+      let totalTokensBefore = await utils.get({fn: DT.totalSupply, bn: false})
+      let tsBalBefore = await utils.get({fn: DT.balances, params: tokenStaker1, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projTokensBefore = await project.get({projAddr: projAddrR, fn: 'tokensStaked', bn: false})
+      let tsProjBalBefore = await project.get({projAddr: projAddrR, fn: 'tokenBalances', params: tokenStaker1, bn: false})
+      let passAmount = await project.get({projAddr: projAddrR, fn: 'passAmount', bn: false})
 
       // calculate refund & reward
       let refund = Math.floor((tsProjBalBefore * passAmount) / 100)
@@ -196,11 +197,11 @@ contract('Complete State', function (accounts) {
       await TR.refundStaker(projAddrR, {from: tokenStaker1})
 
       // take stock of variables after
-      let totalTokensAfter = await utils.getTotalTokens()
-      let tsBalAfter = await utils.getTokenBalance(tokenStaker1)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let projTokensAfter = await project.getStakedTokens(projAddrR)
-      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker1, projAddrR)
+      let totalTokensAfter = await utils.get({fn: DT.totalSupply, bn: false})
+      let tsBalAfter = await utils.get({fn: DT.balances, params: tokenStaker1, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projTokensAfter = await project.get({projAddr: projAddrR, fn: 'tokensStaked', bn: false})
+      let tsProjBalAfter = await project.get({projAddr: projAddrR, fn: 'tokenBalances', params: tokenStaker1, bn: false})
 
       // checks
       assert.equal(totalTokensBefore + reward, totalTokensAfter, 'incorrect token reward minted')
@@ -213,11 +214,11 @@ contract('Complete State', function (accounts) {
 
     it('reputation staker can ask for refund from TR complete project', async () => {
       // take stock of variables before
-      let totalRepBefore = await utils.getTotalRep()
-      let rsBalBefore = await utils.getRepBalance(repStaker1)
-      let projRepBefore = await project.getStakedRep(projAddrT)
-      let rsProjBalBefore = await project.getUserStakedRep(repStaker1, projAddrT)
-      let passAmount = await project.getPassAmount(projAddrT)
+      let totalRepBefore = await utils.get({fn: RR.totalSupply, bn: false})
+      let rsBalBefore = await utils.get({fn: RR.users, params: repStaker1, bn: false, position: 0})
+      let projRepBefore = await project.get({projAddr: projAddrT, fn: 'reputationStaked', bn: false})
+      let rsProjBalBefore = await project.get({projAddr: projAddrT, fn: 'reputationBalances', params: repStaker1, bn: false})
+      let passAmount = await project.get({projAddr: projAddrT, fn: 'passAmount', bn: false})
 
       // calculate refund & reward
       let refund = Math.floor((rsProjBalBefore * passAmount) / 100)
@@ -227,10 +228,10 @@ contract('Complete State', function (accounts) {
       await RR.refundStaker(projAddrT, {from: repStaker1})
 
       // take stock of variables after
-      let totalRepAfter = await utils.getTotalRep()
-      let rsBalAfter = await utils.getRepBalance(repStaker1)
-      let projRepAfter = await project.getStakedRep(projAddrT)
-      let rsProjBalAfter = await project.getUserStakedRep(repStaker1, projAddrT)
+      let totalRepAfter = await utils.get({fn: RR.totalSupply, bn: false})
+      let rsBalAfter = await utils.get({fn: RR.users, params: repStaker1, bn: false, position: 0})
+      let projRepAfter = await project.get({projAddr: projAddrT, fn: 'reputationStaked', bn: false})
+      let rsProjBalAfter = await project.get({projAddr: projAddrT, fn: 'reputationBalances', params: repStaker1, bn: false})
 
       // checks
       assert.equal(totalRepBefore + reward, totalRepAfter, 'incorrect rep reward calculated')
@@ -242,11 +243,11 @@ contract('Complete State', function (accounts) {
 
     it('reputation staker can ask for refund from RR complete project', async () => {
       // take stock of variables before
-      let totalRepBefore = await utils.getTotalRep()
-      let rsBalBefore = await utils.getRepBalance(repStaker1)
-      let projRepBefore = await project.getStakedRep(projAddrR)
-      let rsProjBalBefore = await project.getUserStakedRep(repStaker1, projAddrR)
-      let passAmount = await project.getPassAmount(projAddrR)
+      let totalRepBefore = await utils.get({fn: RR.totalSupply, bn: false})
+      let rsBalBefore = await utils.get({fn: RR.users, params: repStaker1, bn: false, position: 0})
+      let projRepBefore = await project.get({projAddr: projAddrR, fn: 'reputationStaked', bn: false})
+      let rsProjBalBefore = await project.get({projAddr: projAddrR, fn: 'reputationBalances', params: repStaker1, bn: false})
+      let passAmount = await project.get({projAddr: projAddrR, fn: 'passAmount', bn: false})
 
       // calculate refund & reward
       let refund = Math.floor((rsProjBalBefore * passAmount) / 100)
@@ -256,10 +257,10 @@ contract('Complete State', function (accounts) {
       await RR.refundStaker(projAddrR, {from: repStaker1})
 
       // take stock of variables after
-      let totalRepAfter = await utils.getTotalRep()
-      let rsBalAfter = await utils.getRepBalance(repStaker1)
-      let projRepAfter = await project.getStakedRep(projAddrR)
-      let rsProjBalAfter = await project.getUserStakedRep(repStaker1, projAddrR)
+      let totalRepAfter = await utils.get({fn: RR.totalSupply, bn: false})
+      let rsBalAfter = await utils.get({fn: RR.users, params: repStaker1, bn: false, position: 0})
+      let projRepAfter = await project.get({projAddr: projAddrR, fn: 'reputationStaked', bn: false})
+      let rsProjBalAfter = await project.get({projAddr: projAddrR, fn: 'reputationBalances', params: repStaker1, bn: false})
 
       // checks
       assert.equal(totalRepBefore + reward, totalRepAfter, 'incorrect rep reward calculated')
@@ -277,7 +278,7 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not staker can\'t ask for token refund from RR complete project', async () => {
@@ -288,7 +289,7 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not staker can\'t ask for reputation refund from TR complete project', async () => {
@@ -299,7 +300,7 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not staker can\'t ask for reputation refund from TR complete project', async () => {
@@ -310,25 +311,24 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('all stakers can be rewarded from TR complete project', async () => {
       // take stock of variables before
-      let totalTokensBefore = await utils.getTotalTokens()
-      let tsBalBefore = await utils.getTokenBalance(tokenStaker2)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let projTokensBefore = await project.getStakedTokens(projAddrT)
-      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker2, projAddrT)
+      let totalTokensBefore = await utils.get({fn: DT.totalSupply, bn: false})
+      let tsBalBefore = await utils.get({fn: DT.balances, params: tokenStaker2, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projTokensBefore = await project.get({projAddr: projAddrT, fn: 'tokensStaked', bn: false})
+      let tsProjBalBefore = await project.get({projAddr: projAddrT, fn: 'tokenBalances', params: tokenStaker2, bn: false})
 
-      let totalRepBefore = await utils.getTotalRep()
-      let rsBalBefore = await utils.getRepBalance(repStaker2)
-      let projRepBefore = await project.getStakedRep(projAddrT)
-      let rsProjBalBefore = await project.getUserStakedRep(repStaker2, projAddrT)
+      let totalRepBefore = await utils.get({fn: RR.totalSupply, bn: false})
+      let rsBalBefore = await utils.get({fn: RR.users, params: repStaker2, bn: false, position: 0})
+      let projRepBefore = await project.get({projAddr: projAddrT, fn: 'reputationStaked', bn: false})
+      let rsProjBalBefore = await project.get({projAddr: projAddrT, fn: 'reputationBalances', params: repStaker2, bn: false})
+      let passAmount = await project.get({projAddr: projAddrT, fn: 'passAmount', bn: false})
 
-      let passAmount = await project.getPassAmount(projAddrT)
-
-      // calculate refund & reward
+      // // calculate refund & reward
       let refundToken = Math.floor((tsProjBalBefore * passAmount) / 100)
       let rewardToken = Math.floor(refundToken / 20)
 
@@ -342,16 +342,16 @@ contract('Complete State', function (accounts) {
       await RR.refundStaker(projAddrT, {from: repStaker2})
 
       // take stock of variables after
-      let totalTokensAfter = await utils.getTotalTokens()
-      let tsBalAfter = await utils.getTokenBalance(tokenStaker2)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let projTokensAfter = await project.getStakedTokens(projAddrT)
-      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker2, projAddrT)
+      let totalTokensAfter = await utils.get({fn: DT.totalSupply, bn: false})
+      let tsBalAfter = await utils.get({fn: DT.balances, params: tokenStaker2, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projTokensAfter = await project.get({projAddr: projAddrT, fn: 'tokensStaked', bn: false})
+      let tsProjBalAfter = await project.get({projAddr: projAddrT, fn: 'tokenBalances', params: tokenStaker2, bn: false})
 
-      let totalRepAfter = await utils.getTotalRep()
-      let rsBalAfter = await utils.getRepBalance(repStaker2)
-      let projRepAfter = await project.getStakedRep(projAddrT)
-      let rsProjBalAfter = await project.getUserStakedRep(repStaker2, projAddrT)
+      let totalRepAfter = await utils.get({fn: RR.totalSupply, bn: false})
+      let rsBalAfter = await utils.get({fn: RR.users, params: repStaker2, bn: false, position: 0})
+      let projRepAfter = await project.get({projAddr: projAddrT, fn: 'reputationStaked', bn: false})
+      let rsProjBalAfter = await project.get({projAddr: projAddrT, fn: 'reputationBalances', params: repStaker2, bn: false})
 
       // checks
       assert.equal(totalTokensBefore + rewardToken, totalTokensAfter, 'incorrect token reward minted')
@@ -373,18 +373,17 @@ contract('Complete State', function (accounts) {
 
     it('all stakers can be rewarded from RR complete project', async () => {
       // take stock of variables before
-      let totalTokensBefore = await utils.getTotalTokens()
-      let tsBalBefore = await utils.getTokenBalance(tokenStaker2)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let projTokensBefore = await project.getStakedTokens(projAddrR)
-      let tsProjBalBefore = await project.getUserStakedTokens(tokenStaker2, projAddrR)
+      let totalTokensBefore = await utils.get({fn: DT.totalSupply, bn: false})
+      let tsBalBefore = await utils.get({fn: DT.balances, params: tokenStaker2, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projTokensBefore = await project.get({projAddr: projAddrR, fn: 'tokensStaked', bn: false})
+      let tsProjBalBefore = await project.get({projAddr: projAddrR, fn: 'tokenBalances', params: tokenStaker2, bn: false})
 
-      let totalRepBefore = await utils.getTotalRep()
-      let rsBalBefore = await utils.getRepBalance(repStaker2)
-      let projRepBefore = await project.getStakedRep(projAddrR)
-      let rsProjBalBefore = await project.getUserStakedRep(repStaker2, projAddrR)
-
-      let passAmount = await project.getPassAmount(projAddrR)
+      let totalRepBefore = await utils.get({fn: RR.totalSupply, bn: false})
+      let rsBalBefore = await utils.get({fn: RR.users, params: repStaker2, bn: false, position: 0})
+      let projRepBefore = await project.get({projAddr: projAddrR, fn: 'reputationStaked', bn: false})
+      let rsProjBalBefore = await project.get({projAddr: projAddrR, fn: 'reputationBalances', params: repStaker2, bn: false})
+      let passAmount = await project.get({projAddr: projAddrR, fn: 'passAmount', bn: false})
 
       // calculate refund & reward
       let refundToken = Math.floor((tsProjBalBefore * passAmount) / 100)
@@ -400,16 +399,16 @@ contract('Complete State', function (accounts) {
       await RR.refundStaker(projAddrR, {from: repStaker2})
 
       // take stock of variables after
-      let totalTokensAfter = await utils.getTotalTokens()
-      let tsBalAfter = await utils.getTokenBalance(tokenStaker2)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let projTokensAfter = await project.getStakedTokens(projAddrR)
-      let tsProjBalAfter = await project.getUserStakedTokens(tokenStaker2, projAddrR)
+      let totalTokensAfter = await utils.get({fn: DT.totalSupply, bn: false})
+      let tsBalAfter = await utils.get({fn: DT.balances, params: tokenStaker2, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let projTokensAfter = await project.get({projAddr: projAddrR, fn: 'tokensStaked', bn: false})
+      let tsProjBalAfter = await project.get({projAddr: projAddrR, fn: 'tokenBalances', params: tokenStaker2, bn: false})
 
-      let totalRepAfter = await utils.getTotalRep()
-      let rsBalAfter = await utils.getRepBalance(repStaker2)
-      let projRepAfter = await project.getStakedRep(projAddrR)
-      let rsProjBalAfter = await project.getUserStakedRep(repStaker2, projAddrR)
+      let totalRepAfter = await utils.get({fn: RR.totalSupply, bn: false})
+      let rsBalAfter = await utils.get({fn: RR.users, params: repStaker2, bn: false, position: 0})
+      let projRepAfter = await project.get({projAddr: projAddrR, fn: 'reputationStaked', bn: false})
+      let rsProjBalAfter = await project.get({projAddr: projAddrR, fn: 'reputationBalances', params: repStaker2, bn: false})
 
       // checks
       assert.equal(totalTokensBefore + rewardToken, totalTokensAfter, 'incorrect token reward minted')
@@ -435,23 +434,23 @@ contract('Complete State', function (accounts) {
       let index = valTrueOnly
 
       // take stock of variables before
-      let totalRepBefore = await utils.getTotalRep()
-      let rwBalBefore = await utils.getRepBalance(worker1)
-      let projWeiBalVariableBefore = await project.getWeiBal(projAddrT)
+      let totalRepBefore = await utils.get({fn: RR.totalSupply, bn: false})
+      let rwBalBefore = await utils.get({fn: RR.users, params: worker1, bn: false, position: 0})
+      let projWeiBalVariableBefore = await project.get({projAddr: projAddrT, fn: 'weiBal', bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
-      let repRewardBefore = await task.getRepReward(projAddrT, index)
-      let weiRewardBefore = await task.getWeiReward(projAddrT, index)
+      let repRewardBefore = await task.get({projAddr: projAddrT, index: index, fn: 'reputationReward', bn: false})
+      let weiRewardBefore = await task.get({projAddr: projAddrT, index: index, fn: 'weiReward', bn: false})
 
       // reward worker
       await RR.rewardTask(projAddrT, index, {from: worker1})
 
       // take stock of variables after
-      let totalRepAfter = await utils.getTotalRep()
-      let rwBalAfter = await utils.getRepBalance(worker1)
-      let projWeiBalVariableAfter = await project.getWeiBal(projAddrT)
+      let totalRepAfter = await utils.get({fn: RR.totalSupply, bn: false})
+      let rwBalAfter = await utils.get({fn: RR.users, params: worker1, bn: false, position: 0})
+      let projWeiBalVariableAfter = await project.get({projAddr: projAddrT, fn: 'weiBal', bn: false})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
-      let repRewardAfter = await task.getRepReward(projAddrT, index)
-      let weiRewardAfter = await task.getWeiReward(projAddrT, index)
+      let repRewardAfter = await task.get({projAddr: projAddrT, index: index, fn: 'reputationReward', bn: false})
+      let weiRewardAfter = await task.get({projAddr: projAddrT, index: index, fn: 'weiReward', bn: false})
 
       // checks
       assert.equal(totalRepBefore, totalRepAfter, 'total reputation should not change')
@@ -466,23 +465,23 @@ contract('Complete State', function (accounts) {
       let index = valTrueOnly
 
       // take stock of variables before
-      let totalRepBefore = await utils.getTotalRep()
-      let rwBalBefore = await utils.getRepBalance(worker1)
-      let projWeiBalVariableBefore = await project.getWeiBal(projAddrR)
+      let totalRepBefore = await utils.get({fn: RR.totalSupply, bn: false})
+      let rwBalBefore = await utils.get({fn: RR.users, params: worker1, bn: false, position: 0})
+      let projWeiBalVariableBefore = await project.get({projAddr: projAddrR, fn: 'weiBal', bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR))
-      let repRewardBefore = await task.getRepReward(projAddrR, index)
-      let weiRewardBefore = await task.getWeiReward(projAddrR, index)
+      let repRewardBefore = await task.get({projAddr: projAddrR, index: index, fn: 'reputationReward', bn: false})
+      let weiRewardBefore = await task.get({projAddr: projAddrR, index: index, fn: 'weiReward', bn: false})
 
       // reward worker
       await RR.rewardTask(projAddrR, index, {from: worker1})
 
       // take stock of variables after
-      let totalRepAfter = await utils.getTotalRep()
-      let rwBalAfter = await utils.getRepBalance(worker1)
-      let projWeiBalVariableAfter = await project.getWeiBal(projAddrR)
+      let totalRepAfter = await utils.get({fn: RR.totalSupply, bn: false})
+      let rwBalAfter = await utils.get({fn: RR.users, params: worker1, bn: false, position: 0})
+      let projWeiBalVariableAfter = await project.get({projAddr: projAddrR, fn: 'weiBal', bn: false})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR))
-      let repRewardAfter = await task.getRepReward(projAddrR, index)
-      let weiRewardAfter = await task.getWeiReward(projAddrR, index)
+      let repRewardAfter = await task.get({projAddr: projAddrR, index: index, fn: 'reputationReward', bn: false})
+      let weiRewardAfter = await task.get({projAddr: projAddrR, index: index, fn: 'weiReward', bn: false})
 
       // checks
       assert.equal(totalRepBefore, totalRepAfter, 'total reputation should not change')
@@ -503,7 +502,7 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('worker can\'t ask for reward they\'ve already received from RR complete project', async () => {
@@ -516,7 +515,7 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not worker can\'t ask for reward from TR complete project', async () => {
@@ -529,7 +528,7 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not worker can\'t ask for reward from RR complete project', async () => {
@@ -542,7 +541,7 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('all workers can be rewarded from TR complete project', async () => {
@@ -569,7 +568,7 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not originator can\'t call reward originator from RR complete project', async () => {
@@ -580,19 +579,19 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('originator can call reward originator from TR complete project', async () => {
       // take stock of variables before
-      let projWeiBalVariableBefore = await project.getWeiBal(projAddrT, true)
+      let projWeiBalVariableBefore = await project.get({projAddr: projAddrT, fn: 'weiBal'})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
 
       // refund originator
       await TR.rewardOriginator(projAddrT, {from: tokenStaker1})
 
       // take stock of variables after
-      let projWeiBalVariableAfter = await project.getWeiBal(projAddrT, true)
+      let projWeiBalVariableAfter = await project.get({projAddr: projAddrT, fn: 'weiBal'})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
 
       // interm calculations
@@ -605,14 +604,14 @@ contract('Complete State', function (accounts) {
 
     it('originator can call reward originator from RR complete project', async () => {
       // take stock of variables before
-      let projWeiBalVariableBefore = await project.getWeiBal(projAddrR, true)
+      let projWeiBalVariableBefore = await project.get({projAddr: projAddrR, fn: 'weiBal'})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR))
 
       // refund originator
       await TR.rewardOriginator(projAddrR, {from: tokenStaker1})
 
       // take stock of variables after
-      let projWeiBalVariableAfter = await project.getWeiBal(projAddrR, true)
+      let projWeiBalVariableAfter = await project.get({projAddr: projAddrR, fn: 'weiBal'})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR))
 
       // interm calculations
@@ -628,13 +627,13 @@ contract('Complete State', function (accounts) {
     it('yes validator can ask for refund & reward from TR complete project', async () => {
       // take stock of important environmental variables
       let index = valTrueOnly
-      let claimable = await task.getClaimable(projAddrT, index)
-      let claimableByRep = await task.getClaimableByRep(projAddrT, index)
-      let valDetails = await task.getValDetails(projAddrT, index, validator1)
+      let claimable = await task.get({projAddr: projAddrT, index: index, fn: 'claimable'})
+      let claimableByRep = await task.get({projAddr: projAddrT, index: index, fn: 'claimableByRep'})
+      let valDetails = await task.get({projAddr: projAddrT, index: index, fn: 'validators', params: validator1})
       let validatorStatus = valDetails[0]
       let validatorIndexBefore = valDetails[1].toNumber()
-      let validatorAtIndex = await task.getValidatorAtIndex(projAddrT, index, validatorIndexBefore, true)
-      let affirmativeIndex = await task.getValidationIndex(projAddrT, index, true)
+      let validatorAtIndex = await task.get({projAddr: projAddrT, index: index, fn: 'affirmativeValidators', params: validatorIndexBefore})
+      let affirmativeIndex = await task.get({projAddr: projAddrT, index: index, fn: 'affirmativeIndex', bn: false})
 
       // environmental checks
       assert.equal(claimable, true, 'task should be claimable')
@@ -648,24 +647,24 @@ contract('Complete State', function (accounts) {
 
       // calculate wei reward
       let rewardWeighting = 100 // no other validators on this task
-      let validationReward = await project.getValidationReward(projAddrT, true)
-      let taskWeighting = await task.getWeighting(projAddrT, index, true)
+      let validationReward = await project.get({projAddr: projAddrT, fn: 'validationReward'})
+      let taskWeighting = await task.get({projAddr: projAddrT, index: index, fn: 'weighting'})
       let weiReward = Math.floor(validationReward.times(taskWeighting).toNumber() * rewardWeighting / 10000)
 
       // take stock of variables
-      let validationEntryFee = await task.getValidationEntryFee(projAddrT, index)
-      let vBalBefore = await utils.getTokenBalance(validator1)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let validationEntryFee = await task.get({projAddr: projAddrT, index: index, fn: 'validationEntryFee', bn: false})
+      let vBalBefore = await utils.get({fn: DT.balances, params: validator1, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
 
       // refund & reward validator on index validated true only
       await TR.rewardValidator(projAddrT, index, {from: validator1})
 
       // take stock of variables
-      valDetails = await task.getValDetails(projAddrT, index, validator1)
+      valDetails = await task.get({projAddr: projAddrT, index: index, fn: 'validators', params: validator1})
       let validatorIndexAfter = valDetails[1]
-      let vBalAfter = await utils.getTokenBalance(validator1)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let vBalAfter = await utils.get({fn: DT.balances, params: validator1, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
 
       // checks
@@ -678,13 +677,13 @@ contract('Complete State', function (accounts) {
     it('yes validator can ask for refund & reward from RR complete project', async () => {
       // take stock of important environmental variables
       let index = valTrueOnly
-      let claimable = await task.getClaimable(projAddrR, index)
-      let claimableByRep = await task.getClaimableByRep(projAddrR, index)
-      let valDetails = await task.getValDetails(projAddrR, index, validator1)
+      let claimable = await task.get({projAddr: projAddrR, index: index, fn: 'claimable'})
+      let claimableByRep = await task.get({projAddr: projAddrR, index: index, fn: 'claimableByRep'})
+      let valDetails = await task.get({projAddr: projAddrR, index: index, fn: 'validators', params: validator1})
       let validatorStatus = valDetails[0]
       let validatorIndexBefore = valDetails[1].toNumber()
-      let validatorAtIndex = await task.getValidatorAtIndex(projAddrR, index, validatorIndexBefore, true)
-      let affirmativeIndex = await task.getValidationIndex(projAddrR, index, true)
+      let validatorAtIndex = await task.get({projAddr: projAddrR, index: index, fn: 'affirmativeValidators', params: validatorIndexBefore})
+      let affirmativeIndex = await task.get({projAddr: projAddrR, index: index, fn: 'affirmativeIndex', bn: false})
 
       // environmental checks
       assert.equal(claimable, true, 'task should be claimable')
@@ -698,24 +697,24 @@ contract('Complete State', function (accounts) {
 
       // calculate wei reward
       let rewardWeighting = 100 // no other validators on this task
-      let validationReward = await project.getValidationReward(projAddrR, true)
-      let taskWeighting = await task.getWeighting(projAddrR, index, true)
+      let validationReward = await project.get({projAddr: projAddrR, fn: 'validationReward'})
+      let taskWeighting = await task.get({projAddr: projAddrR, index: index, fn: 'weighting'})
       let weiReward = Math.floor(validationReward.times(taskWeighting).toNumber() * rewardWeighting / 10000)
 
       // take stock of variables
-      let validationEntryFee = await task.getValidationEntryFee(projAddrR, index)
-      let vBalBefore = await utils.getTokenBalance(validator1)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let validationEntryFee = await task.get({projAddr: projAddrR, index: index, fn: 'validationEntryFee', bn: false})
+      let vBalBefore = await utils.get({fn: DT.balances, params: validator1, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR))
 
       // refund & reward validator on index validated true only
       await TR.rewardValidator(projAddrR, index, {from: validator1})
 
       // take stock of variables
-      valDetails = await task.getValDetails(projAddrR, index, validator1)
+      valDetails = await task.get({projAddr: projAddrR, index: index, fn: 'validators', params: validator1})
       let validatorIndexAfter = valDetails[1]
-      let vBalAfter = await utils.getTokenBalance(validator1)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let vBalAfter = await utils.get({fn: DT.balances, params: validator1, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR))
 
       // checks
@@ -728,13 +727,13 @@ contract('Complete State', function (accounts) {
     it('no validator can ask for half refund from TR complete project', async () => {
       // take stock of important environmental variables
       let index = valTrueMoreVoteTrueMore
-      let claimable = await task.getClaimable(projAddrT, index)
-      let claimableByRep = await task.getClaimableByRep(projAddrT, index)
-      let valDetails = await task.getValDetails(projAddrT, index, validator2)
+      let claimable = await task.get({projAddr: projAddrT, index: index, fn: 'claimable'})
+      let claimableByRep = await task.get({projAddr: projAddrT, index: index, fn: 'claimableByRep'})
+      let valDetails = await task.get({projAddr: projAddrT, index: index, fn: 'validators', params: validator2})
       let validatorStatus = valDetails[0]
       let validatorIndexBefore = valDetails[1].toNumber()
-      let validatorAtIndex = await task.getValidatorAtIndex(projAddrT, index, validatorIndexBefore, false)
-      let negativeIndex = await task.getValidationIndex(projAddrT, index, false)
+      let validatorAtIndex = await task.get({projAddr: projAddrT, index: index, fn: 'negativeValidators', params: validatorIndexBefore})
+      let negativeIndex = await task.get({projAddr: projAddrT, index: index, fn: 'negativeIndex', bn: false})
 
       // environmental checks
       assert.equal(claimable, true, 'task should be claimable')
@@ -747,24 +746,24 @@ contract('Complete State', function (accounts) {
       assert.isAtLeast(negativeIndex, 0, 'negative index should be at least 0')
 
       // take stock of variables
-      let validationEntryFee = await task.getValidationEntryFee(projAddrT, index)
+      let validationEntryFee = await task.get({projAddr: projAddrT, index: index, fn: 'validationEntryFee', bn: false})
       let refund = Math.floor(validationEntryFee / 2)
       let tokensBurned = validationEntryFee - refund
 
-      let totalTokensBefore = await utils.getTotalTokens()
-      let vBalBefore = await utils.getTokenBalance(validator2)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let totalTokensBefore = await utils.get({fn: DT.totalSupply, bn: false})
+      let vBalBefore = await utils.get({fn: DT.balances, params: validator2, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
 
       // refund & reward validator on index validated true only
       await TR.rewardValidator(projAddrT, index, {from: validator2})
 
       // take stock of variables
-      valDetails = await task.getValDetails(projAddrT, index, validator2)
+      valDetails = await task.get({projAddr: projAddrT, index: index, fn: 'validators', params: validator2})
       let validatorIndexAfter = valDetails[1]
-      let totalTokensAfter = await utils.getTotalTokens()
-      let vBalAfter = await utils.getTokenBalance(validator2)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let totalTokensAfter = await utils.get({fn: DT.totalSupply, bn: false})
+      let vBalAfter = await utils.get({fn: DT.balances, params: validator2, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
 
       // checks
@@ -778,13 +777,13 @@ contract('Complete State', function (accounts) {
     it('no validator can ask for half reward from RR complete project', async () => {
       // take stock of important environmental variables
       let index = valTrueMoreVoteTrueMore
-      let claimable = await task.getClaimable(projAddrR, index)
-      let claimableByRep = await task.getClaimableByRep(projAddrR, index)
-      let valDetails = await task.getValDetails(projAddrR, index, validator2)
+      let claimable = await task.get({projAddr: projAddrR, index: index, fn: 'claimable'})
+      let claimableByRep = await task.get({projAddr: projAddrR, index: index, fn: 'claimableByRep'})
+      let valDetails = await task.get({projAddr: projAddrR, index: index, fn: 'validators', params: validator2})
       let validatorStatus = valDetails[0]
       let validatorIndexBefore = valDetails[1].toNumber()
-      let validatorAtIndex = await task.getValidatorAtIndex(projAddrR, index, validatorIndexBefore, false)
-      let negativeIndex = await task.getValidationIndex(projAddrR, index, false)
+      let validatorAtIndex = await task.get({projAddr: projAddrR, index: index, fn: 'negativeValidators', params: validatorIndexBefore})
+      let negativeIndex = await task.get({projAddr: projAddrR, index: index, fn: 'negativeIndex', bn: false})
 
       // environmental checks
       assert.equal(claimable, true, 'task should be claimable')
@@ -797,24 +796,24 @@ contract('Complete State', function (accounts) {
       assert.isAtLeast(negativeIndex, 0, 'negative index should be at least 0')
 
       // take stock of variables
-      let validationEntryFee = await task.getValidationEntryFee(projAddrR, index)
+      let validationEntryFee = await task.get({projAddr: projAddrR, index: index, fn: 'validationEntryFee', bn: false})
       let refund = Math.floor(validationEntryFee / 2)
       let tokensBurned = validationEntryFee - refund
 
-      let totalTokensBefore = await utils.getTotalTokens()
-      let vBalBefore = await utils.getTokenBalance(validator2)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let totalTokensBefore = await utils.get({fn: DT.totalSupply, bn: false})
+      let vBalBefore = await utils.get({fn: DT.balances, params: validator2, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR))
 
       // refund & reward validator on index validated true only
       await TR.rewardValidator(projAddrR, index, {from: validator2})
 
       // take stock of variables
-      valDetails = await task.getValDetails(projAddrR, index, validator2)
+      valDetails = await task.get({projAddr: projAddrR, index: index, fn: 'validators', params: validator2})
       let validatorIndexAfter = valDetails[1]
-      let totalTokensAfter = await utils.getTotalTokens()
-      let vBalAfter = await utils.getTokenBalance(validator2)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let totalTokensAfter = await utils.get({fn: DT.totalSupply, bn: false})
+      let vBalAfter = await utils.get({fn: DT.balances, params: validator2, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR))
 
       // checks
@@ -834,7 +833,7 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not validator can\'t ask for reward from RR complete project', async () => {
@@ -846,7 +845,7 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('all eligible validators can be rewarded from TR complete project', async () => {
@@ -856,8 +855,8 @@ contract('Complete State', function (accounts) {
       // calculate wei reward for validator 3 on index 1
       let index = valTrueMoreVoteTrueMore
       let rewardWeighting = 45 // 2nd of 2 validators
-      let validationReward = await project.getValidationReward(projAddrT, true)
-      let taskWeighting = await task.getWeighting(projAddrT, index, true)
+      let validationReward = await project.get({projAddr: projAddrT, fn: 'validationReward'})
+      let taskWeighting = await task.get({projAddr: projAddrT, index: index, fn: 'weighting'})
       let weiReward = Math.floor(validationReward.times(taskWeighting).toNumber() * rewardWeighting / 10000)
 
       // take stock of variables
@@ -888,8 +887,8 @@ contract('Complete State', function (accounts) {
       // calculate wei reward for validator 3 on index 1
       let index = valTrueMoreVoteTrueMore
       let rewardWeighting = 45 // 2nd of 2 validators
-      let validationReward = await project.getValidationReward(projAddrR, true)
-      let taskWeighting = await task.getWeighting(projAddrR, index, true)
+      let validationReward = await project.get({projAddr: projAddrR, fn: 'validationReward'})
+      let taskWeighting = await task.get({projAddr: projAddrR, index: index, fn: 'weighting'})
       let weiReward = Math.floor(validationReward.times(taskWeighting).toNumber() * rewardWeighting / 10000)
 
       // take stock of variables
@@ -926,13 +925,13 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('yes token voter can refund voting tokens', async () => {
       // take stock of variables before
-      let tyvBalBefore = await utils.getTokenBalance(tokenYesVoter)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let tyvBalBefore = await utils.get({fn: DT.balances, params: tokenYesVoter, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesBefore = await PLCR.getAvailableTokens(tokenYesVoter, 1)
       let lockedTokens = await PLCR.getLockedTokens(tokenYesVoter)
 
@@ -944,8 +943,8 @@ contract('Complete State', function (accounts) {
       await TR.refundVotingTokens(voteAmountMore, {from: tokenYesVoter})
 
       // take stock of variables after
-      let tyvBalAfter = await utils.getTokenBalance(tokenYesVoter)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let tyvBalAfter = await utils.get({fn: DT.balances, params: tokenYesVoter, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesAfter = await PLCR.getAvailableTokens(tokenYesVoter, 1)
 
       // checks
@@ -965,13 +964,13 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('no token voter can refund voting tokens', async () => {
       // take stock of variables before
-      let tnvBalBefore = await utils.getTokenBalance(tokenNoVoter)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let tnvBalBefore = await utils.get({fn: DT.balances, params: tokenNoVoter, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesBefore = await PLCR.getAvailableTokens(tokenNoVoter, 1)
       let lockedTokens = await PLCR.getLockedTokens(tokenNoVoter)
 
@@ -983,8 +982,8 @@ contract('Complete State', function (accounts) {
       await TR.refundVotingTokens(voteAmount, {from: tokenNoVoter})
 
       // take stock of variables after
-      let tnvBalAfter = await utils.getTokenBalance(tokenNoVoter)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let tnvBalAfter = await utils.get({fn: DT.balances, params: tokenNoVoter, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesAfter = await PLCR.getAvailableTokens(tokenNoVoter, 1)
 
       // checks
@@ -1004,12 +1003,12 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('yes reputation voter can refund voting reputation', async () => {
       // take stock of variables before
-      let ryvBalBefore = await utils.getRepBalance(repYesVoter)
+      let ryvBalBefore = await utils.get({fn: RR.users, params: repYesVoter, bn: false, position: 0})
       let availableVotesBefore = await PLCR.getAvailableTokens(repYesVoter, 2)
       let lockedTokens = await PLCR.getLockedTokens(repYesVoter)
 
@@ -1021,7 +1020,7 @@ contract('Complete State', function (accounts) {
       await RR.refundVotingReputation(voteAmountMore, {from: repYesVoter})
 
       // take stock of variables after
-      let ryvBalAfter = await utils.getRepBalance(repYesVoter)
+      let ryvBalAfter = await utils.get({fn: RR.users, params: repYesVoter, bn: false, position: 0})
       let availableVotesAfter = await PLCR.getAvailableTokens(repYesVoter, 2)
 
       // checks
@@ -1040,12 +1039,12 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('no reputation voter can refund voting reputation', async () => {
       // take stock of variables before
-      let rnvBalBefore = await utils.getRepBalance(repNoVoter)
+      let rnvBalBefore = await utils.get({fn: RR.users, params: repNoVoter, bn: false, position: 0})
       let availableVotesBefore = await PLCR.getAvailableTokens(repNoVoter, 2)
       let lockedTokens = await PLCR.getLockedTokens(repNoVoter)
 
@@ -1057,7 +1056,7 @@ contract('Complete State', function (accounts) {
       await RR.refundVotingReputation(voteAmount, {from: repNoVoter})
 
       // take stock of variables after
-      let rnvBalAfter = await utils.getRepBalance(repNoVoter)
+      let rnvBalAfter = await utils.get({fn: RR.users, params: repNoVoter, bn: false, position: 0})
       let availableVotesAfter = await PLCR.getAvailableTokens(repNoVoter, 2)
 
       // checks
@@ -1073,7 +1072,7 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not voter can\'t refund voting reputation', async () => {
@@ -1084,15 +1083,15 @@ contract('Complete State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
   describe('project contract empty', () => {
     it('TR complete project has 0 wei, 0 tokens staked, and 0 reputation staked', async () => {
       // take stock of variables
-      let projRepStaked = await project.getStakedRep(projAddrT)
-      let projTokensStaked = await project.getStakedTokens(projAddrT)
+      let projRepStaked = await project.get({projAddr: projAddrT, fn: 'reputationStaked', bn: false})
+      let projTokensStaked = await project.get({projAddr: projAddrT, fn: 'tokensStaked', bn: false})
       let projWeiBal = parseInt(await web3.eth.getBalance(projAddrT))
 
       // checks
@@ -1103,8 +1102,8 @@ contract('Complete State', function (accounts) {
 
     it('RR complete project has 0 wei, 0 tokens staked, and 0 reputation staked', async () => {
       // take stock of variables
-      let projRepStaked = await project.getStakedRep(projAddrT)
-      let projTokensStaked = await project.getStakedTokens(projAddrT)
+      let projRepStaked = await project.get({projAddr: projAddrT, fn: 'reputationStaked', bn: false})
+      let projTokensStaked = await project.get({projAddr: projAddrT, fn: 'tokensStaked', bn: false})
       let projWeiBal = parseInt(await web3.eth.getBalance(projAddrT))
 
       // checks

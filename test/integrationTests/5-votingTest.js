@@ -13,14 +13,14 @@ contract('Voting State', function (accounts) {
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let TR, RR, PR, PLCR
-  let {user, project, utils, returnProject, task, validating, voting} = projObj
+  let DT, TR, RR, PR, PLCR
+  let {user, project, variables, utils, returnProject, task} = projObj
   let {tokenProposer, repProposer, notProposer} = user
   let {worker1, worker2, notWorker} = user
   let {validator1, validator2, notValidator} = user
   let {repYesVoter, repNoVoter, tokenYesVoter, tokenNoVoter, notVoter, cheekyYesVoter, cheekyNoVoter} = user
-  let {projectCost, stakingPeriod, ipfsHash} = project
-  let {voteAmount, voteAmountMore} = voting
+  let {projectCost, stakingPeriod, ipfsHash} = variables
+  let {voteAmount, voteAmountMore} = variables
 
   // set up task details & hashing functions
   let {taskSet3} = taskDetails
@@ -39,7 +39,7 @@ contract('Voting State', function (accounts) {
   let valFalseMore2 = 5
   let valNeither = 6
 
-  let valType = [validating.valTrueOnly, validating.valFalseOnly, validating.valTrueMore, validating.valFalseMore, validating.valTrueMore, validating.valFalseMore, validating.valNeither]
+  let valType = [variables.valTrueOnly, variables.valFalseOnly, variables.valTrueMore, variables.valFalseMore, variables.valTrueMore, variables.valFalseMore, variables.valNeither]
 
   let secretSalt = 10000
   let voteYes = 1
@@ -50,6 +50,7 @@ contract('Voting State', function (accounts) {
   before(async function () {
     // get contract
     await projObj.contracts.setContracts()
+    DT = projObj.contracts.DT
     TR = projObj.contracts.TR
     RR = projObj.contracts.RR
     PR = projObj.contracts.PR
@@ -62,16 +63,16 @@ contract('Voting State', function (accounts) {
     projAddrR = projArray[0][1]
 
     // fund & register voters for successful commit & reveal tests
-    await utils.mintIfNecessary(tokenYesVoter)
-    await utils.mintIfNecessary(tokenNoVoter)
-    await utils.register(repYesVoter)
-    await utils.register(repNoVoter)
+    await utils.mintIfNecessary({user: tokenYesVoter})
+    await utils.mintIfNecessary({user: tokenNoVoter})
+    await utils.register({user: repYesVoter})
+    await utils.register({user: repNoVoter})
 
     // fund & register voters for failed reveal tests
-    await utils.mintIfNecessary(cheekyYesVoter)
-    await utils.mintIfNecessary(cheekyNoVoter)
-    await utils.register(cheekyYesVoter)
-    await utils.register(cheekyNoVoter)
+    await utils.mintIfNecessary({user: cheekyYesVoter})
+    await utils.mintIfNecessary({user: cheekyNoVoter})
+    await utils.register({user: cheekyYesVoter})
+    await utils.register({user: cheekyNoVoter})
   })
 
   describe('handle proposer', () => {
@@ -83,7 +84,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not proposer can\'t call refund proposer from reputation registry', async () => {
@@ -94,27 +95,27 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     // these two tests must come after not proposer refund proposer tests
     it('refund proposer can be called on TR voting project', async () => {
       // take stock of variables
-      let proposedWeiCost = await project.getProposedWeiCost(projAddrT)
+      let proposedWeiCost = await project.get({projAddr: projAddrT, fn: 'proposedCost', bn: false})
 
-      let tpBalBefore = await utils.getTokenBalance(tokenProposer)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
-      let weiPoolBefore = await utils.getWeiPoolBal()
-      let proposerStakeBefore = await project.getProposerStake(projAddrT)
+      let tpBalBefore = await utils.get({fn: DT.balances, params: tokenProposer, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let weiPoolBefore = await utils.get({fn: DT.weiBal})
+      let proposerStakeBefore = await project.get({projAddr: projAddrT, fn: 'proposerStake', bn: false})
 
       // call refund proposer
       await TR.refundProposer(projAddrT, {from: tokenProposer})
 
       // take stock of variables
-      let tpBalAfter = await utils.getTokenBalance(tokenProposer)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
-      let weiPoolAfter = await utils.getWeiPoolBal()
-      let proposerStakeAfter = await project.getProposerStake(projAddrT)
+      let tpBalAfter = await utils.get({fn: DT.balances, params: tokenProposer, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
+      let weiPoolAfter = await utils.get({fn: DT.weiBal})
+      let proposerStakeAfter = await project.get({projAddr: projAddrT, fn: 'proposerStake', bn: false})
 
       // checks
       assert.equal(tpBalBefore + proposerStakeBefore, tpBalAfter, 'tokenProposer balance updated incorrectly')
@@ -125,19 +126,19 @@ contract('Voting State', function (accounts) {
 
     it('refund proposer can be called on RR voting project', async () => {
       // take stock of variables
-      let proposedWeiCost = await project.getProposedWeiCost(projAddrR)
+      let proposedWeiCost = await project.get({projAddr: projAddrR, fn: 'proposedCost', bn: false})
 
-      let rpBalBefore = await utils.getRepBalance(repProposer)
-      let weiPoolBefore = await utils.getWeiPoolBal()
-      let proposerStakeBefore = await project.getProposerStake(projAddrR)
+      let rpBalBefore = await utils.get({fn: RR.users, params: repProposer, bn: false, position: 0})
+      let weiPoolBefore = await utils.get({fn: DT.weiBal})
+      let proposerStakeBefore = await project.get({projAddr: projAddrR, fn: 'proposerStake', bn: false})
 
       // call refund proposer
       await RR.refundProposer(projAddrR, {from: repProposer})
 
       // take stock of variables
-      let rpBalAfter = await utils.getRepBalance(repProposer)
-      let weiPoolAfter = await utils.getWeiPoolBal()
-      let proposerStakeAfter = await project.getProposerStake(projAddrR)
+      let rpBalAfter = await utils.get({fn: RR.users, params: repProposer, bn: false, position: 0})
+      let weiPoolAfter = await utils.get({fn: DT.weiBal})
+      let proposerStakeAfter = await project.get({projAddr: projAddrR, fn: 'proposerStake', bn: false})
 
       // checks
       assert.equal(rpBalBefore + proposerStakeBefore, rpBalAfter, 'tokenProposer balance updated incorrectly')
@@ -153,7 +154,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('proposer can\'t call refund proposer multiple times from reputation registry', async () => {
@@ -164,7 +165,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
@@ -173,23 +174,23 @@ contract('Voting State', function (accounts) {
       let index = valTrueOnly
 
       // take stock of variables before
-      let totalRepBefore = await utils.getTotalRep()
-      let rwBalBefore = await utils.getRepBalance(worker1)
-      let projWeiBalVariableBefore = await project.getWeiBal(projAddrT)
+      let totalRepBefore = await utils.get({fn: RR.totalSupply, bn: false})
+      let rwBalBefore = await utils.get({fn: RR.users, params: worker1, bn: false, position: 0})
+      let projWeiBalVariableBefore = await project.get({projAddr: projAddrT, fn: 'weiBal', bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
-      let repRewardBefore = await task.getRepReward(projAddrT, index)
-      let weiRewardBefore = await task.getWeiReward(projAddrT, index)
+      let repRewardBefore = await task.get({projAddr: projAddrT, index: index, fn: 'reputationReward', bn: false})
+      let weiRewardBefore = await task.get({projAddr: projAddrT, index: index, fn: 'weiReward', bn: false})
 
       // reward worker
       await RR.rewardTask(projAddrT, index, {from: worker1})
 
       // take stock of variables after
-      let totalRepAfter = await utils.getTotalRep()
-      let rwBalAfter = await utils.getRepBalance(worker1)
-      let projWeiBalVariableAfter = await project.getWeiBal(projAddrT)
+      let totalRepAfter = await utils.get({fn: RR.totalSupply, bn: false})
+      let rwBalAfter = await utils.get({fn: RR.users, params: worker1, bn: false, position: 0})
+      let projWeiBalVariableAfter = await project.get({projAddr: projAddrT, fn: 'weiBal', bn: false})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
-      let repRewardAfter = await task.getRepReward(projAddrT, index)
-      let weiRewardAfter = await task.getWeiReward(projAddrT, index)
+      let repRewardAfter = await task.get({projAddr: projAddrT, index: index, fn: 'reputationReward', bn: false})
+      let weiRewardAfter = await task.get({projAddr: projAddrT, index: index, fn: 'weiReward', bn: false})
 
       // checks
       assert.equal(totalRepBefore, totalRepAfter, 'total reputation should not change')
@@ -204,23 +205,23 @@ contract('Voting State', function (accounts) {
       let index = valTrueOnly
 
       // take stock of variables before
-      let totalRepBefore = await utils.getTotalRep()
-      let rwBalBefore = await utils.getRepBalance(worker1)
-      let projWeiBalVariableBefore = await project.getWeiBal(projAddrR)
+      let totalRepBefore = await utils.get({fn: RR.totalSupply, bn: false})
+      let rwBalBefore = await utils.get({fn: RR.users, params: worker1, bn: false, position: 0})
+      let projWeiBalVariableBefore = await project.get({projAddr: projAddrR, fn: 'weiBal', bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR))
-      let repRewardBefore = await task.getRepReward(projAddrR, index)
-      let weiRewardBefore = await task.getWeiReward(projAddrR, index)
+      let repRewardBefore = await task.get({projAddr: projAddrR, index: index, fn: 'reputationReward', bn: false})
+      let weiRewardBefore = await task.get({projAddr: projAddrR, index: index, fn: 'weiReward', bn: false})
 
       // reward worker
       await RR.rewardTask(projAddrR, index, {from: worker1})
 
       // take stock of variables after
-      let totalRepAfter = await utils.getTotalRep()
-      let rwBalAfter = await utils.getRepBalance(worker1)
-      let projWeiBalVariableAfter = await project.getWeiBal(projAddrR)
+      let totalRepAfter = await utils.get({fn: RR.totalSupply, bn: false})
+      let rwBalAfter = await utils.get({fn: RR.users, params: worker1, bn: false, position: 0})
+      let projWeiBalVariableAfter = await project.get({projAddr: projAddrR, fn: 'weiBal', bn: false})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR))
-      let repRewardAfter = await task.getRepReward(projAddrR, index)
-      let weiRewardAfter = await task.getWeiReward(projAddrR, index)
+      let repRewardAfter = await task.get({projAddr: projAddrR, index: index, fn: 'reputationReward', bn: false})
+      let weiRewardAfter = await task.get({projAddr: projAddrR, index: index, fn: 'weiReward', bn: false})
 
       // checks
       assert.equal(totalRepBefore, totalRepAfter, 'total reputation should not change')
@@ -241,7 +242,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('worker can\'t ask for reward they\'ve already received from task validated only true in RR voting project', async () => {
@@ -254,7 +255,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('worker can\'t ask for reward from task validated only false in TR voting project', async () => {
@@ -267,7 +268,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('worker can\'t ask for reward from task validated only false in RR voting project', async () => {
@@ -280,7 +281,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('worker can\'t ask for reward from task validated true and false in TR voting project', async () => {
@@ -293,7 +294,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('worker can\'t ask for reward from task validated true and false in RR voting project', async () => {
@@ -306,7 +307,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('worker can\'t ask for reward from task not validated in TR voting project', async () => {
@@ -319,7 +320,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('worker can\'t ask for reward from task not validated in RR voting project', async () => {
@@ -332,7 +333,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not worker can\'t ask for reward from TR voting project', async () => {
@@ -345,7 +346,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not worker can\'t ask for reward from RR voting project', async () => {
@@ -358,7 +359,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
@@ -366,13 +367,13 @@ contract('Voting State', function (accounts) {
     it('yes validator can ask for refund & reward from task validated only true in TR voting project', async () => {
       // take stock of important environmental variables
       let index = valTrueOnly
-      let claimable = await task.getClaimable(projAddrT, index)
-      let claimableByRep = await task.getClaimableByRep(projAddrT, index)
-      let valDetails = await task.getValDetails(projAddrT, index, validator1)
+      let claimable = await task.get({projAddr: projAddrT, index: index, fn: 'claimable'})
+      let claimableByRep = await task.get({projAddr: projAddrT, index: index, fn: 'claimableByRep'})
+      let valDetails = await task.get({projAddr: projAddrT, index: index, fn: 'validators', params: validator1})
       let validatorStatus = valDetails[0]
       let validatorIndexBefore = valDetails[1].toNumber()
-      let validatorAtIndex = await task.getValidatorAtIndex(projAddrT, index, validatorIndexBefore, true)
-      let affirmativeIndex = await task.getValidationIndex(projAddrT, index, true)
+      let validatorAtIndex = await task.get({projAddr: projAddrT, index: index, fn: 'affirmativeValidators', params: validatorIndexBefore})
+      let affirmativeIndex = await task.get({projAddr: projAddrT, index: index, fn: 'affirmativeIndex', bn: false})
 
       // environmental checks
       assert.equal(claimable, true, 'task should be claimable')
@@ -386,24 +387,24 @@ contract('Voting State', function (accounts) {
 
       // calculate wei reward
       let rewardWeighting = 100 // no other validators on this task
-      let validationReward = await project.getValidationReward(projAddrT, true)
-      let taskWeighting = await task.getWeighting(projAddrT, index, true)
+      let validationReward = await project.get({projAddr: projAddrT, fn: 'validationReward'})
+      let taskWeighting = await task.get({projAddr: projAddrT, index: index, fn: 'weighting'})
       let weiReward = Math.floor(validationReward.times(taskWeighting).toNumber() * rewardWeighting / 10000)
 
       // take stock of variables
-      let validationEntryFee = await task.getValidationEntryFee(projAddrT, index)
-      let vBalBefore = await utils.getTokenBalance(validator1)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let validationEntryFee = await task.get({projAddr: projAddrT, index: index, fn: 'validationEntryFee', bn: false})
+      let vBalBefore = await utils.get({fn: DT.balances, params: validator1, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
 
       // refund & reward validator on index validated true only
       await TR.rewardValidator(projAddrT, index, {from: validator1})
 
       // take stock of variables
-      valDetails = await task.getValDetails(projAddrT, index, validator1)
+      valDetails = await task.get({projAddr: projAddrT, index: index, fn: 'validators', params: validator1})
       let validatorIndexAfter = valDetails[1]
-      let vBalAfter = await utils.getTokenBalance(validator1)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let vBalAfter = await utils.get({fn: DT.balances, params: validator1, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
 
       // checks
@@ -416,13 +417,13 @@ contract('Voting State', function (accounts) {
     it('yes validator can ask for refund & reward from task validated only true in RR voting project', async () => {
       // take stock of important environmental variables
       let index = valTrueOnly
-      let claimable = await task.getClaimable(projAddrR, index)
-      let claimableByRep = await task.getClaimableByRep(projAddrR, index)
-      let valDetails = await task.getValDetails(projAddrR, index, validator1)
+      let claimable = await task.get({projAddr: projAddrR, index: index, fn: 'claimable'})
+      let claimableByRep = await task.get({projAddr: projAddrR, index: index, fn: 'claimableByRep'})
+      let valDetails = await task.get({projAddr: projAddrR, index: index, fn: 'validators', params: validator1})
       let validatorStatus = valDetails[0]
       let validatorIndexBefore = valDetails[1].toNumber()
-      let validatorAtIndex = await task.getValidatorAtIndex(projAddrR, index, validatorIndexBefore, true)
-      let affirmativeIndex = await task.getValidationIndex(projAddrR, index, true)
+      let validatorAtIndex = await task.get({projAddr: projAddrR, index: index, fn: 'affirmativeValidators', params: validatorIndexBefore})
+      let affirmativeIndex = await task.get({projAddr: projAddrR, index: index, fn: 'affirmativeIndex', bn: false})
 
       // environmental checks
       assert.equal(claimable, true, 'task should be claimable')
@@ -436,24 +437,24 @@ contract('Voting State', function (accounts) {
 
       // calculate wei reward
       let rewardWeighting = 100 // no other validators on this task
-      let validationReward = await project.getValidationReward(projAddrR, true)
-      let taskWeighting = await task.getWeighting(projAddrR, index, true)
+      let validationReward = await project.get({projAddr: projAddrR, fn: 'validationReward'})
+      let taskWeighting = await task.get({projAddr: projAddrR, index: index, fn: 'weighting'})
       let weiReward = Math.floor(validationReward.times(taskWeighting).toNumber() * rewardWeighting / 10000)
 
       // take stock of variables
-      let validationEntryFee = await task.getValidationEntryFee(projAddrR, index)
-      let vBalBefore = await utils.getTokenBalance(validator1)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let validationEntryFee = await task.get({projAddr: projAddrR, index: index, fn: 'validationEntryFee', bn: false})
+      let vBalBefore = await utils.get({fn: DT.balances, params: validator1, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR))
 
       // refund & reward validator on index validated true only
       await TR.rewardValidator(projAddrR, index, {from: validator1})
 
       // take stock of variables
-      valDetails = await task.getValDetails(projAddrR, index, validator1)
+      valDetails = await task.get({projAddr: projAddrR, index: index, fn: 'validators', params: validator1})
       let validatorIndexAfter = valDetails[1]
-      let vBalAfter = await utils.getTokenBalance(validator1)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let vBalAfter = await utils.get({fn: DT.balances, params: validator1, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR))
 
       // checks
@@ -466,13 +467,13 @@ contract('Voting State', function (accounts) {
     it('no validator can ask for refund & reward from task validated only false in TR voting project', async () => {
       // take stock of important environmental variables
       let index = valFalseOnly
-      let claimable = await task.getClaimable(projAddrT, index)
-      let claimableByRep = await task.getClaimableByRep(projAddrT, index)
-      let valDetails = await task.getValDetails(projAddrT, index, validator1)
+      let claimable = await task.get({projAddr: projAddrT, index: index, fn: 'claimable'})
+      let claimableByRep = await task.get({projAddr: projAddrT, index: index, fn: 'claimableByRep'})
+      let valDetails = await task.get({projAddr: projAddrT, index: index, fn: 'validators', params: validator1})
       let validatorStatus = valDetails[0]
       let validatorIndexBefore = valDetails[1].toNumber()
-      let validatorAtIndex = await task.getValidatorAtIndex(projAddrT, index, validatorIndexBefore, false)
-      let negativeIndex = await task.getValidationIndex(projAddrT, index, false)
+      let validatorAtIndex = await task.get({projAddr: projAddrT, index: index, fn: 'negativeValidators', params: validatorIndexBefore})
+      let negativeIndex = await task.get({projAddr: projAddrT, index: index, fn: 'negativeIndex', bn: false})
 
       // environmental checks
       assert.equal(claimable, true, 'task should be claimable')
@@ -486,24 +487,24 @@ contract('Voting State', function (accounts) {
 
       // calculate wei reward
       let rewardWeighting = 100 // no other validators on this task
-      let validationReward = await project.getValidationReward(projAddrT, true)
-      let taskWeighting = await task.getWeighting(projAddrT, index, true)
+      let validationReward = await project.get({projAddr: projAddrT, fn: 'validationReward'})
+      let taskWeighting = await task.get({projAddr: projAddrT, index: index, fn: 'weighting'})
       let weiReward = Math.floor(validationReward.times(taskWeighting).toNumber() * rewardWeighting / 10000)
 
       // take stock of variables
-      let validationEntryFee = await task.getValidationEntryFee(projAddrT, index)
-      let vBalBefore = await utils.getTokenBalance(validator1)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let validationEntryFee = await task.get({projAddr: projAddrT, index: index, fn: 'validationEntryFee', bn: false})
+      let vBalBefore = await utils.get({fn: DT.balances, params: validator1, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrT))
 
       // refund & reward validator on index validated true only
       await TR.rewardValidator(projAddrT, index, {from: validator1})
 
       // take stock of variables
-      valDetails = await task.getValDetails(projAddrT, index, validator1)
+      valDetails = await task.get({projAddr: projAddrT, index: index, fn: 'validators', params: validator1})
       let validatorIndexAfter = valDetails[1]
-      let vBalAfter = await utils.getTokenBalance(validator1)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let vBalAfter = await utils.get({fn: DT.balances, params: validator1, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrT))
 
       // checks
@@ -516,13 +517,13 @@ contract('Voting State', function (accounts) {
     it('no validator can ask for refund & reward from task validated only false in RR voting project', async () => {
       // take stock of important environmental variables
       let index = valFalseOnly
-      let claimable = await task.getClaimable(projAddrR, index)
-      let claimableByRep = await task.getClaimableByRep(projAddrR, index)
-      let valDetails = await task.getValDetails(projAddrR, index, validator1)
+      let claimable = await task.get({projAddr: projAddrR, index: index, fn: 'claimable'})
+      let claimableByRep = await task.get({projAddr: projAddrR, index: index, fn: 'claimableByRep'})
+      let valDetails = await task.get({projAddr: projAddrR, index: index, fn: 'validators', params: validator1})
       let validatorStatus = valDetails[0]
       let validatorIndexBefore = valDetails[1].toNumber()
-      let validatorAtIndex = await task.getValidatorAtIndex(projAddrR, index, validatorIndexBefore, false)
-      let negativeIndex = await task.getValidationIndex(projAddrR, index, false)
+      let validatorAtIndex = await task.get({projAddr: projAddrR, index: index, fn: 'negativeValidators', params: validatorIndexBefore})
+      let negativeIndex = await task.get({projAddr: projAddrR, index: index, fn: 'negativeIndex', bn: false})
 
       // environmental checks
       assert.equal(claimable, true, 'task should be claimable')
@@ -536,24 +537,24 @@ contract('Voting State', function (accounts) {
 
       // calculate wei reward
       let rewardWeighting = 100 // no other validators on this task
-      let validationReward = await project.getValidationReward(projAddrR, true)
-      let taskWeighting = await task.getWeighting(projAddrR, index, true)
+      let validationReward = await project.get({projAddr: projAddrR, fn: 'validationReward'})
+      let taskWeighting = await task.get({projAddr: projAddrR, index: index, fn: 'weighting'})
       let weiReward = Math.floor(validationReward.times(taskWeighting).toNumber() * rewardWeighting / 10000)
 
       // take stock of variables
-      let validationEntryFee = await task.getValidationEntryFee(projAddrR, index)
-      let vBalBefore = await utils.getTokenBalance(validator1)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let validationEntryFee = await task.get({projAddr: projAddrR, index: index, fn: 'validationEntryFee', bn: false})
+      let vBalBefore = await utils.get({fn: DT.balances, params: validator1, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalBefore = parseInt(await web3.eth.getBalance(projAddrR))
 
       // refund & reward validator on index validated true only
       await TR.rewardValidator(projAddrR, index, {from: validator1})
 
       // take stock of variables
-      valDetails = await task.getValDetails(projAddrR, index, validator1)
+      valDetails = await task.get({projAddr: projAddrR, index: index, fn: 'validators', params: validator1})
       let validatorIndexAfter = valDetails[1]
-      let vBalAfter = await utils.getTokenBalance(validator1)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let vBalAfter = await utils.get({fn: DT.balances, params: validator1, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let projWeiBalAfter = parseInt(await web3.eth.getBalance(projAddrR))
 
       // checks
@@ -573,7 +574,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('validator can\'t ask for reward from task validated true and false in RR voting project', async () => {
@@ -586,7 +587,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('validator can\'t ask for reward from task not validated in TR voting project', async () => {
@@ -599,7 +600,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('worker can\'t ask for reward from task not validated in RR voting project', async () => {
@@ -612,7 +613,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not validator can\'t ask for reward from TR voting project', async () => {
@@ -625,7 +626,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('not validator can\'t ask for reward from RR voting project', async () => {
@@ -638,21 +639,21 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
   describe('committing yes votes with tokens', () => {
     it('token voter can commit a yes vote to a task validated more yes from TR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrT, valTrueMore1)
+      let pollId = await task.get({projAddr: projAddrT, index: valTrueMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(tokenYesVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [tokenYesVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(tokenYesVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(tokenYesVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrT, valTrueMore1)
-      let tyvBalBefore = await utils.getTokenBalance(tokenYesVoter)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let tyvBalBefore = await utils.get({fn: DT.balances, params: tokenYesVoter, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesBefore = await PLCR.getAvailableTokens(tokenYesVoter, 1)
 
       // checks
@@ -673,8 +674,8 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(tokenYesVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(tokenYesVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrT, valTrueMore1)
-      let tyvBalAfter = await utils.getTokenBalance(tokenYesVoter)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let tyvBalAfter = await utils.get({fn: DT.balances, params: tokenYesVoter, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesAfter = await PLCR.getAvailableTokens(tokenYesVoter, 1)
 
       // checks
@@ -691,14 +692,14 @@ contract('Voting State', function (accounts) {
 
     it('token voter can commit a yes vote to a task validated more yes from RR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrR, valTrueMore1)
+      let pollId = await task.get({projAddr: projAddrR, index: valTrueMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(tokenYesVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [tokenYesVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(tokenYesVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(tokenYesVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrR, valTrueMore1)
-      let tyvBalBefore = await utils.getTokenBalance(tokenYesVoter)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let tyvBalBefore = await utils.get({fn: DT.balances, params: tokenYesVoter, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesBefore = await PLCR.getAvailableTokens(tokenYesVoter, 1)
 
       // checks
@@ -719,8 +720,8 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(tokenYesVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(tokenYesVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrR, valTrueMore1)
-      let tyvBalAfter = await utils.getTokenBalance(tokenYesVoter)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let tyvBalAfter = await utils.get({fn: DT.balances, params: tokenYesVoter, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesAfter = await PLCR.getAvailableTokens(tokenYesVoter, 1)
 
       // checks
@@ -737,14 +738,14 @@ contract('Voting State', function (accounts) {
 
     it('token voter can commit a yes vote to a task validated more no from TR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrT, valFalseMore1)
+      let pollId = await task.get({projAddr: projAddrT, index: valFalseMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(tokenYesVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [tokenYesVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(tokenYesVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(tokenYesVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrT, valFalseMore1)
-      let tyvBalBefore = await utils.getTokenBalance(tokenYesVoter)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let tyvBalBefore = await utils.get({fn: DT.balances, params: tokenYesVoter, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesBefore = await PLCR.getAvailableTokens(tokenYesVoter, 1)
 
       // checks
@@ -765,8 +766,8 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(tokenYesVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(tokenYesVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrT, valFalseMore1)
-      let tyvBalAfter = await utils.getTokenBalance(tokenYesVoter)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let tyvBalAfter = await utils.get({fn: DT.balances, params: tokenYesVoter, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesAfter = await PLCR.getAvailableTokens(tokenYesVoter, 1)
 
       // checks
@@ -783,14 +784,14 @@ contract('Voting State', function (accounts) {
 
     it('token voter can commit a yes vote to a task validated more no from RR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrR, valFalseMore1)
+      let pollId = await task.get({projAddr: projAddrR, index: valFalseMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(tokenYesVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [tokenYesVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(tokenYesVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(tokenYesVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrR, valFalseMore1)
-      let tyvBalBefore = await utils.getTokenBalance(tokenYesVoter)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let tyvBalBefore = await utils.get({fn: DT.balances, params: tokenYesVoter, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesBefore = await PLCR.getAvailableTokens(tokenYesVoter, 1)
 
       // checks
@@ -811,8 +812,8 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(tokenYesVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(tokenYesVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrR, valFalseMore1)
-      let tyvBalAfter = await utils.getTokenBalance(tokenYesVoter)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let tyvBalAfter = await utils.get({fn: DT.balances, params: tokenYesVoter, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesAfter = await PLCR.getAvailableTokens(tokenYesVoter, 1)
 
       // checks
@@ -839,7 +840,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot commit a yes vote to a task validated only yes from RR voting project', async () => {
@@ -854,7 +855,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot commit a yes vote to a task validated only no from TR voting project', async () => {
@@ -869,7 +870,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot commit a yes vote to a task validated only no from RR voting project', async () => {
@@ -884,7 +885,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot commit a yes vote to a task not validated from TR voting project', async () => {
@@ -899,7 +900,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot commit a yes vote to a task not validated from RR voting project', async () => {
@@ -914,21 +915,21 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
   describe('committing no votes with tokens', () => {
     it('token voter can commit a no vote to a task validated more yes from TR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrT, valTrueMore1)
+      let pollId = await task.get({projAddr: projAddrT, index: valTrueMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(tokenNoVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [tokenNoVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(tokenNoVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(tokenNoVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrT, valTrueMore1)
-      let tnvBalBefore = await utils.getTokenBalance(tokenNoVoter)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let tnvBalBefore = await utils.get({fn: DT.balances, params: tokenNoVoter, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesBefore = await PLCR.getAvailableTokens(tokenNoVoter, 1)
 
       // checks
@@ -949,8 +950,8 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(tokenNoVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(tokenNoVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrT, valTrueMore1)
-      let tnvBalAfter = await utils.getTokenBalance(tokenNoVoter)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let tnvBalAfter = await utils.get({fn: DT.balances, params: tokenNoVoter, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesAfter = await PLCR.getAvailableTokens(tokenNoVoter, 1)
 
       // checks
@@ -967,14 +968,14 @@ contract('Voting State', function (accounts) {
 
     it('token voter can commit a no vote to a task validated more yes from RR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrR, valTrueMore1)
+      let pollId = await task.get({projAddr: projAddrR, index: valTrueMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(tokenNoVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [tokenNoVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(tokenNoVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(tokenNoVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrR, valTrueMore1)
-      let tnvBalBefore = await utils.getTokenBalance(tokenNoVoter)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let tnvBalBefore = await utils.get({fn: DT.balances, params: tokenNoVoter, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesBefore = await PLCR.getAvailableTokens(tokenNoVoter, 1)
 
       // checks
@@ -995,8 +996,8 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(tokenNoVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(tokenNoVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrR, valTrueMore1)
-      let tnvBalAfter = await utils.getTokenBalance(tokenNoVoter)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let tnvBalAfter = await utils.get({fn: DT.balances, params: tokenNoVoter, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesAfter = await PLCR.getAvailableTokens(tokenNoVoter, 1)
 
       // checks
@@ -1013,14 +1014,14 @@ contract('Voting State', function (accounts) {
 
     it('token voter can commit a no vote to a task validated more no from TR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrT, valFalseMore1)
+      let pollId = await task.get({projAddr: projAddrT, index: valFalseMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(tokenNoVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [tokenNoVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(tokenNoVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(tokenNoVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrT, valFalseMore1)
-      let tnvBalBefore = await utils.getTokenBalance(tokenNoVoter)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let tnvBalBefore = await utils.get({fn: DT.balances, params: tokenNoVoter, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesBefore = await PLCR.getAvailableTokens(tokenNoVoter, 1)
 
       // checks
@@ -1041,8 +1042,8 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(tokenNoVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(tokenNoVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrT, valFalseMore1)
-      let tnvBalAfter = await utils.getTokenBalance(tokenNoVoter)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let tnvBalAfter = await utils.get({fn: DT.balances, params: tokenNoVoter, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesAfter = await PLCR.getAvailableTokens(tokenNoVoter, 1)
 
       // checks
@@ -1059,14 +1060,14 @@ contract('Voting State', function (accounts) {
 
     it('token voter can commit a no vote to a task validated more no from RR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrR, valFalseMore1)
+      let pollId = await task.get({projAddr: projAddrR, index: valFalseMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(tokenNoVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [tokenNoVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(tokenNoVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(tokenNoVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrR, valFalseMore1)
-      let tnvBalBefore = await utils.getTokenBalance(tokenNoVoter)
-      let TRBalBefore = await utils.getTokenBalance(TR.address)
+      let tnvBalBefore = await utils.get({fn: DT.balances, params: tokenNoVoter, bn: false})
+      let TRBalBefore = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesBefore = await PLCR.getAvailableTokens(tokenNoVoter, 1)
 
       // checks
@@ -1087,8 +1088,8 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(tokenNoVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(tokenNoVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrR, valFalseMore1)
-      let tnvBalAfter = await utils.getTokenBalance(tokenNoVoter)
-      let TRBalAfter = await utils.getTokenBalance(TR.address)
+      let tnvBalAfter = await utils.get({fn: DT.balances, params: tokenNoVoter, bn: false})
+      let TRBalAfter = await utils.get({fn: DT.balances, params: TR.address, bn: false})
       let availableVotesAfter = await PLCR.getAvailableTokens(tokenNoVoter, 1)
 
       // checks
@@ -1114,7 +1115,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot commit a no vote to a task validated only yes from RR voting project', async () => {
@@ -1128,7 +1129,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot commit a no vote to a task validated only no from TR voting project', async () => {
@@ -1142,7 +1143,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot commit a no vote to a task validated only no from RR voting project', async () => {
@@ -1156,7 +1157,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot commit a no vote to a task not validated from TR voting project', async () => {
@@ -1170,7 +1171,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot commit a no vote to a task not validated from RR voting project', async () => {
@@ -1184,20 +1185,20 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
   describe('committing yes votes with reputation', () => {
     it('reputation voter can commit a yes vote to a task validated more yes from TR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrT, valTrueMore1)
+      let pollId = await task.get({projAddr: projAddrT, index: valTrueMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(repYesVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [repYesVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(repYesVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(repYesVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrT, valTrueMore1)
-      let ryvBalBefore = await utils.getRepBalance(repYesVoter)
+      let ryvBalBefore = await utils.get({fn: RR.users, params: repYesVoter, bn: false, position: 0})
       let availableVotesBefore = await PLCR.getAvailableTokens(repYesVoter, 2)
 
       // checks
@@ -1218,7 +1219,7 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(repYesVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(repYesVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrT, valTrueMore1)
-      let ryvBalAfter = await utils.getRepBalance(repYesVoter)
+      let ryvBalAfter = await utils.get({fn: RR.users, params: repYesVoter, bn: false, position: 0})
       let availableVotesAfter = await PLCR.getAvailableTokens(repYesVoter, 2)
 
       // checks
@@ -1234,13 +1235,13 @@ contract('Voting State', function (accounts) {
 
     it('reputation voter can commit a yes vote to a task validated more yes from RR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrR, valTrueMore1)
+      let pollId = await task.get({projAddr: projAddrR, index: valTrueMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(repYesVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [repYesVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(repYesVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(repYesVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrR, valTrueMore1)
-      let ryvBalBefore = await utils.getRepBalance(repYesVoter)
+      let ryvBalBefore = await utils.get({fn: RR.users, params: repYesVoter, bn: false, position: 0})
       let availableVotesBefore = await PLCR.getAvailableTokens(repYesVoter, 2)
 
       // checks
@@ -1261,7 +1262,7 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(repYesVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(repYesVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrR, valTrueMore1)
-      let ryvBalAfter = await utils.getRepBalance(repYesVoter)
+      let ryvBalAfter = await utils.get({fn: RR.users, params: repYesVoter, bn: false, position: 0})
       let availableVotesAfter = await PLCR.getAvailableTokens(repYesVoter, 2)
 
       // checks
@@ -1277,13 +1278,13 @@ contract('Voting State', function (accounts) {
 
     it('reputation voter can commit a yes vote to a task validated more no from TR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrT, valFalseMore1)
+      let pollId = await task.get({projAddr: projAddrT, index: valFalseMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(repYesVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [repYesVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(repYesVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(repYesVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrT, valFalseMore1)
-      let ryvBalBefore = await utils.getRepBalance(repYesVoter)
+      let ryvBalBefore = await utils.get({fn: RR.users, params: repYesVoter, bn: false, position: 0})
       let availableVotesBefore = await PLCR.getAvailableTokens(repYesVoter, 2)
 
       // checks
@@ -1304,7 +1305,7 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(repYesVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(repYesVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrT, valFalseMore1)
-      let ryvBalAfter = await utils.getRepBalance(repYesVoter)
+      let ryvBalAfter = await utils.get({fn: RR.users, params: repYesVoter, bn: false, position: 0})
       let availableVotesAfter = await PLCR.getAvailableTokens(repYesVoter, 2)
 
       // checks
@@ -1320,13 +1321,13 @@ contract('Voting State', function (accounts) {
 
     it('reputation voter can commit a yes vote to a task validated more no from RR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrR, valFalseMore1)
+      let pollId = await task.get({projAddr: projAddrR, index: valFalseMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(repYesVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [repYesVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(repYesVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(repYesVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrR, valFalseMore1)
-      let ryvBalBefore = await utils.getRepBalance(repYesVoter)
+      let ryvBalBefore = await utils.get({fn: RR.users, params: repYesVoter, bn: false, position: 0})
       let availableVotesBefore = await PLCR.getAvailableTokens(repYesVoter, 2)
 
       // checks
@@ -1347,7 +1348,7 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(repYesVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(repYesVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrR, valFalseMore1)
-      let ryvBalAfter = await utils.getRepBalance(repYesVoter)
+      let ryvBalAfter = await utils.get({fn: RR.users, params: repYesVoter, bn: false, position: 0})
       let availableVotesAfter = await PLCR.getAvailableTokens(repYesVoter, 2)
 
       // checks
@@ -1372,7 +1373,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('reputation voter cannot commit a yes vote to a task validated only yes from RR voting project', async () => {
@@ -1386,7 +1387,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('reputation voter cannot commit a yes vote to a task validated only no from TR voting project', async () => {
@@ -1400,7 +1401,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('reputation voter cannot commit a yes vote to a task validated only no from RR voting project', async () => {
@@ -1414,7 +1415,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('reputation voter cannot commit a yes vote to a task not validated from TR voting project', async () => {
@@ -1428,7 +1429,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('reputation voter cannot commit a yes vote to a task not validated from RR voting project', async () => {
@@ -1442,20 +1443,20 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
   describe('committing no votes with reputation', () => {
     it('reputation voter can commit a no vote to a task validated more yes from TR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrT, valTrueMore1)
+      let pollId = await task.get({projAddr: projAddrT, index: valTrueMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(repNoVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [repNoVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(repNoVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(repNoVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrT, valTrueMore1)
-      let rnvBalBefore = await utils.getRepBalance(repNoVoter)
+      let rnvBalBefore = await utils.get({fn: RR.users, params: repNoVoter, bn: false, position: 0})
       let availableVotesBefore = await PLCR.getAvailableTokens(repNoVoter, 2)
 
       // checks
@@ -1476,7 +1477,7 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(repNoVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(repNoVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrT, valTrueMore1)
-      let rnvBalAfter = await utils.getRepBalance(repNoVoter)
+      let rnvBalAfter = await utils.get({fn: RR.users, params: repNoVoter, bn: false, position: 0})
       let availableVotesAfter = await PLCR.getAvailableTokens(repNoVoter, 2)
 
       // checks
@@ -1492,13 +1493,13 @@ contract('Voting State', function (accounts) {
 
     it('reputation voter can commit a no vote to a task validated more yes from RR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrR, valTrueMore1)
+      let pollId = await task.get({projAddr: projAddrR, index: valTrueMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(repNoVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [repNoVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(repNoVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(repNoVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrR, valTrueMore1)
-      let rnvBalBefore = await utils.getRepBalance(repNoVoter)
+      let rnvBalBefore = await utils.get({fn: RR.users, params: repNoVoter, bn: false, position: 0})
       let availableVotesBefore = await PLCR.getAvailableTokens(repNoVoter, 2)
 
       // checks
@@ -1519,7 +1520,7 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(repNoVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(repNoVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrR, valTrueMore1)
-      let rnvBalAfter = await utils.getRepBalance(repNoVoter)
+      let rnvBalAfter = await utils.get({fn: RR.users, params: repNoVoter, bn: false, position: 0})
       let availableVotesAfter = await PLCR.getAvailableTokens(repNoVoter, 2)
 
       // checks
@@ -1535,13 +1536,13 @@ contract('Voting State', function (accounts) {
 
     it('reputation voter can commit a no vote to a task validated more no from TR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrT, valFalseMore1)
+      let pollId = await task.get({projAddr: projAddrT, index: valFalseMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(repNoVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [repNoVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(repNoVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(repNoVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrT, valFalseMore1)
-      let rnvBalBefore = await utils.getRepBalance(repNoVoter)
+      let rnvBalBefore = await utils.get({fn: RR.users, params: repNoVoter, bn: false, position: 0})
       let availableVotesBefore = await PLCR.getAvailableTokens(repNoVoter, 2)
 
       // checks
@@ -1562,7 +1563,7 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(repNoVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(repNoVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrT, valFalseMore1)
-      let rnvBalAfter = await utils.getRepBalance(repNoVoter)
+      let rnvBalAfter = await utils.get({fn: RR.users, params: repNoVoter, bn: false, position: 0})
       let availableVotesAfter = await PLCR.getAvailableTokens(repNoVoter, 2)
 
       // checks
@@ -1578,13 +1579,13 @@ contract('Voting State', function (accounts) {
 
     it('reputation voter can commit a no vote to a task validated more no from RR voting project', async () => {
       // take stock of variables before
-      let pollId = await task.getPollNonce(projAddrR, valFalseMore1)
+      let pollId = await task.get({projAddr: projAddrR, index: valFalseMore1, fn: 'pollId', bn: false})
       let attrUUID = await PLCR.attrUUID(repNoVoter, pollId)
       let expectedUUID = ethers.utils.solidityKeccak256(['address', 'uint'], [repNoVoter, pollId])
       let commitHashBefore = await PLCR.getCommitHash(repNoVoter, pollId)
       let numTokensBefore = await PLCR.getNumTokens(repNoVoter, pollId)
       let pollMapBefore = await task.getPollMap(projAddrR, valFalseMore1)
-      let rnvBalBefore = await utils.getRepBalance(repNoVoter)
+      let rnvBalBefore = await utils.get({fn: RR.users, params: repNoVoter, bn: false, position: 0})
       let availableVotesBefore = await PLCR.getAvailableTokens(repNoVoter, 2)
 
       // checks
@@ -1605,7 +1606,7 @@ contract('Voting State', function (accounts) {
       let commitHashAfter = await PLCR.getCommitHash(repNoVoter, pollId)
       let numTokensAfter = await PLCR.getNumTokens(repNoVoter, pollId)
       let pollMapAfter = await task.getPollMap(projAddrR, valFalseMore1)
-      let rnvBalAfter = await utils.getRepBalance(repNoVoter)
+      let rnvBalAfter = await utils.get({fn: RR.users, params: repNoVoter, bn: false, position: 0})
       let availableVotesAfter = await PLCR.getAvailableTokens(repNoVoter, 2)
 
       // checks
@@ -1630,7 +1631,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('reputation voter cannot commit a no vote to a task validated only yes from RR voting project', async () => {
@@ -1644,7 +1645,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('reputation voter cannot commit a no vote to a task validated only no from TR voting project', async () => {
@@ -1658,7 +1659,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('reputation voter cannot commit a no vote to a task validated only no from RR voting project', async () => {
@@ -1672,7 +1673,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('reputation voter cannot commit a no vote to a task not validated from TR voting project', async () => {
@@ -1686,7 +1687,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('reputation voter cannot commit a no vote to a task not validated from RR voting project', async () => {
@@ -1700,7 +1701,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
@@ -1842,7 +1843,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('token voter cannot reveal a vote they didn\'t commit for a project', async () => {
@@ -1853,7 +1854,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
@@ -1933,7 +1934,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('reputation voter cannot reveal a vote they didn\'t commit for a RR voting project', async () => {
@@ -1944,7 +1945,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
@@ -2042,7 +2043,7 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
@@ -2139,20 +2140,20 @@ contract('Voting State', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 
   describe('state changes before time is up', () => {
     it('checkEnd does not change TR voting project to failed state before time is up', async () => {
       // take stock of variables
-      let stateBefore = await project.getState(projAddrT)
+      let stateBefore = await project.get({projAddr: projAddrT, fn: 'state'})
 
       // attempt to checkEnd
       await PR.checkEnd(projAddrT)
 
       // take stock of variables
-      let stateAfter = await project.getState(projAddrT)
+      let stateAfter = await project.get({projAddr: projAddrT, fn: 'state'})
 
       // checks
       assert.equal(stateBefore, 5, 'state before should be 5')
@@ -2161,13 +2162,13 @@ contract('Voting State', function (accounts) {
 
     it('checkEnd does not change RR voting project to failed state before time is up', async () => {
       // take stock of variables
-      let stateBefore = await project.getState(projAddrR)
+      let stateBefore = await project.get({projAddr: projAddrR, fn: 'state'})
 
       // attempt to checkEnd
       await PR.checkEnd(projAddrR)
 
       // take stock of variables
-      let stateAfter = await project.getState(projAddrR)
+      let stateAfter = await project.get({projAddr: projAddrR, fn: 'state'})
 
       // checks
       assert.equal(stateBefore, 5, 'state before should be 5')
@@ -2196,13 +2197,13 @@ contract('Voting State', function (accounts) {
 
     it('checkEnd changes TR voting project to failed state after time is up', async () => {
       // take stock of variables
-      let stateBefore = await project.getState(projAddrT)
+      let stateBefore = await project.get({projAddr: projAddrT, fn: 'state'})
 
       // attempt to checkEnd
       await PR.checkEnd(projAddrT)
 
       // take stock of variables
-      let stateAfter = await project.getState(projAddrT)
+      let stateAfter = await project.get({projAddr: projAddrT, fn: 'state'})
 
       let taskClaimableByVal = []
       let taskClaimableByRep = []
@@ -2210,9 +2211,9 @@ contract('Voting State', function (accounts) {
 
       // only check indices with polls
       for (let i = 2; i < 6; i++) {
-        let claimable = await task.getClaimable(projAddrT, i)
-        let claimableByRep = await task.getClaimableByRep(projAddrT, i)
-        let ended = await task.pollEnded(projAddrT, i)
+        let claimable = await task.get({projAddr: projAddrT, index: i, fn: 'claimable'})
+        let claimableByRep = await task.get({projAddr: projAddrT, index: i, fn: 'claimableByRep'})
+        let ended = await task.getPollEnded(projAddrT, i)
         taskClaimableByVal.push(claimable)
         taskClaimableByRep.push(claimableByRep)
         pollEnded.push(ended)
@@ -2240,13 +2241,13 @@ contract('Voting State', function (accounts) {
 
     it('checkEnd changes RR voting project to failed state after time is up', async () => {
       // take stock of variables
-      let stateBefore = await project.getState(projAddrR)
+      let stateBefore = await project.get({projAddr: projAddrR, fn: 'state'})
 
       // attempt to checkEnd
       await PR.checkEnd(projAddrR)
 
       // take stock of variables
-      let stateAfter = await project.getState(projAddrR)
+      let stateAfter = await project.get({projAddr: projAddrR, fn: 'state'})
 
       let taskClaimableByVal = []
       let taskClaimableByRep = []
@@ -2254,9 +2255,9 @@ contract('Voting State', function (accounts) {
 
       // only check indices with polls
       for (let i = 2; i < 6; i++) {
-        let claimable = await task.getClaimable(projAddrR, i)
-        let claimableByRep = await task.getClaimableByRep(projAddrR, i)
-        let ended = await task.pollEnded(projAddrR, i)
+        let claimable = await task.get({projAddr: projAddrR, index: i, fn: 'claimable'})
+        let claimableByRep = await task.get({projAddr: projAddrR, index: i, fn: 'claimableByRep'})
+        let ended = await task.getPollEnded(projAddrR, i)
         taskClaimableByVal.push(claimable)
         taskClaimableByRep.push(claimableByRep)
         pollEnded.push(ended)

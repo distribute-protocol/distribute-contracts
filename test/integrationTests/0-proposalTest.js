@@ -14,12 +14,11 @@ contract('Propose Projects', function (accounts) {
   let projObj = projectHelper(accounts)
 
   // get project helper variables
-  let TR, RR, PR
+  let DT, TR, RR, PR
   let {tokenProposer, repProposer, notProposer} = projObj.user
-  let {tokensToMint} = projObj.minting
-  let {registeredRep} = projObj.reputation
+  let {tokensToMint, registeredRep} = projObj.variables
+  let {stakingPeriod, expiredStakingPeriod, projectCost, ipfsHash, incorrectIpfsHash, proposeProportion} = projObj.variables
   let {utils} = projObj
-  let {stakingPeriod, expiredStakingPeriod, projectCost, ipfsHash, incorrectIpfsHash, proposeProportion} = projObj.project
 
   // local test variables
   let projAddr
@@ -39,23 +38,24 @@ contract('Propose Projects', function (accounts) {
     TR = projObj.contracts.TR
     RR = projObj.contracts.RR
     PR = projObj.contracts.PR
+    DT = projObj.contracts.DT
 
     // fund users with tokens and reputation
-    await utils.mintIfNecessary(tokenProposer, tokensToMint) // mint 10000 tokens for token proposer
-    await utils.register(repProposer) // register 10000 reputation for rep proposer
+    await utils.mintIfNecessary({user: tokenProposer}) // mint 10000 tokens for token proposer
+    await utils.register({user: repProposer}) // register 10000 reputation for rep proposer
 
     // take stock of variables after minting and registering
-    ttBal = await utils.getTokenBalance(tokenProposer)
-    rtBal = await utils.getTokenBalance(repProposer)
-    ntBal = await utils.getTokenBalance(notProposer)
+    ttBal = await utils.get({fn: DT.balances, params: tokenProposer, bn: false})
+    rtBal = await utils.get({fn: DT.balances, params: repProposer, bn: false})
+    ntBal = await utils.get({fn: DT.balances, params: notProposer, bn: false})
 
-    trBal = await utils.getRepBalance(tokenProposer)
-    rrBal = await utils.getRepBalance(repProposer)
-    nrBal = await utils.getRepBalance(notProposer)
+    trBal = await utils.get({fn: RR.users, params: tokenProposer, bn: false, position: 0})
+    rrBal = await utils.get({fn: RR.users, params: repProposer, bn: false, position: 0})
+    nrBal = await utils.get({fn: RR.users, params: notProposer, bn: false, position: 0})
 
-    totalTokens = await utils.getTotalTokens()
-    totalReputation = await utils.getTotalRep()
-    repHolders = await utils.getRepHolders()
+    totalTokens = await utils.get({fn: DT.totalSupply, bn: false})
+    totalReputation = await utils.get({fn: RR.totalSupply, bn: false})
+    repHolders = await utils.get({fn: RR.totalUsers, bn: false})
 
     // checks
     assert.equal(0, rtBal + ntBal, 'rep proposer or not proposer somehow have tokens')
@@ -73,10 +73,10 @@ contract('Propose Projects', function (accounts) {
       tx = await TR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: tokenProposer})
 
       // token supply, token balance checks
-      ttBal = await utils.getTokenBalance(tokenProposer)
-      weiBal = await utils.getWeiPoolBal()
-      totalTokens = await utils.getTotalTokens()
-      totalReputation = await utils.getTotalRep()
+      ttBal = await utils.get({fn: DT.balances, params: tokenProposer, bn: false})
+      weiBal = await utils.get({fn: DT.weiBal})
+      totalTokens = await utils.get({fn: DT.totalSupply, bn: false})
+      totalReputation = await utils.get({fn: RR.totalSupply, bn: false})
 
       proposerCost = Math.floor((projectCost / weiBal / proposeProportion) * totalTokens)
       repCost = Math.floor((projectCost / weiBal) * totalReputation)
@@ -119,10 +119,10 @@ contract('Propose Projects', function (accounts) {
       tx = await RR.proposeProject(projectCost, stakingPeriod, ipfsHash, {from: repProposer})
 
       // token supply, token balance checks
-      rrBal = await utils.getRepBalance(repProposer)
-      weiBal = await utils.getWeiPoolBal()
-      totalTokens = await utils.getTotalTokens()
-      totalReputation = await utils.getTotalRep()
+      rrBal = await utils.get({fn: RR.users, params: repProposer, bn: false, position: 0})
+      weiBal = await utils.get({fn: DT.weiBal})
+      totalTokens = await utils.get({fn: DT.totalSupply, bn: false})
+      totalReputation = await utils.get({fn: RR.totalSupply, bn: false})
 
       proposerCost = Math.floor((projectCost / weiBal / proposeProportion) * totalReputation)
       repCost = Math.floor((projectCost / weiBal) * totalReputation)
@@ -171,7 +171,7 @@ contract('Propose Projects', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('proposer with reputation can\'t propose project from RR with staking period that\'s passed', async () => {
@@ -182,7 +182,7 @@ contract('Propose Projects', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('proposer can\'t propose project from TR with ipfs hash of incorrect length', async () => {
@@ -193,7 +193,7 @@ contract('Propose Projects', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('proposer can\'t propose project from RR with ipfs hash of incorrect length', async () => {
@@ -204,7 +204,7 @@ contract('Propose Projects', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('user can\'t propose project without the required token stake', async () => {
@@ -215,7 +215,7 @@ contract('Propose Projects', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
 
     it('user can\'t propose project without the required reputation stake', async () => {
@@ -226,7 +226,7 @@ contract('Propose Projects', function (accounts) {
         assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
         errorThrown = true
       }
-      assertThrown(errorThrown, 'An error should have been thrown')
+      await assertThrown(errorThrown, 'An error should have been thrown')
     })
   })
 })
