@@ -463,7 +463,7 @@ contract('Distribute Token', function (accounts) {
     it('user can sell tokens they have', async () => {
       // get user balance & current price
       let userBalance = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
-      let burnPrice = await utils.calculateBurnPrice({DT: spoofedDT, tokens: userBalance})
+      let burnPrice = await utils.calculateBurnPrice({DT: spoofedDT, tokens: userBalance - 1000})
 
       // take stock of variables
       let tokenSupplyBefore = await utils.get({fn: spoofedDT.totalSupply, bn: false})
@@ -471,7 +471,7 @@ contract('Distribute Token', function (accounts) {
       let minterBalanceBefore = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
       let dtWeiBalBefore = parseInt(await web3.eth.getBalance(spoofedDT.address))
 
-      await spoofedDT.sell(userBalance, {from: anyAddress})
+      await spoofedDT.sell(userBalance - 1000, {from: anyAddress})
 
       // take stock of variables
       let tokenSupplyAfter = await utils.get({fn: spoofedDT.totalSupply, bn: false})
@@ -480,14 +480,82 @@ contract('Distribute Token', function (accounts) {
       let dtWeiBalAfter = parseInt(await web3.eth.getBalance(spoofedDT.address))
 
       // checks
-      assert.equal(tokenSupplyBefore, tokenSupplyAfter + userBalance, 'incorrect number of tokens minted')
-      assert.equal(minterBalanceBefore, minterBalanceAfter + userBalance, 'incorrect number of tokens minted')
+      assert.equal(tokenSupplyBefore, tokenSupplyAfter + userBalance - 1000, 'incorrect number of tokens minted')
+      assert.equal(minterBalanceBefore, minterBalanceAfter + userBalance - 1000, 'incorrect number of tokens minted')
       assert.equal(weiBalBefore.minus(weiBalAfter), burnPrice, 'incorrect amount of wei kept by contract in variable')
       assert.equal(dtWeiBalBefore - dtWeiBalAfter, burnPrice, 'incorrect amount of wei kept by contract in actual wei')
     })
   })
 
   describe('transferWeiTo', () => {
+    it('can\'t be called if contract is frozen', async () => {
+      // freeze contract
+      let owner = await utils.get({fn: spoofedDT.owner})
+      await spoofedDT.freezeContract({from: owner})
+
+      // get DT weiBal
+      let weiBal = await utils.get({fn: spoofedDT.weiBal})
+
+      errorThrown = false
+      try {
+        await spoofedDT.transferWeiTo(anyAddress, weiBal, {from: spoofedTRAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+
+      errorThrown = false
+      try {
+        await spoofedDT.transferWeiTo(anyAddress, weiBal, {from: spoofedRRAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+
+      // unfreeze contract
+      await spoofedDT.unfreezeContract({from: owner})
+    })
+
+    it('not token/reputation registry is unable to transfer wei', async () => {
+      // get DT weiBal
+      let weiBal = await utils.get({fn: spoofedDT.weiBal})
+
+      errorThrown = false
+      try {
+        await spoofedDT.transferWeiTo(anyAddress, weiBal, {from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('token/reputation registry is able to transfer wei', async () => {
+      // take stock of variables
+      let weiBalBefore = await utils.get({fn: spoofedDT.weiBal})
+      let dtWeiBalBefore = parseInt(await web3.eth.getBalance(spoofedDT.address))
+      let weiBalToTransfer = weiBalBefore.div(10)
+
+      await spoofedDT.transferWeiTo(anyAddress, weiBalToTransfer, {from: spoofedTRAddress})
+
+      // take stock of variables
+      let weiBalMiddle = await utils.get({fn: spoofedDT.weiBal})
+      let dtWeiBalMiddle = parseInt(await web3.eth.getBalance(spoofedDT.address))
+
+      await spoofedDT.transferWeiTo(anyAddress, weiBalToTransfer, {from: spoofedRRAddress})
+
+      // take stock of variables
+      let weiBalAfter = await utils.get({fn: spoofedDT.weiBal})
+      let dtWeiBalAfter = parseInt(await web3.eth.getBalance(spoofedDT.address))
+
+      // checks
+      assert.equal(weiBalBefore.minus(weiBalMiddle).minus(weiBalToTransfer), 0, 'TR failed to transfer wei (variable)')
+      assert.equal(dtWeiBalBefore - dtWeiBalMiddle, weiBalToTransfer, 'TR failed to transfer wei (actual wei)')
+      assert.equal(weiBalMiddle.minus(weiBalAfter).minus(weiBalToTransfer), 0, 'RR failed to transfer wei (variable)')
+      assert.equal(dtWeiBalMiddle - dtWeiBalAfter, weiBalToTransfer, 'RR failed to transfer wei (actual wei)')
+    })
   })
 
   describe('transferTokensTo', () => {
