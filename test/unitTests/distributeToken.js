@@ -18,7 +18,7 @@ contract('Distribute Token', function (accounts) {
   let {utils} = projObj
 
   // local test variables
-  // let errorThrown
+  let errorThrown
 
   before(async () => {
     // get contracts from project helped
@@ -133,7 +133,7 @@ contract('Distribute Token', function (accounts) {
     let weiRequired = await spoofedDT.weiRequired(tokensToMint)
     await spoofedDT.mint(tokensToMint, {from: spoofedTR, value: weiRequired})
 
-    let errorThrown = false
+    errorThrown = false
     try {
       await spoofedDT.burn(tokensToBurn, {from: anyAddress})
     } catch (e) {
@@ -188,7 +188,7 @@ contract('Distribute Token', function (accounts) {
     // get wei pool bal before
     let weiPoolBalBefore = await spoofedDT.weiBal()
 
-    let errorThrown = false
+    errorThrown = false
     try {
       await spoofedDT.transferWeiTo(spoofedPR, weiPoolBalBefore, {from: spoofedPR})
     } catch (e) {
@@ -212,7 +212,7 @@ contract('Distribute Token', function (accounts) {
   })
 
   it('only allows the tokenRegistry to call returnWei()', async () => {
-    let errorThrown = false
+    errorThrown = false
     try {
       await spoofedDT.returnWei(weiToReturn, {from: anyAddress})
     } catch (e) {
@@ -250,7 +250,7 @@ contract('Distribute Token', function (accounts) {
     let weiRequired = await spoofedDT.weiRequired(tokensToMint)
     await spoofedDT.mint(tokensToMint, {from: tokenProposer, value: weiRequired})
 
-    let errorThrown = false
+    errorThrown = false
     try {
       await spoofedDT.transferToEscrow(tokenProposer, tokensToMint, {from: anyAddress})
     } catch (e) {
@@ -280,7 +280,7 @@ contract('Distribute Token', function (accounts) {
   })
 
   it('only allows the tokenRegistry to call transferFromEscrow()', async () => {
-    let errorThrown = false
+    errorThrown = false
     try {
       await spoofedDT.transferFromEscrow(tokenProposer, tokensToMint, {from: anyAddress})
     } catch (e) {
