@@ -415,19 +415,22 @@ contract('Distribute Token', function (accounts) {
     })
 
     it('token registry is able to burn tokens', async () => {
+      // get user balance
+      let trBalance = await utils.get({fn: spoofedDT.balances, params: spoofedTRAddress, bn: false})
+
       // take stock of variables
       let tokenSupplyBefore = await utils.get({fn: spoofedDT.totalSupply, bn: false})
       let trBalanceBefore = await utils.get({fn: spoofedDT.balances, params: spoofedTRAddress, bn: false})
 
-      await spoofedDT.burn(tokensToMint, {from: spoofedTRAddress})
+      await spoofedDT.burn(trBalance, {from: spoofedTRAddress})
 
       // take stock of variables
       let tokenSupplyAfter = await utils.get({fn: spoofedDT.totalSupply, bn: false})
       let trBalanceAfter = await utils.get({fn: spoofedDT.balances, params: spoofedTRAddress, bn: false})
 
       // checks
-      assert.equal(tokenSupplyBefore, tokenSupplyAfter + tokensToMint, 'incorrectly updated total supply')
-      assert.equal(trBalanceBefore, trBalanceAfter + tokensToMint, 'incorrectly updated TR token balance')
+      assert.equal(tokenSupplyBefore, tokenSupplyAfter + trBalance, 'incorrectly updated total supply')
+      assert.equal(trBalanceBefore, trBalanceAfter + trBalance, 'incorrectly updated TR token balance')
     })
   })
 
