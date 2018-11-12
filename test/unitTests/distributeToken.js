@@ -640,6 +640,70 @@ contract('Distribute Token', function (accounts) {
   })
 
   describe('transferToEscrow', () => {
+    it('can\'t be called if contract is frozen', async () => {
+      // freeze contract
+      let owner = await utils.get({fn: spoofedDT.owner})
+      await spoofedDT.freezeContract({from: owner})
+
+      // get user balance
+      let userBalance = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
+
+      errorThrown = false
+      try {
+        await spoofedDT.transferToEscrow(anyAddress, userBalance, {from: spoofedTRAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+
+      // unfreeze contract
+      await spoofedDT.unfreezeContract({from: owner})
+    })
+
+    it('can\'t be called by not token registry', async () => {
+      // get user balance
+      let userBalance = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
+
+      errorThrown = false
+      try {
+        await spoofedDT.transferToEscrow(anyAddress, userBalance, {from: anyAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('token registry can\'t transfer more to escrow than a user has', async () => {
+      // get user balance
+      let userBalance = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
+
+      errorThrown = false
+      try {
+        await spoofedDT.transferToEscrow(anyAddress, userBalance + 1, {from: spoofedTRAddress})
+      } catch (e) {
+        assert.match(e.message, /VM Exception while processing transaction: revert/, 'throws an error')
+        errorThrown = true
+      }
+      await assertThrown(errorThrown, 'An error should have been thrown')
+    })
+
+    it('token registry can transfer user tokens to escrow', async () => {
+      // take stock of variables
+      let userBalanceBefore = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
+      let dtBalanceBefore = await utils.get({fn: spoofedDT.balances, params: spoofedTRAddress, bn: false})
+
+      await spoofedDT.transferToEscrow(anyAddress, userBalanceBefore, {from: spoofedTRAddress})
+
+      // take stock of variables
+      let userBalanceAfter = await utils.get({fn: spoofedDT.balances, params: anyAddress, bn: false})
+      let dtBalanceAfter = await utils.get({fn: spoofedDT.balances, params: spoofedTRAddress, bn: false})
+
+      // checks
+      assert.equal(userBalanceBefore - userBalanceAfter, userBalanceBefore, 'incorrect amount of tokens transferred from user')
+      assert.equal(dtBalanceAfter - dtBalanceBefore, userBalanceBefore, 'incorrect amount of tokens transferred to escrow')
+    })
   })
 
   describe('transferFromEscrow', () => {
