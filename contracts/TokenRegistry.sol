@@ -183,7 +183,7 @@ contract TokenRegistry is Ownable {
 
         uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress, msg.sender);        //call project to "send back" staked tokens to put in proposer's balances
         distributeToken.transferFromEscrow(msg.sender, proposerVals[1]);
-        distributeToken.transferWeiTo(msg.sender, proposerVals[0] / (20));
+        distributeToken.transferWeiTo(msg.sender, proposerVals[0].div(20));
     }
 
     /**
@@ -195,7 +195,7 @@ contract TokenRegistry is Ownable {
       Project project = Project(_projectAddress);
       require(project.state() == 6);
       projectRegistry.rewardOriginator(_projectAddress, msg.sender);
-      project.transferWeiReward(msg.sender, project.originatorReward());
+      project.transferWeiReward(msg.sender, project.originatorReward().mul(project.passAmount()).div(100));
     }
 
     // =====================================================================
@@ -342,7 +342,7 @@ contract TokenRegistry is Ownable {
             statusNeed == 1
                 ? require(task.negativeValidators(index) == msg.sender)
                 : require(task.affirmativeValidators(index) == msg.sender);
-            returnAmount += task.validationEntryFee() / 2;
+            returnAmount += task.validationEntryFee().div(2);
             distributeToken.burn(task.validationEntryFee() - returnAmount);
             emit LogRewardValidator(_projectAddress, _index, 0, returnAmount, msg.sender);
         }
@@ -435,8 +435,9 @@ contract TokenRegistry is Ownable {
         require(refund > 0);
         Project(_projectAddress).clearTokenStake(msg.sender);
         distributeToken.transferFromEscrow(msg.sender, refund);
+        // Inflationary Reward Mechanic for Full Completion
         if (Project(_projectAddress).state() == 6) {
-          distributeToken.transferTokensTo(msg.sender, refund / 20);
+          distributeToken.transferTokensTo(msg.sender, refund.div(20));
         }
     }
 
