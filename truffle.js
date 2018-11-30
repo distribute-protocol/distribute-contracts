@@ -20,6 +20,14 @@ module.exports = {
       port: 8545,
       network_id: 5777
     },
+    dogfood: {
+      provider: new HDWalletProvider(mnemonic, 'http://165.227.184.116:8540'),
+      gasPrice: '0x0',
+      // from: '0x0b239f63ec6219b0b295648162c7f186725eb321',
+      // host: '165.227.184.116',
+      // port: 8540,
+      network_id: 5777
+    },
     rinkeby: {
       provider: new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/'),
       network_id: '*',
