@@ -18,7 +18,7 @@ module.exports = {
     app: {
       host: 'localhost',
       port: 8545,
-      network_id: 5777
+      network_id: 1545334121552
     },
     dogfood: {
       provider: new HDWalletProvider(mnemonic, 'http://165.227.184.116:8540'),

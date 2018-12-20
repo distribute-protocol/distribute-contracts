@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.0;
 
 import "./ProjectRegistry.sol";
 import "./DistributeToken.sol";
@@ -68,11 +68,11 @@ contract TokenRegistry is Ownable {
     @param _projectRegistry Address of ProjectRegistry contract
     @param _plcrVoting Address of PLCRVoting contract
     */
-    function init(address _distributeToken, address _projectRegistry, address _plcrVoting) public { //contract is created
+    function init(address payable _distributeToken, address _projectRegistry, address _plcrVoting) public { //contract is created
         require(
-            address(distributeToken) == 0 &&
-            address(projectRegistry) == 0 &&
-            address(plcrVoting) == 0
+            address(distributeToken) == address(0) &&
+            address(projectRegistry) == address(0) &&
+            address(plcrVoting) == address(0)
         );
 
         distributeToken = DistributeToken(_distributeToken);
@@ -110,7 +110,7 @@ contract TokenRegistry is Ownable {
      * @dev Update the address of the distributeToken
      * @param _newDistributeToken Address of the new distribute token
      */
-    function updateDistributeToken(address _newDistributeToken) external onlyOwner {
+    function updateDistributeToken(address payable _newDistributeToken) external onlyOwner {
       distributeToken = DistributeToken(_newDistributeToken);
     }
 
@@ -131,7 +131,7 @@ contract TokenRegistry is Ownable {
     // FALLBACK
     // =====================================================================
 
-    function() public payable {}
+    function() external payable {}
 
     // =====================================================================
     // PROPOSE
@@ -145,7 +145,7 @@ contract TokenRegistry is Ownable {
     @param _stakingPeriod Length of time the project can be staked on before it expires
     @param _ipfsHash Hash of the project description
     */
-    function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes _ipfsHash) external {
+    function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes calldata _ipfsHash) external {
         require(!freeze);
         require(block.timestamp < _stakingPeriod && _cost > 0);
         uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
@@ -175,7 +175,7 @@ contract TokenRegistry is Ownable {
     @dev token proposer types are denoted by '1' and reputation proposers by '2'
     @param _projectAddress Address of the project
     */
-    function refundProposer(address _projectAddress) external {                                 //called by proposer to get refund once project is active
+    function refundProposer(address payable _projectAddress) external {                                 //called by proposer to get refund once project is active
         require(!freeze);
         Project project = Project(_projectAddress);                            //called by proposer to get refund once project is active
         require(project.proposer() == msg.sender);
@@ -190,7 +190,7 @@ contract TokenRegistry is Ownable {
     @notice Rewards the originator of a project plan in tokens.
     @param _projectAddress Address of the project
     */
-    function rewardOriginator(address _projectAddress) external {
+    function rewardOriginator(address payable _projectAddress) external {
       require(!freeze);
       Project project = Project(_projectAddress);
       require(project.state() == 6);
@@ -208,7 +208,7 @@ contract TokenRegistry is Ownable {
     @param _projectAddress Address of the project
     @param _tokens Amount of tokens to stake
     */
-    function stakeTokens(address _projectAddress, uint256 _tokens) external {
+    function stakeTokens(address payable _projectAddress, uint256 _tokens) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         require(distributeToken.balanceOf(msg.sender) >= _tokens);
@@ -245,7 +245,7 @@ contract TokenRegistry is Ownable {
     @param _projectAddress Address of the project
     @param _tokens Amount of reputation to unstake
     */
-    function unstakeTokens(address _projectAddress, uint256 _tokens) external {
+    function unstakeTokens(address payable _projectAddress, uint256 _tokens) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         // handles edge case where someone attempts to unstake past the staking deadline
@@ -284,7 +284,7 @@ contract TokenRegistry is Ownable {
     @param _validationState Approve or Deny task
     */
     function validateTask(
-        address _projectAddress,
+        address payable _projectAddress,
         uint256 _taskIndex,
         bool _validationState
     ) external {
@@ -295,7 +295,7 @@ contract TokenRegistry is Ownable {
         uint256 validationFee = task.validationEntryFee();
         require(distributeToken.balanceOf(msg.sender) >= validationFee);
         distributeToken.transferToEscrow(msg.sender, validationFee);
-        _projectAddress.validate(msg.sender, _taskIndex, _validationState);
+        ProjectLibrary.validate(_projectAddress, msg.sender, _taskIndex, _validationState);
         emit LogValidateTask(_projectAddress, validationFee, _validationState, _taskIndex, msg.sender);
     }
 
@@ -304,7 +304,7 @@ contract TokenRegistry is Ownable {
     @param _projectAddress Address of the project
     @param _index Index of the task
     */
-    function rewardValidator(address _projectAddress, uint256 _index) external {
+    function rewardValidator(address payable _projectAddress, uint256 _index) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         Project project = Project(_projectAddress);
@@ -316,6 +316,7 @@ contract TokenRegistry is Ownable {
         task.setValidatorIndex(msg.sender);
         uint rewardWeighting = projectRegistry.validationRewardWeightings(index);
         uint statusNeed = task.claimableByRep() ? 1 : 0;
+        uint weiReward;
 
         if (statusNeed == task.getValidatorStatus(msg.sender)) {
             returnAmount += task.validationEntryFee();
@@ -334,7 +335,7 @@ contract TokenRegistry is Ownable {
                 }
                 rewardWeighting = rewardWeighting.add(addtlWeighting.div(validationIndex));
             }
-            uint256 weiReward = project.validationReward().mul(task.weighting()).mul(rewardWeighting).div(10000);
+            weiReward = project.validationReward().mul(task.weighting()).mul(rewardWeighting).div(10000);
             project.transferWeiReward(msg.sender, weiReward);
             emit LogRewardValidator(_projectAddress, _index, weiReward, returnAmount, msg.sender);
         } else {
@@ -365,7 +366,7 @@ contract TokenRegistry is Ownable {
     @param _prevPollID The nonce of the previous poll. This is stored off chain
     */
     function voteCommit(
-        address _projectAddress,
+        address payable _projectAddress,
         uint256 _index,
         uint256 _votes,
         bytes32 _secretHash,
@@ -396,7 +397,7 @@ contract TokenRegistry is Ownable {
     @param _salt Salt of account
     */
     function voteReveal(
-        address _projectAddress,
+        address payable _projectAddress,
         uint256 _index,
         uint256 _voteOption,
         uint256 _salt
@@ -428,10 +429,10 @@ contract TokenRegistry is Ownable {
     @notice Refund a token staker from project at `_projectAddress`
     @param _projectAddress Address of the project
     */
-    function refundStaker(address _projectAddress) external {
+    function refundStaker(address payable _projectAddress) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
-        uint256 refund = _projectAddress.refundStaker(msg.sender, address(this));
+        uint256 refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender, address(this));
         require(refund > 0);
         Project(_projectAddress).clearTokenStake(msg.sender);
         distributeToken.transferFromEscrow(msg.sender, refund);
@@ -446,7 +447,7 @@ contract TokenRegistry is Ownable {
     @param _projectAddress Address of the project
     @param _index Index of the task
     */
-    function rescueTokens(address _projectAddress, uint _index) external {
+    function rescueTokens(address payable _projectAddress, uint _index) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.0;
 
 // divide by 10 ** precision at the very end
 library Division {

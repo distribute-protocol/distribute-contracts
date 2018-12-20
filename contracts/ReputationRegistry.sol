@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.0;
 
 import "./Project.sol";
 import "./ProjectLibrary.sol";
@@ -86,11 +86,11 @@ contract ReputationRegistry is Ownable {
     @param _projectRegistry Address of ProjectRegistry contract
     @param _plcrVoting Address of PLCRVoting contract
     */
-    function init(address _distributeToken, address _projectRegistry, address _plcrVoting) public {
+    function init(address payable _distributeToken, address _projectRegistry, address _plcrVoting) public {
         require(
-            address(distributeToken) == 0 &&
-            address(projectRegistry) == 0 &&
-            address(plcrVoting) == 0
+            address(distributeToken) == address(0) &&
+            address(projectRegistry) == address(0) &&
+            address(plcrVoting) == address(0)
         );
         projectRegistry = ProjectRegistry(_projectRegistry);
         plcrVoting = PLCRVoting(_plcrVoting);
@@ -139,7 +139,7 @@ contract ReputationRegistry is Ownable {
      * @dev Update the address of the distributeToken
      * @param _newDistributeToken Address of the new distribute token
      */
-    function updateDistributeToken(address _newDistributeToken) external onlyOwner {
+    function updateDistributeToken(address payable _newDistributeToken) external onlyOwner {
       distributeToken = DistributeToken(_newDistributeToken);
     }
 
@@ -186,7 +186,7 @@ contract ReputationRegistry is Ownable {
     @param _stakingPeriod Length of time the project can be staked before it expires
     @param _ipfsHash Hash of the project description
     */
-    function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes _ipfsHash) external {
+    function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes calldata _ipfsHash) external {
         require(!freeze);
         require(block.timestamp < _stakingPeriod && _cost > 0);
         uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
@@ -213,7 +213,7 @@ contract ReputationRegistry is Ownable {
     wei as a reward along with any reputation staked.
     @param _projectAddress Address of the project
     */
-    function refundProposer(address _projectAddress) external {
+    function refundProposer(address payable _projectAddress) external {
         require(!freeze);
         Project project = Project(_projectAddress);                                         //called by proposer to get refund once project is active
         require(project.proposer() == msg.sender);
@@ -234,7 +234,7 @@ contract ReputationRegistry is Ownable {
     @param _projectAddress Address of the project
     @param _reputation Amount of reputation to stake
     */
-    function stakeReputation(address _projectAddress, uint256 _reputation) external {
+    function stakeReputation(address payable _projectAddress, uint256 _reputation) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         require(users[msg.sender].balance >= _reputation && _reputation > 0);                    //make sure project exists & RH has tokens to stake
@@ -257,7 +257,7 @@ contract ReputationRegistry is Ownable {
     @param _projectAddress Address of the project
     @param _reputation Amount of reputation to unstake
     */
-    function unstakeReputation(address _projectAddress, uint256 _reputation) external {
+    function unstakeReputation(address payable _projectAddress, uint256 _reputation) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         require(_reputation > 0);
@@ -299,7 +299,7 @@ contract ReputationRegistry is Ownable {
     @param _weighting Weighting of the task
     */
     function claimTask(
-        address _projectAddress,
+        address payable _projectAddress,
         uint256 _index,
         bytes32 _taskDescription,
         uint _weighting
@@ -329,10 +329,10 @@ contract ReputationRegistry is Ownable {
     @param _index Index of the task
     */
     // called by reputation holder who completed a task
-    function rewardTask(address _projectAddress, uint256 _index) external {
+    function rewardTask(address payable _projectAddress, uint256 _index) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
-        uint256 reward = _projectAddress.claimTaskReward(_index, msg.sender);
+        uint256 reward = ProjectLibrary.claimTaskReward(_projectAddress, _index, msg.sender);
         users[msg.sender].balance += reward;
     }
 
@@ -351,7 +351,7 @@ contract ReputationRegistry is Ownable {
     @param _prevPollID The nonce of the previous poll. This is stored off chain
     */
     function voteCommit(
-        address _projectAddress,
+        address payable _projectAddress,
         uint256 _index,
         uint256 _votes,
         bytes32 _secretHash,
@@ -382,7 +382,7 @@ contract ReputationRegistry is Ownable {
     @param _salt Salt of account
     */
     function voteReveal(
-        address _projectAddress,
+        address payable _projectAddress,
         uint256 _index,
         uint256 _voteOption,
         uint256 _salt
@@ -414,10 +414,10 @@ contract ReputationRegistry is Ownable {
     @notice Refund a reputation staker from project at `_projectAddress`
     @param _projectAddress Address of the project
     */
-    function refundStaker(address _projectAddress) external {     //called by worker who staked or voted
+    function refundStaker(address payable _projectAddress) external {     //called by worker who staked or voted
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
-        uint256 refund = _projectAddress.refundStaker(msg.sender, address(this));
+        uint256 refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender, address(this));
         require(refund > 0);
         Project(_projectAddress).clearReputationStake(msg.sender);
         users[msg.sender].balance = users[msg.sender].balance.add(refund);
@@ -434,7 +434,7 @@ contract ReputationRegistry is Ownable {
     @param _projectAddress Address of the project
     @param _index Index of the task
     */
-    function rescueTokens(address _projectAddress, uint _index) external {
+    function rescueTokens(address payable _projectAddress, uint _index) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
         uint256 pollId = Task(Project(_projectAddress).tasks(_index)).pollId();

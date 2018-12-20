@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.0;
 
 import "./library/EIP20.sol";
 import "./library/SafeMath.sol";
@@ -65,7 +65,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     @param _reputationRegistry Address of the ReputationRegistry
     */
     constructor (address _tokenRegistry, address _reputationRegistry) public {
-        require(tokenRegistryAddress == 0 && reputationRegistryAddress == 0);
+        require(tokenRegistryAddress == address(0) && reputationRegistryAddress == address(0));
         tokenRegistryAddress = _tokenRegistry;
         reputationRegistryAddress = _reputationRegistry;
     }
@@ -212,7 +212,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     @param _address Recipient of wei value
     @param _weiValue The amount of wei to transfer to the _address
     */
-    function transferWeiTo(address _address, uint256 _weiValue) external onlyTRorRR {
+    function transferWeiTo(address payable _address, uint256 _weiValue) external onlyTRorRR {
         require(!freeze);
         require(_weiValue <= weiBal);
         weiBal = weiBal.sub(_weiValue);
@@ -273,6 +273,6 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     // FALLBACK
     // =====================================================================
 
-    function() public payable {}
+    function() external payable {}
 
 }

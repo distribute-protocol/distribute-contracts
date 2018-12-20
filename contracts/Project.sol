@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.0;
 
 import "./ProjectRegistry.sol";
 import "./ReputationRegistry.sol";
@@ -160,12 +160,12 @@ contract Project {
         address _proposer,
         uint256 _proposerType,
         uint256 _proposerStake,
-        bytes _ipfsHash,
+        bytes memory _ipfsHash,
         address _reputationRegistry,
         address _tokenRegistry
     ) public {
         require(bytes(_ipfsHash).length == 46);
-        require(reputationRegistryAddress == 0);
+        require(reputationRegistryAddress == address(0));
         reputationRegistryAddress = _reputationRegistry;
         tokenRegistryAddress = _tokenRegistry;
         projectRegistryAddress = msg.sender;
@@ -210,7 +210,7 @@ contract Project {
     // FALLBACK
     // =====================================================================
 
-    function() public payable {}
+    function() external payable {}
 
     // =====================================================================
     // GETTERS
@@ -342,7 +342,7 @@ contract Project {
     @return The amount of ether to deduct from the projects balance
 
     */
-    function unstakeTokens(address _staker, uint256 _tokens, address _distributeToken) external onlyTR returns (uint256) {
+    function unstakeTokens(address _staker, uint256 _tokens, address payable _distributeToken) external onlyTR returns (uint256) {
         require(state == 1);
         uint256 weiVal = (Division.percent(_tokens, tokensStaked, 10).mul(weiBal)).div(10000000000);
         tokenBalances[_staker] = tokenBalances[_staker].sub(_tokens);
@@ -387,7 +387,7 @@ contract Project {
     @param _rewardee The account who claimed and completed the task.
     @param _reward The amount of wei to transfer.
     */
-    function transferWeiReward(address _rewardee, uint _reward) external onlyTRorRR {
+    function transferWeiReward(address payable _rewardee, uint _reward) external onlyTRorRR {
         weiBal = weiBal.sub(_reward);
         _rewardee.transfer(_reward);
     }
@@ -398,7 +398,7 @@ contract Project {
     @param _distributeToken The address of the systems token contract.
     @param _value The amount of ether to send
     */
-    function returnWei(address _distributeToken, uint _value) external onlyPR {
+    function returnWei(address payable _distributeToken, uint _value) external onlyPR {
         weiBal = weiBal.sub(_value);
         _distributeToken.transfer(_value);
     }

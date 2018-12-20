@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.0;
 
 import "./Project.sol";
 import "./TokenRegistry.sol";
@@ -40,7 +40,7 @@ library ProjectLibrary {
     @param _staker Address of the staker
     @return A boolean representing staker status
     */
-    function isStaker(address _projectAddress, address _staker) public view returns(bool) {
+    function isStaker(address payable _projectAddress, address _staker) public view returns(bool) {
         Project project = Project(_projectAddress);
         return project.tokenBalances(_staker) > 0 || project.reputationBalances(_staker) > 0;
     }
@@ -51,7 +51,7 @@ library ProjectLibrary {
     @param _projectAddress Address of the project
     @return A boolean representing the project staked status
     */
-    function isStaked(address _projectAddress) public view returns (bool) {
+    function isStaked(address payable _projectAddress) public view returns (bool) {
         Project project = Project(_projectAddress);
         return project.weiBal() >= project.weiCost() && project.reputationStaked() >= project.reputationCost();
     }
@@ -62,7 +62,7 @@ library ProjectLibrary {
     @param _projectAddress Address of the project
     @return A boolean representing whether the project has passed its next deadline.
     */
-    function timesUp(address _projectAddress) public view returns (bool) {
+    function timesUp(address payable _projectAddress) public view returns (bool) {
         return (block.timestamp > Project(_projectAddress).nextDeadline());
     }
 
@@ -76,7 +76,7 @@ library ProjectLibrary {
     @return The relative weight of a staker as a whole integer
     */
     function calculateWeightOfAddress(
-        address _projectAddress,
+        address payable _projectAddress,
         address _address
     ) public view returns (uint256) {
         uint256 reputationWeight;
@@ -108,7 +108,7 @@ library ProjectLibrary {
     @param _projectAddress Address of the project.
     @return Returns a bool denoting the project is in the staked state.
     */
-    function checkStaked(address _projectAddress) public returns (bool) {
+    function checkStaked(address payable _projectAddress) public returns (bool) {
         Project project = Project(_projectAddress);
         require(project.state() == 1);
 
@@ -135,7 +135,7 @@ library ProjectLibrary {
     @param _taskHash Address of the top weighted task hash
     @return Returns a bool denoting the project is in the active state.
     */
-    function checkActive(address _projectAddress, bytes32 _taskHash, uint256 _taskListWeighting, address _tokenRegistryAddress, address _reputationRegistryAddress, address _distributeTokenAddress) public returns (bool) {
+    function checkActive(address payable _projectAddress, bytes32 _taskHash, uint256 _taskListWeighting, address payable _tokenRegistryAddress, address _reputationRegistryAddress, address payable _distributeTokenAddress) public returns (bool) {
         Project project = Project(_projectAddress);
         require(project.state() == 2);
 
@@ -169,9 +169,9 @@ library ProjectLibrary {
     @return Returns a bool denoting if the project is in the validation state.
     */
     function checkValidate(
-        address _projectAddress,
-        address _tokenRegistryAddress,
-        address _distributeTokenAddress
+        address payable _projectAddress,
+        address payable _tokenRegistryAddress,
+        address payable _distributeTokenAddress
     ) public returns (bool) {
         Project project = Project(_projectAddress);
         require(project.state() == 3);
@@ -209,9 +209,9 @@ library ProjectLibrary {
     @return Returns a bool denoting if the project is in the voting state.
     */
     function checkVoting(
-        address _projectAddress,
-        address _tokenRegistryAddress,
-        address _distributeTokenAddress,
+        address payable _projectAddress,
+        address payable _tokenRegistryAddress,
+        address payable _distributeTokenAddress,
         address _plcrVoting
     ) public returns (bool) {
         Project project = Project(_projectAddress);
@@ -229,25 +229,25 @@ library ProjectLibrary {
                     if (task.affirmativeIndex() != 0 && task.negativeIndex() != 0) { // there is an opposing validator, poll required
                         uint pollNonce = plcr.startPoll(51, project.voteCommitPeriod(), project.voteRevealPeriod());
                         task.setPollId(pollNonce); // function handles storage of voting pollId
-                        emit LogTaskVote(task, _projectAddress, pollNonce);
+                        emit LogTaskVote(address(task), _projectAddress, pollNonce);
                     } else if (task.negativeIndex() == 0 && task.affirmativeIndex() != 0) {
                         // this means that there are no negative validators, the task passes, and reward is claimable.
                         task.markTaskClaimable(true);
-                        emit LogTaskValidated(task, _projectAddress, true);
+                        emit LogTaskValidated(address(task), _projectAddress, true);
                     } else if (task.negativeIndex() != 0 && task.affirmativeIndex() == 0) {
                       // this means that there are no affirmative validators, the task fails, and reward is not claimable.
                         task.markTaskClaimable(false);
                         reward = task.weiReward();
                         tr.revertWei(reward);
                         project.returnWei(_distributeTokenAddress, reward);
-                        emit LogTaskValidated(task, _projectAddress, false);
+                        emit LogTaskValidated(address(task), _projectAddress, false);
                     } else {
                       // there are no validators, reward & validator chunk must be sent back
                       task.markTaskClaimable(false);
                       reward = task.weiReward().mul(21).div(20);
                       tr.revertWei(reward);
                       project.returnWei(_distributeTokenAddress, reward);
-                      emit LogTaskValidated(task, _projectAddress, false);
+                      emit LogTaskValidated(address(task), _projectAddress, false);
                     }
                 }
             }
@@ -272,9 +272,9 @@ library ProjectLibrary {
     @return Returns a bool denoting if the project is its final state.
     */
     function checkEnd(
-        address _projectAddress,
-        address _tokenRegistryAddress,
-        address _distributeTokenAddress,
+        address payable _projectAddress,
+        address payable _tokenRegistryAddress,
+        address payable _distributeTokenAddress,
         address _plcrVoting,
         address _reputationRegistryAddress
     ) public returns (uint) {
@@ -330,7 +330,7 @@ library ProjectLibrary {
     @param _validationState Bool representing validators choice.s
     */
     function validate(
-        address _projectAddress,
+        address payable _projectAddress,
         address _validator,
         uint256 _taskIndex,
         bool _validationState
@@ -349,7 +349,7 @@ library ProjectLibrary {
     @param _projectAddress Address of the project
     @return Sum of the weightings of the task which have passed.
     */
-    function calculatePassAmount(address _projectAddress) public returns (uint){
+    function calculatePassAmount(address payable _projectAddress) public returns (uint){
         Project project = Project(_projectAddress);
         require(project.state() == 5);
 
@@ -376,9 +376,9 @@ library ProjectLibrary {
     @return The amount of reputation the claimer staked on the task
     */
     function claimTaskReward(
-        address _projectAddress,
+        address payable _projectAddress,
         uint256 _index,
-        address _claimer
+        address payable _claimer
     ) public returns (uint256) {
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));
@@ -402,7 +402,7 @@ library ProjectLibrary {
     @param _staker Address of the staker
     @return The amount to be refunded to the staker.
     */
-    function refundStaker(address _projectAddress, address _staker, address _sender) public returns (uint256) {
+    function refundStaker(address payable _projectAddress, address _staker, address _sender) public returns (uint256) {
         Project project = Project(_projectAddress);
         require(project.state() == 6 || project.state() == 8);
         if (project.isTR(_sender)) {

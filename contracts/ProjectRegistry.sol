@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.0;
 
 import "./library/PLCRVoting.sol";
 import "./ReputationRegistry.sol";
@@ -46,9 +46,9 @@ contract ProjectRegistry is Ownable {
     // =====================================================================
 
     PLCRVoting plcrVoting;
-    address tokenRegistryAddress;
+    address payable tokenRegistryAddress;
     address reputationRegistryAddress;
-    address distributeTokenAddress;
+    address payable distributeTokenAddress;
     address projectContractAddress;
     address taskContractAddress;
 
@@ -102,8 +102,8 @@ contract ProjectRegistry is Ownable {
     @param _plcrVoting Address of the plcr voting contract
     */
     function init(
-        address _distributeToken,
-        address _tokenRegistry,
+        address payable _distributeToken,
+        address payable _tokenRegistry,
         address _reputationRegistry,
         address _plcrVoting,
         address _projectAddress,
@@ -111,9 +111,9 @@ contract ProjectRegistry is Ownable {
     ) public {       //contract is created
               /* address _proxyFactory */
         require(
-            tokenRegistryAddress == 0 &&
-            reputationRegistryAddress == 0 &&
-            distributeTokenAddress == 0
+            tokenRegistryAddress == address(0) &&
+            reputationRegistryAddress == address(0) &&
+            distributeTokenAddress == address(0)
         );
         distributeTokenAddress = _distributeToken;
         tokenRegistryAddress = _tokenRegistry;
@@ -154,7 +154,7 @@ contract ProjectRegistry is Ownable {
      * @dev Update the address of the distributeToken
      * @param _newDistributeToken Address of the new distribute token
      */
-    function updateDistributeToken(address _newDistributeToken) external onlyOwner {
+    function updateDistributeToken(address payable _newDistributeToken) external onlyOwner {
         distributeTokenAddress = _newDistributeToken;
     }
 
@@ -178,7 +178,7 @@ contract ProjectRegistry is Ownable {
      * @dev Update the address of the token registry
      * @param _newTokenRegistry Address of the new token registry
      */
-    function updateTokenRegistry(address _newTokenRegistry) external onlyOwner {
+    function updateTokenRegistry(address payable _newTokenRegistry) external onlyOwner {
         tokenRegistryAddress = _newTokenRegistry;
     }
 
@@ -194,7 +194,7 @@ contract ProjectRegistry is Ownable {
     // PROXY DEPLOYER
     // =====================================================================
 
-    function createProxy(address _target, bytes _data)
+    function createProxy(address _target, bytes memory _data)
         internal
         returns (address proxyContract)
     {
@@ -203,7 +203,7 @@ contract ProjectRegistry is Ownable {
         /* emit ProxyDeployed(proxyContract, _target); */
     }
 
-    function createProxyImpl(address _target, bytes _data)
+    function createProxyImpl(address _target, bytes memory _data)
         internal
         returns (address proxyContract)
     {
@@ -236,7 +236,7 @@ contract ProjectRegistry is Ownable {
         address _proposer,
         uint256 _proposerType,
         uint256 _proposerStake,
-        bytes _ipfsHash,
+        bytes memory _ipfsHash,
         address _reputationRegistry,
         address _tokenRegistry
     ) internal returns (address) {
@@ -296,10 +296,10 @@ contract ProjectRegistry is Ownable {
     @param _projectAddress Address of the project
     @return Boolean representing Staked status
     */
-    function checkStaked(address _projectAddress) external returns (bool) {
+    function checkStaked(address payable _projectAddress) external returns (bool) {
         require(!freeze);
         require(projects[_projectAddress] == true);
-        bool staked = _projectAddress.checkStaked();
+        bool staked = ProjectLibrary.checkStaked(_projectAddress);
         emit LogProjectFullyStaked(_projectAddress, staked);
         return staked;
     }
@@ -311,11 +311,11 @@ contract ProjectRegistry is Ownable {
     @param _projectAddress Address of the project
     @return Boolean representing Active status
     */
-    function checkActive(address _projectAddress) public returns (bool) {
+    function checkActive(address payable _projectAddress) public returns (bool) {
         require(!freeze);
         require(projects[_projectAddress] == true);
         bytes32 topTaskHash = stakedProjects[_projectAddress].topTaskHash;
-        bool active = _projectAddress.checkActive(topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash], tokenRegistryAddress, reputationRegistryAddress, distributeTokenAddress);
+        bool active = ProjectLibrary.checkActive(_projectAddress, topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash], tokenRegistryAddress, reputationRegistryAddress, distributeTokenAddress);
         emit LogProjectActive(_projectAddress, topTaskHash, active);
         return active;
     }
@@ -326,10 +326,10 @@ contract ProjectRegistry is Ownable {
     @param _projectAddress Address of the project
     @return Boolean representing Validate status
     */
-    function checkValidate(address _projectAddress) external {
+    function checkValidate(address payable _projectAddress) external {
         require(!freeze);
         require(projects[_projectAddress] == true);
-        bool validate = _projectAddress.checkValidate(tokenRegistryAddress, distributeTokenAddress);
+        bool validate = ProjectLibrary.checkValidate(_projectAddress, tokenRegistryAddress, distributeTokenAddress);
         emit LogProjectValidate(_projectAddress, validate);
     }
 
@@ -339,10 +339,10 @@ contract ProjectRegistry is Ownable {
     @param _projectAddress Address of the project
     @return Boolean representing Voting status
     */
-    function checkVoting(address _projectAddress) external {
+    function checkVoting(address payable _projectAddress) external {
         require(!freeze);
         require(projects[_projectAddress] == true);
-        bool vote = _projectAddress.checkVoting(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
+        bool vote = ProjectLibrary.checkVoting(_projectAddress, tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
         emit LogProjectVoting(_projectAddress, vote);
     }
 
@@ -352,10 +352,10 @@ contract ProjectRegistry is Ownable {
     @param _projectAddress Address of the project
     @return uint representing Final Status
     */
-    function checkEnd(address _projectAddress) external {
+    function checkEnd(address payable _projectAddress) external {
         require(!freeze);
         require(projects[_projectAddress] == true);
-        uint end = _projectAddress.checkEnd(tokenRegistryAddress, distributeTokenAddress, address(plcrVoting), reputationRegistryAddress);
+        uint end = ProjectLibrary.checkEnd(_projectAddress, tokenRegistryAddress, distributeTokenAddress, address(plcrVoting), reputationRegistryAddress);
         emit LogProjectEnd(_projectAddress, end);
     }
 
@@ -386,7 +386,7 @@ contract ProjectRegistry is Ownable {
         address _proposer,
         uint256 _proposerType,
         uint256 _proposerStake,
-        bytes _ipfsHash
+        bytes calldata _ipfsHash
         ) external onlyTRorRR returns (address) {
         require(!freeze);
         address projectAddress = createProxyProject(
@@ -414,7 +414,7 @@ contract ProjectRegistry is Ownable {
     @param _projectAddress Address of the project
     @return An array with the weiCost of the project and the proposers stake
     */
-    function refundProposer(address _projectAddress, address proposer) external onlyTRorRR returns (uint256[2]) {
+    function refundProposer(address payable _projectAddress, address proposer) external onlyTRorRR returns (uint256[2] memory) {
         require(!freeze);
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
@@ -444,7 +444,7 @@ contract ProjectRegistry is Ownable {
     @param _projectAddress Address of the project
     @param _taskHash Hash of the task list
     */
-    function addTaskHash(address _projectAddress, bytes32 _taskHash) external  { // format of has should be 'description', 'percentage', check via js that percentages add up to 100 prior to calling contract
+    function addTaskHash(address payable _projectAddress, bytes32 _taskHash) external  { // format of has should be 'description', 'percentage', check via js that percentages add up to 100 prior to calling contract
         require(!freeze);
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
@@ -453,7 +453,7 @@ contract ProjectRegistry is Ownable {
         ReputationRegistry rr = ReputationRegistry(reputationRegistryAddress);
         TokenRegistry tr = TokenRegistry(tokenRegistryAddress);
         uint256 networkWeight = (rr.calculateWeightOfAddress(msg.sender) + tr.calculateWeightOfAddress(msg.sender)) / 2;
-        uint256 stakerWeight = _projectAddress.calculateWeightOfAddress(msg.sender);
+        uint256 stakerWeight = ProjectLibrary.calculateWeightOfAddress(_projectAddress, msg.sender);
         uint256 totalWeight = (networkWeight + stakerWeight) / 2;
         require(totalWeight > 0);
         stakedTaskHash(_projectAddress, msg.sender, _taskHash, totalWeight);
@@ -482,7 +482,7 @@ contract ProjectRegistry is Ownable {
         }
         ss.numSubmissionsByWeight[_taskHash] += _stakerWeight;
         ss.taskHashSubmissions[_staker] = _taskHash;
-        if (ss.originator[_taskHash] == 0) {
+        if (ss.originator[_taskHash] == address(0)) {
           ss.originator[_taskHash] = _staker;
         }
         if(ss.numSubmissionsByWeight[_taskHash] > ss.numSubmissionsByWeight[ss.topTaskHash]) {
@@ -500,7 +500,7 @@ contract ProjectRegistry is Ownable {
       require(projects[_projectAddress] == true);
       StakedState storage ss = stakedProjects[_projectAddress];
       require(_claimer == ss.originator[ss.topTaskHash]);
-      ss.originator[ss.topTaskHash] = 0;
+      ss.originator[ss.topTaskHash] = address(0);
     }
     // =====================================================================
     // ACTIVE
@@ -515,7 +515,7 @@ contract ProjectRegistry is Ownable {
     @param _hashes Array of task hashes
     */
     // Doesn't Change State Here Could Possibly move to ProjectLibrary
-    function submitHashList(address _projectAddress, bytes32[] _hashes) external {
+    function submitHashList(address payable _projectAddress, bytes32[] calldata _hashes) external {
         require(!freeze);
         require(projects[_projectAddress] == true);
         Project project = Project(_projectAddress);
@@ -547,7 +547,7 @@ contract ProjectRegistry is Ownable {
     */
     // Doesn't Change State Here Could Possibly move to ProjectLibrary
     function claimTask(
-        address _projectAddress,
+        address payable _projectAddress,
         uint256 _index,
         bytes32 _taskDescription,
         address _claimer,
@@ -561,7 +561,7 @@ contract ProjectRegistry is Ownable {
         Task task = Task(project.tasks(_index));
         require(keccak256(abi.encodePacked(_taskDescription, _weighting)) == task.taskHash());
         require(
-            task.claimer() == 0 ||
+            task.claimer() == address(0) ||
             (block.timestamp > (task.claimTime() + project.turnoverTime()) && !task.complete())
         );
         task.setWeighting(_weighting);
@@ -576,7 +576,7 @@ contract ProjectRegistry is Ownable {
     @param _index Index of the task in task array
     */
     // Doesn't Change State Here Could Possibly move to ProjectLibrary
-    function submitTaskComplete(address _projectAddress, uint256 _index) external {
+    function submitTaskComplete(address payable _projectAddress, uint256 _index) external {
         require(!freeze);
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));

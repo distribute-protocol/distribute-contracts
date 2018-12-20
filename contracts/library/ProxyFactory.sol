@@ -28,7 +28,7 @@
 *
 ***/
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.5.0;
 
 /* solhint-disable no-inline-assembly, indent, state-visibility, avoid-low-level-calls */
 
@@ -36,7 +36,7 @@ contract ProxyFactory {
     event ProxyDeployed(address proxyAddress, address targetAddress);
     event ProxiesDeployed(address[] proxyAddresses, address targetAddress);
 
-    function createManyProxies(uint256 _count, address _target, bytes _data)
+    function createManyProxies(uint256 _count, address _target, bytes memory _data)
         public
     {
         address[] memory proxyAddresses = new address[](_count);
@@ -48,7 +48,7 @@ contract ProxyFactory {
         emit ProxiesDeployed(proxyAddresses, _target);
     }
 
-    function createProxy(address _target, bytes _data)
+    function createProxy(address _target, bytes memory _data)
         public
         returns (address proxyContract)
     {
@@ -57,7 +57,7 @@ contract ProxyFactory {
         emit ProxyDeployed(proxyContract, _target);
     }
 
-    function createProxyImpl(address _target, bytes _data)
+    function createProxyImpl(address _target, bytes memory _data)
         internal
         returns (address proxyContract)
     {
