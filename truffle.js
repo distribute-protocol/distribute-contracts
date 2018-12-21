@@ -15,10 +15,11 @@ module.exports = {
   networks: {
     // run truffle migrate --network app to migrate contracts for app
     // do not change name to development!!!!
-    app: {
-      host: 'localhost',
+    local: {
+      host: "127.0.0.1",
       port: 8545,
-      network_id: 1545334121552
+      network_id: "*", // match any network
+      websockets: true
     },
     dogfood: {
       provider: new HDWalletProvider(mnemonic, 'http://165.227.184.116:8540'),
@@ -41,10 +42,15 @@ module.exports = {
       }
     }
   },
-  solc: {
-    optimizer: {
-      enabled: true,
-      runs: 200
+  compilers: {
+    solc: {
+      version: "^0.5.0",
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        }
+      }
     }
   }
 }
