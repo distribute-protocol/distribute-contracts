@@ -135,7 +135,7 @@ library ProjectLibrary {
     @param _taskHash Address of the top weighted task hash
     @return Returns a bool denoting the project is in the active state.
     */
-    function checkActive(address payable _projectAddress, bytes32 _taskHash, uint256 _taskListWeighting, address payable _tokenRegistryAddress, address _reputationRegistryAddress, address payable _distributeTokenAddress) public returns (bool) {
+    function checkActive(address payable _projectAddress, bytes32 _taskHash, uint256 _taskListWeighting, address payable _tokenRegistryAddress, address _reputationRegistryAddress, address payable _hyphaTokenAddress) public returns (bool) {
         Project project = Project(_projectAddress);
         require(project.state() == 2);
 
@@ -150,7 +150,7 @@ library ProjectLibrary {
                 TokenRegistry(_tokenRegistryAddress).burnTokens(project.tokensStaked());
                 ReputationRegistry(_reputationRegistryAddress).burnReputation(project.reputationStaked());
                 TokenRegistry(_tokenRegistryAddress).revertWei(project.weiBal());
-                project.returnWei(_distributeTokenAddress, project.weiBal());
+                project.returnWei(_hyphaTokenAddress, project.weiBal());
                 project.clearStake();
             }
         }
@@ -165,13 +165,13 @@ library ProjectLibrary {
     @dev This is an interative function and gas costs will vary depending on the number of tasks.
     @param _projectAddress Address of the project
     @param _tokenRegistryAddress Address of the systems Token Registry contract
-    @param _distributeTokenAddress Address of the systems DistributeToken contract
+    @param _hyphaTokenAddress Address of the systems HyphaToken contract
     @return Returns a bool denoting if the project is in the validation state.
     */
     function checkValidate(
         address payable _projectAddress,
         address payable _tokenRegistryAddress,
-        address payable _distributeTokenAddress
+        address payable _hyphaTokenAddress
     ) public returns (bool) {
         Project project = Project(_projectAddress);
         require(project.state() == 3);
@@ -187,7 +187,7 @@ library ProjectLibrary {
                     uint reward = task.weiReward();
                     reward = task.weiReward().mul(21).div(20);
                     tr.revertWei(reward);
-                    project.returnWei(_distributeTokenAddress, reward);
+                    project.returnWei(_hyphaTokenAddress, reward);
                 }
             }
             return true;
@@ -204,14 +204,14 @@ library ProjectLibrary {
     @dev This is an interative function and gas costs will vary depending on the number of tasks.
     @param _projectAddress Address of the project
     @param _tokenRegistryAddress Address of the systems token registry contract
-    @param _distributeTokenAddress Address of the systems token contract
+    @param _hyphaTokenAddress Address of the systems token contract
     @param _plcrVoting Address of the systems PLCR Voting contract
     @return Returns a bool denoting if the project is in the voting state.
     */
     function checkVoting(
         address payable _projectAddress,
         address payable _tokenRegistryAddress,
-        address payable _distributeTokenAddress,
+        address payable _hyphaTokenAddress,
         address _plcrVoting
     ) public returns (bool) {
         Project project = Project(_projectAddress);
@@ -239,14 +239,14 @@ library ProjectLibrary {
                         task.markTaskClaimable(false);
                         reward = task.weiReward();
                         tr.revertWei(reward);
-                        project.returnWei(_distributeTokenAddress, reward);
+                        project.returnWei(_hyphaTokenAddress, reward);
                         emit LogTaskValidated(address(task), _projectAddress, false);
                     } else {
                       // there are no validators, reward & validator chunk must be sent back
                       task.markTaskClaimable(false);
                       reward = task.weiReward().mul(21).div(20);
                       tr.revertWei(reward);
-                      project.returnWei(_distributeTokenAddress, reward);
+                      project.returnWei(_hyphaTokenAddress, reward);
                       emit LogTaskValidated(address(task), _projectAddress, false);
                     }
                 }
@@ -267,14 +267,14 @@ library ProjectLibrary {
     @dev The project pass passThreshold is set in the project state variables
     @param _projectAddress Address of the project
     @param _tokenRegistryAddress Address of the systems token registry contract
-    @param _distributeTokenAddress Address of the systems token contract
+    @param _hyphaTokenAddress Address of the systems token contract
     @param _plcrVoting Address of the systems PLCR Voting contract
     @return Returns a bool denoting if the project is its final state.
     */
     function checkEnd(
         address payable _projectAddress,
         address payable _tokenRegistryAddress,
-        address payable _distributeTokenAddress,
+        address payable _hyphaTokenAddress,
         address _plcrVoting,
         address _reputationRegistryAddress
     ) public returns (uint) {
@@ -294,7 +294,7 @@ library ProjectLibrary {
                             task.markTaskClaimable(false);
                             uint reward = task.weiReward();
                             tr.revertWei(reward);
-                            project.returnWei(_distributeTokenAddress, reward);
+                            project.returnWei(_hyphaTokenAddress, reward);
                         }
                     }
                 }
@@ -306,7 +306,7 @@ library ProjectLibrary {
             } else {
               uint originatorReward = project.originatorReward();
               tr.revertWei(originatorReward);
-              project.returnWei(_distributeTokenAddress, originatorReward);
+              project.returnWei(_hyphaTokenAddress, originatorReward);
               project.setState(7, 0);
               TokenRegistry(_tokenRegistryAddress).burnTokens(project.tokensStaked());
               ReputationRegistry(_reputationRegistryAddress).burnReputation(project.reputationStaked());

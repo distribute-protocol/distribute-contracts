@@ -142,7 +142,7 @@ contract Project {
     @dev Used for proxy deployment of this contract. Initialize a Project with a Reputation Registry
     and a Token Registry, and all related project values.
     @param _cost The total cost of the project in wei
-    @param _costProportion The proportion of the project cost divided by theDistributeToken weiBal
+    @param _costProportion The proportion of the project cost divided by theHyphaToken weiBal
     represented as integer
     @param _stakingPeriod The length of time the project is open for staking
     @param _proposer The address of the user proposing the project
@@ -338,17 +338,17 @@ contract Project {
     @dev Only callable before the staking period of a proposed project ends (state must still be 1)
     @param _staker Address of the staker who is unstaking
     @param _tokens Amount of tokens to unstake on the project
-    @param _distributeToken Address of distribute token contract
+    @param _hyphaToken Address of distribute token contract
     @return The amount of ether to deduct from the projects balance
 
     */
-    function unstakeTokens(address _staker, uint256 _tokens, address payable _distributeToken) external onlyTR returns (uint256) {
+    function unstakeTokens(address _staker, uint256 _tokens, address payable _hyphaToken) external onlyTR returns (uint256) {
         require(state == 1);
         uint256 weiVal = (Division.percent(_tokens, tokensStaked, 10).mul(weiBal)).div(10000000000);
         tokenBalances[_staker] = tokenBalances[_staker].sub(_tokens);
         tokensStaked = tokensStaked.sub(_tokens);
         weiBal = weiBal.sub(weiVal);
-        _distributeToken.transfer(weiVal);
+        _hyphaToken.transfer(weiVal);
         return weiVal;
     }
 
@@ -395,12 +395,12 @@ contract Project {
     /**
     @notice Transfer `_value` wei back to distribute token balance on task failure
     @dev Only callable by the Project Registry initialized during construction, to maintain control flow
-    @param _distributeToken The address of the systems token contract.
+    @param _hyphaToken The address of the systems token contract.
     @param _value The amount of ether to send
     */
-    function returnWei(address payable _distributeToken, uint _value) external onlyPR {
+    function returnWei(address payable _hyphaToken, uint _value) external onlyPR {
         weiBal = weiBal.sub(_value);
-        _distributeToken.transfer(_value);
+        _hyphaToken.transfer(_value);
     }
 
 }

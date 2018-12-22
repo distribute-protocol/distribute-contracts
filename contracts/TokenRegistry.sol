@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "./ProjectRegistry.sol";
-import "./DistributeToken.sol";
+import "./HyphaToken.sol";
 import "./Project.sol";
 import "./ProjectLibrary.sol";
 import "./Task.sol";
@@ -40,7 +40,7 @@ contract TokenRegistry is Ownable {
     // =====================================================================
 
     ProjectRegistry projectRegistry;
-    DistributeToken distributeToken;
+    HyphaToken hyphaToken;
     PLCRVoting plcrVoting;
 
     uint256 proposeProportion = 200000000000;  // tokensupply/proposeProportion is the number of tokens the proposer must stake
@@ -62,20 +62,20 @@ contract TokenRegistry is Ownable {
     // =====================================================================
 
     /**
-    @dev Quasi constructor is called after contract is deployed, must be called with distributeToken,
+    @dev Quasi constructor is called after contract is deployed, must be called with hyphaToken,
     projectRegistry, and plcrVoting intialized to 0
-    @param _distributeToken Address of DistributeToken contract
+    @param _hyphaToken Address of HyphaToken contract
     @param _projectRegistry Address of ProjectRegistry contract
     @param _plcrVoting Address of PLCRVoting contract
     */
-    function init(address payable _distributeToken, address _projectRegistry, address _plcrVoting) public { //contract is created
+    function init(address payable _hyphaToken, address _projectRegistry, address _plcrVoting) public { //contract is created
         require(
-            address(distributeToken) == address(0) &&
+            address(hyphaToken) == address(0) &&
             address(projectRegistry) == address(0) &&
             address(plcrVoting) == address(0)
         );
 
-        distributeToken = DistributeToken(_distributeToken);
+        hyphaToken = HyphaToken(_hyphaToken);
         projectRegistry = ProjectRegistry(_projectRegistry);
         plcrVoting = PLCRVoting(_plcrVoting);
     }
@@ -107,11 +107,11 @@ contract TokenRegistry is Ownable {
     }
 
     /**
-     * @dev Update the address of the distributeToken
-     * @param _newDistributeToken Address of the new distribute token
+     * @dev Update the address of the hyphaToken
+     * @param _newHyphaToken Address of the new distribute token
      */
-    function updateDistributeToken(address payable _newDistributeToken) external onlyOwner {
-      distributeToken = DistributeToken(_newDistributeToken);
+    function updateHyphaToken(address payable _newHyphaToken) external onlyOwner {
+      hyphaToken = HyphaToken(_newHyphaToken);
     }
 
     /**
@@ -148,15 +148,15 @@ contract TokenRegistry is Ownable {
     function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes calldata _ipfsHash) external {
         require(!freeze);
         require(block.timestamp < _stakingPeriod && _cost > 0);
-        uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
+        uint256 costProportion = Division.percent(_cost, hyphaToken.weiBal(), 10);
         uint256 proposerTokenCost = (
             Division.percent(costProportion, proposeProportion, 10).mul(
-            distributeToken.totalSupply())).div(
+            hyphaToken.totalSupply())).div(
             10000000000);
             //divide by 20 to get 5 percent of tokens
-        require(distributeToken.balanceOf(msg.sender) >= proposerTokenCost);
+        require(hyphaToken.balanceOf(msg.sender) >= proposerTokenCost);
 
-        distributeToken.transferToEscrow(msg.sender, proposerTokenCost);
+        hyphaToken.transferToEscrow(msg.sender, proposerTokenCost);
         address projectAddress = projectRegistry.createProject(
             _cost,
             costProportion,
@@ -182,8 +182,8 @@ contract TokenRegistry is Ownable {
         require(project.proposerType() == 1);
 
         uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress, msg.sender);        //call project to "send back" staked tokens to put in proposer's balances
-        distributeToken.transferFromEscrow(msg.sender, proposerVals[1]);
-        distributeToken.transferWeiTo(msg.sender, proposerVals[0] / (20));
+        hyphaToken.transferFromEscrow(msg.sender, proposerVals[1]);
+        hyphaToken.transferWeiTo(msg.sender, proposerVals[0] / (20));
     }
 
     /**
@@ -211,7 +211,7 @@ contract TokenRegistry is Ownable {
     function stakeTokens(address payable _projectAddress, uint256 _tokens) external {
         require(!freeze);
         require(projectRegistry.projects(_projectAddress) == true);
-        require(distributeToken.balanceOf(msg.sender) >= _tokens);
+        require(hyphaToken.balanceOf(msg.sender) >= _tokens);
         Project project = Project(_projectAddress);
         // handles edge case where someone attempts to stake past the staking deadline
         projectRegistry.checkStaked(_projectAddress);
@@ -221,7 +221,7 @@ contract TokenRegistry is Ownable {
         uint256 weiRemaining = project.weiCost() - project.weiBal();
         require(weiRemaining > 0);
 
-        uint256 currentPrice = distributeToken.currentPrice();
+        uint256 currentPrice = hyphaToken.currentPrice();
         uint256 weiVal =  currentPrice * _tokens;
         bool flag = weiVal > weiRemaining;
         uint256 weiChange = flag
@@ -233,8 +233,8 @@ contract TokenRegistry is Ownable {
         // updating of P weiBal happens via the next line
         project.stakeTokens(msg.sender, tokens, weiChange);
         // the transfer of wei and the updating of DT weiBal happens via the next line
-        distributeToken.transferWeiTo(_projectAddress, weiChange);
-        distributeToken.transferToEscrow(msg.sender, tokens);
+        hyphaToken.transferWeiTo(_projectAddress, weiChange);
+        hyphaToken.transferToEscrow(msg.sender, tokens);
         bool staked = projectRegistry.checkStaked(_projectAddress);
         emit LogStakedTokens(_projectAddress, tokens, weiChange, msg.sender, staked);
     }
@@ -251,11 +251,11 @@ contract TokenRegistry is Ownable {
         // handles edge case where someone attempts to unstake past the staking deadline
         projectRegistry.checkStaked(_projectAddress);
 
-        uint256 weiVal = Project(_projectAddress).unstakeTokens(msg.sender, _tokens, address(distributeToken));
+        uint256 weiVal = Project(_projectAddress).unstakeTokens(msg.sender, _tokens, address(hyphaToken));
         // the actual wei is sent back to DT via Project.unstakeTokens()
         // the weiBal is updated via the next line
-        distributeToken.returnWei(weiVal);
-        distributeToken.transferFromEscrow(msg.sender, _tokens);
+        hyphaToken.returnWei(weiVal);
+        hyphaToken.transferFromEscrow(msg.sender, _tokens);
         emit LogUnstakedTokens(_projectAddress, _tokens, weiVal, msg.sender);
     }
 
@@ -268,7 +268,7 @@ contract TokenRegistry is Ownable {
     function calculateWeightOfAddress(
         address _address
     ) public view returns (uint256) {
-        return Division.percent(distributeToken.balanceOf(_address), distributeToken.totalSupply(), 15);
+        return Division.percent(hyphaToken.balanceOf(_address), hyphaToken.totalSupply(), 15);
     }
 
     // =====================================================================
@@ -293,8 +293,8 @@ contract TokenRegistry is Ownable {
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_taskIndex));
         uint256 validationFee = task.validationEntryFee();
-        require(distributeToken.balanceOf(msg.sender) >= validationFee);
-        distributeToken.transferToEscrow(msg.sender, validationFee);
+        require(hyphaToken.balanceOf(msg.sender) >= validationFee);
+        hyphaToken.transferToEscrow(msg.sender, validationFee);
         ProjectLibrary.validate(_projectAddress, msg.sender, _taskIndex, _validationState);
         emit LogValidateTask(_projectAddress, validationFee, _validationState, _taskIndex, msg.sender);
     }
@@ -344,11 +344,11 @@ contract TokenRegistry is Ownable {
                 ? require(task.negativeValidators(index) == msg.sender)
                 : require(task.affirmativeValidators(index) == msg.sender);
             returnAmount += task.validationEntryFee() / 2;
-            distributeToken.burn(task.validationEntryFee() - returnAmount);
+            hyphaToken.burn(task.validationEntryFee() - returnAmount);
             emit LogRewardValidator(_projectAddress, _index, 0, returnAmount, msg.sender);
         }
         emit LogRewardValidator(_projectAddress, _index, weiReward, returnAmount, msg.sender);
-        distributeToken.transferFromEscrow(msg.sender, returnAmount);
+        hyphaToken.transferFromEscrow(msg.sender, returnAmount);
     }
 
     // =====================================================================
@@ -381,8 +381,8 @@ contract TokenRegistry is Ownable {
         // if not, request voting rights for token holder
         if (availableVotes < _votes) {
             uint votesCost = squaredAmount(_votes) - squaredAmount(availableVotes);
-            require(distributeToken.balanceOf(msg.sender) >= votesCost);
-            distributeToken.transferToEscrow(msg.sender, votesCost);
+            require(hyphaToken.balanceOf(msg.sender) >= votesCost);
+            hyphaToken.transferToEscrow(msg.sender, votesCost);
             plcrVoting.requestVotingRights(msg.sender, _votes - availableVotes);
         }
         plcrVoting.commitVote(msg.sender, pollId, _secretHash, _votes, _prevPollID);
@@ -418,7 +418,7 @@ contract TokenRegistry is Ownable {
         require(_votes <= userVotes);
         uint votesPrice = squaredAmount(userVotes) - squaredAmount(userVotes - _votes);
         plcrVoting.withdrawVotingRights(msg.sender, _votes);
-        distributeToken.transferFromEscrow(msg.sender, votesPrice);
+        hyphaToken.transferFromEscrow(msg.sender, votesPrice);
     }
 
     // =====================================================================
@@ -435,9 +435,9 @@ contract TokenRegistry is Ownable {
         uint256 refund = ProjectLibrary.refundStaker(_projectAddress, msg.sender, address(this));
         require(refund > 0);
         Project(_projectAddress).clearTokenStake(msg.sender);
-        distributeToken.transferFromEscrow(msg.sender, refund);
+        hyphaToken.transferFromEscrow(msg.sender, refund);
         if (Project(_projectAddress).state() == 6) {
-          distributeToken.transferTokensTo(msg.sender, refund / 20);
+          hyphaToken.transferTokensTo(msg.sender, refund / 20);
         }
     }
 
@@ -462,11 +462,11 @@ contract TokenRegistry is Ownable {
     /**
     @notice Return wei from project balance if task fails
     @dev Only callable by the ProjectRegistry contract
-    @param _value Amount of wei to transfer to the distributeToken contract
+    @param _value Amount of wei to transfer to the hyphaToken contract
     */
     function revertWei(uint256 _value) external onlyPR {
         require(!freeze);
-        distributeToken.returnWei(_value);
+        hyphaToken.returnWei(_value);
     }
 
     /**
@@ -476,7 +476,7 @@ contract TokenRegistry is Ownable {
     */
     function burnTokens(uint256 _tokens) external onlyPR {
         require(!freeze);
-        distributeToken.burn(_tokens);
+        hyphaToken.burn(_tokens);
     }
 
 }

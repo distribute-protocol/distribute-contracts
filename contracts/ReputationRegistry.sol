@@ -3,7 +3,7 @@ pragma solidity ^0.5.0;
 import "./Project.sol";
 import "./ProjectLibrary.sol";
 import "./ProjectRegistry.sol";
-import "./DistributeToken.sol";
+import "./HyphaToken.sol";
 import "./Task.sol";
 import "./library/PLCRVoting.sol";
 import "./library/Division.sol";
@@ -15,7 +15,7 @@ import "./library/Ownable.sol";
 @notice This contract manages the reputation balances of each user and serves as the interface through
 which users stake reputation, come to consensus around tasks, claim tasks, vote, refund their stakes,
 and claim their task rewards. This contract also registers users and instantiates their accounts with 10.000 reputation
-@dev This contract must be initialized with the address of a valid DistributeToken, ProjectRegistry,
+@dev This contract must be initialized with the address of a valid HyphaToken, ProjectRegistry,
 and PLCR Voting contract
 */
 // ===================================================================== //
@@ -45,7 +45,7 @@ contract ReputationRegistry is Ownable {
     // STATE VARIABLES
     // =====================================================================
 
-    DistributeToken distributeToken;
+    HyphaToken hyphaToken;
     ProjectRegistry projectRegistry;
     PLCRVoting plcrVoting;
 
@@ -80,21 +80,21 @@ contract ReputationRegistry is Ownable {
     // =====================================================================
 
     /**
-    @dev Quasi contstructor is called after contract is deployed, must be called with distributeToken,
+    @dev Quasi contstructor is called after contract is deployed, must be called with hyphaToken,
     projectRegistry, and plcrVoting intialized to 0
-    @param _distributeToken Address of DistributeToken contract
+    @param _hyphaToken Address of HyphaToken contract
     @param _projectRegistry Address of ProjectRegistry contract
     @param _plcrVoting Address of PLCRVoting contract
     */
-    function init(address payable _distributeToken, address _projectRegistry, address _plcrVoting) public {
+    function init(address payable _hyphaToken, address _projectRegistry, address _plcrVoting) public {
         require(
-            address(distributeToken) == address(0) &&
+            address(hyphaToken) == address(0) &&
             address(projectRegistry) == address(0) &&
             address(plcrVoting) == address(0)
         );
         projectRegistry = ProjectRegistry(_projectRegistry);
         plcrVoting = PLCRVoting(_plcrVoting);
-        distributeToken = DistributeToken(_distributeToken);
+        hyphaToken = HyphaToken(_hyphaToken);
     }
 
     // =====================================================================
@@ -136,11 +136,11 @@ contract ReputationRegistry is Ownable {
     }
 
     /**
-     * @dev Update the address of the distributeToken
-     * @param _newDistributeToken Address of the new distribute token
+     * @dev Update the address of the hyphaToken
+     * @param _newHyphaToken Address of the new distribute token
      */
-    function updateDistributeToken(address payable _newDistributeToken) external onlyOwner {
-      distributeToken = DistributeToken(_newDistributeToken);
+    function updateHyphaToken(address payable _newHyphaToken) external onlyOwner {
+      hyphaToken = HyphaToken(_newHyphaToken);
     }
 
     /**
@@ -189,7 +189,7 @@ contract ReputationRegistry is Ownable {
     function proposeProject(uint256 _cost, uint256 _stakingPeriod, bytes calldata _ipfsHash) external {
         require(!freeze);
         require(block.timestamp < _stakingPeriod && _cost > 0);
-        uint256 costProportion = Division.percent(_cost, distributeToken.weiBal(), 10);
+        uint256 costProportion = Division.percent(_cost, hyphaToken.weiBal(), 10);
         uint256 proposerReputationCost = ( //divide by 20 to get 5 percent of reputation
         Division.percent(costProportion, proposeProportion, 10) *
         totalSupply) /
@@ -221,7 +221,7 @@ contract ReputationRegistry is Ownable {
 
         uint256[2] memory proposerVals = projectRegistry.refundProposer(_projectAddress, msg.sender);   //call project to "send back" staked tokens to put in proposer's balances
         users[msg.sender].balance += proposerVals[1];
-        distributeToken.transferWeiTo(msg.sender, proposerVals[0] / 20);
+        hyphaToken.transferWeiTo(msg.sender, proposerVals[0] / 20);
     }
 
     // =====================================================================

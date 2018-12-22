@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./library/PLCRVoting.sol";
 import "./ReputationRegistry.sol";
-import "./DistributeToken.sol";
+import "./HyphaToken.sol";
 import "./ProjectLibrary.sol";
 import "./Task.sol";
 import "bytes/BytesLib.sol";
@@ -48,7 +48,7 @@ contract ProjectRegistry is Ownable {
     PLCRVoting plcrVoting;
     address payable tokenRegistryAddress;
     address reputationRegistryAddress;
-    address payable distributeTokenAddress;
+    address payable hyphaTokenAddress;
     address projectContractAddress;
     address taskContractAddress;
 
@@ -96,13 +96,13 @@ contract ProjectRegistry is Ownable {
     @notice
     @dev Quasi constructor is called after thr project is deployed. Requires that all relevant contract
     address are not yet intialized.
-    @param _distributeToken Address of the distributeToken contract
+    @param _hyphaToken Address of the hyphaToken contract
     @param _tokenRegistry Address of the token registry contract
     @param _reputationRegistry Address of the reputation registry contract
     @param _plcrVoting Address of the plcr voting contract
     */
     function init(
-        address payable _distributeToken,
+        address payable _hyphaToken,
         address payable _tokenRegistry,
         address _reputationRegistry,
         address _plcrVoting,
@@ -113,9 +113,9 @@ contract ProjectRegistry is Ownable {
         require(
             tokenRegistryAddress == address(0) &&
             reputationRegistryAddress == address(0) &&
-            distributeTokenAddress == address(0)
+            hyphaTokenAddress == address(0)
         );
-        distributeTokenAddress = _distributeToken;
+        hyphaTokenAddress = _hyphaToken;
         tokenRegistryAddress = _tokenRegistry;
         reputationRegistryAddress = _reputationRegistry;
         plcrVoting = PLCRVoting(_plcrVoting);
@@ -151,11 +151,11 @@ contract ProjectRegistry is Ownable {
     }
 
     /**
-     * @dev Update the address of the distributeToken
-     * @param _newDistributeToken Address of the new distribute token
+     * @dev Update the address of the hyphaToken
+     * @param _newHyphaToken Address of the new distribute token
      */
-    function updateDistributeToken(address payable _newDistributeToken) external onlyOwner {
-        distributeTokenAddress = _newDistributeToken;
+    function updateHyphaToken(address payable _newHyphaToken) external onlyOwner {
+        hyphaTokenAddress = _newHyphaToken;
     }
 
     /**
@@ -315,7 +315,7 @@ contract ProjectRegistry is Ownable {
         require(!freeze);
         require(projects[_projectAddress] == true);
         bytes32 topTaskHash = stakedProjects[_projectAddress].topTaskHash;
-        bool active = ProjectLibrary.checkActive(_projectAddress, topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash], tokenRegistryAddress, reputationRegistryAddress, distributeTokenAddress);
+        bool active = ProjectLibrary.checkActive(_projectAddress, topTaskHash, stakedProjects[_projectAddress].numSubmissionsByWeight[topTaskHash], tokenRegistryAddress, reputationRegistryAddress, hyphaTokenAddress);
         emit LogProjectActive(_projectAddress, topTaskHash, active);
         return active;
     }
@@ -329,7 +329,7 @@ contract ProjectRegistry is Ownable {
     function checkValidate(address payable _projectAddress) external {
         require(!freeze);
         require(projects[_projectAddress] == true);
-        bool validate = ProjectLibrary.checkValidate(_projectAddress, tokenRegistryAddress, distributeTokenAddress);
+        bool validate = ProjectLibrary.checkValidate(_projectAddress, tokenRegistryAddress, hyphaTokenAddress);
         emit LogProjectValidate(_projectAddress, validate);
     }
 
@@ -342,7 +342,7 @@ contract ProjectRegistry is Ownable {
     function checkVoting(address payable _projectAddress) external {
         require(!freeze);
         require(projects[_projectAddress] == true);
-        bool vote = ProjectLibrary.checkVoting(_projectAddress, tokenRegistryAddress, distributeTokenAddress, address(plcrVoting));
+        bool vote = ProjectLibrary.checkVoting(_projectAddress, tokenRegistryAddress, hyphaTokenAddress, address(plcrVoting));
         emit LogProjectVoting(_projectAddress, vote);
     }
 
@@ -355,7 +355,7 @@ contract ProjectRegistry is Ownable {
     function checkEnd(address payable _projectAddress) external {
         require(!freeze);
         require(projects[_projectAddress] == true);
-        uint end = ProjectLibrary.checkEnd(_projectAddress, tokenRegistryAddress, distributeTokenAddress, address(plcrVoting), reputationRegistryAddress);
+        uint end = ProjectLibrary.checkEnd(_projectAddress, tokenRegistryAddress, hyphaTokenAddress, address(plcrVoting), reputationRegistryAddress);
         emit LogProjectEnd(_projectAddress, end);
     }
 
@@ -369,7 +369,7 @@ contract ProjectRegistry is Ownable {
     `_proposerStake` defined by ipfsHash `_ipfsHash`
     @dev Only callable by the ReputationRegistry or TokenRegistry, after proposer stake is confirmed.
     @param _cost The total cost of the project in wei
-    @param _costProportion The proportion of the project cost divided by the DistributeToken weiBal
+    @param _costProportion The proportion of the project cost divided by the HyphaToken weiBal
     represented as integer
     @param _stakingPeriod The length of time this project is open for staking
     @param _proposer The address of the user proposing the project
@@ -580,7 +580,7 @@ contract ProjectRegistry is Ownable {
         require(!freeze);
         Project project = Project(_projectAddress);
         Task task = Task(project.tasks(_index));
-        DistributeToken dt = DistributeToken(distributeTokenAddress);
+        HyphaToken dt = HyphaToken(hyphaTokenAddress);
         require(task.claimer() == msg.sender);
         require(task.complete() == false);
         require(project.state() == 3);

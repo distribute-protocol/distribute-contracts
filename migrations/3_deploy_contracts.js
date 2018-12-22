@@ -5,7 +5,7 @@ const ReputationRegistry = artifacts.require('ReputationRegistry')
 const ProjectRegistry = artifacts.require('ProjectRegistry')
 const Project = artifacts.require('Project')
 const PLCRVoting = artifacts.require('PLCRVoting')
-const DistributeToken = artifacts.require('DistributeToken')
+const HyphaToken = artifacts.require('HyphaToken')
 const ProjectLibrary = artifacts.require('ProjectLibrary')
 const Task = artifacts.require('Task')
 
@@ -15,7 +15,7 @@ const Task = artifacts.require('Task')
 
 module.exports = async function (deployer) {
   // await deployer.deploy(Division)
-  // await deployer.link(Division, [DistributeToken, ProjectLibrary, ProjectRegistry, ReputationRegistry, TokenRegistry, Project])
+  // await deployer.link(Division, [HyphaToken, ProjectLibrary, ProjectRegistry, ReputationRegistry, TokenRegistry, Project])
   await deployer.deploy(ProjectLibrary)
   await deployer.link(ProjectLibrary, [TokenRegistry, ReputationRegistry, ProjectRegistry])
   await deployer.deploy(TokenRegistry)
@@ -24,14 +24,14 @@ module.exports = async function (deployer) {
   await deployer.deploy(Project)
 
   await deployer.deploy(ProjectRegistry)
-  await deployer.deploy(DistributeToken, TokenRegistry.address, ReputationRegistry.address)
+  await deployer.deploy(HyphaToken, TokenRegistry.address, ReputationRegistry.address)
   await deployer.deploy(PLCRVoting, TokenRegistry.address, ReputationRegistry.address, ProjectRegistry.address)
 
   let PRInstance = await ProjectRegistry.deployed()
   let TRInstance = await TokenRegistry.deployed()
   let RRInstance = await ReputationRegistry.deployed()
 
-  await PRInstance.init(DistributeToken.address, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address, Project.address, Task.address)
-  await TRInstance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address)
-  await RRInstance.init(DistributeToken.address, ProjectRegistry.address, PLCRVoting.address)
+  await PRInstance.init(HyphaToken.address, TokenRegistry.address, ReputationRegistry.address, PLCRVoting.address, Project.address, Task.address)
+  await TRInstance.init(HyphaToken.address, ProjectRegistry.address, PLCRVoting.address)
+  await RRInstance.init(HyphaToken.address, ProjectRegistry.address, PLCRVoting.address)
 }

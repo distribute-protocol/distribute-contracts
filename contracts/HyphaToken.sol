@@ -11,7 +11,7 @@ import "./library/Ownable.sol";
 @notice This contract implements functionality to be controlled by a TokenRegistry & a ReputationRegistry.
 @dev This contract must be initialized with both a TokenRegistry & a ReputationRegistry.
 */
-contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ownable {
+contract HyphaToken is EIP20(0, "Hypha Utility Token", 18, "HYP"), Ownable {
 
     using SafeMath for uint256;
 
@@ -20,7 +20,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     // =====================================================================
 
     event LogMint(uint256 amountMinted, uint256 totalCost, address minter);
-    event LogWithdraw(uint256 amountWithdrawn, uint256 reward, address seller);
+    event LogSell(uint256 amounSold, uint256 totalCost, address seller);
 
     // =====================================================================
     // STATE VARIABLES
@@ -59,7 +59,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     // =====================================================================
 
     /**
-    @dev Initialize the DistributeToken contract with the address of a TokenRegistry contract & a
+    @dev Initialize the HyphaToken contract with the address of a TokenRegistry contract & a
     ReputationRegistry contract
     @param _tokenRegistry Address of the TokenRegistry
     @param _reputationRegistry Address of the ReputationRegistry
@@ -75,14 +75,14 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     // =====================================================================
 
     /**
-     * @dev Freezes the distribute token contract and allows existing token holders to withdraw tokens
+     * @dev Freezes the hypha token contract and allows existing token holders to withdraw tokens
      */
     function freezeContract() external onlyOwner {
         freeze = true;
     }
 
     /**
-     * @dev Unfreezes the distribute token contract and allows existing token holders to withdraw tokens
+     * @dev Unfreezes the hypha token contract and allows existing token holders to withdraw tokens
      */
     function unfreezeContract() external onlyOwner {
         freeze = false;
@@ -197,7 +197,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
         balances[msg.sender] = balances[msg.sender].sub(_tokens);
         totalSupply = totalSupply.sub(_tokens);
         weiBal = weiBal.sub(weiVal);
-        emit LogWithdraw(_tokens, weiVal, msg.sender);
+        emit LogSell(_tokens, weiVal, msg.sender);
         msg.sender.transfer(weiVal);
     }
 
@@ -232,7 +232,7 @@ contract DistributeToken is EIP20(0, "Distributed Utility Token", 18, "DST"), Ow
     }
 
     /**
-    @notice Return `_weiValue` wei back to Distribute Token contract
+    @notice Return `_weiValue` wei back to Hypha Token contract
     @dev Only callable by the TokenRegistry initialized during contract construction
     @param _weiValue The amount of wei to transfer back to the token contract
     */
