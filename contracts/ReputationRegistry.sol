@@ -38,7 +38,7 @@ contract ReputationRegistry is Ownable {
     event LogStakedReputation(address indexed projectAddress, uint256 reputation, address staker, bool projectStaked);
     event LogUnstakedReputation(address indexed projectAddress, uint256 reputation, address unstaker);
     event LogReputationVoteCommitted(address indexed projectAddress, uint256 index, uint256 votes, bytes32 secretHash, uint256 pollId, address voter);
-    event LogReputationVoteRevealed(address indexed projectAddress, uint256 index, uint256 voteOption, uint256 salt, address voter);
+    event LogReputationVoteRevealed(address indexed projectAddress, uint256 index, uint256 vote, uint256 salt, address voter);
     event LogReputationVoteRescued(address indexed projectAddress, uint256 index, uint256 pollId, address voter);
 
     // =====================================================================
