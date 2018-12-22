@@ -22,8 +22,8 @@ library ProjectLibrary {
     // EVENTS
     // =====================================================================
 
-    event TokenRefund(address staker, uint256 refund);
-    event ReputationRefund(address projectAddress, address staker, uint256 refund);
+    event LogTokenRefund(address staker, uint256 refund);
+    event LogReputationRefund(address staker, uint256 refund);
     event LogTaskVote(address taskAddress, address projectAddress, uint pollNonce);
     event LogTaskValidated(address taskAddress, address projectAddress, bool confirmation);
     event LogClaimTaskReward(address projectAddress, uint256 index, address claimer, uint256 weiReward, uint256 reputationReward);
@@ -429,7 +429,7 @@ library ProjectLibrary {
                 ? refund = _project.tokenBalances(_staker).mul( _project.passAmount()).div(100)
                 : refund = _project.tokenBalances(_staker);
         }
-        emit TokenRefund(_staker, refund);
+        emit LogTokenRefund(_staker, refund);
         return refund;
     }
 
@@ -447,7 +447,7 @@ library ProjectLibrary {
               ? refund = _project.reputationBalances(_staker).mul( _project.passAmount()).div(100)
               : refund = _project.reputationBalances(_staker);
         }
-        emit ReputationRefund(address(_project), _staker, refund);
+        emit LogReputationRefund(_staker, refund);
         return refund;
     }
 }

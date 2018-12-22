@@ -36,7 +36,6 @@ contract ProjectRegistry is Ownable {
     event LogProjectValidate(address projectAddress, bool validate);
     event LogProjectVoting(address projectAddress, bool vote);
     event LogProjectEnd(address projectAddress, uint end);
-    event LogRewardOriginator(address projectAddress, address originator, uint256 reward);
     event LogRefundProposer(address projectAddress, uint256 contractCaller, address proposer, uint256 proposedCost, uint256 proposedStake);
 
     /* event ProxyDeployed(address proxyAddress, address targetAddress); */

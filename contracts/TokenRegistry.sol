@@ -26,14 +26,14 @@ contract TokenRegistry is Ownable {
     // EVENTS
     // =====================================================================
 
-    event LogProjectCreated(address projectAddress, uint256 weiCost, uint256 tokenCost);
     event LogStakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address staker, bool staked);
     event LogUnstakedTokens(address indexed projectAddress, uint256 tokens, uint256 weiChange, address unstaker);
     event LogValidateTask(address indexed projectAddress, uint256 validationFee, bool validationState, uint256 taskIndex, address validator);
     event LogRewardValidator(address indexed projectAddress, uint256 index, uint256 weiReward, uint256 returnAmount, address validator);
-    event LogTokenVoteCommitted(address indexed projectAddress, uint256 index, uint256 tokens, bytes32 secretHash, uint256 pollId, address voter);
+    event LogTokenVoteCommitted(address indexed projectAddress, uint256 index, uint256 votes, bytes32 secretHash, uint256 pollId, address voter);
     event LogTokenVoteRevealed(address indexed projectAddress, uint256 index, uint256 voteOption, uint256 salt, address voter);
     event LogTokenVoteRescued(address indexed projectAddress, uint256 index, uint256 pollId, address voter);
+    event LogRewardOriginator(address projectAddress);
 
     // =====================================================================
     // STATE VARIABLES
@@ -166,7 +166,6 @@ contract TokenRegistry is Ownable {
             proposerTokenCost,
             _ipfsHash
         );
-        emit LogProjectCreated(projectAddress, _cost, proposerTokenCost);
     }
 
     /**
@@ -187,7 +186,7 @@ contract TokenRegistry is Ownable {
     }
 
     /**
-    @notice Rewards the originator of a project plan in tokens.
+    @notice Rewards the originator of a project plan in wei.
     @param _projectAddress Address of the project
     */
     function rewardOriginator(address payable _projectAddress) external {
@@ -195,6 +194,7 @@ contract TokenRegistry is Ownable {
       Project project = Project(_projectAddress);
       require(project.state() == 6);
       projectRegistry.rewardOriginator(_projectAddress, msg.sender);
+      emit LogRewardOriginator(_projectAddress);
       project.transferWeiReward(msg.sender, project.originatorReward());
     }
 
